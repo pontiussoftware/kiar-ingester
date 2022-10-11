@@ -67,7 +67,16 @@ class IngesterServer(val config: Config) {
      *
      * @param jobName The name of the job to schedule.
      */
-    fun schedule(jobName: String) {
+    fun schedule(jobName: String) = this.ingesterService.execute {
+        this.execute(jobName)
+    }
+
+    /**
+     * Executes the [Job] with the given name.
+     *
+     * @param jobName The name of the job to schedule.
+     */
+    fun execute(jobName: String) {
         val jobConfig = this.config.jobs.find { it.name == jobName } ?: throw IllegalArgumentException("Job configuration with name '$jobName' could not be found.")
         val mappingConfig = this.config.mapper.find { it.name == jobConfig.mappingConfig } ?: throw IllegalArgumentException("Mapping configuration with name '${jobConfig.mappingConfig}' could not be found.")
         val imageConfig = this.config.image.find { it.name == jobConfig.imageConfig } ?: throw IllegalArgumentException("Image configuration with name '${jobConfig.imageConfig}' could not be found.")
@@ -84,11 +93,8 @@ class IngesterServer(val config: Config) {
         /* Configure transformer processor(s). TODO: Make more configurable. */
         val solr = ApacheSolrSink(transformer, this.client, solrConfig)
 
-        /* Submit task to ingester service. */
-        this.ingesterService.execute {
-            runBlocking {
-                solr.execute().collect()
-            }
+        runBlocking {
+            solr.execute().collect()
         }
     }
 

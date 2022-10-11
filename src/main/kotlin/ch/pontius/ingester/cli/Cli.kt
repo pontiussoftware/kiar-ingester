@@ -29,7 +29,10 @@ class Cli(server: IngesterServer) {
     /** Basic [NoOpCliktCommand] that contains all commands supported by this [Cli]. */
     private val clikt = object : NoOpCliktCommand(name = "ingester", help = "The base command for all CLI commands.") {
         init {
-            subcommands(ScheduleCommand(server))
+            subcommands(
+                ScheduleCommand(server),
+                ExecuteCommand(server)
+            )
         }
     }
 
