@@ -1,5 +1,6 @@
 package ch.pontius.ingester.config
 
+import ch.pontius.ingester.processors.sinks.Sinks
 import ch.pontius.ingester.processors.sources.Sources
 import ch.pontius.ingester.serializers.PathSerializer
 import ch.pontius.ingester.watcher.FileWatcher
@@ -21,8 +22,11 @@ data class JobConfig(
     @Serializable(with = PathSerializer::class)
     val file: Path,
 
-    /** The type of [Sources]. */
+    /** The type of [Sources] that should be used for the [JobConfig]. */
     val source: Sources,
+
+    /** The type of [Sinks] that should be used for the [JobConfig]. */
+    val sink: Sinks,
 
     /** The named mapping configuration to use. Must correspond to an existing configuration. */
     val mappingConfig: String,

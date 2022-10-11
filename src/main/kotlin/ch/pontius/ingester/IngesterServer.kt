@@ -2,6 +2,8 @@ package ch.pontius.ingester
 
 import ch.pontius.ingester.config.Config
 import ch.pontius.ingester.processors.sinks.ApacheSolrSink
+import ch.pontius.ingester.processors.sinks.LoggerSink
+import ch.pontius.ingester.processors.sinks.Sinks
 import ch.pontius.ingester.processors.transformers.ImageTransformer
 import ch.pontius.ingester.processors.sources.Sources
 import ch.pontius.ingester.processors.sources.XmlFileSource
@@ -90,11 +92,14 @@ class IngesterServer(val config: Config) {
         /* Configure transformer processor(s). TODO: Make more configurable. */
         val transformer = ImageTransformer(source, imageConfig)
 
-        /* Configure transformer processor(s). TODO: Make more configurable. */
-        val solr = ApacheSolrSink(transformer, this.client, solrConfig)
+        /* Configure sink processor(s). */
+        val sink = when (jobConfig.sink) {
+            Sinks.SOLR -> ApacheSolrSink(transformer, this.client, solrConfig)
+            Sinks.LOGGER -> LoggerSink(transformer)
+        }
 
         runBlocking {
-            solr.execute().collect()
+            sink.execute().collect()
         }
     }
 
