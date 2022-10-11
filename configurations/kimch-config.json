@@ -1,0 +1,59 @@
+{
+  "server": "http://localhost:8983/solr",
+  "mapper": [
+    {
+      "name":  "culture.web XML Mapper",
+      "description":  "A XML mapper for the culture.web XML format.",
+      "values": [
+        {"source": "/objects/object/BilderzumObjekt/image/imageScreenPath", "destination": "_raw_", "parser": "IMAGE"},
+        {"source": "/objects/object/BilderzumObjekt/image/imageScreenPath", "destination": "_path_", "parser": "STRING"},
+        {"source": "/objects/object/Ziele/term", "destination": "_output_", "parser": "STRING"},
+        {"source": "/objects/object/guid", "destination": "uuid", "parser": "STRING"},
+        {"source": "/objects/object/InvNr", "destination": "inventarnummer", "parser": "STRING"},
+        {"source": "/objects/object/InventarnummerQuellsystem", "destination": "inventarnummer_quellsystem", "parser": "STRING"},
+        {"source": "/objects/object/AlteInventarnummer", "destination": "alte_inventarnummern", "parser": "STRING"},
+        {"source": "/objects/object/Isbn", "destination": "isbn", "parser": "STRING"},
+        {"source": "/objects/object/Objektbezeichnung", "destination": "objektbezeichnung", "parser": "STRING", "required": true},
+        {"source": "/objects/object/AlternativeObjektbezeichnung", "destination": "alternative_objektbezeichnung", "parser": "STRING"},
+        {"source": "/objects/object/Stuck", "destination": "anzahl", "parser": "DOUBLE"},
+        {"source": "/objects/object/Titel", "destination": "taxon", "parser": "STRING"},
+        {"source": "/objects/object/Taxon", "destination": "uuid", "parser": "STRING"},
+        {"source": "/objects/object/Objekttyp", "destination": "objekttyp", "parser": "STRING"},
+        {"source": "/objects/object/Sammlung/collection/institution/name", "destination": "institution", "parser": "STRING"},
+        {"source": "/objects/object/Sammlung/collection/institution/email", "destination": "institution_email", "parser": "STRING"},
+        {"source": "/objects/object/Sammlung/collection/name", "destination": "sammlung", "parser": "STRING"},
+        {"source": "/objects/object/Teilsammlung", "destination": "teilsammlung", "parser": "STRING"},
+        {"source": "/objects/object/Katalogtext", "destination": "beschreibung", "parser": "STRING"},
+        {"source": "/objects/object/Lizenzbedingungen", "destination": "lizenzbedingung", "parser": "STRING"},
+        {"source": "/objects/object/Copyright", "destination": "copyright", "parser": "STRING"},
+        {"source": "/objects/object/Creditline", "destination": "creditline", "parser": "STRING"},
+        {"source": "/objects/object/Inschriften", "destination": "inschriften", "parser": "STRING"},
+        {"source": "/objects/object/Entstehungszeit", "destination": "datierung_beschreibung", "parser": "STRING"},
+        {"source": "/objects/object/Entstehungszeitvon", "destination": "datierung_von", "parser": "DOUBLE"},
+        {"source": "/objects/object/Entstehungszeitbis", "destination": "datierung_bis", "parser": "DOUBLE"},
+        {"source": "/objects/object/Material/thesaurusTerm/value", "destination": "material", "parser": "STRING"},
+        {"source": "/objects/object/Material/thesaurusTerm/thesaurusHierarchyString", "destination": "material_s", "parser": "STRING"},
+        {"source": "/objects/object/Technik/thesaurusTerm/value", "destination": "technik", "parser": "STRING"},
+        {"source": "/objects/object/Technik/thesaurusTerm/thesaurusHierarchyString", "destination": "technik_s", "parser": "STRING"}
+      ]
+    }
+  ],
+  "image": [
+    {"name": "culture.web Image Mapper", "maxSize":  1280, "deployTo": "/Users/rgasser/Downloads"}
+  ],
+  "ingest": [
+    {"name": "KIM.ch Ingest Config", "collection":  "kimch-objects", "deleteBeforeImport": true}
+  ],
+  "jobs": [
+    {
+      "name": "Internal",
+      "file": "/Users/rgasser/Downloads/export.xml",
+      "source": "XML",
+      "mappingConfig": "culture.web XML Mapper",
+      "imageConfig": "culture.web Image Mapper",
+      "ingestConfig": "KIM.ch Ingest Config",
+      "startOnCreation": true,
+      "deleteOnCompletion": false
+    }
+  ]
+}
