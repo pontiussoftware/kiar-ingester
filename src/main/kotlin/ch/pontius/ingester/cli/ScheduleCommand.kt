@@ -5,7 +5,7 @@ import com.github.ajalt.clikt.core.CliktCommand
 import com.github.ajalt.clikt.parameters.arguments.argument
 
 /**
- * A CLI command that can be used to schedule a job directly.
+ * A CLI command that can be used to schedule a named job.
  *
  * @author Ralph Gasser
  * @version 1.0.0
