@@ -6,7 +6,9 @@ import ch.pontius.ingester.solrj.Constants.FIELD_NAME_UUID
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.channelFlow
+import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
 import org.apache.logging.log4j.LogManager
 import org.apache.solr.common.SolrDocument
 import org.apache.solr.common.SolrInputDocument
@@ -33,19 +35,20 @@ class XmlFileSource(private val file: Path, private val config: MappingConfig): 
      * @return [Flow]
      */
     override fun toFlow(): Flow<SolrInputDocument> = channelFlow {
-        launch(Dispatchers.IO) {
-            val factory: SAXParserFactory = SAXParserFactory.newInstance()
-            val saxParser: SAXParser = factory.newSAXParser()
-            Files.newInputStream(this@XmlFileSource.file).use { input ->
-                val parser = XmlParsingContext(this@XmlFileSource.config) { doc ->
-                    if (this@XmlFileSource.validate(doc)) {
-                        this.launch { send(doc) }
+        val channel = this
+        val factory: SAXParserFactory = SAXParserFactory.newInstance()
+        val saxParser: SAXParser = factory.newSAXParser()
+        Files.newInputStream(this@XmlFileSource.file).use { input ->
+            val parser = XmlParsingContext(this@XmlFileSource.config) { doc ->
+                if (this@XmlFileSource.validate(doc)) {
+                    runBlocking {
+                        channel.send(doc)
                     }
                 }
-                saxParser.parse(input, parser)
             }
+            saxParser.parse(input, parser)
         }
-    }
+    }.flowOn(Dispatchers.IO)
 
     /**
      * Validates a [SolrDocument] with respect to the [MappingConfig].

@@ -51,16 +51,16 @@ class ApacheSolrSink(override val input: Source<SolrInputDocument>, private val 
 
             this@ApacheSolrSink.client.add(collection, it)
         }.onCompletion {
-            if (it == null) {
-                LOGGER.info("Data ingest ${this@ApacheSolrSink.config.name} (collection = ${this@ApacheSolrSink.config.collection}) successful; committing.")
-                try {
-                    this@ApacheSolrSink.client.commit(collection)
-                } catch (e: Throwable) {
-                    LOGGER.error("Data ingest ${this@ApacheSolrSink.config.name} (collection = ${this@ApacheSolrSink.config.collection}) commit failed: ${e.message}.")
-                }
-            } else {
-                LOGGER.error("Data ingest ${this@ApacheSolrSink.config.name} (collection = ${this@ApacheSolrSink.config.collection}) failed ${it.message}. Rolling back.")
+            if (it != null) {
+                LOGGER.error("Data ingest ${this@ApacheSolrSink.config.name} (collection = ${this@ApacheSolrSink.config.collection}) failed; rolling back...")
                 this@ApacheSolrSink.client.rollback(collection)
+                return@onCompletion
+            }
+            LOGGER.info("Data ingest ${this@ApacheSolrSink.config.name} (collection = ${this@ApacheSolrSink.config.collection}) successful; committing...")
+            try {
+                this@ApacheSolrSink.client.commit(collection)
+            } catch (e: Throwable) {
+                LOGGER.error("Data ingest ${this@ApacheSolrSink.config.name} (collection = ${this@ApacheSolrSink.config.collection}) commit failed: ${e.message}.")
             }
         }
 
