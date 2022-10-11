@@ -1,6 +1,6 @@
-package ch.pontius.ingester.parsing.values
+package ch.pontius.ingester.parsing.values.primitive
 
-import java.awt.image.BufferedImage
+import ch.pontius.ingester.parsing.values.ValueParser
 import java.text.SimpleDateFormat
 import java.util.Date
 

@@ -1,11 +1,11 @@
-package ch.pontius.ingester.parsing.values
+package ch.pontius.ingester.parsing.values.primitive
 
+import ch.pontius.ingester.parsing.values.ValueParser
 import org.apache.logging.log4j.LogManager
 import java.awt.image.BufferedImage
 import java.nio.file.Files
 import java.nio.file.Paths
 import java.nio.file.StandardOpenOption
-import java.util.regex.Pattern
 import javax.imageio.ImageIO
 
 /**

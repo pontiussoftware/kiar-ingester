@@ -1,4 +1,6 @@
-package ch.pontius.ingester.parsing.values
+package ch.pontius.ingester.parsing.values.primitive
+
+import ch.pontius.ingester.parsing.values.ValueParser
 
 /**
  * [ValueParser] to convert a [String] to a [Double].
