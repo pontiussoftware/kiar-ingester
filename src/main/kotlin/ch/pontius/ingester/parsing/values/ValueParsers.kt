@@ -14,11 +14,11 @@ enum class ValueParsers {
      *
      * @return [ValueParser].
      */
-    fun newInstance() = when (this) {
+    fun newInstance(params: Map<String,String> = emptyMap()) = when (this) {
         STRING -> StringValueParser()
         INTEGER -> IntegerValueParser()
         DOUBLE -> DoubleValueParser()
-        DATE -> DateValueParser()
-        IMAGE -> ImageValueParser()
+        DATE -> DateValueParser(params)
+        IMAGE -> ImageValueParser(params)
     }
 }

@@ -112,7 +112,7 @@ class XmlParsingContext(config: MappingConfig, val callback: (SolrInputDocument)
         val mappings = this.mappings[this.xpath]
         if (mappings != null) {
             for (m in mappings) {
-                this.parsers[m] = m.parser.newInstance()
+                this.parsers[m] = m.parser.newInstance(m.parameters)
             }
         }
     }
