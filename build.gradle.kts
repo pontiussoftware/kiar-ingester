@@ -5,6 +5,7 @@ val appCompatVersion: String by project
 plugins {
     kotlin("jvm") version "1.7.20"
     kotlin("plugin.serialization") version "1.7.20"
+    application
 }
 
 group = "ch.pontius"
@@ -35,6 +36,10 @@ dependencies {
 
     /* UnitTest dependencies. */
     testImplementation(kotlin("test"))
+}
+
+application {
+    mainClass.set("ch.pontius.ingester.IngesterKt")
 }
 
 tasks.test {
