@@ -2,6 +2,8 @@ package ch.pontius.ingester.processors.transformers
 
 import ch.pontius.ingester.config.ImageConfig
 import ch.pontius.ingester.processors.sources.Source
+import ch.pontius.ingester.solrj.Constants.FIELD_NAME_RAW
+import ch.pontius.ingester.solrj.Constants.FIELD_NAME_UUID
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flowOn
@@ -28,7 +30,7 @@ import javax.imageio.ImageIO
 class ImageTransformer(override val input: Source<SolrInputDocument>, val config: ImageConfig): Transformer<SolrInputDocument, SolrInputDocument> {
 
     companion object {
-        val LOGGER = LogManager.getLogger(ImageTransformer::class.java)
+        private val LOGGER = LogManager.getLogger(ImageTransformer::class.java)
     }
 
     /**
@@ -46,21 +48,21 @@ class ImageTransformer(override val input: Source<SolrInputDocument>, val config
         val old = this.config.deployTo.resolve("old-$timestamp")
         val tmp = this.config.deployTo.resolve("ingest-$timestamp")
         Files.createDirectories(tmp)
-
         return this.input.toFlow().map {
             try {
-                if (it.containsKey("_raw_") && it.containsKey("uuid")) {
-                    val uuid = it["uuid"]!!.value as String
-                    val images = it.getFieldValues("_raw_")
+                if (it.containsKey(FIELD_NAME_RAW) && it.containsKey(FIELD_NAME_UUID)) {
+                    val uuid = it[FIELD_NAME_UUID]!!.value as String
+                    val images = it.getFieldValues(FIELD_NAME_RAW)
                     var i = 1
                     for (original in images) {
                         if (original is BufferedImage) {
-                            this.store( this.resize(original), tmp.resolve("${uuid}_%03d.jpg".format(i++)))
+                            this.store(this.resize(original), tmp.resolve("${uuid}_%03d.jpg".format(i++)))
                         }
                     }
-                    it.removeField("_raw_")
+                    it.removeField(FIELD_NAME_RAW)
                 }
             } catch (e: Throwable) {
+                LOGGER.warn("Error while processing image for ${it[FIELD_NAME_UUID]}; ${e.message}")
             }
             it
         }.onCompletion {
