@@ -44,14 +44,14 @@
   "jobs": [
     {
       "name": "kimch-test",
-      "file": "/Users/rgasser/Downloads/export.xml",
+      "file": "/mnt/ingest/upload/kimch/export.xml",
       "source": "XML",
       "mappingConfig": "culture.web XML Mapper",
       "sink": "SOLR",
       "solrConfig": "KIM.ch Solr Config",
       "transformers": [
-        { "type": "IMAGE", "parameters": { "name": "_preview_", "maxSize": "1280", "deployTo": "/Users/rgasser/Downloads" }},
-        { "type": "IMAGE", "parameters": { "name": "_thumbnails_", "maxSize": "500", "deployTo": "/Users/rgasser/Downloads" }},
+        { "type": "IMAGE", "parameters": { "name": "_preview_", "maxSize": "1280", "deployTo": "/mnt/ingest/media" }},
+        { "type": "IMAGE", "parameters": { "name": "_thumbnails_", "maxSize": "500", "deployTo": "/mnt/ingest/media" }},
         { "type": "SYSTEM" }
       ],
       "startOnCreation": true,
