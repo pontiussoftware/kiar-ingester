@@ -10,11 +10,11 @@ import kotlinx.serialization.Serializable
  */
 @Serializable
 data class Config(
-    /** A [List] of registered [MappingConfig] instances. */
-    val mapper: List<MappingConfig> = emptyList(),
-
     /** A [List] of registered [SolrConfig] instances. */
     val solr: List<SolrConfig> = emptyList(),
+
+    /** A [List] of registered [MappingConfig] instances. */
+    val mappers: List<MappingConfig> = emptyList(),
 
     /** A [List] of registered [JobConfig] instances. */
     val jobs: List<JobConfig> = emptyList()

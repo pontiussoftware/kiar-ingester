@@ -70,7 +70,7 @@ class IngesterServer(val config: Config) {
      */
     fun execute(jobName: String) {
         val jobConfig = this.config.jobs.find { it.name == jobName } ?: throw IllegalArgumentException("Job configuration with name '$jobName' could not be found.")
-        val mappingConfig = this.config.mapper.find { it.name == jobConfig.mappingConfig } ?: throw IllegalArgumentException("Mapping configuration with name '${jobConfig.mappingConfig}' could not be found.")
+        val mappingConfig = this.config.mappers.find { it.name == jobConfig.mappingConfig } ?: throw IllegalArgumentException("Mapping configuration with name '${jobConfig.mappingConfig}' could not be found.")
         val solrConfig = this.config.solr.find { it.name == jobConfig.solrConfig } ?: throw IllegalArgumentException("Apache Solr configuration with name '${jobConfig.solrConfig}' could not be found.")
 
         /* Generate source processor. */

@@ -48,10 +48,10 @@
       "source": "XML",
       "mappingConfig": "culture.web XML Mapper",
       "sink": "SOLR",
-      "solrConfig": "KIM.ch Ingest Config",
+      "solrConfig": "KIM.ch Solr Config",
       "transformers": [
-        { "type": "IMAGE", "name": "_preview_", "maxSize": 1280, "deployTo": "/Users/rgasser/Downloads" },
-        { "type": "IMAGE", "name": "_thumbnails_", "maxSize": 500, "deployTo": "/Users/rgasser/Downloads" },
+        { "type": "IMAGE", "parameters": { "name": "_preview_", "maxSize": "1280", "deployTo": "/Users/rgasser/Downloads" }},
+        { "type": "IMAGE", "parameters": { "name": "_thumbnails_", "maxSize": "500", "deployTo": "/Users/rgasser/Downloads" }},
         { "type": "SYSTEM" }
       ],
       "startOnCreation": true,
