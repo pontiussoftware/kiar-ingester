@@ -50,7 +50,7 @@ class ImageTransformer(override val input: Source<SolrInputDocument>, parameters
 
         /* Prepare temporary directory. */
         val timestamp = System.currentTimeMillis()
-        val dst = this.deployTo.resolve(this.name)
+        val dst = this.deployTo.resolve(this.context)
         val old = this.deployTo.resolve("old-$timestamp")
         val tmp = this.deployTo.resolve("ingest-$timestamp")
         Files.createDirectories(tmp)
@@ -62,10 +62,11 @@ class ImageTransformer(override val input: Source<SolrInputDocument>, parameters
                     var i = 1
                     for (original in images) {
                         if (original is BufferedImage) {
-                            this.store(this.resize(original), tmp.resolve("${uuid}_%03d.jpg".format(i++)))
+                            val path = tmp.resolve(this.name).resolve("${uuid}_%03d.jpg".format(i++))
+                            this.store(this.resize(original), path)
+                            it.addField(this.name, path.relativize(this.deployTo).toString())
                         }
                     }
-                    it.removeField(FIELD_NAME_RAW)
                 }
             } catch (e: Throwable) {
                 LOGGER.warn("Error while processing image for ${it[FIELD_NAME_UUID]}; ${e.message}")

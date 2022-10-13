@@ -3,7 +3,7 @@ package ch.pontius.ingester.solrj
 /**
  *
  * @author Ralph Gasser
- * @version 1.0
+ * @version 1.0.0
  */
 object Constants {
 
@@ -19,4 +19,6 @@ object Constants {
     /** Name of the UUID field in an Apache Solr document. */
     val FIELD_NAME_UUID = "uuid"
 
+    /** Name of the 'inventarnummer' field in an Apache Solr document. */
+    val FIELD_NAME_INVENTORY_NUMBER = "inventarnummer"
 }

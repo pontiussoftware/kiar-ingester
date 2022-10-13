@@ -10,7 +10,8 @@ import org.apache.solr.common.SolrInputDocument
  * @version 1.0.0
  */
 enum class Transformers {
-    IMAGE;
+    IMAGE,
+    SYSTEM;
 
     /**
      * Generates and returns a new [Transformer] instance from this [Transformers] enumeration.
@@ -21,5 +22,6 @@ enum class Transformers {
      */
     fun newInstance(input: Source<SolrInputDocument>, parameters: Map<String,String>) = when (this) {
         IMAGE -> ImageTransformer(input, parameters)
+        SYSTEM -> SystemTransformer(input, parameters)
     }
 }

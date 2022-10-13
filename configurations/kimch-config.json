@@ -10,7 +10,6 @@
       "values": [
         {"source": "/objects/object/guid", "destination": "uuid", "parser": "STRING"},
         {"source": "/objects/object/Ziele/term", "destination": "_output_", "parser": "STRING"},
-        {"source": "/objects/object/InvNr", "destination": "_canton_", "parser": "CANTON", "required": true},
         {"source": "/objects/object/InvNr", "destination": "inventarnummer", "parser": "STRING", "required": true},
         {"source": "/objects/object/Objektbezeichnung", "destination": "objektbezeichnung", "parser": "STRING", "required": true},
         {"source": "/objects/object/InventarnummerQuellsystem", "destination": "inventarnummer_quellsystem", "parser": "STRING"},
@@ -51,8 +50,9 @@
       "sink": "SOLR",
       "solrConfig": "KIM.ch Ingest Config",
       "transformers": [
-        { "type": "IMAGE", "name": "preview", "maxSize":  1280, "deployTo": "/Users/rgasser/Downloads" },
-        { "type": "IMAGE", "name": "thumbnails", "maxSize":  500, "deployTo": "/Users/rgasser/Downloads" }
+        { "type": "IMAGE", "name": "_preview_", "maxSize": 1280, "deployTo": "/Users/rgasser/Downloads" },
+        { "type": "IMAGE", "name": "_thumbnails_", "maxSize": 500, "deployTo": "/Users/rgasser/Downloads" },
+        { "type": "IMAGE", "name": "_thumbnails_", "maxSize": 500, "deployTo": "/Users/rgasser/Downloads" }
       ],
       "startOnCreation": true,
       "deleteOnCompletion": false
