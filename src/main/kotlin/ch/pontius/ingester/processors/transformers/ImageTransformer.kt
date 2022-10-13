@@ -67,7 +67,7 @@ class ImageTransformer(override val input: Source<SolrInputDocument>, parameters
                             val actualPath = dst.resolve("${uuid}_%03d.jpg".format(i++))
                             val tmpPath = tmp.resolve("${uuid}_%03d.jpg".format(i++))
                             this.store(this.resize(original), tmpPath)
-                            it.addField(this.name, "/" + this.deployTo.relativize(tmpPath).toString())
+                            it.addField(this.name, "/" + this.deployTo.relativize(actualPath).toString())
                         }
                     }
                 }
