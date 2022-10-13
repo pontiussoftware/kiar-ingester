@@ -4,13 +4,12 @@ import ch.pontius.ingester.config.Config
 import ch.pontius.ingester.processors.sinks.ApacheSolrSink
 import ch.pontius.ingester.processors.sinks.LoggerSink
 import ch.pontius.ingester.processors.sinks.Sinks
-import ch.pontius.ingester.processors.transformers.ImageTransformer
+import ch.pontius.ingester.processors.sources.Source
 import ch.pontius.ingester.processors.sources.Sources
 import ch.pontius.ingester.processors.sources.XmlFileSource
-import kotlinx.coroutines.flow.collect
-import kotlinx.coroutines.runBlocking
-import org.apache.solr.client.solrj.impl.ConcurrentUpdateHttp2SolrClient
-import org.apache.solr.client.solrj.impl.Http2SolrClient
+import org.apache.logging.log4j.LogManager
+import org.apache.logging.log4j.Logger
+import org.apache.solr.common.SolrInputDocument
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
@@ -27,6 +26,9 @@ class IngesterServer(val config: Config) {
     companion object {
         /** Number of watchers. */
         val WATCHER_COUNTER = AtomicLong(0L)
+
+        /** The [Logger] used by this [IngesterServer]. */
+        private val LOGGER: Logger = LogManager.getLogger()
     }
 
     /**
@@ -47,22 +49,10 @@ class IngesterServer(val config: Config) {
         thread
     }
 
-    /** The [ConcurrentUpdateHttp2SolrClient] used to perform updates. */
-    private val client: ConcurrentUpdateHttp2SolrClient
-
     /** Flag indicating that the [IngesterServer] is still running. */
     @Volatile
     var isRunning: Boolean = true
         private set
-
-    init {
-        /** Prepare client that performs Apache Solr Updates. */
-        var httpBuilder = Http2SolrClient.Builder(this.config.server)
-        if (this.config.user != null && this.config.password != null) {
-            httpBuilder = httpBuilder.withBasicAuthCredentials(this.config.user, this.config.password)
-        }
-        this.client = ConcurrentUpdateHttp2SolrClient.Builder(this.config.server, httpBuilder.build(), true).build()
-    }
 
     /**
      * Schedules the [Job] with the given name.
@@ -81,25 +71,30 @@ class IngesterServer(val config: Config) {
     fun execute(jobName: String) {
         val jobConfig = this.config.jobs.find { it.name == jobName } ?: throw IllegalArgumentException("Job configuration with name '$jobName' could not be found.")
         val mappingConfig = this.config.mapper.find { it.name == jobConfig.mappingConfig } ?: throw IllegalArgumentException("Mapping configuration with name '${jobConfig.mappingConfig}' could not be found.")
-        val imageConfig = this.config.image.find { it.name == jobConfig.imageConfig } ?: throw IllegalArgumentException("Image configuration with name '${jobConfig.imageConfig}' could not be found.")
-        val solrConfig = this.config.ingest.find { it.name == jobConfig.ingestConfig } ?: throw IllegalArgumentException("Image configuration with name '${jobConfig.imageConfig}' could not be found.")
+        val solrConfig = this.config.solr.find { it.name == jobConfig.solrConfig } ?: throw IllegalArgumentException("Apache Solr configuration with name '${jobConfig.solrConfig}' could not be found.")
 
         /* Generate source processor. */
-        val source = when (jobConfig.source) {
-            Sources.XML -> XmlFileSource(jobConfig.file, mappingConfig)
+        var source: Source<SolrInputDocument> = when (jobConfig.source) {
+            Sources.XML -> XmlFileSource(jobConfig.name, jobConfig.file, mappingConfig)
         }
 
-        /* Configure transformer processor(s). TODO: Make more configurable. */
-        val transformer = ImageTransformer(source, imageConfig)
+        /* Generate and append transformer processors. */
+        for (t in jobConfig.transformers) {
+            source = t.type.newInstance(source, t.parameters)
+        }
 
-        /* Configure sink processor(s). */
+        /* Generate sink processor(s). */
         val sink = when (jobConfig.sink) {
-            Sinks.SOLR -> ApacheSolrSink(transformer, this.client, solrConfig)
-            Sinks.LOGGER -> LoggerSink(transformer)
+            Sinks.SOLR -> ApacheSolrSink(source, solrConfig)
+            Sinks.LOGGER -> LoggerSink(source)
         }
 
-        runBlocking {
-            sink.execute().collect()
+        /* Execute the pipeline. */
+        try {
+            sink.execute()
+            LOGGER.info("Data ingest (name = ${jobConfig.name}, collection = ${solrConfig.collection}) completed successfully!")
+        } catch (e: Throwable) {
+            LOGGER.error("Data ingest (name = ${jobConfig.name}, collection = ${solrConfig.collection}) failed: ${e.message}")
         }
     }
 

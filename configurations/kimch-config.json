@@ -1,6 +1,9 @@
 {
-  "server": "http://localhost:8983/solr",
-  "mapper": [
+  "solr": [
+    { "name": "KIM.ch Solr Config", "server": "http://localhost:8983/solr", "collection":  "kimch-objects", "deleteBeforeImport": true }
+  ],
+
+  "mappers": [
     {
       "name":  "culture.web XML Mapper",
       "description":  "A XML mapper for the culture.web XML format.",
@@ -38,21 +41,19 @@
       ]
     }
   ],
-  "image": [
-    {"name": "culture.web Image Mapper", "maxSize":  1280, "deployTo": "/Users/rgasser/Downloads"}
-  ],
-  "ingest": [
-    {"name": "KIM.ch Ingest Config", "collection":  "kimch-objects", "deleteBeforeImport": true}
-  ],
+
   "jobs": [
     {
-      "name": "Internal",
+      "name": "kimch-test",
       "file": "/Users/rgasser/Downloads/export.xml",
       "source": "XML",
-      "sink": "SOLR",
       "mappingConfig": "culture.web XML Mapper",
-      "imageConfig": "culture.web Image Mapper",
-      "ingestConfig": "KIM.ch Ingest Config",
+      "sink": "SOLR",
+      "solrConfig": "KIM.ch Ingest Config",
+      "transformers": [
+        { "type": "IMAGE", "name": "preview", "maxSize":  1280, "deployTo": "/Users/rgasser/Downloads" },
+        { "type": "IMAGE", "name": "thumbnails", "maxSize":  500, "deployTo": "/Users/rgasser/Downloads" }
+      ],
       "startOnCreation": true,
       "deleteOnCompletion": false
     }

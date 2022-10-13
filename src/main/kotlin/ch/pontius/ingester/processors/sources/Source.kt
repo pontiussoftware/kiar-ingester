@@ -9,6 +9,9 @@ import kotlinx.coroutines.flow.Flow
  * @version 1.0.0
  */
 interface Source<O> {
+    /** Name of this [Source]'s context. */
+    val context: String
+
     /**
      * Transforms this [Source] to a flow and returns that flow.
      *

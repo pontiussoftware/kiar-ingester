@@ -1,6 +1,6 @@
 package ch.pontius.ingester.processors.transformers
 
-import ch.pontius.ingester.config.ImageConfig
+import ch.pontius.ingester.config.TransformerConfig
 import ch.pontius.ingester.processors.sources.Source
 import ch.pontius.ingester.solrj.Constants.FIELD_NAME_RAW
 import ch.pontius.ingester.solrj.Constants.FIELD_NAME_UUID
@@ -12,10 +12,7 @@ import kotlinx.coroutines.flow.onCompletion
 import org.apache.logging.log4j.LogManager
 import org.apache.solr.common.SolrInputDocument
 import java.awt.image.BufferedImage
-import java.nio.file.Files
-import java.nio.file.Path
-import java.nio.file.StandardCopyOption
-import java.nio.file.StandardOpenOption
+import java.nio.file.*
 import javax.imageio.ImageIO
 
 
@@ -27,26 +24,35 @@ import javax.imageio.ImageIO
  * @author Ralph Gasser
  * @version 1.0.0
  */
-class ImageTransformer(override val input: Source<SolrInputDocument>, val config: ImageConfig): Transformer<SolrInputDocument, SolrInputDocument> {
+class ImageTransformer(override val input: Source<SolrInputDocument>, parameters: Map<String,String>): Transformer<SolrInputDocument, SolrInputDocument> {
 
     companion object {
         private val LOGGER = LogManager.getLogger(ImageTransformer::class.java)
     }
+
+    /** Name of the [ImageTransformer]. Determines the name of the output folder. */
+    private val name: String = parameters["name"] ?: throw IllegalArgumentException("Parameter 'name' is required by ImageTransformer.")
+
+    /** Path to the folder the image derivatives should be deployed to.  */
+    private val deployTo = parameters["deployTo"]?.let { Paths.get(it) } ?: throw IllegalArgumentException("Parameter 'deployTo' is required by ImageTransformer.")
+
+    /** Path to the folder the image derivatives should be deployed to.  */
+    private val maxSize = parameters["maxSize"]?.toIntOrNull() ?: 1280
 
     /**
      * Returns a [Flow] of this [ImageTransformer].
      */
     override fun toFlow(): Flow<SolrInputDocument> {
         /** The temporary directory to deploy images to. */
-        if (!Files.exists(this.config.deployTo)) {
-            throw IllegalArgumentException("Directory ${this.config.deployTo} does not exist!")
+        if (!Files.exists(this.deployTo)) {
+            throw IllegalArgumentException("Directory ${this.deployTo} does not exist!")
         }
 
         /* Prepare temporary directory. */
         val timestamp = System.currentTimeMillis()
-        val dst = this.config.deployTo.resolve(config.name)
-        val old = this.config.deployTo.resolve("old-$timestamp")
-        val tmp = this.config.deployTo.resolve("ingest-$timestamp")
+        val dst = this.deployTo.resolve(this.name)
+        val old = this.deployTo.resolve("old-$timestamp")
+        val tmp = this.deployTo.resolve("ingest-$timestamp")
         Files.createDirectories(tmp)
         return this.input.toFlow().map {
             try {
@@ -103,16 +109,16 @@ class ImageTransformer(override val input: Source<SolrInputDocument>, val config
     }
 
     /**
-     * Resizes the provided [BufferedImage] to the size specified by [ImageConfig].
+     * Resizes the provided [BufferedImage] to the size specified by [TransformerConfig].
      *
      * @param original The [BufferedImage] to resize.
      * @return The resized [BufferedImage]
      */
     private fun resize(original: BufferedImage): BufferedImage {
         val (targetWidth, targetHeight) = if (original.width > original.height) {
-            this.config.maxSize to ((this.config.maxSize .toFloat() / original.width) * original.height).toInt()
+            this.maxSize to ((this.maxSize.toFloat() / original.width) * original.height).toInt()
         } else {
-            ((this.config.maxSize .toFloat() / original.height) * original.width).toInt() to this.config.maxSize
+            ((this.maxSize .toFloat() / original.height) * original.width).toInt() to this.maxSize
         }
         val resized = BufferedImage(targetWidth, targetHeight, BufferedImage.TYPE_INT_RGB)
         val graphics2D = resized.createGraphics()

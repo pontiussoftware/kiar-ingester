@@ -7,7 +7,6 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.channelFlow
 import kotlinx.coroutines.flow.flowOn
-import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import org.apache.logging.log4j.LogManager
 import org.apache.solr.common.SolrDocument
@@ -23,7 +22,7 @@ import javax.xml.parsers.SAXParserFactory
  * @author Ralph Gasser
  * @version 1.0.0
  */
-class XmlFileSource(private val file: Path, private val config: MappingConfig): Source<SolrInputDocument> {
+class XmlFileSource(override val context: String, private val file: Path, private val config: MappingConfig): Source<SolrInputDocument> {
 
     companion object {
         private val LOGGER = LogManager.getLogger()
