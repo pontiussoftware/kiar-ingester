@@ -14,7 +14,7 @@
         {"source": "/objects/object/Objektbezeichnung", "destination": "objektbezeichnung", "parser": "STRING", "required": true},
         {"source": "/objects/object/InventarnummerQuellsystem", "destination": "inventarnummer_quellsystem", "parser": "STRING"},
         {"source": "/objects/object/AlteInventarnummer", "destination": "alte_inventarnummern", "parser": "STRING"},
-        {"source": "/objects/object/BilderzumObjekt/image/imageScreenPath", "destination": "_raw_", "parser": "IMAGE", "parameters":  {"search": "^(\\\\\\\\IP-FS-KIM01\\\\kimmedia\\\\PROD)\\\\(.+)\\\\(.+)\\\\(.+)$", "replace": "/tank/kimmedia/PROD/$2/$3/$4"}},
+        {"source": "/objects/object/BilderzumObjekt/image/imageScreenPath", "destination": "_raw_", "parser": "IMAGE", "parameters":  {"search": "^(\\\\\\\\IP-FS-KIM01\\\\kimmedia\\\\PROD)\\\\(.+)\\\\(.+)\\\\(.+)$", "replace": "/mnt/kimmedia/PROD/$2/$3/$4"}},
         {"source": "/objects/object/Isbn", "destination": "isbn", "parser": "STRING"},
         {"source": "/objects/object/AlternativeObjektbezeichnung", "destination": "alternative_objektbezeichnung", "parser": "STRING"},
         {"source": "/objects/object/Stuck", "destination": "anzahl", "parser": "DOUBLE"},
