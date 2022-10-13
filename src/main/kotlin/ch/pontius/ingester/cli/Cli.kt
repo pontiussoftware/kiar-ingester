@@ -31,7 +31,8 @@ class Cli(server: IngesterServer) {
         init {
             subcommands(
                 ScheduleCommand(server),
-                ExecuteCommand(server)
+                ExecuteCommand(server),
+                QuitCommand(server)
             )
         }
     }
