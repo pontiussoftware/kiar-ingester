@@ -52,7 +52,7 @@
       "transformers": [
         { "type": "IMAGE", "name": "_preview_", "maxSize": 1280, "deployTo": "/Users/rgasser/Downloads" },
         { "type": "IMAGE", "name": "_thumbnails_", "maxSize": 500, "deployTo": "/Users/rgasser/Downloads" },
-        { "type": "IMAGE", "name": "_thumbnails_", "maxSize": 500, "deployTo": "/Users/rgasser/Downloads" }
+        { "type": "SYSTEM" }
       ],
       "startOnCreation": true,
       "deleteOnCompletion": false
