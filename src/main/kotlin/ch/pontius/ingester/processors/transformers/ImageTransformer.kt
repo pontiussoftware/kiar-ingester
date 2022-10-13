@@ -52,7 +52,7 @@ class ImageTransformer(override val input: Source<SolrInputDocument>, parameters
         val timestamp = System.currentTimeMillis()
         val dst = this.deployTo.resolve(this.context)
         val old = this.deployTo.resolve("old-$timestamp")
-        val tmp = this.deployTo.resolve("ingest-$timestamp")
+        val tmp = this.deployTo.resolve("ingest-$timestamp").resolve(this.name)
         Files.createDirectories(tmp)
         return this.input.toFlow().map {
             try {
@@ -62,9 +62,9 @@ class ImageTransformer(override val input: Source<SolrInputDocument>, parameters
                     var i = 1
                     for (original in images) {
                         if (original is BufferedImage) {
-                            val path = tmp.resolve(this.name).resolve("${uuid}_%03d.jpg".format(i++))
+                            val path = tmp.resolve("${uuid}_%03d.jpg".format(i++))
                             this.store(this.resize(original), path)
-                            it.addField(this.name, path.relativize(this.deployTo).toString())
+                            it.addField(this.name, "/" + this.deployTo.relativize(path).toString())
                         }
                     }
                 }
