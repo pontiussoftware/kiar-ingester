@@ -50,9 +50,11 @@ class ImageTransformer(override val input: Source<SolrInputDocument>, parameters
 
         /* Prepare temporary directory. */
         val timestamp = System.currentTimeMillis()
-        val dst = this.deployTo.resolve(this.context)
-        val old = this.deployTo.resolve("old-$timestamp")
-        val tmp = this.deployTo.resolve("ingest-$timestamp").resolve(this.name)
+        val ctxPath = this.deployTo.resolve(this.context)
+        val dst = ctxPath.resolve(this.name)                  /* Destination directory, i.e., the directory that will contain all the generated images */
+        val old = ctxPath.resolve("old-$timestamp")     /* Temporary location of the previous version of the destination directory (if exists). This is used to maintain atomicity. */
+        val tmp = ctxPath.resolve("ingest-$timestamp")  /* Temporary location destination directory. This is used to maintain atomicity. */
+
         Files.createDirectories(tmp)
         return this.input.toFlow().map {
             try {
@@ -62,9 +64,10 @@ class ImageTransformer(override val input: Source<SolrInputDocument>, parameters
                     var i = 1
                     for (original in images) {
                         if (original is BufferedImage) {
-                            val path = tmp.resolve("${uuid}_%03d.jpg".format(i++))
-                            this.store(this.resize(original), path)
-                            it.addField(this.name, "/" + this.deployTo.relativize(path).toString())
+                            val actualPath = dst.resolve("${uuid}_%03d.jpg".format(i++))
+                            val tmpPath = tmp.resolve("${uuid}_%03d.jpg".format(i++))
+                            this.store(this.resize(original), tmpPath)
+                            it.addField(this.name, "/" + this.deployTo.relativize(tmpPath).toString())
                         }
                     }
                 }
