@@ -61,11 +61,12 @@ class ImageTransformer(override val input: Source<SolrInputDocument>, parameters
                 if (it.containsKey(FIELD_NAME_RAW) && it.containsKey(FIELD_NAME_UUID)) {
                     val uuid = it[FIELD_NAME_UUID]!!.value as String
                     val images = it.getFieldValues(FIELD_NAME_RAW)
-                    var i = 1
+                    var counter = 1
                     for (original in images) {
                         if (original is BufferedImage) {
-                            val actualPath = dst.resolve("${uuid}_%03d.jpg".format(i++))
-                            val tmpPath = tmp.resolve("${uuid}_%03d.jpg".format(i++))
+                            counter += 1
+                            val actualPath = dst.resolve("${uuid}_%03d.jpg".format(counter))
+                            val tmpPath = tmp.resolve("${uuid}_%03d.jpg".format(counter))
                             this.store(this.resize(original), tmpPath)
                             it.addField(this.name, "/" + this.deployTo.relativize(actualPath).toString())
                         }
