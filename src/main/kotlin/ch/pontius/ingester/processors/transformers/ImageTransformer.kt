@@ -49,9 +49,9 @@ class ImageTransformer(override val input: Source<SolrInputDocument>, parameters
         }
 
         /* Prepare temporary directory. */
-        val timestamp = System.currentTimeMillis()
         val ctxPath = this.deployTo.resolve(this.context)
-        val dst = ctxPath.resolve(this.name)                  /* Destination directory, i.e., the directory that will contain all the generated images */
+        val dst = ctxPath.resolve(this.name)
+        val timestamp = System.currentTimeMillis()            /* Destination directory, i.e., the directory that will contain all the generated images */
         val old = ctxPath.resolve("old-$timestamp")     /* Temporary location of the previous version of the destination directory (if exists). This is used to maintain atomicity. */
         val tmp = ctxPath.resolve("ingest-$timestamp")  /* Temporary location destination directory. This is used to maintain atomicity. */
 
@@ -64,11 +64,12 @@ class ImageTransformer(override val input: Source<SolrInputDocument>, parameters
                     var counter = 1
                     for (original in images) {
                         if (original is BufferedImage) {
-                            counter += 1
                             val actualPath = dst.resolve("${uuid}_%03d.jpg".format(counter))
                             val tmpPath = tmp.resolve("${uuid}_%03d.jpg".format(counter))
-                            this.store(this.resize(original), tmpPath)
-                            it.addField(this.name, "/" + this.deployTo.relativize(actualPath).toString())
+                            if (this.store(this.resize(original), tmpPath)) {
+                                it.addField(this.name, "/" + this.deployTo.relativize(actualPath).toString())
+                                counter += 1
+                            }
                         }
                     }
                 }
