@@ -46,7 +46,7 @@ class ApacheSolrSink(override val input: Source<SolrInputDocument>, private val 
             if (this.config.deleteBeforeImport) {
                 val response = client.deleteByQuery(collection, "$FIELD_NAME_PARTICIPANT:\"${this.config.name}\"")
                 if (response.status != 0) {
-                    throw IllegalArgumentException("Data ingest  ${this@ApacheSolrSink.config.name} (collection = ${this@ApacheSolrSink.config.collection}) failed because delete before import could not be executed.")
+                    throw IllegalArgumentException("Data ingest ${this@ApacheSolrSink.config.name} (collection = ${this@ApacheSolrSink.config.collection}) failed because delete before import could not be executed.")
                 }
             }
 
@@ -58,14 +58,19 @@ class ApacheSolrSink(override val input: Source<SolrInputDocument>, private val 
                         it.addField("_output_", "all")
                         val response = client.add(collection, it)
                         if (response.status == 0) {
-                            LOGGER.info("Successfully added document (${it[Constants.FIELD_NAME_UUID]}, collection = ${this@ApacheSolrSink.config.collection}).")
+                            LOGGER.info("Successfully added document (name = ${this@ApacheSolrSink.config.name}, uuid = ${it[Constants.FIELD_NAME_UUID]}, collection = ${this@ApacheSolrSink.config.collection}).")
                         } else {
-                            LOGGER.warn("Error while adding document (${it[Constants.FIELD_NAME_UUID]}, collection = ${this@ApacheSolrSink.config.collection}).")
+                            LOGGER.warn("Error while adding document (name = ${this@ApacheSolrSink.config.name}, uuid = ${it[Constants.FIELD_NAME_UUID]}, collection = ${this@ApacheSolrSink.config.collection}).")
                         }
                     }
                 }
                 LOGGER.info("Data ingest ${this@ApacheSolrSink.config.name} (collection = ${this@ApacheSolrSink.config.collection}) successful; committing...")
-                client.commit(collection)
+                val response = client.commit(collection)
+                if (response.status == 0) {
+                    LOGGER.info("Data ingest (name = ${this@ApacheSolrSink.config.name}, collection = ${this@ApacheSolrSink.config.collection}) committed successfully.")
+                } else {
+                    LOGGER.warn("Failed to commit data ingest (name = ${this@ApacheSolrSink.config.name}, collection = ${this@ApacheSolrSink.config.collection}).")
+                }
             } catch (e: Throwable) {
                 client.rollback(collection)
             }
