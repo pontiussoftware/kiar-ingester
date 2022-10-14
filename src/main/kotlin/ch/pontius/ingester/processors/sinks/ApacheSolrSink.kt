@@ -46,7 +46,7 @@ class ApacheSolrSink(override val input: Source<SolrInputDocument>, private val 
             if (this.config.deleteBeforeImport) {
                 val response = client.deleteByQuery(collection, "$FIELD_NAME_PARTICIPANT:\"${this.config.name}\"")
                 if (response.status != 0) {
-                    throw IllegalArgumentException("Data ingest failed because delete before import could not be executed.")
+                    throw IllegalArgumentException("Data ingest  ${this@ApacheSolrSink.config.name} (collection = ${this@ApacheSolrSink.config.collection}) failed because delete before import could not be executed.")
                 }
             }
 
@@ -58,7 +58,9 @@ class ApacheSolrSink(override val input: Source<SolrInputDocument>, private val 
                         it.addField("_output_", "all")
                         val response = client.add(collection, it)
                         if (response.status == 0) {
-                            LOGGER.info("Successfully document ${it[Constants.FIELD_NAME_UUID]} (collection = ${this@ApacheSolrSink.config.collection})...")
+                            LOGGER.info("Successfully added document (${it[Constants.FIELD_NAME_UUID]}, collection = ${this@ApacheSolrSink.config.collection}).")
+                        } else {
+                            LOGGER.warn("Error while adding document (${it[Constants.FIELD_NAME_UUID]}, collection = ${this@ApacheSolrSink.config.collection}).")
                         }
                     }
                 }
