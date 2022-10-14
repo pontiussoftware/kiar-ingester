@@ -16,9 +16,15 @@ object Constants {
     /** Name of the canton field in an Apache Solr document. */
     val FIELD_NAME_CANTON = "_canton_"
 
+    /** Name of the display field in an Apache Solr document. */
+    val FIELD_NAME_DISPLAY = "_display_"
+
     /** Name of the UUID field in an Apache Solr document. */
     val FIELD_NAME_UUID = "uuid"
 
     /** Name of the 'inventarnummer' field in an Apache Solr document. */
     val FIELD_NAME_INVENTORY_NUMBER = "inventarnummer"
+
+    /** Name of the 'objekttyp' field in an Apache Solr document. */
+    val FIELD_NAME_OBJECTTYPE = "objekttpy"
 }
