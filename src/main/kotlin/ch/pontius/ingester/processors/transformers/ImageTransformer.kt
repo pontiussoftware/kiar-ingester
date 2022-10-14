@@ -78,13 +78,18 @@ class ImageTransformer(override val input: Source<SolrInputDocument>, parameters
             }
             it
         }.onCompletion {
-            /* Move in new directory. */
-            if (Files.exists(dst)) {
-                Files.move(dst, old, StandardCopyOption.ATOMIC_MOVE)
-                Files.move(tmp, dst, StandardCopyOption.ATOMIC_MOVE)
-                Files.walk(old).sorted(Comparator.reverseOrder()).forEach { Files.deleteIfExists(it) }
+            if (it != null) {
+                /* Case 1: Cleanup after error. */
+                Files.walk(tmp).sorted(Comparator.reverseOrder()).forEach { Files.deleteIfExists(it) }
             } else {
-                Files.move(tmp, dst, StandardCopyOption.ATOMIC_MOVE)
+                /* Case 2: Finalisation */
+                if (Files.exists(dst)) {
+                    Files.move(dst, old, StandardCopyOption.ATOMIC_MOVE)
+                    Files.move(tmp, dst, StandardCopyOption.ATOMIC_MOVE)
+                    Files.walk(old).sorted(Comparator.reverseOrder()).forEach { Files.deleteIfExists(it) }
+                } else {
+                    Files.move(tmp, dst, StandardCopyOption.ATOMIC_MOVE)
+                }
             }
         }.flowOn(Dispatchers.IO)
     }
