@@ -35,16 +35,8 @@ class IngesterServer(val config: Config) {
     /**
      * The [ExecutorService] used to execute continuous jobs, e.g., driven by file watchers.
      */
-    private val watcherService: ExecutorService = Executors.newCachedThreadPool {
-        val thread = Thread(it, "watcher-thread-${WATCHER_COUNTER.incrementAndGet()}")
-        thread.priority = 3
-        thread.isDaemon = false
-        thread
-    }
-
-    /** The [ExecutorService] used to execute ingester Jobs; only one Job can be executed in parallel. */
-    private val ingesterService: ExecutorService = Executors.newSingleThreadExecutor {
-        val thread = Thread(it, "ingester-job-thread-01")
+    private val service: ExecutorService = Executors.newCachedThreadPool {
+        val thread = Thread(it, "ingester-thread-${WATCHER_COUNTER.incrementAndGet()}")
         thread.priority = 10
         thread.isDaemon = false
         thread
@@ -58,7 +50,7 @@ class IngesterServer(val config: Config) {
     init {
         for (job in this.config.jobs) {
             if (job.startOnCreation) {
-                this.watcherService.execute(FileWatcher(this, job))
+                this.service.execute(FileWatcher(this, job))
             }
         }
     }
@@ -68,7 +60,7 @@ class IngesterServer(val config: Config) {
      *
      * @param jobName The name of the job to schedule.
      */
-    fun schedule(jobName: String) = this.ingesterService.execute {
+    fun schedule(jobName: String) = this.service.execute {
         this.execute(jobName)
     }
 
@@ -112,10 +104,8 @@ class IngesterServer(val config: Config) {
      */
     fun stop() {
         if (this.isRunning) {
-            this.ingesterService.shutdown()
-            this.ingesterService.awaitTermination(5000L, TimeUnit.MILLISECONDS)
-            this.watcherService.shutdown()
-            this.watcherService.awaitTermination(5000L, TimeUnit.MILLISECONDS)
+            this.service.shutdown()
+            this.service.awaitTermination(10000L, TimeUnit.MILLISECONDS)
             this.isRunning = false
         }
     }
