@@ -54,9 +54,9 @@ class ImageTransformer(override val input: Source<SolrInputDocument>, parameters
         /* Prepare temporary directory. */
         val ctxPath = this.deployTo.resolve(this.context)
         val dst = ctxPath.resolve(this.name)
-        val timestamp = System.currentTimeMillis()            /* Destination directory, i.e., the directory that will contain all the generated images */
-        val old = ctxPath.resolve("old-$timestamp")     /* Temporary location of the previous version of the destination directory (if exists). This is used to maintain atomicity. */
-        val tmp = ctxPath.resolve("ingest-$timestamp")  /* Temporary location destination directory. This is used to maintain atomicity. */
+        val timestamp = System.currentTimeMillis()                         /* Destination directory, i.e., the directory that will contain all the generated images */
+        val old = ctxPath.resolve("${this.name}-old-$timestamp")     /* Temporary location of the previous version of the destination directory (if exists). This is used to maintain atomicity. */
+        val tmp = ctxPath.resolve("${this.name}-$timestamp")         /* Temporary location destination directory. This is used to maintain atomicity. */
 
         Files.createDirectories(tmp)
         return this.input.toFlow().map {
