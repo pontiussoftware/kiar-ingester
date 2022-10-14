@@ -50,8 +50,8 @@
       "sink": "SOLR",
       "solrConfig": "KIM.ch Solr Config",
       "transformers": [
-        { "type": "IMAGE", "parameters": { "name": "_preview_", "maxSize": "1280", "deployTo": "/mnt/ingest/media" }},
-        { "type": "IMAGE", "parameters": { "name": "_thumbnails_", "maxSize": "500", "deployTo": "/mnt/ingest/media" }},
+        { "type": "IMAGE", "parameters": { "name": "_preview_", "maxSize": "1280", "deployTo": "/mnt/ingest/media", "host": "https://api.kimnet.ch/media/" }},
+        { "type": "IMAGE", "parameters": { "name": "_thumbnails_", "maxSize": "500", "deployTo": "/mnt/ingest/media", "host": "https://api.kimnet.ch/media/" }},
         { "type": "SYSTEM" }
       ],
       "startOnCreation": true,
