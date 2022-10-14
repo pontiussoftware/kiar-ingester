@@ -2,6 +2,7 @@ package ch.pontius.ingester.processors.sinks
 
 import ch.pontius.ingester.config.SolrConfig
 import ch.pontius.ingester.processors.sources.Source
+import ch.pontius.ingester.solrj.Constants
 import ch.pontius.ingester.solrj.Constants.FIELD_NAME_CANTON
 import ch.pontius.ingester.solrj.Constants.FIELD_NAME_PARTICIPANT
 
@@ -56,9 +57,11 @@ class ApacheSolrSink(override val input: Source<SolrInputDocument>, private val 
                         it.addField(FIELD_NAME_PARTICIPANT, this@ApacheSolrSink.config.name)
                         it.addField("_output_", "all")
                         client.add(collection, it)
+                        client.commit(collection)
+                        LOGGER.info("Adding document ${it[Constants.FIELD_NAME_UUID]} (collection = ${this@ApacheSolrSink.config.collection})...")
                     }
                 }
-                LOGGER.debug("Data ingest ${this@ApacheSolrSink.config.name} (collection = ${this@ApacheSolrSink.config.collection}) successful; committing...")
+                LOGGER.info("Data ingest ${this@ApacheSolrSink.config.name} (collection = ${this@ApacheSolrSink.config.collection}) successful; committing...")
                 client.commit(collection)
             } catch (e: Throwable) {
                 client.rollback(collection)
