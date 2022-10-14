@@ -54,7 +54,6 @@ class ApacheSolrSink(override val input: Source<SolrInputDocument>, private val 
                 runBlocking {
                     this@ApacheSolrSink.input.toFlow().collect {
                         it.addField(FIELD_NAME_PARTICIPANT, this@ApacheSolrSink.config.name)
-                        it.addField(FIELD_NAME_CANTON, "BE")
                         it.addField("_output_", "all")
                         it.addField("_display_", "test")
                         client.add(collection, it)
