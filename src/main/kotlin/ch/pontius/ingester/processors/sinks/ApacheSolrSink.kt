@@ -56,12 +56,17 @@ class ApacheSolrSink(override val input: Source<SolrInputDocument>, private val 
                     this@ApacheSolrSink.input.toFlow().collect {
                         it.addField(FIELD_NAME_PARTICIPANT, this@ApacheSolrSink.config.name)
                         it.addField("_output_", "all")
-                        val response = client.add(collection, it)
-                        if (response.status == 0) {
-                            LOGGER.info("Successfully added document (name = ${this@ApacheSolrSink.config.name}, uuid = ${it[Constants.FIELD_NAME_UUID]}, collection = ${this@ApacheSolrSink.config.collection}).")
-                        } else {
+                        try {
+                            val response = client.add(collection, it)
+                            if (response.status == 0) {
+                                LOGGER.info("Successfully added document (name = ${this@ApacheSolrSink.config.name}, uuid = ${it[Constants.FIELD_NAME_UUID]}, collection = ${this@ApacheSolrSink.config.collection}).")
+                            } else {
+                                LOGGER.warn("Error while adding document (name = ${this@ApacheSolrSink.config.name}, uuid = ${it[Constants.FIELD_NAME_UUID]}, collection = ${this@ApacheSolrSink.config.collection}).")
+                            }
+                        } catch (e: Throwable) {
                             LOGGER.warn("Error while adding document (name = ${this@ApacheSolrSink.config.name}, uuid = ${it[Constants.FIELD_NAME_UUID]}, collection = ${this@ApacheSolrSink.config.collection}).")
                         }
+
                     }
                 }
                 LOGGER.info("Data ingest ${this@ApacheSolrSink.config.name} (collection = ${this@ApacheSolrSink.config.collection}) successful; committing...")
