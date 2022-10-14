@@ -7,6 +7,7 @@ import ch.pontius.ingester.processors.sinks.Sinks
 import ch.pontius.ingester.processors.sources.Source
 import ch.pontius.ingester.processors.sources.Sources
 import ch.pontius.ingester.processors.sources.XmlFileSource
+import ch.pontius.ingester.watcher.FileWatcher
 import org.apache.logging.log4j.LogManager
 import org.apache.logging.log4j.Logger
 import org.apache.solr.common.SolrInputDocument
@@ -53,6 +54,14 @@ class IngesterServer(val config: Config) {
     @Volatile
     var isRunning: Boolean = true
         private set
+
+    init {
+        for (job in this.config.jobs) {
+            if (job.startOnCreation) {
+                this.watcherService.execute(FileWatcher(this, job))
+            }
+        }
+    }
 
     /**
      * Schedules the [Job] with the given name.
