@@ -20,6 +20,7 @@
         {"source": "/objects/object/Stuck", "destination": "anzahl", "parser": "DOUBLE"},
         {"source": "/objects/object/Titel", "destination": "taxon", "parser": "STRING"},
         {"source": "/objects/object/Taxon", "destination": "uuid", "parser": "STRING"},
+        {"source": "/objects/object/Sprache", "destination": "sprache", "parser": "STRING"},
         {"source": "/objects/object/Objekttyp", "destination": "objekttyp", "parser": "STRING"},
         {"source": "/objects/object/Sammlung/collection/institution/name", "destination": "institution", "parser": "STRING"},
         {"source": "/objects/object/Sammlung/collection/institution/email", "destination": "institution_email", "parser": "STRING"},
@@ -33,10 +34,18 @@
         {"source": "/objects/object/Entstehungszeit", "destination": "datierung_beschreibung", "parser": "STRING"},
         {"source": "/objects/object/Entstehungszeitvon", "destination": "datierung_von", "parser": "DOUBLE"},
         {"source": "/objects/object/Entstehungszeitbis", "destination": "datierung_bis", "parser": "DOUBLE"},
+        {"source": "/objects/object/Herstellungsort/thesaurusTerm/value", "destination": "ort_herstellung", "parser": "STRING"},
+        {"source": "/objects/object/Herstellungsort/thesaurusTerm/thesaurusHierarchyString", "destination": "ort_s_herstellung", "parser": "STRING"},
+        {"source": "/objects/object/Fundort/thesaurusTerm/value", "destination": "ort_fund", "parser": "STRING"},
+        {"source": "/objects/object/Fundort/thesaurusTerm/thesaurusHierarchyString", "destination": "ort_s_fund", "parser": "STRING"},
         {"source": "/objects/object/Material/thesaurusTerm/value", "destination": "material", "parser": "STRING"},
         {"source": "/objects/object/Material/thesaurusTerm/thesaurusHierarchyString", "destination": "material_s", "parser": "STRING"},
         {"source": "/objects/object/Technik/thesaurusTerm/value", "destination": "technik", "parser": "STRING"},
-        {"source": "/objects/object/Technik/thesaurusTerm/thesaurusHierarchyString", "destination": "technik_s", "parser": "STRING"}
+        {"source": "/objects/object/Technik/thesaurusTerm/thesaurusHierarchyString", "destination": "technik_s", "parser": "STRING"},
+        {"source": "/objects/object/Sachgruppe/thesaurusTerm/value", "destination": "klassifikation_sachgruppe", "parser": "STRING"},
+        {"source": "/objects/object/Sachgruppe/thesaurusTerm/thesaurusHierarchyString", "destination": "klassifikation_s_sachgruppe", "parser": "STRING"},
+        {"source": "/objects/object/Ikonographie/thesaurusTerm/value", "destination": "klassifikation_ikonographie", "parser": "STRING"},
+        {"source": "/objects/object/Ikonographie/thesaurusTerm/thesaurusHierarchyString", "destination": "klassifikation_s_ikonographie", "parser": "STRING"}
       ]
     }
   ],
