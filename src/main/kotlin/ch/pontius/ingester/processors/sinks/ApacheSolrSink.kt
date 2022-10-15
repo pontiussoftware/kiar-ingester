@@ -52,8 +52,10 @@ class ApacheSolrSink(override val input: Source<SolrInputDocument>, private val 
 
             /* Consume flow and commit (or rollback)*/
             try {
+                var counter = 0
                 runBlocking {
                     this@ApacheSolrSink.input.toFlow().collect {
+                        counter += 1
                         it.addField(FIELD_NAME_PARTICIPANT, this@ApacheSolrSink.config.name)
                         it.addField("_output_", "all")
                         try {
@@ -69,7 +71,7 @@ class ApacheSolrSink(override val input: Source<SolrInputDocument>, private val 
 
                     }
                 }
-                LOGGER.info("Data ingest ${this@ApacheSolrSink.config.name} (collection = ${this@ApacheSolrSink.config.collection}) successful; committing...")
+                LOGGER.info("Data ingest (name = ${this@ApacheSolrSink.config.name}, collection = ${this@ApacheSolrSink.config.collection}) completed. Ingested $counter documents; committing...")
                 val response = client.commit(collection)
                 if (response.status == 0) {
                     LOGGER.info("Data ingest (name = ${this@ApacheSolrSink.config.name}, collection = ${this@ApacheSolrSink.config.collection}) committed successfully.")
