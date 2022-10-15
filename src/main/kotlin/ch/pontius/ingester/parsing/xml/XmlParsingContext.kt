@@ -72,13 +72,8 @@ class XmlParsingContext(config: MappingConfig, val callback: (SolrInputDocument)
      * Removes the new element from the stack
      */
     override fun endElement(uri: String, localName: String, qName: String) {
-        val previousMappings = this.mappings[this.xpath]
-
-        /* Pop stack. */
-        this.stack.pop()
-        this.xpath = "/${this.stack.joinToString("/")}"
-
         /* Flush old context into document (if required). */
+        val previousMappings = this.mappings[this.xpath]
         if (previousMappings != null) {
             for (m in previousMappings) {
                 val value = this.parsers[m]?.get()
@@ -88,6 +83,10 @@ class XmlParsingContext(config: MappingConfig, val callback: (SolrInputDocument)
             }
         }
         this.parsers.clear()
+
+        /* Pop stack. */
+        this.stack.pop()
+        this.xpath = "/${this.stack.joinToString("/")}"
 
         /* Flush old document (if needed). */
         if (this.xpath == this.newDocumentOn) {

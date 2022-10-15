@@ -43,9 +43,9 @@ class ApacheSolrSink(override val input: Source<SolrInputDocument>, private val 
         val client = ConcurrentUpdateHttp2SolrClient.Builder(this.config.server, httpBuilder.build(), true).build()
         client.use {
             if (this.config.deleteBeforeImport) {
-                val response = client.deleteByQuery(collection, "$FIELD_NAME_PARTICIPANT:\"${this.config.name}\"")
+                val response = client.deleteByQuery(collection, "$FIELD_NAME_PARTICIPANT:\"${this.context}\"")
                 if (response.status != 0) {
-                    throw IllegalArgumentException("Data ingest ${this@ApacheSolrSink.config.name} (collection = ${this@ApacheSolrSink.config.collection}) failed because delete before import could not be executed.")
+                    throw IllegalArgumentException("Data ingest (name = ${this.context}, collection = ${this@ApacheSolrSink.config.collection}) failed because delete before import could not be executed.")
                 }
             }
 
@@ -55,24 +55,24 @@ class ApacheSolrSink(override val input: Source<SolrInputDocument>, private val 
                 var errorCounter = 0
                 runBlocking {
                     this@ApacheSolrSink.input.toFlow().collect {
-                        it.addField(FIELD_NAME_PARTICIPANT, this@ApacheSolrSink.config.name)
+                        it.addField(FIELD_NAME_PARTICIPANT, this@ApacheSolrSink.context)
                         it.addField("_output_", "all")
                         try {
                             val response = client.add(collection, it)
                             if (response.status == 0) {
                                 successCounter += 1
-                                LOGGER.info("Successfully added document (name = ${this@ApacheSolrSink.config.name}, uuid = ${it[Constants.FIELD_NAME_UUID]}, collection = ${this@ApacheSolrSink.config.collection}).")
+                                LOGGER.info("Successfully added document (name = ${this@ApacheSolrSink.context}, uuid = ${it[Constants.FIELD_NAME_UUID]}, collection = ${this@ApacheSolrSink.config.collection}).")
                             } else {
                                 errorCounter += 1
-                                LOGGER.warn("Error while adding document (name = ${this@ApacheSolrSink.config.name}, uuid = ${it[Constants.FIELD_NAME_UUID]}, collection = ${this@ApacheSolrSink.config.collection}).")
+                                LOGGER.warn("Error while adding document (name = ${this@ApacheSolrSink.context}, uuid = ${it[Constants.FIELD_NAME_UUID]}, collection = ${this@ApacheSolrSink.config.collection}).")
                             }
                         } catch (e: Throwable) {
                             errorCounter += 1
-                            LOGGER.warn("Error while adding document (name = ${this@ApacheSolrSink.config.name}, uuid = ${it[Constants.FIELD_NAME_UUID]}, collection = ${this@ApacheSolrSink.config.collection}).")
+                            LOGGER.warn("Error while adding document (name = ${this@ApacheSolrSink.context}, uuid = ${it[Constants.FIELD_NAME_UUID]}, collection = ${this@ApacheSolrSink.config.collection}).")
                         }
                     }
                 }
-                LOGGER.info("Data ingest (name = ${this@ApacheSolrSink.config.name}, collection = ${this@ApacheSolrSink.config.collection}, success = $successCounter, error = $errorCounter) completed; committing...")
+                LOGGER.info("Data ingest (name = ${this@ApacheSolrSink.context}, collection = ${this@ApacheSolrSink.config.collection}, success = $successCounter, error = $errorCounter) completed; committing...")
                 val response = client.commit(collection)
                 if (response.status == 0) {
                     LOGGER.info("Data ingest (name = ${this@ApacheSolrSink.config.name}, collection = ${this@ApacheSolrSink.config.collection}) committed successfully.")
