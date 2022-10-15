@@ -80,7 +80,6 @@ class ImageTransformer(override val input: Source<SolrInputDocument>, parameters
                             }
                         }
                     }
-                    it.addField(Constants.FIELD_NAME_IMAGECOUNT, counter)
                 }
             } catch (e: Throwable) {
                 LOGGER.warn("Error while processing image for ${it[FIELD_NAME_UUID]}; ${e.message}")
