@@ -2,6 +2,7 @@ package ch.pontius.ingester.processors.transformers
 
 import ch.pontius.ingester.config.TransformerConfig
 import ch.pontius.ingester.processors.sources.Source
+import ch.pontius.ingester.solrj.Constants
 import ch.pontius.ingester.solrj.Constants.FIELD_NAME_RAW
 import ch.pontius.ingester.solrj.Constants.FIELD_NAME_UUID
 import kotlinx.coroutines.Dispatchers
@@ -79,6 +80,7 @@ class ImageTransformer(override val input: Source<SolrInputDocument>, parameters
                             }
                         }
                     }
+                    it.addField(Constants.FIELD_NAME_IMAGECOUNT, counter)
                 }
             } catch (e: Throwable) {
                 LOGGER.warn("Error while processing image for ${it[FIELD_NAME_UUID]}; ${e.message}")

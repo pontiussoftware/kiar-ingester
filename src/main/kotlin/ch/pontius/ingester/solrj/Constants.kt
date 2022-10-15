@@ -16,6 +16,9 @@ object Constants {
     /** Name of the canton field in an Apache Solr document. */
     val FIELD_NAME_CANTON = "_canton_"
 
+    /** Name of the image count field in an Apache Solr document. */
+    val FIELD_NAME_IMAGECOUNT = "_imagecount_"
+
     /** Name of the display field in an Apache Solr document. */
     val FIELD_NAME_DISPLAY = "_display_"
 
