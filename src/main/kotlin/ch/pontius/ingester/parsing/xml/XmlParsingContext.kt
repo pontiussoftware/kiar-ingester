@@ -58,7 +58,15 @@ class XmlParsingContext(config: MappingConfig, val callback: (SolrInputDocument)
      */
     override fun startElement(uri: String, localName: String, qName: String, attributes: Attributes) {
         this.stack.add(qName)
-        this.updateContext()
+        this.xpath = "/${this.stack.joinToString("/")}"
+
+        /* Create parsers for mappings. */
+        val mappings = this.mappings[this.xpath]
+        if (mappings != null) {
+            for (m in mappings) {
+                this.parsers[m] = m.parser.newInstance(m.parameters)
+            }
+        }
     }
 
     /**
@@ -66,7 +74,24 @@ class XmlParsingContext(config: MappingConfig, val callback: (SolrInputDocument)
      */
     override fun endElement(uri: String, localName: String, qName: String) {
         this.stack.pop()
-        this.updateContext()
+        this.xpath = "/${this.stack.joinToString("/")}"
+
+        /* Flush old context into document (if required). */
+        val previousMappings = this.mappings[this.xpath]
+        if (previousMappings != null) {
+            for (m in previousMappings) {
+                val value = this.parsers[m]?.get()
+                if (value != null) {
+                    this.document.setField(m.destination, value)
+                }
+            }
+        }
+
+        /* Flush old document (if needed). */
+        if (this.xpath == this.newDocumentOn) {
+            this.callback(this.document)
+            this.document = SolrInputDocument()
+        }
     }
 
     /**
@@ -81,38 +106,6 @@ class XmlParsingContext(config: MappingConfig, val callback: (SolrInputDocument)
         if (mappings != null) {
             for (m in mappings) {
                 this.parsers[m]?.parse(String(ch.copyOfRange(start, start + length)))
-            }
-        }
-    }
-
-    /**
-     * Updates the XPath context of this [XmlFileSource]
-     */
-    private fun updateContext() {
-        /* Flush old context into document (if required). */
-        val previousMappings = this.mappings[this.xpath]
-        if (previousMappings != null) {
-            for (m in previousMappings) {
-                val value = this.parsers[m]?.get()
-                if (value != null) {
-                    this.document.setField(m.destination, value)
-                }
-            }
-        }
-
-        /* Flush old document. */
-        if (this.xpath == this.newDocumentOn) {
-            this.callback(this.document)
-            this.document = SolrInputDocument()
-        }
-
-        /* Update context. */
-        this.xpath = "/${this.stack.joinToString("/")}"
-        this.parsers.clear()
-        val mappings = this.mappings[this.xpath]
-        if (mappings != null) {
-            for (m in mappings) {
-                this.parsers[m] = m.parser.newInstance(m.parameters)
             }
         }
     }
