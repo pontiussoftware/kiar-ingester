@@ -3,7 +3,6 @@ package ch.pontius.ingester.processors.sinks
 import ch.pontius.ingester.config.SolrConfig
 import ch.pontius.ingester.processors.sources.Source
 import ch.pontius.ingester.solrj.Constants
-import ch.pontius.ingester.solrj.Constants.FIELD_NAME_CANTON
 import ch.pontius.ingester.solrj.Constants.FIELD_NAME_PARTICIPANT
 
 import kotlinx.coroutines.flow.*
@@ -52,26 +51,28 @@ class ApacheSolrSink(override val input: Source<SolrInputDocument>, private val 
 
             /* Consume flow and commit (or rollback)*/
             try {
-                var counter = 0
+                var successCounter = 0
+                var errorCounter = 0
                 runBlocking {
                     this@ApacheSolrSink.input.toFlow().collect {
-                        counter += 1
                         it.addField(FIELD_NAME_PARTICIPANT, this@ApacheSolrSink.config.name)
                         it.addField("_output_", "all")
                         try {
                             val response = client.add(collection, it)
                             if (response.status == 0) {
+                                successCounter += 1
                                 LOGGER.info("Successfully added document (name = ${this@ApacheSolrSink.config.name}, uuid = ${it[Constants.FIELD_NAME_UUID]}, collection = ${this@ApacheSolrSink.config.collection}).")
                             } else {
+                                errorCounter += 1
                                 LOGGER.warn("Error while adding document (name = ${this@ApacheSolrSink.config.name}, uuid = ${it[Constants.FIELD_NAME_UUID]}, collection = ${this@ApacheSolrSink.config.collection}).")
                             }
                         } catch (e: Throwable) {
+                            errorCounter += 1
                             LOGGER.warn("Error while adding document (name = ${this@ApacheSolrSink.config.name}, uuid = ${it[Constants.FIELD_NAME_UUID]}, collection = ${this@ApacheSolrSink.config.collection}).")
                         }
-
                     }
                 }
-                LOGGER.info("Data ingest (name = ${this@ApacheSolrSink.config.name}, collection = ${this@ApacheSolrSink.config.collection}) completed. Ingested $counter documents; committing...")
+                LOGGER.info("Data ingest (name = ${this@ApacheSolrSink.config.name}, collection = ${this@ApacheSolrSink.config.collection}, success = $successCounter, error = $errorCounter) completed; committing...")
                 val response = client.commit(collection)
                 if (response.status == 0) {
                     LOGGER.info("Data ingest (name = ${this@ApacheSolrSink.config.name}, collection = ${this@ApacheSolrSink.config.collection}) committed successfully.")
