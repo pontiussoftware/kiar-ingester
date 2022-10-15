@@ -22,13 +22,13 @@ class XmlParsingContext(config: MappingConfig, val callback: (SolrInputDocument)
     private var document = SolrInputDocument()
 
     /** The current XPath this [XmlParsingContext] is currently in. */
-    private var stack = Stack<String>()
+    private val stack = Stack<String>()
 
     /** The current XPath this [XmlParsingContext] is currently in. */
     private var xpath = "/"
 
     /** The current XPath this [XmlParsingContext] is currently in. */
-    private var parsers = HashMap<XmlAttributeMapping, ValueParser<*>>()
+    private val parsers = HashMap<XmlAttributeMapping, ValueParser<*>>()
 
     /** The longest, common prefix found for all [XmlAttributeMapping]. This prefix will be used to distinguish between different objects. */
     private val mappings = HashMap<String, MutableList<XmlAttributeMapping>>()
@@ -66,12 +66,7 @@ class XmlParsingContext(config: MappingConfig, val callback: (SolrInputDocument)
      */
     override fun endElement(uri: String, localName: String, qName: String) {
         this.stack.pop()
-
         this.updateContext()
-        if (this.xpath == this.newDocumentOn) {
-            this.callback(this.document)
-            this.document = SolrInputDocument()
-        }
     }
 
     /**
@@ -85,8 +80,7 @@ class XmlParsingContext(config: MappingConfig, val callback: (SolrInputDocument)
         val mappings = this.mappings[this.xpath]
         if (mappings != null) {
             for (m in mappings) {
-                val string = StringBuffer().append(ch, start, length).toString()
-                this.parsers[m]?.parse(string)
+                this.parsers[m]?.parse(String(ch.copyOfRange(start, start + length)))
             }
         }
     }
@@ -95,7 +89,7 @@ class XmlParsingContext(config: MappingConfig, val callback: (SolrInputDocument)
      * Updates the XPath context of this [XmlFileSource]
      */
     private fun updateContext() {
-        /* Flush old context into document. */
+        /* Flush old context into document (if required). */
         val previousMappings = this.mappings[this.xpath]
         if (previousMappings != null) {
             for (m in previousMappings) {
@@ -104,6 +98,12 @@ class XmlParsingContext(config: MappingConfig, val callback: (SolrInputDocument)
                     this.document.setField(m.destination, value)
                 }
             }
+        }
+
+        /* Flush old document. */
+        if (this.xpath == this.newDocumentOn) {
+            this.callback(this.document)
+            this.document = SolrInputDocument()
         }
 
         /* Update context. */
