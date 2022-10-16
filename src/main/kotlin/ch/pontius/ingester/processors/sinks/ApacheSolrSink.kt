@@ -81,6 +81,8 @@ class ApacheSolrSink(override val input: Source<SolrInputDocument>, private val 
                 }
             } catch (e: Throwable) {
                 client.rollback(collection)
+            } finally {
+                client.blockUntilFinished()
             }
         }
     }
