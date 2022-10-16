@@ -12,7 +12,7 @@
         {"destination": "_output_", "source": "/objects/object/Ziele/term", "parser": "STRING"},
         {"destination": "_display_", "source": "/objects/object/Objektbezeichnung", "parser": "STRING"},
 
-        {"destination": "uuid", "source": "/objects/object/guid", "parser": "STRING"},
+        {"destination": "uuid", "source": "/objects/object/guid", "parser": "UUID"},
         {"destination": "inventarnummer", "source": "/objects/object/InvNr", "parser": "STRING"},
         {"destination": "inventarnummer_quellsystem", "source": "/objects/object/InventarnummerQuellsystem", "parser": "STRING"},
         {"destination": "alte_inventarnummern", "source": "/objects/object/AlteInventarnummer", "parser": "STRING"},

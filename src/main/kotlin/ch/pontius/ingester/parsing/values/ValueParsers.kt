@@ -9,6 +9,7 @@ import ch.pontius.ingester.parsing.values.primitive.*
  * @version 1.0.0
  */
 enum class ValueParsers {
+    UUID,
     STRING,
     DATE,
     INTEGER,
@@ -21,6 +22,7 @@ enum class ValueParsers {
      * @return [ValueParser].
      */
     fun newInstance(params: Map<String,String> = emptyMap()) = when (this) {
+        UUID -> UuidValueParser()
         STRING -> StringValueParser()
         INTEGER -> IntegerValueParser()
         DOUBLE -> DoubleValueParser()
