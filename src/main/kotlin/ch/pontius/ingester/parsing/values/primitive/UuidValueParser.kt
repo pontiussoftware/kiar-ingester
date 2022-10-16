@@ -9,10 +9,10 @@ import java.util.UUID
  * @author Ralph Gasser
  * @version 1.0.0
  */
-class UuidValueParser: ValueParser<UUID> {
+class UuidValueParser: ValueParser<String> {
     private var buffer: UUID? = null
     override fun parse(value: String) {
         this.buffer = UUID.fromString(value)
     }
-    override fun get(): UUID? = this.buffer
+    override fun get(): String? = this.buffer.toString()
 }
