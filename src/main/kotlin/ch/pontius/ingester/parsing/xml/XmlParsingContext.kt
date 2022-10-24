@@ -78,7 +78,7 @@ class XmlParsingContext(config: MappingConfig, val callback: (SolrInputDocument)
             for (m in previousMappings) {
                 val value = this.parsers[m]?.get()
                 if (value != null) {
-                    this.document.setField(m.destination, value)
+                    this.document.addField(m.destination, value)
                 }
             }
         }
