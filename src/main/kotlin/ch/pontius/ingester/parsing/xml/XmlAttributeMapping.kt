@@ -14,5 +14,6 @@ data class XmlAttributeMapping(
     val destination: String,
     val parser: ValueParsers,
     val required: Boolean = false,
-    val parameters: Map<String,String> = emptyMap()
+    val multiValued: Boolean = false,
+    val parameters: Map<String,String> = emptyMap(),
 )

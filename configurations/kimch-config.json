@@ -8,7 +8,7 @@
       "name":  "culture.web XML Mapper",
       "description":  "A XML mapper for the culture.web XML format.",
       "values": [
-        {"destination": "_raw_", "source": "/objects/object/BilderzumObjekt/image/imageScreenPath", "parser": "IMAGE", "parameters":  {"search": "^(\\\\\\\\IP-FS-KIM01\\\\kimmedia\\\\PROD)\\\\(.+)\\\\(.+)\\\\(.+)$", "replace": "/mnt/kimmedia/PROD/$2/$3/$4"}},
+        {"destination": "_raw_", "source": "/objects/object/BilderzumObjekt/image/imageScreenPath", "parser": "IMAGE", "multiValued": true, "parameters":  {"search": "^(\\\\\\\\IP-FS-KIM01\\\\kimmedia\\\\PROD)\\\\(.+)\\\\(.+)\\\\(.+)$", "replace": "/mnt/kimmedia/PROD/$2/$3/$4"}},
         {"destination": "_output_", "source": "/objects/object/Ziele/term", "parser": "STRING"},
         {"destination": "_display_", "source": "/objects/object/Objektbezeichnung", "parser": "STRING"},
 
