@@ -3,6 +3,7 @@ package ch.pontius.ingester.parsing.values.primitive
 import ch.pontius.ingester.parsing.values.ValueParser
 import org.apache.logging.log4j.LogManager
 import java.awt.image.BufferedImage
+import java.io.IOException
 import java.nio.file.Files
 import java.nio.file.Paths
 import java.nio.file.StandardOpenOption
@@ -42,9 +43,14 @@ class ImageValueParser(params: Map<String,String>): ValueParser<BufferedImage> {
         /* Parse path and read file. */
         val path = Paths.get(actualPath)
         if (!Files.exists(path)) {
-            LOGGER.warn("Failed to extract file $path: File does not exist")
+            LOGGER.warn("Failed to read image file $path: File does not exist")
         } else {
-            this.buffer = Files.newInputStream(path, StandardOpenOption.READ).use { ImageIO.read(it) }
+            this.buffer = try {
+                Files.newInputStream(path, StandardOpenOption.READ).use { ImageIO.read(it) }
+            } catch (e: IOException) {
+                LOGGER.warn("Failed to read image file $path: ${e.message}")
+                null
+            }
         }
     }
 
