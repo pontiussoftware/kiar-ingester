@@ -13,6 +13,7 @@ import kotlinx.coroutines.flow.onCompletion
 import org.apache.logging.log4j.LogManager
 import org.apache.solr.common.SolrInputDocument
 import java.awt.image.BufferedImage
+import java.io.IOException
 import java.nio.file.*
 import javax.imageio.ImageIO
 
@@ -61,28 +62,24 @@ class ImageTransformer(override val input: Source<SolrInputDocument>, parameters
 
         Files.createDirectories(tmp)
         return this.input.toFlow().map {
-            try {
-                if (it.containsKey(FIELD_NAME_RAW) && it.containsKey(FIELD_NAME_UUID)) {
-                    val uuid = it[FIELD_NAME_UUID]!!.value as String
-                    val images = it.getFieldValues(FIELD_NAME_RAW)
-                    var counter = 1
-                    for (original in images) {
-                        if (original is BufferedImage) {
-                            val actualPath = dst.resolve("${uuid}_%03d.jpg".format(counter))
-                            val tmpPath = tmp.resolve("${uuid}_%03d.jpg".format(counter))
-                            if (this.store(this.resize(original), tmpPath)) {
-                                if (this.host == null) {
-                                    it.addField(this.name, this.deployTo.relativize(actualPath).toString())
-                                } else {
-                                    it.addField(this.name, "${this.host}${this.deployTo.relativize(actualPath)}")
-                                }
-                                counter += 1
+            if (it.containsKey(FIELD_NAME_RAW) && it.containsKey(FIELD_NAME_UUID)) {
+                val uuid = it[FIELD_NAME_UUID]!!.value as String
+                val images = it.getFieldValues(FIELD_NAME_RAW)
+                var counter = 1
+                for (original in images) {
+                    if (original is BufferedImage) {
+                        val actualPath = dst.resolve("${uuid}_%03d.jpg".format(counter))
+                        val tmpPath = tmp.resolve("${uuid}_%03d.jpg".format(counter))
+                        if (this.store(this.resize(original), tmpPath)) {
+                            if (this.host == null) {
+                                it.addField(this.name, this.deployTo.relativize(actualPath).toString())
+                            } else {
+                                it.addField(this.name, "${this.host}${this.deployTo.relativize(actualPath)}")
                             }
                         }
+                        counter += 1
                     }
                 }
-            } catch (e: Throwable) {
-                LOGGER.warn("Error while processing image for ${it[FIELD_NAME_UUID]}; ${e.message}")
             }
             it
         }.onCompletion {
@@ -108,23 +105,15 @@ class ImageTransformer(override val input: Source<SolrInputDocument>, parameters
      * @param image The [BufferedImage] to store.
      * @param path The [Path] to store the image under.
      */
-    private fun store(image: BufferedImage, path: Path): Boolean {
-        try {
-            val os = Files.newOutputStream(path, StandardOpenOption.CREATE_NEW, StandardOpenOption.WRITE)
-            return try {
-                ImageIO.write(image, "JPEG", os)
-                LOGGER.debug("Successfully stored image $path!")
-                true
-            } catch (e: Throwable) {
-                LOGGER.error("Failed to save image $path due to exception: ${e.message}")
-                false
-            } finally {
-                os.close()
-            }
-        } catch (e: Throwable) {
-            LOGGER.error("Failed to create output stream for image $path due to exception: ${e.message}")
-            return false
+    private fun store(image: BufferedImage, path: Path): Boolean = try {
+        Files.newOutputStream(path, StandardOpenOption.CREATE_NEW, StandardOpenOption.WRITE).use {os ->
+            ImageIO.write(image, "JPEG", os)
+            LOGGER.debug("Successfully stored image $path!")
+            true
         }
+    } catch (e: IOException) {
+        LOGGER.error("Failed to save image $path due to IO exception: ${e.message}")
+        false
     }
 
     /**

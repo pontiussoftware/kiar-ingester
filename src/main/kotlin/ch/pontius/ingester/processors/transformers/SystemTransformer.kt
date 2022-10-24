@@ -18,7 +18,6 @@ class SystemTransformer(override val input: Source<SolrInputDocument>, parameter
         it.addField(Constants.FIELD_NAME_CANTON, (it[FIELD_NAME_INVENTORY_NUMBER]?.value as String).substring(0..1))
         it.addField(Constants.FIELD_NAME_IMAGECOUNT, it[Constants.FIELD_NAME_RAW]?.valueCount ?: 0) /* Set _imagecount_ field. */
         it.removeField(Constants.FIELD_NAME_RAW) /* Remove the _raw_ field. */
-
         it
     }
 }
