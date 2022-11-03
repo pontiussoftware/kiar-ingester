@@ -8,10 +8,12 @@ import ch.pontius.ingester.solrj.Constants.FIELD_NAME_PARTICIPANT
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.runBlocking
 import org.apache.logging.log4j.LogManager
+import org.apache.solr.client.solrj.SolrServerException
 
 import org.apache.solr.client.solrj.impl.ConcurrentUpdateHttp2SolrClient
 import org.apache.solr.client.solrj.impl.Http2SolrClient
 import org.apache.solr.common.SolrInputDocument
+import java.io.IOException
 import java.lang.IllegalArgumentException
 
 /**
@@ -50,39 +52,41 @@ class ApacheSolrSink(override val input: Source<SolrInputDocument>, private val 
             }
 
             /* Consume flow and commit (or rollback)*/
-            try {
-                var successCounter = 0
-                var errorCounter = 0
-                runBlocking {
-                    this@ApacheSolrSink.input.toFlow().collect {
-                        it.addField(FIELD_NAME_PARTICIPANT, this@ApacheSolrSink.context)
-                        it.addField("_output_", "all")
-                        try {
-                            val response = client.add(collection, it)
-                            if (response.status == 0) {
-                                successCounter += 1
-                                LOGGER.info("Successfully added document (name = ${this@ApacheSolrSink.context}, uuid = ${it[Constants.FIELD_NAME_UUID]}, collection = ${this@ApacheSolrSink.config.collection}).")
-                            } else {
-                                errorCounter += 1
-                                LOGGER.warn("Error while adding document (name = ${this@ApacheSolrSink.context}, uuid = ${it[Constants.FIELD_NAME_UUID]}, collection = ${this@ApacheSolrSink.config.collection}).")
-                            }
-                        } catch (e: Throwable) {
+
+            var successCounter = 0
+            var errorCounter = 0
+            runBlocking {
+                this@ApacheSolrSink.input.toFlow().collect {
+                    it.addField(FIELD_NAME_PARTICIPANT, this@ApacheSolrSink.context)
+                    it.addField("_output_", "all")
+                    try {
+                        val response = client.add(collection, it)
+                        if (response.status == 0) {
+                            successCounter += 1
+                            LOGGER.info("Successfully added document (name = ${this@ApacheSolrSink.context}, uuid = ${it[Constants.FIELD_NAME_UUID]}, collection = ${this@ApacheSolrSink.config.collection}).")
+                        } else {
                             errorCounter += 1
                             LOGGER.warn("Error while adding document (name = ${this@ApacheSolrSink.context}, uuid = ${it[Constants.FIELD_NAME_UUID]}, collection = ${this@ApacheSolrSink.config.collection}).")
                         }
+                    } catch (e: SolrServerException) {
+                        errorCounter += 1
+                        LOGGER.warn("Server reported error while adding document (name = ${this@ApacheSolrSink.context}, uuid = ${it[Constants.FIELD_NAME_UUID]}, collection = ${this@ApacheSolrSink.config.collection}).")
                     }
                 }
-                LOGGER.info("Data ingest (name = ${this@ApacheSolrSink.context}, collection = ${this@ApacheSolrSink.config.collection}, success = $successCounter, error = $errorCounter) completed; committing...")
+            }
+            LOGGER.info("Data ingest (name = ${this@ApacheSolrSink.context}, collection = ${this@ApacheSolrSink.config.collection}, success = $successCounter, error = $errorCounter) completed; committing...")
+            try {
                 val response = client.commit(collection)
                 if (response.status == 0) {
                     LOGGER.info("Data ingest (name = ${this@ApacheSolrSink.config.name}, collection = ${this@ApacheSolrSink.config.collection}) committed successfully.")
                 } else {
                     LOGGER.warn("Failed to commit data ingest (name = ${this@ApacheSolrSink.config.name}, collection = ${this@ApacheSolrSink.config.collection}).")
                 }
-            } catch (e: Throwable) {
+            } catch (e: SolrServerException) {
                 client.rollback(collection)
-            } finally {
-                client.blockUntilFinished()
+                LOGGER.error("Failed to commit data ingest due to server error (name = ${this@ApacheSolrSink.config.name}, collection = ${this@ApacheSolrSink.config.collection}). Rolling back...")
+            } catch (e: IOException) {
+                LOGGER.error("Failed to commit data ingest due to IO error (name = ${this@ApacheSolrSink.config.name}, collection = ${this@ApacheSolrSink.config.collection}).")
             }
         }
     }
