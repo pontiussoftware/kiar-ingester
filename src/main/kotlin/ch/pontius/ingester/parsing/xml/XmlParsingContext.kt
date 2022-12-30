@@ -138,14 +138,4 @@ class XmlParsingContext(config: MappingConfig, val callback: (SolrInputDocument)
         LOGGER.error("SAX parse error encountered while parsing document (uuid = ${this.document[Constants.FIELD_NAME_UUID]}): ${e.message}.")
         this.error = true
     }
-
-    /**
-     * Handles fatal [SAXParseException].
-     *
-     * @param e [SAXParseException]
-     */
-    override fun fatalError(e: SAXParseException) {
-        LOGGER.error("Fatal SAX parse error encountered while parsing document (uuid = ${this.document[Constants.FIELD_NAME_UUID]}): ${e.message}.")
-        this.error = true
-    }
 }
