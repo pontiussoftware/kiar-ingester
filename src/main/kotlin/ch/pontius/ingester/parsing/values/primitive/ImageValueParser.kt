@@ -3,7 +3,6 @@ package ch.pontius.ingester.parsing.values.primitive
 import ch.pontius.ingester.parsing.values.ValueParser
 import org.apache.logging.log4j.LogManager
 import java.awt.image.BufferedImage
-import java.io.IOException
 import java.nio.file.Files
 import java.nio.file.Paths
 import java.nio.file.StandardOpenOption
@@ -30,7 +29,7 @@ class ImageValueParser(params: Map<String,String>): ValueParser<BufferedImage> {
     private val replace: String? = params["replace"]
 
     /**
-     * Parses the given [BufferedImage] and returns [T].
+     * Parses the given [BufferedImage].
      */
     override fun parse(value: String) {
         /* Read path - apply Regex search/replace if needed. */
@@ -47,7 +46,7 @@ class ImageValueParser(params: Map<String,String>): ValueParser<BufferedImage> {
         } else {
             this.buffer = try {
                 Files.newInputStream(path, StandardOpenOption.READ).use { ImageIO.read(it) }
-            } catch (e: IOException) {
+            } catch (e: Throwable) {
                 LOGGER.warn("Failed to read image file $path: ${e.message}")
                 null
             }
