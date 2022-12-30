@@ -29,6 +29,10 @@ dependencies {
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json-jvm:1.4.1")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core-jvm:1.6.4")
 
+    /** Kotlinx Serialization. */
+    implementation("com.twelvemonkeys.imageio:imageio-core:3.9.4")
+    implementation("com.twelvemonkeys.imageio:imageio-jpeg:3.9.4")
+
     /** CLI. */
     implementation("com.github.ajalt.clikt:clikt:3.5.0")
     implementation("org.jline:jline:3.21.0")
