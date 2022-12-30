@@ -2,8 +2,11 @@ package ch.pontius.ingester.parsing.xml
 
 import ch.pontius.ingester.config.MappingConfig
 import ch.pontius.ingester.parsing.values.ValueParser
+import ch.pontius.ingester.solrj.Constants
+import org.apache.logging.log4j.LogManager
 import org.apache.solr.common.SolrInputDocument
 import org.xml.sax.Attributes
+import org.xml.sax.SAXParseException
 import org.xml.sax.helpers.DefaultHandler
 import java.util.*
 
@@ -16,6 +19,9 @@ import java.util.*
  * @version 1.0.0
  */
 class XmlParsingContext(config: MappingConfig, val callback: (SolrInputDocument) -> Unit): DefaultHandler() {
+    companion object {
+        private val LOGGER = LogManager.getLogger()
+    }
 
     /** The current [SolrInputDocument] that is being processed. */
     private val document = SolrInputDocument()
@@ -34,6 +40,9 @@ class XmlParsingContext(config: MappingConfig, val callback: (SolrInputDocument)
 
     /** The longest, common prefix found for all [XmlAttributeMapping]. This prefix will be used to distinguish between different objects. */
     private val newDocumentOn: String
+
+    /** An internal error flag */
+    private var error: Boolean = false
 
     init {
         var commonPrefix = config.values.first().source
@@ -94,7 +103,12 @@ class XmlParsingContext(config: MappingConfig, val callback: (SolrInputDocument)
 
         /* Flush old document (if needed). */
         if (this.xpath == this.newDocumentOn) {
-            this.callback(this.document.deepCopy())
+            if (this.error) {
+                LOGGER.warn("Skipping document due to parse error (uuid = ${this.document[Constants.FIELD_NAME_UUID]}).")
+                this.error = false /* Clear error flag when new document starts. */
+            } else {
+                this.callback(this.document.deepCopy())
+            }
             this.document.clear()
         }
     }
@@ -113,5 +127,15 @@ class XmlParsingContext(config: MappingConfig, val callback: (SolrInputDocument)
                 this.parsers[m]?.parse(String(ch.copyOfRange(start, start + length)))
             }
         }
+    }
+
+    /**
+     * Handles [SAXParseException].
+     *
+     * @param e [SAXParseException]
+     */
+    override fun error(e: SAXParseException) {
+        LOGGER.error("SAX parse error encountered while parsing document: ${e.message}.")
+        this.error = true
     }
 }
