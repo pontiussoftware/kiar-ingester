@@ -18,7 +18,7 @@ repositories {
 dependencies {
 
     /** SolrJ. */
-    implementation("org.apache.solr:solr-solrj:9.0.0")
+    implementation("org.apache.solr:solr-solrj:9.1.0")
 
     /** Log4j2 & SLF4j */
     implementation("org.apache.logging.log4j:log4j-api:2.19.0")
@@ -26,7 +26,7 @@ dependencies {
     implementation("org.apache.logging.log4j:log4j-slf4j-impl:2.19.0")
 
     /** Kotlinx Serialization. */
-    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json-jvm:1.4.0")
+    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json-jvm:1.4.1")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core-jvm:1.6.4")
 
     /** CLI. */
