@@ -5,7 +5,7 @@ import io.ktor.client.statement.*
 import io.ktor.server.testing.*
 import kotlin.test.*
 import io.ktor.http.*
-import uploader.kiar.pontius.ch.plugins.*
+import uploader.kiar.pontius.ch.routes.configureRouting
 
 class ApplicationTest {
     @Test

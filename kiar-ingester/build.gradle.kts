@@ -1,14 +1,4 @@
-import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
-
 val appCompatVersion: String by project
-
-val kotlin_version: String by project
-
-plugins {
-    kotlin("jvm") version "1.8.0"
-    id("org.jetbrains.kotlin.plugin.serialization") version "1.8.0"
-    application
-}
 
 application {
     mainClass.set("ch.pontius.ingester.IngesterKt")
@@ -35,15 +25,4 @@ dependencies {
     implementation("com.github.ajalt.clikt:clikt:3.5.0")
     implementation("org.jline:jline:3.21.0")
     implementation("org.jline:jline-terminal-jna:3.21.0")
-
-    /* UnitTest dependencies. */
-    testImplementation(kotlin("test"))
-}
-
-tasks.test {
-    useJUnitPlatform()
-}
-
-tasks.withType<KotlinCompile> {
-    kotlinOptions.jvmTarget = "1.8"
 }
