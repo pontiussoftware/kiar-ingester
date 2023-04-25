@@ -35,7 +35,7 @@ data class JobConfig(
     /** The named mapping configuration to use. Must correspond to an existing configuration. */
     val mappingConfig: String,
 
-    /** The named mapping configuration to use. Must correspond to an existing configuration. */
+    /** The name of the [SolrConfig] to use. Must correspond to an existing configuration. */
     val solrConfig: String,
 
     /** Set to true, if job should be started upon creation of the file. */

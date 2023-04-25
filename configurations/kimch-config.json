@@ -1,6 +1,14 @@
 {
   "solr": [
-    { "name": "KIM.ch Solr Config", "server": "http://localhost:8983/solr", "collection":  "kimch-objects", "deleteBeforeImport": true }
+    {
+      "name": "KIM.ch Solr Confi",
+      "server": "http://localhost:8983/solr",
+      "collections": [
+        {"name": "kimch-objects", "deleteBeforeImport": true, "filter": ["Kulturgüterportal NWCH"]},
+        {"name": "kimbl-objects", "deleteBeforeImport": true, "filter": ["Kulturgüterportal BL"]},
+        {"name": "mmbe-objects", "deleteBeforeImport": true, "filter": ["mmBE Inventar"]}
+      ]
+    }
   ],
 
   "mappers": [

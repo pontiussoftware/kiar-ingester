@@ -4,7 +4,7 @@ package ch.pontius.ingester.config
  * Configuration regarding Apache Solr (for SolrJ).
  *
  * @author Ralph Gasser
- * @version 1.0.0
+ * @version 1.1.0
  */
 @kotlinx.serialization.Serializable
 class SolrConfig(
@@ -19,9 +19,6 @@ class SolrConfig(
     /** Password to use when authentication with Apache Solr. */
     val password: String? = null,
 
-    /** URL of the Apache Solr server. */
-    val collection: String,
-
-    /** Password to use when authentication with Apache Solr. */
-    val deleteBeforeImport: Boolean = true
+    /** A list of [CollectionConfig] for this [SolrConfig]. */
+    val collections: List<CollectionConfig> = emptyList()
 )

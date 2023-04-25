@@ -93,9 +93,9 @@ class IngesterServer(val config: Config) {
         /* Execute the pipeline. */
         try {
             sink.execute()
-            LOGGER.info("Data ingest (name = ${jobConfig.name}, collection = ${solrConfig.collection}) completed successfully!")
+            LOGGER.info("Data ingest (name = ${jobConfig.name}) completed successfully!")
         } catch (e: Throwable) {
-            LOGGER.error("Data ingest (name = ${jobConfig.name}, collection = ${solrConfig.collection}) failed: ${e.message}")
+            LOGGER.error("Data ingest (name = ${jobConfig.name}) failed: ${e.message}")
         }
     }
 
