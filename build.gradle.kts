@@ -1,8 +1,7 @@
 plugins {
-    val kotlinVersion = "1.8.0"
+    val kotlinVersion = "1.8.20"
     kotlin("jvm") version kotlinVersion
     id("org.jetbrains.kotlin.plugin.serialization") version kotlinVersion
-    application
     idea
 }
 

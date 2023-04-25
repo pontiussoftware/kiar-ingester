@@ -4,4 +4,4 @@ pluginManagement {
     }
 }
 rootProject.name = "kiar"
-include("kiar-uploader", "kiar-ingester")
+include("kiar-ingest", "kiar-ui")
