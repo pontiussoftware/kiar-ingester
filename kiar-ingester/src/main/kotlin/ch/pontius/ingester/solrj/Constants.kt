@@ -11,6 +11,9 @@ object Constants {
     val FIELD_NAME_RAW = "_raw_"
 
     /** Name of the participant field in an Apache Solr document. */
+    val FIELD_NAME_OUTPUT = "_output_"
+
+    /** Name of the participant field in an Apache Solr document. */
     val FIELD_NAME_PARTICIPANT = "_participant_"
 
     /** Name of the canton field in an Apache Solr document. */
