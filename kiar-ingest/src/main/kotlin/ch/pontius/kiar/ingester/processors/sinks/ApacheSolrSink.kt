@@ -82,8 +82,10 @@ class ApacheSolrSink(override val input: Source<SolrInputDocument>, private val 
         /* Purge all collections that were configured. */
         for (c in this.config.collections) {
             if (c.deleteBeforeImport) {
+                LOGGER.info("Purging collection (name = ${this@ApacheSolrSink.context} collection = ${c.name}).")
                 val response = client.deleteByQuery(c.name, "$FIELD_NAME_PARTICIPANT:\"${this.context}\"")
                 if (response.status != 0) {
+                    LOGGER.error("Purge of collection failed (name = ${this@ApacheSolrSink.context} collection = ${c.name}).")
                     throw IllegalArgumentException("Data ingest (name = ${this.context}, collection = ${c.name}) failed because delete before import could not be executed.")
                 }
             }
