@@ -85,9 +85,10 @@ class ApacheSolrSink(override val input: Source<SolrInputDocument>, private val 
                 LOGGER.info("Purging collection (name = ${this@ApacheSolrSink.context} collection = ${c.name}).")
                 val response = client.deleteByQuery(c.name, "$FIELD_NAME_PARTICIPANT:\"${this.context}\"")
                 if (response.status != 0) {
-                    LOGGER.error("Purge of collection failed (name = ${this@ApacheSolrSink.context} collection = ${c.name}).")
+                    LOGGER.error("Purge of collection failed (name = ${this@ApacheSolrSink.context} collection = ${c.name}). Aborting...")
                     throw IllegalArgumentException("Data ingest (name = ${this.context}, collection = ${c.name}) failed because delete before import could not be executed.")
                 }
+                LOGGER.info("Purge of collection successful (name = ${this@ApacheSolrSink.context} collection = ${c.name}).")
             }
         }
     }
