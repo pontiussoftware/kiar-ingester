@@ -33,5 +33,5 @@ class DbInstitution(entity: Entity) : XdEntity(entity) {
     var publish by xdBooleanProp()
 
     /** List of [DbUser]s that belong to this [DbInstitution]. */
-    //val users by xdLink0_N<DbInstitution, DbUser>(DbUser::institution, onDelete = OnDeletePolicy.CASCADE, onTargetDelete = OnDeletePolicy.CLEAR)
+    val users by xdLink0_N(DbUser::institution, onDelete = OnDeletePolicy.CASCADE, onTargetDelete = OnDeletePolicy.CLEAR)
 }

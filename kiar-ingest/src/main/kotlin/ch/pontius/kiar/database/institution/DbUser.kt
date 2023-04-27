@@ -31,5 +31,5 @@ class DbUser(entity: Entity) : XdEntity(entity) {
     var role by xdLink1(DbRole)
 
     /** The [DbInstitution] this [DbUser] belongs to. */
-    //var institution by xdLink0_1<DbUser, DbInstitution>(DbInstitution::users, onDelete = OnDeletePolicy.CLEAR, onTargetDelete = OnDeletePolicy.CASCADE)
+    var institution: DbInstitution? by xdLink0_1(DbInstitution::users, onDelete = OnDeletePolicy.CLEAR, onTargetDelete = OnDeletePolicy.CASCADE)
 }
