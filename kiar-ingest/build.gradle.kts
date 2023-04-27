@@ -2,7 +2,7 @@ val appCompatVersion: String by project
 
 val ktorVersion: String by project
 val kotlinVersion: String by project
-val logbackVersion: String by project
+val solrjVersion: String by project
 val xodusVersion: String by project
 val xodusDnqVersion: String by project
 
@@ -16,7 +16,7 @@ application {
 
 dependencies {
     /** SolrJ. */
-    implementation("org.apache.solr:solr-solrj:9.1.0")
+    implementation("org.apache.solr:solr-solrj:$solrjVersion")
 
     /** Log4j2 & SLF4j */
     implementation("org.apache.logging.log4j:log4j-api:2.19.0")
