@@ -50,18 +50,19 @@ class ApacheSolrSink(override val input: Source<SolrInputDocument>, private val 
             /* Consume flow and commit (or rollback)*/
             runBlocking {
                 flow.collect {
-                    LOGGER.debug("Incoming document (name = ${this@ApacheSolrSink.context}, uuid = ${it[Constants.FIELD_NAME_UUID]}).")
+                    try {
+                        LOGGER.debug("Incoming document (name = ${this@ApacheSolrSink.context}, uuid = ${it[Constants.FIELD_NAME_UUID]}).")
 
-                    it.addField(FIELD_NAME_PARTICIPANT, this@ApacheSolrSink.context)
-                    if (it[FIELD_NAME_CANTON]?.value == "BE") {  /* TODO: This is a hack! */
-                        it.addField(FIELD_NAME_OUTPUT, "mmBE Inventar")
-                    }
+                        it.addField(FIELD_NAME_PARTICIPANT, this@ApacheSolrSink.context)
+                        if (it[FIELD_NAME_CANTON]?.value == "BE") {  /* TODO: This is a hack! */
+                            it.addField(FIELD_NAME_OUTPUT, "mmBE Inventar")
+                        }
 
-                    LOGGER.debug("Starting document ingest (name = ${this@ApacheSolrSink.context}, uuid = ${it[Constants.FIELD_NAME_UUID]}).")
-                    for (c in this@ApacheSolrSink.config.collections) {
-                        try {
-                            if (c.isMatch(it)) {
-                                LOGGER.debug("Adding document (name = ${this@ApacheSolrSink.context}, uuid = ${it[Constants.FIELD_NAME_UUID]}, collection = ${c.name}).")
+                        LOGGER.debug("Starting document ingest (name = ${this@ApacheSolrSink.context}, uuid = ${it[Constants.FIELD_NAME_UUID]}).")
+                        for (c in this@ApacheSolrSink.config.collections) {
+                            try {
+                                if (c.isMatch(it)) {
+                                    LOGGER.debug("Adding document (name = ${this@ApacheSolrSink.context}, uuid = ${it[Constants.FIELD_NAME_UUID]}, collection = ${c.name}).")
                                     val response = client.add(c.name, it)
                                     if (response.status == 0) {
                                         LOGGER.info("Successfully added document (name = ${this@ApacheSolrSink.context}, uuid = ${it[Constants.FIELD_NAME_UUID]}, collection = ${c.name}).")
@@ -69,14 +70,15 @@ class ApacheSolrSink(override val input: Source<SolrInputDocument>, private val 
                                         LOGGER.warn("Error while adding document (name = ${this@ApacheSolrSink.context}, uuid = ${it[Constants.FIELD_NAME_UUID]}, collection = ${c.name}).")
                                     }
 
-                            } else {
-                                LOGGER.debug("Document (name = ${this@ApacheSolrSink.context}, uuid = ${it[Constants.FIELD_NAME_UUID]}, collection = ${c.name}) no match for collection.")
+                                } else {
+                                    LOGGER.debug("Document (name = ${this@ApacheSolrSink.context}, uuid = ${it[Constants.FIELD_NAME_UUID]}, collection = ${c.name}) no match for collection.")
+                                }
+                            } catch (e: SolrServerException) {
+                                LOGGER.warn("Server reported error while adding document (name = ${this@ApacheSolrSink.context}, uuid = ${it[Constants.FIELD_NAME_UUID]}, collection = ${c.name}).")
                             }
-                        } catch (e: SolrServerException) {
-                            LOGGER.warn("Server reported error while adding document (name = ${this@ApacheSolrSink.context}, uuid = ${it[Constants.FIELD_NAME_UUID]}, collection = ${c.name}).")
-                        } catch (e: Throwable) {
-                            LOGGER.error("Serious error occurred while adding a document (name = ${this@ApacheSolrSink.context}, uuid = ${it[Constants.FIELD_NAME_UUID]}, collection = ${c.name}): ${e.message}")
                         }
+                    } catch (e: Throwable) {
+                        LOGGER.error("Serious error occurred while adding a document (name = ${this@ApacheSolrSink.context}, uuid = ${it[Constants.FIELD_NAME_UUID]}): ${e.message}")
                     }
                 }
             }
