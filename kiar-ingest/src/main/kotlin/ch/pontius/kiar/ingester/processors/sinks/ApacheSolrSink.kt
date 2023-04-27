@@ -28,6 +28,8 @@ class ApacheSolrSink(override val input: Source<SolrInputDocument>, private val 
 
     companion object {
         private val LOGGER = LogManager.getLogger()
+
+        private val SYSTEM_FIELDS = setOf("_version_", "_fulltext_")
     }
 
     /** The [Http2SolrClient] used to interact with Apache Solr.*/
@@ -100,7 +102,7 @@ class ApacheSolrSink(override val input: Source<SolrInputDocument>, private val 
             /* Prepare HTTP client builder. */
             val fields = SchemaRequest.Fields().process(this.client, c.name).fields
             val validators = fields.mapNotNull { schemaField ->
-                if (schemaField["name"] != "_fulltext_") {
+                if (schemaField["name"] in SYSTEM_FIELDS) {
                     ApacheSolrField(schemaField["name"] as String, schemaField["required"] as Boolean, schemaField["multiValued"] as Boolean)
                 } else {
                     null
