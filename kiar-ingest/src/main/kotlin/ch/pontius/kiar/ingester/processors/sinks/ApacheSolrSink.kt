@@ -44,6 +44,7 @@ class ApacheSolrSink(override val input: Source<SolrInputDocument>, private val 
         val client = ConcurrentUpdateHttp2SolrClient.Builder(this.config.server, httpBuilder.build(), true).build()
         client.use {
             /* Prepare all collections for import. */
+
             this.prepareIngest(client)
 
             /* Consume flow and commit (or rollback)*/
@@ -66,6 +67,8 @@ class ApacheSolrSink(override val input: Source<SolrInputDocument>, private val 
                                 }
                             } catch (e: SolrServerException) {
                                 LOGGER.warn("Server reported error while adding document (name = ${this@ApacheSolrSink.context}, uuid = ${it[Constants.FIELD_NAME_UUID]}, collection = ${c.name}).")
+                            } catch (e: Throwable) {
+                                LOGGER.error("Serious error occurred while adding a document (name = ${this@ApacheSolrSink.context}, uuid = ${it[Constants.FIELD_NAME_UUID]}, collection = ${c.name}): ${e.message}")
                             }
                         }
                     }
