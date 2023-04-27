@@ -26,7 +26,7 @@
         {"destination": "isbn", "source": "/objects/object/Isbn", "parser": "STRING"},
         {"destination": "objektbezeichnung", "source": "/objects/object/Objektbezeichnung", "parser": "STRING", "required": true},
         {"destination": "alternative_objektbezeichnung", "source": "/objects/object/AlternativeObjektbezeichnung", "parser": "STRING"},
-        {"destination": "anzahl", "source": "/objects/object/Stuck", "parser": "DOUBLE"},
+        {"destination": "anzahl", "source": "/objects/object/Stuck", "parser": "INTEGER"},
         {"destination": "titel", "source": "/objects/object/Titel", "parser": "STRING"},
         {"destination": "taxon", "source": "/objects/object/Taxon", "parser": "STRING"},
         {"destination": "objekttyp", "source": "/objects/object/Objekttyp", "parser": "STRING", "required": true},

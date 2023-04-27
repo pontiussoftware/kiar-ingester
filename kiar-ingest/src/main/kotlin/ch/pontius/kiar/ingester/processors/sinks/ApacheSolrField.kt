@@ -7,7 +7,7 @@ import org.apache.solr.common.SolrInputDocument
  * @author Ralph Gasser
  * @version 1.0.0
  */
-data class ApacheSolrField(val name: String, val required: Boolean, val multiValued: Boolean) {
+data class ApacheSolrField(val name: String, val required: Boolean, val multiValued: Boolean, val hasDefault: Boolean) {
     /**
      * Checks if [SolrInputDocument] is valid for ingest. Returns true if so, and false otherwise.
      *
@@ -16,7 +16,7 @@ data class ApacheSolrField(val name: String, val required: Boolean, val multiVal
      */
     fun isValid(input: SolrInputDocument): Boolean {
         val field = input[this.name]
-        if (this.required && (field == null || field.valueCount == 0)) return false
+        if (this.required && !this.hasDefault && (field == null || field.valueCount == 0)) return false
         if (field != null) {
             if (!this.multiValued &&  field.valueCount > 1) return false
         }
@@ -31,7 +31,7 @@ data class ApacheSolrField(val name: String, val required: Boolean, val multiVal
      */
     fun isInvalidReason(input: SolrInputDocument): String {
         val field = input[this.name]
-        if (this.required && (field == null || field.valueCount == 0)) return "Field ${this.name} is required but empty."
+        if (this.required && !this.hasDefault && (field == null || field.valueCount == 0)) return "Field ${this.name} is required but empty."
         if (field != null) {
             if (!this.multiValued &&  field.valueCount > 1) return "Field ${this.name} is single-valued but contains multiple values."
         }

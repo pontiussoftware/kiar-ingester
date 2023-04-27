@@ -103,7 +103,7 @@ class ApacheSolrSink(override val input: Source<SolrInputDocument>, private val 
             val fields = SchemaRequest.Fields().process(this.client, c.name).fields
             val validators = fields.mapNotNull { schemaField ->
                 if (schemaField["name"] !in SYSTEM_FIELDS) {
-                    ApacheSolrField(schemaField["name"] as String, schemaField["required"] as Boolean, schemaField["multiValued"] as Boolean)
+                    ApacheSolrField(schemaField["name"] as String, schemaField["required"] as Boolean, schemaField["multiValued"] as Boolean, schemaField.contains("default"))
                 } else {
                     null
                 }
