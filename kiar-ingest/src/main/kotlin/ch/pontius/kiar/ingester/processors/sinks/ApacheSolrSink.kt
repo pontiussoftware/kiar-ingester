@@ -44,12 +44,13 @@ class ApacheSolrSink(override val input: Source<SolrInputDocument>, private val 
         val client = ConcurrentUpdateHttp2SolrClient.Builder(this.config.server, httpBuilder.build(), true).build()
         client.use {
             /* Prepare all collections for import. */
-
+            val flow = this@ApacheSolrSink.input.toFlow()
             this.prepareIngest(client)
 
             /* Consume flow and commit (or rollback)*/
             runBlocking {
-                this@ApacheSolrSink.input.toFlow().collect {
+                flow.collect {
+                    LOGGER.debug("Incoming document (name = ${this@ApacheSolrSink.context}, uuid = ${it[Constants.FIELD_NAME_UUID]}.")
 
                     it.addField(FIELD_NAME_PARTICIPANT, this@ApacheSolrSink.context)
                     if (it[FIELD_NAME_CANTON]?.value == "BE") {  /* TODO: This is a hack! */
