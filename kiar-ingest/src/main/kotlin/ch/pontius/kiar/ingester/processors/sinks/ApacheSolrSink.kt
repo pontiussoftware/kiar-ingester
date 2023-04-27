@@ -58,6 +58,7 @@ class ApacheSolrSink(override val input: Source<SolrInputDocument>, private val 
 
                     for (c in this@ApacheSolrSink.config.collections) {
                         if (c.isMatch(it)) {
+                            LOGGER.debug("Adding document (name = ${this@ApacheSolrSink.context}, uuid = ${it[Constants.FIELD_NAME_UUID]}, collection = ${c.name}).")
                             try {
                                 val response = client.add(c.name, it)
                                 if (response.status == 0) {
