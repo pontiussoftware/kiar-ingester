@@ -78,7 +78,7 @@ class ApacheSolrSink(override val input: Source<SolrInputDocument>, private val 
                             }
                         }
                     } catch (e: Throwable) {
-                        LOGGER.error("Serious error occurred while adding a document (name = ${this@ApacheSolrSink.context}, uuid = ${it[Constants.FIELD_NAME_UUID]}): $e")
+                        LOGGER.error("Serious error occurred while adding a document (name = ${this@ApacheSolrSink.context}, uuid = ${it[Constants.FIELD_NAME_UUID]}): ${e.printStackTrace()}")
                     }
                 }
             }
