@@ -57,6 +57,7 @@ class ApacheSolrSink(override val input: Source<SolrInputDocument>, private val 
                         it.addField(FIELD_NAME_OUTPUT, "mmBE Inventar")
                     }
 
+                    LOGGER.debug("Starting document ingest (name = ${this@ApacheSolrSink.context}, uuid = ${it[Constants.FIELD_NAME_UUID]}).")
                     for (c in this@ApacheSolrSink.config.collections) {
                         try {
                             if (c.isMatch(it)) {
