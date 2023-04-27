@@ -30,6 +30,7 @@ data class CollectionConfig (
      * @return True if [SolrInputDocument] is a match, false otherwise.
      */
     fun isMatch(doc: SolrInputDocument): Boolean {
+        if (this.filter.isEmpty()) return true
         val field = doc.getFieldValues(Constants.FIELD_NAME_OUTPUT) ?: return this.acceptEmptyFilter
         if (this.acceptEmptyFilter && field.isEmpty()) return true
         return field.any { this.filter.contains(it) }
