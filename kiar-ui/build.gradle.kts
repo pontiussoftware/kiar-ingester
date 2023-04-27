@@ -15,25 +15,4 @@ application {
 
 dependencies {
 
-    /** Ktor */
-    implementation("io.ktor:ktor-server-core-jvm:$ktorVersion")
-    implementation("io.ktor:ktor-server-auth-jvm:$ktorVersion")
-    implementation("io.ktor:ktor-server-sessions-jvm:$ktorVersion")
-    implementation("io.ktor:ktor-server-content-negotiation-jvm:$ktorVersion")
-    implementation("io.ktor:ktor-serialization-kotlinx-json-jvm:$ktorVersion")
-    implementation("io.ktor:ktor-server-netty-jvm:$ktorVersion")
-
-    /** Logback */
-    implementation("ch.qos.logback:logback-classic:$logbackVersion")
-
-    /** Xodus & Xodus DNQ */
-    implementation("org.jetbrains.xodus:xodus-openAPI:$xodusVersion")
-    implementation("org.jetbrains.xodus:xodus-environment:$xodusVersion")
-    implementation("org.jetbrains.xodus:xodus-entity-store:$xodusVersion")
-    implementation("org.jetbrains.xodus:xodus-vfs:$xodusVersion")
-    implementation("org.jetbrains.xodus:dnq:$xodusDnqVersion")
-
-    /** UnitTest dependencies. */
-    testImplementation("org.jetbrains.kotlin:kotlin-test-junit:$kotlinVersion")
-    testImplementation("io.ktor:ktor-server-tests-jvm:$ktorVersion")
 }
