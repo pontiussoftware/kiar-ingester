@@ -64,6 +64,9 @@ class ApacheSolrSink(override val input: Source<SolrInputDocument>, private val 
             try {
                 LOGGER.debug("Incoming document (name = ${this@ApacheSolrSink.context}, uuid = $uuid).")
 
+                /* Add necessary system fields. */
+                doc.addField(FIELD_NAME_PARTICIPANT, this@ApacheSolrSink.context)
+
                 LOGGER.debug("Starting document ingest (name = ${this@ApacheSolrSink.context}, uuid = $uuid).")
                 for (c in this@ApacheSolrSink.config.collections) {
                     try {
@@ -136,8 +139,7 @@ class ApacheSolrSink(override val input: Source<SolrInputDocument>, private val 
     private fun sanitize(collection: String, doc: SolrInputDocument): SolrInputDocument {
         val sanitized = doc.deepCopy()
 
-        /* Add necessary system fields. */
-        sanitized.addField(FIELD_NAME_PARTICIPANT, this@ApacheSolrSink.context)
+        /* TODO: Remove fields not needed by this collection. */
 
         /* Remove fields that have been marked as internal */
         for (f in Constants.INTERNAL_FIELDS) {
