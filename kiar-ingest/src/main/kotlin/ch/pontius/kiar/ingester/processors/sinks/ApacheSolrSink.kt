@@ -6,6 +6,7 @@ import ch.pontius.kiar.ingester.solrj.Constants
 import ch.pontius.kiar.ingester.solrj.Constants.FIELD_NAME_CANTON
 import ch.pontius.kiar.ingester.solrj.Constants.FIELD_NAME_OUTPUT
 import ch.pontius.kiar.ingester.solrj.Constants.FIELD_NAME_PARTICIPANT
+import ch.pontius.kiar.ingester.solrj.Constants.SYSTEM_FIELDS
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.runBlocking
 import org.apache.logging.log4j.LogManager
@@ -103,7 +104,7 @@ class ApacheSolrSink(override val input: Source<SolrInputDocument>, private val 
             val types = SchemaRequest.FieldTypes().process(client, c.name).fieldTypes /* TODO: Type-based validation. */
 
             val validators = fields.mapNotNull { schemaField ->
-                if (schemaField["name"] !in copyFields) {
+                if (schemaField["name"] !in copyFields && schemaField["name"] !in SYSTEM_FIELDS) {
                     ApacheSolrField(schemaField["name"] as String, schemaField["required"] as Boolean, schemaField["multiValued"] as Boolean, schemaField.contains("default"))
                 } else {
                     null
