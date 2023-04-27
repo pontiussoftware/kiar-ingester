@@ -1,10 +1,10 @@
-package ch.pontius.kiar.uploader.routes
+package ch.pontius.kiar.api.routes
 
 import io.ktor.server.routing.*
 import io.ktor.server.response.*
 import io.ktor.server.application.*
 import io.ktor.server.auth.*
-import ch.pontius.kiar.uploader.routes.kiar.kiarUploadRoute
+import ch.pontius.kiar.api.routes.kiar.kiarUploadRoute
 import io.ktor.serialization.kotlinx.json.*
 import io.ktor.server.plugins.contentnegotiation.*
 import jetbrains.exodus.database.TransientEntityStore

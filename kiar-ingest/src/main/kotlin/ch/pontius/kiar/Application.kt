@@ -1,8 +1,14 @@
 package ch.pontius.kiar
 
+import ch.pontius.kiar.api.routes.configureRoutes
+import ch.pontius.kiar.api.security.configureAuthentication
+import ch.pontius.kiar.api.security.configureSecurity
 import ch.pontius.kiar.ingester.IngesterServer
 import ch.pontius.kiar.ingester.cli.Cli
 import ch.pontius.kiar.ingester.config.Config
+import io.ktor.server.application.*
+import io.ktor.server.engine.*
+import io.ktor.server.netty.*
 import jetbrains.exodus.database.TransientEntityStore
 import kotlinx.serialization.json.Json
 import java.io.FileNotFoundException
@@ -13,6 +19,9 @@ import kotlin.system.exitProcess
 /** The [TransientEntityStore] representing this instance's database. */
 var DB: TransientEntityStore? = null
 
+/** The [IngesterServer] running for this application instance. */
+var SERVER: IngesterServer? = null
+
 /**
  * Entry point for [IngesterServer].
  */
@@ -20,18 +29,16 @@ fun main(args: Array<String>) {
     /* Try to start Cottontail DB */
     try {
         val config: Config = loadConfig(args.firstOrNull() ?: "./config.json")
-        val server = IngesterServer(config)
+        SERVER = IngesterServer(config)
 
 
         /* Initializes the embedded Xodus database. */
         //XdModel.registerNodes(DbJob, DbTaskStatus, DbInstitution, DbRole, DbUser)
         //initMetaData(XdModel.hierarchy, store)
 
-        /* Start Ktor server. */
-        //embeddedServer(Netty, port = 8080, host = "0.0.0.0", module = Application::module).start(wait = true)
+        embeddedServer(Netty, port = 7070, host = "0.0.0.0", module = Application::module).start(wait = true)
+        Cli(SERVER!!).loop()
 
-        val cli = Cli(server)
-        cli.loop()
     } catch (e: Throwable) {
         System.err.println("Failed to start IngesterServer due to error:")
         System.err.println(e.printStackTrace())
@@ -67,11 +74,11 @@ private fun loadConfig(path: String): Config {
 /**
  * Configures the Ktor application
  */
-private fun module() {
+private fun Application.module() {
     /* Configures security and authentication. */
-    //configureSecurity()
-    //configureAuthentication(DB ?: throw IllegalStateException("Database has not been initialized. Program is terminated!"))
+    configureSecurity()
+    configureAuthentication(DB ?: throw IllegalStateException("Database has not been initialized. Program is terminated!"))
 
     /* Configures routes for API. */
-    //configureRoutes(DB ?: throw IllegalStateException("Database has not been initialized. Program is terminated!"))
+    configureRoutes(DB ?: throw IllegalStateException("Database has not been initialized. Program is terminated!"))
 }

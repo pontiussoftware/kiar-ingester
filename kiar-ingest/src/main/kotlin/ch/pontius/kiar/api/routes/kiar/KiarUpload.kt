@@ -1,4 +1,4 @@
-package ch.pontius.kiar.uploader.routes.kiar
+package ch.pontius.kiar.api.routes.kiar
 
 import io.ktor.http.*
 import io.ktor.server.application.*

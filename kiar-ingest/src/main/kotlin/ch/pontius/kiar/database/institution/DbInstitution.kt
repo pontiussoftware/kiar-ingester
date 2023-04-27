@@ -1,4 +1,4 @@
-package ch.pontius.kiar.uploader.model.database.institution
+package ch.pontius.kiar.database.institution
 
 import jetbrains.exodus.entitystore.Entity
 import kotlinx.dnq.*

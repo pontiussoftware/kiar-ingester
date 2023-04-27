@@ -1,4 +1,4 @@
-package ch.pontius.kiar.uploader.model.database.ingest
+package ch.pontius.kiar.database.ingest
 
 import jetbrains.exodus.entitystore.Entity
 import kotlinx.dnq.XdEnumEntity

@@ -1,4 +1,4 @@
-package ch.pontius.kiar.uploader.security
+package ch.pontius.kiar.api.security
 
 import io.ktor.server.sessions.*
 import io.ktor.server.response.*

@@ -1,6 +1,6 @@
-package ch.pontius.kiar.uploader.model.database.ingest
+package ch.pontius.kiar.database.ingest
 
-import ch.pontius.kiar.uploader.model.database.institution.DbUser
+import ch.pontius.kiar.database.institution.DbUser
 import jetbrains.exodus.entitystore.Entity
 import kotlinx.dnq.*
 
