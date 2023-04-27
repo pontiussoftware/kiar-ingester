@@ -38,7 +38,7 @@ object Constants {
     const val FIELD_NAME_INVENTORY_NUMBER = "inventarnummer"
 
     /** Name of the 'objekttyp' field in an Apache Solr document. */
-    const val FIELD_NAME_OBJECTTYPE = "objekttpy"
+    const val FIELD_NAME_OBJECTTYPE = "objekttyp"
 
     /** Set of system fields to ignore upon ingest. */
     val SYSTEM_FIELDS = setOf(FIELD_NAME_VERSION, FIELD_NAME_RANDOM)
