@@ -6,6 +6,11 @@ import ch.pontius.kiar.api.security.configureSecurity
 import ch.pontius.kiar.ingester.IngesterServer
 import ch.pontius.kiar.cli.Cli
 import ch.pontius.kiar.config.Config
+import ch.pontius.kiar.database.ingest.DbJob
+import ch.pontius.kiar.database.ingest.DbTaskStatus
+import ch.pontius.kiar.database.institution.DbInstitution
+import ch.pontius.kiar.database.institution.DbRole
+import ch.pontius.kiar.database.institution.DbUser
 import io.ktor.server.application.*
 import io.ktor.server.engine.*
 import io.ktor.server.netty.*
@@ -36,9 +41,7 @@ fun main(args: Array<String>) {
         SERVER = IngesterServer(config)
 
         /* Initializes the embedded Xodus database. */
-        DB = StaticStoreContainer.init(dbFolder = File(config.dbPath), entityStoreName = "kiar-db")
-        //XdModel.registerNodes(DbJob, DbTaskStatus, DbInstitution, DbRole, DbUser)
-        // initMetaData(XdModel.hierarchy, store)
+        DB = initializeDatabase(config)
 
         /* Start Ktor web-server (if configured). */
         if (config.web) {
@@ -79,6 +82,18 @@ private fun loadConfig(path: String): Config {
         e.printStackTrace()
         exitProcess(1)
     }
+}
+
+/**
+ * Initializes and returns the [TransientEntityStore] based on the provided [Config].
+ *
+ * @return [TransientEntityStore]
+ */
+private fun initializeDatabase(config: Config): TransientEntityStore {
+    val store = StaticStoreContainer.init(dbFolder = File(config.dbPath), entityStoreName = "kiar-db")
+    XdModel.registerNodes(DbJob, DbTaskStatus, DbInstitution, DbRole, DbUser)
+    initMetaData(XdModel.hierarchy, store)
+    return store;
 }
 
 /**
