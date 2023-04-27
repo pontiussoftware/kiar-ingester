@@ -1,4 +1,4 @@
-package ch.pontius.kiar.ingester.config
+package ch.pontius.kiar.config
 
 import ch.pontius.kiar.ingester.processors.sinks.Sinks
 import ch.pontius.kiar.ingester.processors.sources.Sources

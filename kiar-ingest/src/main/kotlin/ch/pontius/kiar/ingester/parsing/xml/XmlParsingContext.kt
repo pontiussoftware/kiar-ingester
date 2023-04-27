@@ -1,6 +1,6 @@
 package ch.pontius.kiar.ingester.parsing.xml
 
-import ch.pontius.kiar.ingester.config.MappingConfig
+import ch.pontius.kiar.config.MappingConfig
 import ch.pontius.kiar.ingester.parsing.values.ValueParser
 import ch.pontius.kiar.ingester.solrj.Constants
 import org.apache.logging.log4j.LogManager

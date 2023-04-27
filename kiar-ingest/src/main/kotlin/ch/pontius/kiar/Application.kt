@@ -4,8 +4,8 @@ import ch.pontius.kiar.api.routes.configureRoutes
 import ch.pontius.kiar.api.security.configureAuthentication
 import ch.pontius.kiar.api.security.configureSecurity
 import ch.pontius.kiar.ingester.IngesterServer
-import ch.pontius.kiar.ingester.cli.Cli
-import ch.pontius.kiar.ingester.config.Config
+import ch.pontius.kiar.cli.Cli
+import ch.pontius.kiar.config.Config
 import io.ktor.server.application.*
 import io.ktor.server.engine.*
 import io.ktor.server.netty.*
@@ -31,14 +31,19 @@ fun main(args: Array<String>) {
         val config: Config = loadConfig(args.firstOrNull() ?: "./config.json")
         SERVER = IngesterServer(config)
 
-
         /* Initializes the embedded Xodus database. */
         //XdModel.registerNodes(DbJob, DbTaskStatus, DbInstitution, DbRole, DbUser)
         //initMetaData(XdModel.hierarchy, store)
 
-        embeddedServer(Netty, port = 7070, host = "0.0.0.0", module = Application::module).start(wait = true)
-        Cli(SERVER!!).loop()
+        /* Start Ktor web-server (if configured). */
+        if (config.web) {
+            embeddedServer(Netty, port = config.webPort, host = "0.0.0.0", module = Application::module).start(wait = true)
+        }
 
+        /* Start CLI (if configured). */
+        if (config.cli) {
+            Cli(SERVER!!).loop()
+        }
     } catch (e: Throwable) {
         System.err.println("Failed to start IngesterServer due to error:")
         System.err.println(e.printStackTrace())

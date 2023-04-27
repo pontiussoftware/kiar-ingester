@@ -1,7 +1,7 @@
 package ch.pontius.kiar.ingester.watcher
 
 import ch.pontius.kiar.ingester.IngesterServer
-import ch.pontius.kiar.ingester.config.JobConfig
+import ch.pontius.kiar.config.JobConfig
 import org.apache.logging.log4j.LogManager
 import java.io.IOException
 import java.nio.file.*

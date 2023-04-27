@@ -16,8 +16,10 @@ import org.apache.solr.common.SolrInputDocument
 class SystemTransformer(override val input: Source<SolrInputDocument>, parameters: Map<String,String>): Transformer<SolrInputDocument, SolrInputDocument> {
     override fun toFlow(): Flow<SolrInputDocument> = this.input.toFlow().map {
         it.addField(Constants.FIELD_NAME_CANTON, (it[FIELD_NAME_INVENTORY_NUMBER]?.value as String).substring(0..1))
+        if (it[Constants.FIELD_NAME_CANTON]?.value == "BE") {  /* TODO: This is a hack! */
+            it.addField(Constants.FIELD_NAME_OUTPUT, "mmBE Inventar")
+        }
         it.addField(Constants.FIELD_NAME_IMAGECOUNT, it[Constants.FIELD_NAME_RAW]?.valueCount ?: 0) /* Set _imagecount_ field. */
-        it.removeField(Constants.FIELD_NAME_RAW) /* Remove the _raw_ field. */
         it
     }
 }

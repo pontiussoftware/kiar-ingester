@@ -1,4 +1,4 @@
-package ch.pontius.kiar.ingester.config
+package ch.pontius.kiar.config
 
 import kotlinx.serialization.Serializable
 
@@ -10,6 +10,15 @@ import kotlinx.serialization.Serializable
  */
 @Serializable
 data class Config(
+    /** Flag indicating whether the CLI should be started. */
+    val cli: Boolean = true,
+
+    /** Flag indicating whether the web server should be started. */
+    val web: Boolean = false,
+
+    /** The port to start the web server under.*/
+    val webPort: Int = 7070,
+
     /** A [List] of registered [SolrConfig] instances. */
     val solr: List<SolrConfig> = emptyList(),
 

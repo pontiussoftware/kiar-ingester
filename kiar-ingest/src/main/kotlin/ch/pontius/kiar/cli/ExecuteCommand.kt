@@ -1,4 +1,4 @@
-package ch.pontius.kiar.ingester.cli
+package ch.pontius.kiar.cli
 
 import ch.pontius.kiar.ingester.IngesterServer
 import com.github.ajalt.clikt.core.CliktCommand

@@ -1,6 +1,6 @@
 package ch.pontius.kiar.ingester.processors.sources
 
-import ch.pontius.kiar.ingester.config.MappingConfig
+import ch.pontius.kiar.config.MappingConfig
 import ch.pontius.kiar.ingester.parsing.xml.XmlAttributeMapping
 import ch.pontius.kiar.ingester.parsing.xml.XmlParsingContext
 import ch.pontius.kiar.ingester.solrj.Constants.FIELD_NAME_UUID

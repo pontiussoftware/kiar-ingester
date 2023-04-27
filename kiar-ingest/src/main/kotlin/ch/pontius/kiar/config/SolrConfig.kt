@@ -1,4 +1,4 @@
-package ch.pontius.kiar.ingester.config
+package ch.pontius.kiar.config
 
 /**
  * Configuration regarding Apache Solr (for SolrJ).

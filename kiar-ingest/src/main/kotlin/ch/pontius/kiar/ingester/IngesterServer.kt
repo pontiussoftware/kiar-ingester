@@ -1,6 +1,6 @@
 package ch.pontius.kiar.ingester
 
-import ch.pontius.kiar.ingester.config.Config
+import ch.pontius.kiar.config.Config
 import ch.pontius.kiar.ingester.processors.sinks.ApacheSolrSink
 import ch.pontius.kiar.ingester.processors.sinks.LoggerSink
 import ch.pontius.kiar.ingester.processors.sinks.Sinks

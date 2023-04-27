@@ -1,6 +1,6 @@
 package ch.pontius.kiar.ingester.processors.transformers
 
-import ch.pontius.kiar.ingester.config.TransformerConfig
+import ch.pontius.kiar.config.TransformerConfig
 import ch.pontius.kiar.ingester.processors.sources.Source
 import ch.pontius.kiar.ingester.solrj.Constants.FIELD_NAME_RAW
 import ch.pontius.kiar.ingester.solrj.Constants.FIELD_NAME_UUID

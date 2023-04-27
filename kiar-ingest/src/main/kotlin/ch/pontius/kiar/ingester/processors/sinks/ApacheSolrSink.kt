@@ -1,6 +1,6 @@
 package ch.pontius.kiar.ingester.processors.sinks
 
-import ch.pontius.kiar.ingester.config.SolrConfig
+import ch.pontius.kiar.config.SolrConfig
 import ch.pontius.kiar.ingester.processors.sources.Source
 import ch.pontius.kiar.ingester.solrj.Constants
 import ch.pontius.kiar.ingester.solrj.Constants.FIELD_NAME_CANTON
@@ -64,16 +64,11 @@ class ApacheSolrSink(override val input: Source<SolrInputDocument>, private val 
             try {
                 LOGGER.debug("Incoming document (name = ${this@ApacheSolrSink.context}, uuid = $uuid).")
 
-                doc.addField(FIELD_NAME_PARTICIPANT, this@ApacheSolrSink.context)
-                if (doc[FIELD_NAME_CANTON]?.value == "BE") {  /* TODO: This is a hack! */
-                    doc.addField(FIELD_NAME_OUTPUT, "mmBE Inventar")
-                }
-
                 LOGGER.debug("Starting document ingest (name = ${this@ApacheSolrSink.context}, uuid = $uuid).")
                 for (c in this@ApacheSolrSink.config.collections) {
                     try {
                         if (c.isMatch(doc) && this@ApacheSolrSink.validate(c.name, doc)) {
-                            val response = this@ApacheSolrSink.client.add(c.name, this@ApacheSolrSink.sanitize(doc))
+                            val response = this@ApacheSolrSink.client.add(c.name, this@ApacheSolrSink.sanitize(c.name, doc))
                             if (response.status == 0) {
                                 LOGGER.info("Successfully added document (name = ${this@ApacheSolrSink.context}, uuid = $uuid, collection = ${c.name}).")
                             } else {
@@ -138,11 +133,17 @@ class ApacheSolrSink(override val input: Source<SolrInputDocument>, private val 
      * @param doc The [SolrInputDocument] to sanitize.
      * @return Sanitized document (same instance).
      */
-    private fun sanitize(doc: SolrInputDocument): SolrInputDocument {
+    private fun sanitize(collection: String, doc: SolrInputDocument): SolrInputDocument {
+        val sanitized = doc.deepCopy()
+
+        /* Add necessary system fields. */
+        sanitized.addField(FIELD_NAME_PARTICIPANT, this@ApacheSolrSink.context)
+
+        /* Remove fields that have been marked as internal */
         for (f in Constants.INTERNAL_FIELDS) {
-            doc.removeField(f)
+            sanitized.removeField(f)
         }
-        return doc
+        return sanitized
     }
 
     /** Purge all collections that were configured. */
