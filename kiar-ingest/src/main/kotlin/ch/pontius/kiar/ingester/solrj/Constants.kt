@@ -42,4 +42,7 @@ object Constants {
 
     /** Set of system fields to ignore upon ingest. */
     val SYSTEM_FIELDS = setOf(FIELD_NAME_VERSION, FIELD_NAME_RANDOM)
+
+    /** Set of system fields to ignore upon ingest. */
+    val INTERNAL_FIELDS = setOf(FIELD_NAME_RAW, FIELD_NAME_OUTPUT)
 }

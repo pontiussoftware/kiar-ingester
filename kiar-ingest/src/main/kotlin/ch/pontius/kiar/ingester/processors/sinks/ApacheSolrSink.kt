@@ -73,7 +73,7 @@ class ApacheSolrSink(override val input: Source<SolrInputDocument>, private val 
                 for (c in this@ApacheSolrSink.config.collections) {
                     try {
                         if (c.isMatch(doc) && this@ApacheSolrSink.validate(c.name, doc)) {
-                            val response = this@ApacheSolrSink.client.add(c.name, doc)
+                            val response = this@ApacheSolrSink.client.add(c.name, this@ApacheSolrSink.sanitize(doc))
                             if (response.status == 0) {
                                 LOGGER.info("Successfully added document (name = ${this@ApacheSolrSink.context}, uuid = $uuid, collection = ${c.name}).")
                             } else {
@@ -130,6 +130,19 @@ class ApacheSolrSink(override val input: Source<SolrInputDocument>, private val 
             }
         }
         return true
+    }
+
+    /**
+     * Sanitizes the provided [SolrInputDocument] and removes all fields contained in [Constants.INTERNAL_FIELDS].
+     *
+     * @param doc The [SolrInputDocument] to sanitize.
+     * @return Sanitized document (same instance).
+     */
+    private fun sanitize(doc: SolrInputDocument): SolrInputDocument {
+        for (f in Constants.INTERNAL_FIELDS) {
+            doc.removeField(f)
+        }
+        return doc
     }
 
     /** Purge all collections that were configured. */
