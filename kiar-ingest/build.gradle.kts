@@ -1,8 +1,9 @@
 val appCompatVersion: String by project
 
 val cliktVersion: String by project
+val javalinVersion: String by project
+val jacksonVersion: String by project
 val jlineVersion: String by project
-val ktorVersion: String by project
 val kotlinVersion: String by project
 val kotlinCoroutines: String by project
 val kotlinSerializaion: String by project
@@ -14,7 +15,7 @@ val xodusVersion: String by project
 val xodusDnqVersion: String by project
 
 plugins {
-    id("io.ktor.plugin") version "2.3.0"
+    id("kotlin-kapt")
 }
 
 configurations {
@@ -49,13 +50,16 @@ dependencies {
     implementation("com.twelvemonkeys.imageio:imageio-core:$twelveMonkeysVersion")
     implementation("com.twelvemonkeys.imageio:imageio-jpeg:$twelveMonkeysVersion")
 
-    /** Ktor */
-    implementation("io.ktor:ktor-server-core-jvm:$ktorVersion")
-    implementation("io.ktor:ktor-server-auth-jvm:$ktorVersion")
-    implementation("io.ktor:ktor-server-sessions-jvm:$ktorVersion")
-    implementation("io.ktor:ktor-server-content-negotiation-jvm:$ktorVersion")
-    implementation("io.ktor:ktor-serialization-kotlinx-json-jvm:$ktorVersion")
-    implementation("io.ktor:ktor-server-netty-jvm:$ktorVersion")
+    /** Javalin + Open API. */
+    implementation("io.javalin:javalin:$javalinVersion")
+    implementation("io.javalin.community.openapi:javalin-openapi-plugin:$javalinVersion")
+    implementation("io.javalin.community.openapi:javalin-swagger-plugin:$javalinVersion")
+    implementation("io.javalin.community.ssl:ssl-plugin:$javalinVersion")
+    kapt("io.javalin.community.openapi:openapi-annotation-processor:$javalinVersion")
+
+    /* Jackson databind. */
+    implementation("com.fasterxml.jackson.core:jackson-databind:$jacksonVersion")
+    implementation("com.fasterxml.jackson.module:jackson-module-kotlin:$jacksonVersion")
 
     /** Xodus & Xodus DNQ */
     implementation("org.jetbrains.xodus:xodus-openAPI:$xodusVersion")

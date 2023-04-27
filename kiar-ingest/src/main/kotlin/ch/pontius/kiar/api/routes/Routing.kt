@@ -1,41 +1,22 @@
 package ch.pontius.kiar.api.routes
 
-import io.ktor.server.routing.*
-import io.ktor.server.response.*
-import io.ktor.server.application.*
-import io.ktor.server.auth.*
-import ch.pontius.kiar.api.routes.kiar.kiarUploadRoute
-import io.ktor.serialization.kotlinx.json.*
-import io.ktor.server.http.content.*
-import io.ktor.server.plugins.contentnegotiation.*
+import ch.pontius.kiar.api.routes.users.login
+import ch.pontius.kiar.api.routes.users.logout
+import io.javalin.apibuilder.ApiBuilder.*
 import jetbrains.exodus.database.TransientEntityStore
 
-fun Application.configureRoutes(store: TransientEntityStore) {
-    /* Install JSON serialization. */
-    install(ContentNegotiation) {
-        json()
-    }
-
-    /* Start configuration of routes. */
-    routing {
-        /** SPA is served at root. */
-        staticResources("/", "html", index = "index.html")
-
-        /**
-         * Route for API calls.
-         */
-        route("/api") {
-            /**
-             * Public area of the KIAR Uploader API.
-             */
-
-
-            /**
-             * Protected area of the KIAR Uploader API.
-             */
-            authenticate("basic-auth") {
-                kiarUploadRoute()
-            }
+/**
+ * Configures all the API routes.
+ *
+ * @param store The [TransientEntityStore] used for persistence.
+ */
+fun configureApiRoutes(store: TransientEntityStore) {
+    /** Path to API related functionality. */
+    path("api") {
+        /** All paths related to session, login and logout handling. */
+        path("session") {
+            post("login") { login(it) }
+            get("logout") { logout(it) }
         }
     }
 }
