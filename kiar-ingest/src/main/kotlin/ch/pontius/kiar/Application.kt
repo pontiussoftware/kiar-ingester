@@ -10,7 +10,11 @@ import io.ktor.server.application.*
 import io.ktor.server.engine.*
 import io.ktor.server.netty.*
 import jetbrains.exodus.database.TransientEntityStore
+import kotlinx.dnq.XdModel
+import kotlinx.dnq.store.container.StaticStoreContainer
+import kotlinx.dnq.util.initMetaData
 import kotlinx.serialization.json.Json
+import java.io.File
 import java.io.FileNotFoundException
 import java.nio.file.Files
 import java.nio.file.Paths
@@ -32,8 +36,9 @@ fun main(args: Array<String>) {
         SERVER = IngesterServer(config)
 
         /* Initializes the embedded Xodus database. */
+        DB = StaticStoreContainer.init(dbFolder = File(config.dbPath), entityStoreName = "kiar-db")
         //XdModel.registerNodes(DbJob, DbTaskStatus, DbInstitution, DbRole, DbUser)
-        //initMetaData(XdModel.hierarchy, store)
+        // initMetaData(XdModel.hierarchy, store)
 
         /* Start Ktor web-server (if configured). */
         if (config.web) {

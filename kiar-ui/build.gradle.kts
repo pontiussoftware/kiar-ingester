@@ -1,18 +1,61 @@
-val appCompatVersion: String by project
-val ktorVersion: String by project
-val kotlinVersion: String by project
-val logbackVersion: String by project
-val xodusVersion: String by project
-val xodusDnqVersion: String by project
+import org.gradle.api.tasks.Copy
+import org.gradle.kotlin.dsl.*
 
 plugins {
-    id("io.ktor.plugin") version "2.2.2"
+    id("com.github.node-gradle.node") version "4.0.0"
 }
 
-application {
-    mainClass.set("ch.pontius.kiar.uploader.ApplicationKt")
+configurations {
+    val frontendFiles by creating {
+        isCanBeConsumed = true
+        isCanBeResolved = false
+    }
 }
 
-dependencies {
 
+val includeConfig: Boolean by lazy { project.hasProperty("includeConfig") }
+node {
+    this.version.value("18.16.0")
+    this.download.value(true)
+    this.workDir.dir("${project.projectDir}/.gradle/nodejs")
+    this.yarnWorkDir.dir("${project.projectDir}/.gradle/nodejs")
+    this.nodeProjectDir.dir("${project.projectDir}")
+}
+
+/**
+ * New task to build front-end.
+ */
+val buildFrontend by tasks.registering(com.github.gradle.node.yarn.task.YarnTask::class) {
+    outputs.upToDateWhen {
+        file("$buildDir/dist").isDirectory
+    }
+    args.add("run")
+    args.add("pbuild")
+    dependsOn(tasks.yarnSetup)
+    //dependsOn(rootProject.tasks.named("openApiGenerate"))
+}
+
+/**
+ * New task to package front-end.
+ */
+val packageFrontend by tasks.registering(Copy::class) {
+    outputs.upToDateWhen {
+        file("$buildDir/lib/kiar-ui.jar").exists()
+    }
+    dependsOn(buildFrontend)
+    destinationDir = file("$buildDir/lib")
+    from("$buildDir/dist") {
+        println("includeConfig: $includeConfig")
+        if (!includeConfig) {
+            exclude("**/config.json")
+        }
+        into("html")
+    }
+}
+
+artifacts {
+    add("frontendFiles", packageFrontend) {
+        builtBy(packageFrontend)
+        type = "jar"
+    }
 }

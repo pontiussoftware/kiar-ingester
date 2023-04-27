@@ -6,6 +6,10 @@
 build
 out
 
+# Files related to angular
+node_modules
+.angular
+
 # Java Dependencies
 *.jar
 *.war

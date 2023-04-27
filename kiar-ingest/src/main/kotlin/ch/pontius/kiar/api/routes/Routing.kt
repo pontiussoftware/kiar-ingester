@@ -6,6 +6,7 @@ import io.ktor.server.application.*
 import io.ktor.server.auth.*
 import ch.pontius.kiar.api.routes.kiar.kiarUploadRoute
 import io.ktor.serialization.kotlinx.json.*
+import io.ktor.server.http.content.*
 import io.ktor.server.plugins.contentnegotiation.*
 import jetbrains.exodus.database.TransientEntityStore
 
@@ -17,14 +18,13 @@ fun Application.configureRoutes(store: TransientEntityStore) {
 
     /* Start configuration of routes. */
     routing {
-        get("/") {
-            call.respondText("Hello World!")
-        }
+        /** SPA is served at root. */
+        staticResources("/", "html", index = "index.html")
 
         /**
          * Route for API calls.
          */
-        route("api") {
+        route("/api") {
             /**
              * Public area of the KIAR Uploader API.
              */

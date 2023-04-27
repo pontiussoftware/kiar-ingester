@@ -14,10 +14,13 @@ data class Config(
     val cli: Boolean = true,
 
     /** Flag indicating whether the web server should be started. */
-    val web: Boolean = false,
+    val web: Boolean = true,
 
     /** The port to start the web server under.*/
     val webPort: Int = 7070,
+
+    /** Path to database folder. */
+    val dbPath: String,
 
     /** A [List] of registered [SolrConfig] instances. */
     val solr: List<SolrConfig> = emptyList(),

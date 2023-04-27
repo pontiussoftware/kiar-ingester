@@ -13,7 +13,14 @@ val xodusVersion: String by project
 val xodusDnqVersion: String by project
 
 plugins {
-    id("io.ktor.plugin") version "2.2.2"
+    id("io.ktor.plugin") version "2.3.0"
+}
+
+configurations {
+    val frontendClasspath by creating {
+        isCanBeConsumed = false
+        isCanBeResolved = true
+    }
 }
 
 application {
@@ -21,6 +28,9 @@ application {
 }
 
 dependencies {
+    /** Frontend. */
+    implementation(project(":kiar-ui", "frontendFiles"))
+
     /** SolrJ. */
     implementation("org.apache.solr:solr-solrj:$solrjVersion")
 
