@@ -99,8 +99,12 @@ class ApacheSolrSink(override val input: Source<SolrInputDocument>, private val 
         for (c in this.config.collections) {
             /* Prepare HTTP client builder. */
             val fields = SchemaRequest.Fields().process(this.client, c.name).fields
-            val validators = fields.map { schemaField ->
-                ApacheSolrField(schemaField["name"] as String, schemaField["required"] as Boolean, schemaField["multiValued"] as Boolean)
+            val validators = fields.mapNotNull { schemaField ->
+                if (schemaField["name"] != "_fulltext_") {
+                    ApacheSolrField(schemaField["name"] as String, schemaField["required"] as Boolean, schemaField["multiValued"] as Boolean)
+                } else {
+                    null
+                }
             }
             this.validators[c.name] = validators
         }
