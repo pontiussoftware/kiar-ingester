@@ -70,7 +70,6 @@ class ApacheSolrSink(override val input: Source<SolrInputDocument>, private val 
                 LOGGER.debug("Starting document ingest (name = ${this@ApacheSolrSink.context}, uuid = $uuid).")
                 for (c in this@ApacheSolrSink.config.collections) {
                     try {
-                        LOGGER.debug("Applying filter to output ${doc.getFieldValues(FIELD_NAME_OUTPUT).joinToString(";")} (name = ${this@ApacheSolrSink.context}, uuid = $uuid, collection = ${c.name}).")
                         if (c.isMatch(doc) && this@ApacheSolrSink.validate(c.name, doc)) {
                             val response = this@ApacheSolrSink.client.add(c.name, this@ApacheSolrSink.sanitize(c.name, doc))
                             if (response.status == 0) {

@@ -1,4 +1,6 @@
 {
+  "dbFolder": "/path/to/db",
+  "logFolder": "/path/to/logs",
   "solr": [
     {
       "name": "KIM.ch Solr Confi",
