@@ -41,7 +41,6 @@ val packageFrontend by tasks.registering(Zip::class) {
     }
     archiveFileName.set("kiar-ui.jar")
     destinationDirectory.set(file("$buildDir/libs"))
-
     from("$buildDir/dist") {
         into("html")
     }
