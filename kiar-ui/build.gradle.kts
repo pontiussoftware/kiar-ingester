@@ -34,17 +34,15 @@ val buildFrontend by tasks.registering(com.github.gradle.node.npm.task.NpxTask::
 /**
  * New task to package front-end.
  */
-val packageFrontend by tasks.registering(Copy::class) {
+val packageFrontend by tasks.registering(Zip::class) {
     dependsOn(buildFrontend)
     outputs.upToDateWhen {
-        file("$buildDir/lib/kiar-ui.jar").exists()
+        file("$buildDir/libs/kiar-ui.jar").exists()
     }
-    destinationDir = file("$buildDir/lib")
+    archiveFileName.set("kiar-ui.jar")
+    destinationDirectory.set(file("$buildDir/libs"))
+
     from("$buildDir/dist") {
-        println("includeConfig: $includeConfig")
-        if (!includeConfig) {
-            exclude("**/config.json")
-        }
         into("html")
     }
 }
