@@ -60,7 +60,7 @@ fun main(args: Array<String>) {
 
         /* Start CLI (if configured). */
         if (config.cli) {
-            Cli(SERVER!!).loop()
+            Cli(config, SERVER!!).loop()
         }
     } catch (e: Throwable) {
         System.err.println("Failed to start IngesterServer due to error:")
