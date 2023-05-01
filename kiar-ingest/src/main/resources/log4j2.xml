@@ -1,17 +1,16 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <Configuration strict="true" name="Default">
   <Appenders>
-    <Appender type="Console" name="STDOUT">
-      <Layout type="PatternLayout" pattern="%d{yyyy-MM-dd HH:mm:ss} [%t] %-5p %c{1}:%L - %m%n"/>
-    </Appender>
+    <Console name="STDOUT">
+      <PatternLayout pattern="%d{yyyy-MM-dd HH:mm:ss} [%t] %-5p %c{1}:%L - %m%n"/>
+    </Console>
 
-    <Appender type="RollingFile" name="FILE" fileName="logs/${name}.log">
-      <Layout type="PatternLayout" pattern="%d{yyyy-MM-dd HH:mm:ss} [%t] %-5p %c{1}:%L - %m%n"/>
+    <RollingFile name="FILE" filename="kiar.log" filepattern="kiar.log.%i" append="true">
+      <PatternLayout pattern="%d{yyyy-MM-dd HH:mm:ss} [%t] %-5p %c{1}:%L - %m%n"/>
       <Policies>
-        <TimeBasedTriggeringPolicy /><!-- Rotated everyday -->
         <SizeBasedTriggeringPolicy size="100 MB"/> <!-- Or every 100 MB -->
       </Policies>
-    </Appender>
+    </RollingFile>
   </Appenders>
   <Loggers>
     <Root level="info">
