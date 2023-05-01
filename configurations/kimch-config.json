@@ -20,7 +20,7 @@
       "description":  "A XML mapper for the culture.web XML format.",
       "values": [
         {"destination": "_raw_", "source": "/objects/object/BilderzumObjekt/image/imageScreenPath", "parser": "IMAGE", "multiValued": true, "parameters":  {"search": "^(\\\\\\\\IP-FS-KIM01\\\\kimmedia\\\\PROD)\\\\(.+)\\\\(.+)\\\\(.+)$", "replace": "/mnt/kimmedia/PROD/$2/$3/$4"}},
-        {"destination": "_output_", "source": "/objects/object/Ziele/term", "parser": "MULTISTRING", "multiValued": true},
+        {"destination": "_output_", "source": "/objects/object/Ziele", "parser": "MULTISTRING", "multiValued": true},
         {"destination": "_display_", "source": "/objects/object/Objektbezeichnung", "parser": "STRING"},
         {"destination": "uuid", "source": "/objects/object/guid", "parser": "UUID", "required": true},
         {"destination": "inventarnummer", "source": "/objects/object/InvNr", "parser": "STRING", "required": true},
