@@ -25,6 +25,9 @@ data class Config(
     /** Path to log file. */
     val logPath: String,
 
+    /** The [ImdasConfig] used; is optional. However, some functionality may be unavailable. */
+    val imdas: ImdasConfig? = null,
+
     /** A [List] of registered [SolrConfig] instances. */
     val solr: List<SolrConfig> = emptyList(),
 

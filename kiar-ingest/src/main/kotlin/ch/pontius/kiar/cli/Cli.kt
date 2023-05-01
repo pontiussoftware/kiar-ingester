@@ -1,5 +1,7 @@
 package ch.pontius.kiar.cli
 
+import ch.pontius.kiar.cli.museum.SynchroniseMuseumCommand
+import ch.pontius.kiar.config.Config
 import ch.pontius.kiar.ingester.IngesterServer
 import com.github.ajalt.clikt.core.NoOpCliktCommand
 import com.github.ajalt.clikt.core.subcommands
@@ -16,7 +18,7 @@ import java.util.regex.Pattern
  * @author Ralph Gasser
  * @version 1.0.0
  */
-class Cli(server: IngesterServer) {
+class Cli(config: Config, server: IngesterServer) {
 
     companion object {
         /** The default prompt -- just fancification */
@@ -32,6 +34,7 @@ class Cli(server: IngesterServer) {
             subcommands(
                 ScheduleCommand(server),
                 ExecuteCommand(server),
+                SynchroniseMuseumCommand(config),
                 QuitCommand(server)
             )
         }

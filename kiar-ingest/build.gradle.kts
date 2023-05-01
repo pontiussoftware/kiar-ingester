@@ -8,6 +8,7 @@ val kotlinVersion: String by project
 val kotlinCoroutines: String by project
 val kotlinSerializaion: String by project
 val log4jVersion: String by project
+val postgresVersion: String by project
 val solrjVersion: String by project
 val slf4jVersion: String by project
 val twelveMonkeysVersion: String by project
@@ -35,6 +36,9 @@ dependencies {
 
     /** SolrJ. */
     implementation("org.apache.solr:solr-solrj:$solrjVersion")
+
+    /** PostgreSQL */
+    implementation("org.postgresql:postgresql:$postgresVersion")
 
     /** Log4j2 & SLF4j */
     implementation("org.apache.logging.log4j:log4j-api:$log4jVersion")
