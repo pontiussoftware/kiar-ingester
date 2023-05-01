@@ -26,19 +26,16 @@ node {
  * New task to build front-end.
  */
 val buildFrontend by tasks.registering(com.github.gradle.node.npm.task.NpxTask::class) {
-    outputs.upToDateWhen {
-        file("$buildDir/dist").isDirectory
-    }
-    command.value("@angular/cli@latest")
-    args.value(listOf("--configuration=production", "--output-path=build/dist"))
-    dependsOn(tasks.npmSetup)
     dependsOn(tasks.npmInstall)
+    command.value("@angular/cli@latest")
+    args.value(listOf("build", "--configuration=production", "--output-path=build/dist"))
 }
 
 /**
  * New task to package front-end.
  */
 val packageFrontend by tasks.registering(Copy::class) {
+    dependsOn(buildFrontend)
     outputs.upToDateWhen {
         file("$buildDir/lib/kiar-ui.jar").exists()
     }
@@ -50,7 +47,6 @@ val packageFrontend by tasks.registering(Copy::class) {
         }
         into("html")
     }
-    dependsOn(buildFrontend)
 }
 
 artifacts {
