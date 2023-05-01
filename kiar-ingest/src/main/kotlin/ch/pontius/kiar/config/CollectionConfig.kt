@@ -33,6 +33,6 @@ data class CollectionConfig (
         if (this.filter.isEmpty()) return true
         val field = doc.getFieldValues(Constants.FIELD_NAME_OUTPUT) ?: return this.acceptEmptyFilter
         if (this.acceptEmptyFilter && field.isEmpty()) return true
-        return field.any { this.filter.contains(it) }
+        return this.filter.any { field.contains(it) }
     }
 }
