@@ -87,10 +87,20 @@ class XmlParsingContext(config: MappingConfig, val callback: (SolrInputDocument)
             for (m in previousMappings) {
                 val value = this.parsers[m]?.get()
                 if (value != null) {
-                    if (m.multiValued) {
-                        this.document.addField(m.destination, value)
+                    if (value is Collection<*>) {
+                        value.forEach { v ->
+                            if (m.multiValued) {
+                                this.document.addField(m.destination, v)
+                            } else {
+                                this.document.setField(m.destination, v)
+                            }
+                        }
                     } else {
-                        this.document.setField(m.destination, value)
+                        if (m.multiValued) {
+                            this.document.addField(m.destination, value)
+                        } else {
+                            this.document.setField(m.destination, value)
+                        }
                     }
                 }
             }

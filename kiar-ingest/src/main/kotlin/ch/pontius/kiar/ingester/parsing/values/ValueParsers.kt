@@ -11,6 +11,7 @@ import ch.pontius.kiar.ingester.parsing.values.primitive.*
 enum class ValueParsers {
     UUID,
     STRING,
+    MULTISTRING,
     DATE,
     INTEGER,
     DOUBLE,
@@ -24,6 +25,7 @@ enum class ValueParsers {
     fun newInstance(params: Map<String,String> = emptyMap()) = when (this) {
         UUID -> UuidValueParser()
         STRING -> StringValueParser()
+        MULTISTRING -> MultiStringValueParser()
         INTEGER -> IntegerValueParser()
         DOUBLE -> DoubleValueParser()
         DATE -> DateValueParser(params)
