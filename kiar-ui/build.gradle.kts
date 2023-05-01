@@ -25,14 +25,14 @@ node {
 /**
  * New task to build front-end.
  */
-val buildFrontend by tasks.registering(com.github.gradle.node.yarn.task.YarnTask::class) {
+val buildFrontend by tasks.registering(com.github.gradle.node.npm.task.NpxTask::class) {
     outputs.upToDateWhen {
         file("$buildDir/dist").isDirectory
     }
-    args.add("run")
-    args.add("pbuild")
-    dependsOn(tasks.yarnSetup)
-    //dependsOn(rootProject.tasks.named("openApiGenerate"))
+    command.value("@angular/cli@latest")
+    args.value(listOf("--configuration=production", "--output-path=build/dist"))
+    dependsOn(tasks.npmSetup)
+    dependsOn(tasks.npmInstall)
 }
 
 /**
@@ -42,7 +42,6 @@ val packageFrontend by tasks.registering(Copy::class) {
     outputs.upToDateWhen {
         file("$buildDir/lib/kiar-ui.jar").exists()
     }
-    dependsOn(buildFrontend)
     destinationDir = file("$buildDir/lib")
     from("$buildDir/dist") {
         println("includeConfig: $includeConfig")
@@ -51,6 +50,7 @@ val packageFrontend by tasks.registering(Copy::class) {
         }
         into("html")
     }
+    dependsOn(buildFrontend)
 }
 
 artifacts {
