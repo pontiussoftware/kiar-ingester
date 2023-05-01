@@ -46,6 +46,8 @@ fun main(args: Array<String>) {
     /* Try to start Cottontail DB */
     try {
         val config: Config = loadConfig(args.firstOrNull() ?: "./config.json")
+        System.setProperty("log4j.saveDirectory", config.logPath) /* Set log path for Log4j2. */
+
         SERVER = IngesterServer(config)
 
         /* Initializes the embedded Xodus database. */

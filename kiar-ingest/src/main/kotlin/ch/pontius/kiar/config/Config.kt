@@ -22,6 +22,9 @@ data class Config(
     /** Path to database folder. */
     val dbPath: String,
 
+    /** Path to log file. */
+    val logPath: String,
+
     /** A [List] of registered [SolrConfig] instances. */
     val solr: List<SolrConfig> = emptyList(),
 
