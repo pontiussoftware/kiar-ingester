@@ -1,6 +1,5 @@
 package ch.pontius.kiar.cli
 
-import ch.pontius.kiar.cli.museum.SynchroniseMuseumCommand
 import ch.pontius.kiar.config.Config
 import ch.pontius.kiar.ingester.IngesterServer
 import com.github.ajalt.clikt.core.NoOpCliktCommand
@@ -34,7 +33,6 @@ class Cli(config: Config, server: IngesterServer) {
             subcommands(
                 ScheduleCommand(server),
                 ExecuteCommand(server),
-                SynchroniseMuseumCommand(config),
                 QuitCommand(server)
             )
         }

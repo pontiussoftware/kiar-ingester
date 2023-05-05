@@ -1,4 +1,4 @@
-package ch.pontius.kiar.database.ingest
+package ch.pontius.kiar.database.job
 
 import jetbrains.exodus.entitystore.Entity
 import kotlinx.dnq.XdEnumEntity
@@ -11,8 +11,8 @@ import kotlinx.dnq.xdRequiredStringProp
  * @author Ralph Gasser
  * @version 1.0.0
  */
-class DbTaskStatus(entity: Entity) : XdEnumEntity(entity)  {
-    companion object : XdEnumEntityType<DbTaskStatus>() {
+class DbJobStatus(entity: Entity) : XdEnumEntity(entity)  {
+    companion object : XdEnumEntityType<DbJobStatus>() {
         val CREATED by enumField { description = "CREATED" }
         val ABORTED by enumField { description = "ABORTED" }
         val HARVESTED by enumField { description = "HARVESTED" }

@@ -1,6 +1,7 @@
 package ch.pontius.kiar.config
 
 import kotlinx.serialization.Serializable
+import java.nio.file.Path
 
 /**
  * Configuration file for Ingester Pipeline.
@@ -20,13 +21,13 @@ data class Config(
     val webPort: Int = 7070,
 
     /** Path to database folder. */
-    val dbPath: String,
+    val dbPath: Path,
+
+    /** Path to ingest main folder. */
+    val ingestPath: Path,
 
     /** Path to log file. */
-    val logPath: String,
-
-    /** The [ImdasConfig] used; is optional. However, some functionality may be unavailable. */
-    val imdas: ImdasConfig? = null,
+    val logPath: Path,
 
     /** A [List] of registered [SolrConfig] instances. */
     val solr: List<SolrConfig> = emptyList(),

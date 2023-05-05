@@ -17,17 +17,32 @@ class DbInstitution(entity: Entity) : XdEntity(entity) {
     /** The name held by this [DbInstitution]. Must be unique!*/
     var name by xdRequiredStringProp(unique = true, trimmed = true)
 
-    /** The name held by this [DbInstitution]. Must be unique!*/
-    var displayName by xdStringProp(trimmed = true)
+    /** The [DbParticipant] this [DbInstitution] belongs to. */
+    val participant by xdLink1(DbParticipant)
+
+    /** The display name held by this [DbInstitution]. */
+    var displayName by xdRequiredStringProp(trimmed = true)
+
+    /** The ISIL number held by this [DbInstitution]. */
+    var isil by xdStringProp(trimmed = true)
+
+    /** A brief description for this [DbInstitution]. */
+    var description by xdStringProp(trimmed = true)
 
     /** The name held by this [DbInstitution].*/
-    var street by xdRequiredStringProp(unique = true, trimmed = true)
+    var street by xdStringProp(trimmed = true)
 
     /** The name held by this [DbInstitution].*/
-    var city by xdRequiredStringProp(trimmed = true)
+    var city by xdStringProp(trimmed = true)
 
     /** The name held by this [DbInstitution].!*/
-    var zip by xdRequiredStringProp(trimmed = true)
+    var zip by xdStringProp(trimmed = true)
+
+    /** The name held by this [DbInstitution].!*/
+    var email by xdStringProp(trimmed = true)
+
+    /** The name held by this [DbInstitution].!*/
+    var homepage by xdStringProp(trimmed = true)
 
     /** Flag indicating whether this [DbInstitution]'s metadata should be published. */
     var publish by xdBooleanProp()

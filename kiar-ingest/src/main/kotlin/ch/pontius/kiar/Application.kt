@@ -4,11 +4,25 @@ import ch.pontius.kiar.api.routes.configureApiRoutes
 import ch.pontius.kiar.ingester.IngesterServer
 import ch.pontius.kiar.cli.Cli
 import ch.pontius.kiar.config.Config
-import ch.pontius.kiar.database.ingest.DbJob
-import ch.pontius.kiar.database.ingest.DbTaskStatus
+import ch.pontius.kiar.database.config.jobs.DbJobTemplate
+import ch.pontius.kiar.database.config.jobs.DbJobType
+import ch.pontius.kiar.database.config.mapping.DbAttributeMapping
+import ch.pontius.kiar.database.config.mapping.DbEntityMapping
+import ch.pontius.kiar.database.config.mapping.DbFormat
+import ch.pontius.kiar.database.config.mapping.DbParser
+import ch.pontius.kiar.database.config.solr.DbCollection
+import ch.pontius.kiar.database.config.solr.DbCollectionType
+import ch.pontius.kiar.database.config.solr.DbSolr
+import ch.pontius.kiar.database.config.transformers.DbTransformer
+import ch.pontius.kiar.database.config.transformers.DbTransformerParameter
+import ch.pontius.kiar.database.config.transformers.DbTransformerType
+import ch.pontius.kiar.database.job.DbJob
+import ch.pontius.kiar.database.job.DbJobStatus
 import ch.pontius.kiar.database.institution.DbInstitution
+import ch.pontius.kiar.database.institution.DbParticipant
 import ch.pontius.kiar.database.institution.DbRole
 import ch.pontius.kiar.database.institution.DbUser
+import ch.pontius.kiar.utilities.KotlinxJsonMapper
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.KotlinFeature
 import com.fasterxml.jackson.module.kotlin.KotlinModule
@@ -40,13 +54,13 @@ var DB: TransientEntityStore? = null
 var SERVER: IngesterServer? = null
 
 /**
- * Entry point for [IngesterServer].
+ * Entry point for KIAR Tools.
  */
 fun main(args: Array<String>) {
     /* Try to start Cottontail DB */
     try {
         val config: Config = loadConfig(args.firstOrNull() ?: "./config.json")
-        System.setProperty("log4j.saveDirectory", config.logPath) /* Set log path for Log4j2. */
+        System.setProperty("log4j.saveDirectory", config.logPath.toString()) /* Set log path for Log4j2. */
 
         SERVER = IngesterServer(config)
 
@@ -100,12 +114,30 @@ private fun loadConfig(path: String): Config {
  * @return [TransientEntityStore]
  */
 private fun initializeDatabase(config: Config): TransientEntityStore {
-    val store = StaticStoreContainer.init(dbFolder = File(config.dbPath), entityStoreName = "kiar-db")
-    XdModel.registerNodes(DbJob, DbTaskStatus, DbInstitution, DbRole, DbUser)
+    val store = StaticStoreContainer.init(dbFolder = config.dbPath.toFile(), entityStoreName = "kiar-db")
+    XdModel.registerNodes(
+        DbSolr,
+        DbCollection,
+        DbCollectionType,
+        DbJobTemplate,
+        DbJobType,
+        DbEntityMapping,
+        DbAttributeMapping,
+        DbFormat,
+        DbParser,
+        DbTransformer,
+        DbTransformerParameter,
+        DbTransformerType,
+        DbParticipant,
+        DbJob,
+        DbJobStatus,
+        DbInstitution,
+        DbRole,
+        DbUser
+    )
     initMetaData(XdModel.hierarchy, store)
     return store;
 }
-
 
 /**
  * Initializes and returns the [TransientEntityStore] based on the provided [Config].
@@ -125,16 +157,8 @@ private fun initializeWebserver() = Javalin.create { config ->
         }
     }
 
-    /* Configure serialization using Jackson + Kotlin module. */
-    val mapper = ObjectMapper().registerModule(
-        KotlinModule.Builder()
-            .configure(KotlinFeature.NullToEmptyCollection, true)
-            .configure(KotlinFeature.NullToEmptyMap, true)
-            .configure(KotlinFeature.NullIsSameAsDefault, true)
-            .configure(KotlinFeature.SingletonSupport, true)
-            .configure(KotlinFeature.StrictNullChecks, true)
-            .build())
-    config.jsonMapper(JavalinJackson(mapper))
+    /* We use Kotlinx serialization for de-/serialization. */
+    config.jsonMapper(KotlinxJsonMapper)
 
     /* Registers Open API plugin. */
     config.plugins.register(
