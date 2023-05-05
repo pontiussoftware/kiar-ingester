@@ -1,5 +1,8 @@
 package ch.pontius.kiar.database.institution
 
+import ch.pontius.kiar.api.routes.session.Role
+import ch.pontius.kiar.database.config.mapping.DbEntityMapping
+import ch.pontius.kiar.ingester.parsing.values.ValueParsers
 import jetbrains.exodus.entitystore.Entity
 import kotlinx.dnq.XdEnumEntity
 import kotlinx.dnq.XdEnumEntityType
@@ -19,4 +22,11 @@ class DbRole(entity: Entity) : XdEnumEntity(entity)  {
     }
 
     var description by xdRequiredStringProp(unique = true)
+
+    /**
+     * A convenience method used to convert this [DbRole] to a [Role] instance.
+     *
+     * @return This [Role].
+     */
+    fun toApi(): Role = Role.valueOf(this.description)
 }

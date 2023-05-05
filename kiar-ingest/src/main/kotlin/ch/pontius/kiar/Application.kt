@@ -1,6 +1,7 @@
 package ch.pontius.kiar
 
 import ch.pontius.kiar.api.routes.configureApiRoutes
+import ch.pontius.kiar.api.routes.session.DatabaseAccessManager
 import ch.pontius.kiar.ingester.IngesterServer
 import ch.pontius.kiar.cli.Cli
 import ch.pontius.kiar.config.Config
@@ -29,6 +30,7 @@ import io.javalin.openapi.plugin.OpenApiPluginConfiguration
 import io.javalin.openapi.plugin.SecurityComponentConfiguration
 import io.javalin.openapi.plugin.swagger.SwaggerConfiguration
 import io.javalin.openapi.plugin.swagger.SwaggerPlugin
+import io.javalin.security.AccessManager
 import jetbrains.exodus.database.TransientEntityStore
 import kotlinx.dnq.XdModel
 import kotlinx.dnq.query.filter
@@ -219,6 +221,12 @@ private fun persistConfig(store: TransientEntityStore, config: Config) = store.t
  * @return [TransientEntityStore]
  */
 private fun initializeWebserver(store: TransientEntityStore) = Javalin.create { config ->
+
+
+    /* Access to resources is determined by database users. */
+    config.accessManager(DatabaseAccessManager(store))
+
+    /* Configure static routes for SPA. */
     config.staticFiles.add{
         it.directory = "html"
         it.location = Location.CLASSPATH

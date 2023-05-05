@@ -1,0 +1,70 @@
+package ch.pontius.kiar.api.routes.session
+
+import ch.pontius.kiar.api.model.session.LoginRequest
+import ch.pontius.kiar.api.model.status.ErrorStatus
+import ch.pontius.kiar.api.model.status.ErrorStatusException
+import ch.pontius.kiar.api.model.status.SuccessStatus
+import ch.pontius.kiar.database.institution.DbUser
+import io.javalin.http.BadRequestResponse
+import io.javalin.http.Context
+import io.javalin.openapi.*
+import jetbrains.exodus.database.TransientEntityStore
+import kotlinx.dnq.query.filter
+import kotlinx.dnq.query.firstOrNull
+import org.mindrot.jbcrypt.BCrypt
+
+@OpenApi(
+    path = "/api/session/login",
+    methods = [HttpMethod.POST],
+    summary = "Attempts a login using the credentials provided in the request body.",
+    operationId = "login",
+    tags = ["Session"],
+    requestBody = OpenApiRequestBody([OpenApiContent(LoginRequest::class)], required = false),
+    pathParams = [],
+    responses = [
+        OpenApiResponse("200", [OpenApiContent(SuccessStatus::class)]),
+        OpenApiResponse("401", [OpenApiContent(ErrorStatus::class)]),
+        OpenApiResponse("500", [OpenApiContent(ErrorStatus::class)]),
+    ]
+)
+fun login(ctx: Context, store: TransientEntityStore) {
+    val request = try {
+        ctx.bodyAsClass(LoginRequest::class.java)
+    } catch (e: BadRequestResponse) {
+        throw ErrorStatusException(400, "Malformed login request.")
+    }
+
+    store.transactional (true) {
+        val user = DbUser.filter { (it.name eq request.username) and (it.inactive eq false) }.firstOrNull()
+            ?: throw ErrorStatusException(401, "The provided credentials are invalid.")
+
+        if (!BCrypt.checkpw(request.password, user.password)) {
+            throw ErrorStatusException(401, "The provided credentials are invalid.")
+        }
+
+        ctx.sessionAttribute(SESSION_USER_ID, user.xdId) /* Store ID of the user. */
+        ctx.sessionAttribute(SESSION_USER_ID, user.name) /* Store ID of the user. */
+
+        ctx.json(SuccessStatus("Login successful!"))
+    }
+}
+
+@OpenApi(
+    path = "/api/session/logout",
+    methods = [HttpMethod.GET],
+    summary = "Performs a logout for the currently logged-in user.",
+    operationId = "logout",
+    tags = ["Session"],
+    pathParams = [],
+    responses = [
+        OpenApiResponse("200", [OpenApiContent(SuccessStatus::class)])
+    ]
+)
+fun logout(ctx: Context) {
+    /* Logout user. */
+    ctx.sessionAttribute(SESSION_USER_ID, null)
+    ctx.sessionAttribute(SESSION_USER_NAME, null)
+
+    /* Return success status. */
+    ctx.json(SuccessStatus("Logout successful!"))
+}

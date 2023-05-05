@@ -1,5 +1,6 @@
 val appCompatVersion: String by project
 
+val bcryptVersion: String by project
 val cliktVersion: String by project
 val javalinVersion: String by project
 val jacksonVersion: String by project
@@ -37,8 +38,8 @@ dependencies {
     /** SolrJ. */
     implementation("org.apache.solr:solr-solrj:$solrjVersion")
 
-    /** PostgreSQL */
-    implementation("org.postgresql:postgresql:$postgresVersion")
+    /** Bcrypt */
+    implementation("org.mindrot:jbcrypt:$bcryptVersion")
 
     /** Log4j2 & SLF4j */
     implementation("org.apache.logging.log4j:log4j-api:$log4jVersion")

@@ -1,7 +1,7 @@
 package ch.pontius.kiar.api.routes
 
-import ch.pontius.kiar.api.routes.users.login
-import ch.pontius.kiar.api.routes.users.logout
+import ch.pontius.kiar.api.routes.session.Role
+import ch.pontius.kiar.api.routes.session.login
 import io.javalin.apibuilder.ApiBuilder.*
 import jetbrains.exodus.database.TransientEntityStore
 
@@ -15,8 +15,8 @@ fun configureApiRoutes(store: TransientEntityStore) {
     path("api") {
         /** All paths related to session, login and logout handling. */
         path("session") {
-            post("login") { login(it) }
-            get("logout") { logout(it) }
+            post("login", { ctx -> login(ctx, store) }, Role.ANYONE)
+            get("logout", { ctx -> login(ctx, store) }, Role.ADMINISTRATOR, Role.VIEWER, Role.MANAGER )
         }
     }
 }
