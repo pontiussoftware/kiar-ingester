@@ -11,7 +11,7 @@ import kotlinx.dnq.xdRequiredStringProp
  * @version 1.0
  */
 class DbJobSource(entity: Entity) : XdEnumEntity(entity)  {
-    companion object : XdEnumEntityType<DbJobStatus>() {
+    companion object : XdEnumEntityType<DbJobSource>() {
         val WATCHER by enumField { description = "WATCHER" }
         val WEB by enumField { description = "WEB" }
     }
