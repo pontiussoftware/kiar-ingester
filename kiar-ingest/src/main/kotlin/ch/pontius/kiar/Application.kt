@@ -19,14 +19,10 @@ import ch.pontius.kiar.database.institution.DbInstitution
 import ch.pontius.kiar.database.institution.DbParticipant
 import ch.pontius.kiar.database.institution.DbRole
 import ch.pontius.kiar.database.institution.DbUser
-import ch.pontius.kiar.ingester.processors.transformers.Transformers
+import ch.pontius.kiar.database.job.DbJobSource
 import ch.pontius.kiar.utilities.KotlinxJsonMapper
-import com.fasterxml.jackson.databind.ObjectMapper
-import com.fasterxml.jackson.module.kotlin.KotlinFeature
-import com.fasterxml.jackson.module.kotlin.KotlinModule
 import io.javalin.Javalin
 import io.javalin.http.staticfiles.Location
-import io.javalin.json.JavalinJackson
 import io.javalin.openapi.CookieAuth
 import io.javalin.openapi.plugin.OpenApiPlugin
 import io.javalin.openapi.plugin.OpenApiPluginConfiguration
@@ -35,25 +31,16 @@ import io.javalin.openapi.plugin.swagger.SwaggerConfiguration
 import io.javalin.openapi.plugin.swagger.SwaggerPlugin
 import jetbrains.exodus.database.TransientEntityStore
 import kotlinx.dnq.XdModel
-import kotlinx.dnq.query.FilteringContext.isEmpty
 import kotlinx.dnq.query.filter
 import kotlinx.dnq.query.first
 import kotlinx.dnq.query.isEmpty
 import kotlinx.dnq.store.container.StaticStoreContainer
 import kotlinx.dnq.util.initMetaData
 import kotlinx.serialization.json.Json
-import java.io.File
 import java.io.FileNotFoundException
-import java.lang.IllegalStateException
 import java.nio.file.Files
 import java.nio.file.Paths
 import kotlin.system.exitProcess
-
-/** The [TransientEntityStore] representing this instance's database. */
-var DB: TransientEntityStore? = null
-
-/** The [IngesterServer] running for this application instance. */
-var SERVER: IngesterServer? = null
 
 /**
  * Entry point for KIAR Tools.
@@ -68,16 +55,16 @@ fun main(args: Array<String>) {
         val database = initializeDatabase(config)
 
         /* Initializes the IngestServer. */
-        SERVER = IngesterServer(database, config)
+        val server = IngesterServer(database, config)
 
         /* Start Javalin web-server (if configured). */
         if (config.web) {
-            initializeWebserver().start(config.webPort)
+            initializeWebserver(database).start(config.webPort)
         }
 
         /* Start CLI (if configured). */
         if (config.cli) {
-            Cli(config, SERVER!!).loop()
+            Cli(config, server).loop()
         }
     } catch (e: Throwable) {
         System.err.println("Failed to start IngesterServer due to error:")
@@ -124,6 +111,7 @@ private fun initializeDatabase(config: Config): TransientEntityStore {
         DbCollectionType,
         DbJobTemplate,
         DbJobType,
+        DbJobSource,
         DbEntityMapping,
         DbAttributeMapping,
         DbAttributeMappingParameters,
@@ -230,7 +218,7 @@ private fun persistConfig(store: TransientEntityStore, config: Config) = store.t
  *
  * @return [TransientEntityStore]
  */
-private fun initializeWebserver() = Javalin.create { config ->
+private fun initializeWebserver(store: TransientEntityStore) = Javalin.create { config ->
     config.staticFiles.add{
         it.directory = "html"
         it.location = Location.CLASSPATH
@@ -275,5 +263,5 @@ private fun initializeWebserver() = Javalin.create { config ->
         )
     )
 }.routes {
-    configureApiRoutes(DB ?: throw IllegalStateException("The database has not been properly initialized. This is a programmer's error!"))
+    configureApiRoutes(store)
 }

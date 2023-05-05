@@ -3,12 +3,9 @@ package ch.pontius.kiar.ingester.processors.sinks
 import ch.pontius.kiar.config.SolrConfig
 import ch.pontius.kiar.ingester.processors.sources.Source
 import ch.pontius.kiar.ingester.solrj.Constants
-import ch.pontius.kiar.ingester.solrj.Constants.FIELD_NAME_CANTON
-import ch.pontius.kiar.ingester.solrj.Constants.FIELD_NAME_OUTPUT
 import ch.pontius.kiar.ingester.solrj.Constants.FIELD_NAME_PARTICIPANT
 import ch.pontius.kiar.ingester.solrj.Constants.SYSTEM_FIELDS
 import kotlinx.coroutines.flow.*
-import kotlinx.coroutines.runBlocking
 import org.apache.logging.log4j.LogManager
 import org.apache.solr.client.solrj.SolrServerException
 import org.apache.solr.client.solrj.impl.Http2SolrClient
