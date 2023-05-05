@@ -10,19 +10,17 @@ import org.apache.solr.common.SolrInputDocument
  * A [Sink] that processes [SolrInputDocument]s and writes them to the log.
  *
  * @author Ralph Gasser
- * @version 1.0.0
+ * @version 1.1.0
  */
 class LoggerSink(override val input: Source<SolrInputDocument>): Sink<SolrInputDocument> {
     companion object {
         private val LOGGER = LogManager.getLogger()
     }
 
-    /**
-     * Executes this [LoggerSink] and the associated processing pipeline.
-     */
-    override fun execute() = runBlocking {
+    override fun toFlow() = flow {
         this@LoggerSink.input.toFlow().collect {
             LOGGER.info(it.toString())
         }
+        emit(Unit)
     }
 }

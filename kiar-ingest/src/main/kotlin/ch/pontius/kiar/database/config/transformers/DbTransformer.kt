@@ -17,10 +17,10 @@ import org.apache.solr.common.SolrInputDocument
  * @version 1.0.0
  */
 class DbTransformer(entity: Entity) : XdEntity(entity) {
-    companion object: XdNaturalEntityType<DbTransformerParameter>()
+    companion object: XdNaturalEntityType<DbTransformer>()
 
     /** The [DbTransformerType] of this [DbTransformer]. */
-    val type by xdLink1(DbTransformerType)
+    var type by xdLink1(DbTransformerType)
 
     /** The value of this [DbTransformerParameter]. */
     val parameters by xdChildren0_N(DbTransformerParameter::transformer)

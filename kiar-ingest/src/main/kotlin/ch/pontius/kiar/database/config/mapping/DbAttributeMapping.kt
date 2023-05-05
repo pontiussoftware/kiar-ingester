@@ -27,13 +27,13 @@ class DbAttributeMapping(entity: Entity) : XdEntity(entity) {
     var multiValued by xdBooleanProp()
 
     /** The [DbParser] this [DbAttributeMapping] should use. */
-    val parser by xdLink1(DbParser)
+    var parser by xdLink1(DbParser)
 
     /** The [DbAttributeMappingParameters] used to configure this [DbAttributeMapping]. */
     val parameters by xdChildren0_N(DbAttributeMappingParameters::mapping)
 
     /** The [DbEntityMapping] this [DbAttributeMapping] belongs to.  */
-    val config: DbEntityMapping by xdParent(DbEntityMapping::attributes)
+    val mapping: DbEntityMapping by xdParent(DbEntityMapping::attributes)
 
     /**
      * A convenience method used to convert this [DbEntityMapping] to a [AttributeMapping].

@@ -1,5 +1,6 @@
 package ch.pontius.kiar.config
 
+import ch.pontius.kiar.database.config.transformers.DbTransformerType
 import ch.pontius.kiar.ingester.processors.transformers.Transformers
 
 /**
@@ -9,4 +10,7 @@ import ch.pontius.kiar.ingester.processors.transformers.Transformers
  * @version 1.0.0
  */
 @kotlinx.serialization.Serializable
-data class TransformerConfig(val type: Transformers, val parameters: Map<String,String> = emptyMap())
+data class TransformerConfig(val type: Transformers, val parameters: Map<String,String> = emptyMap()) {
+
+
+}

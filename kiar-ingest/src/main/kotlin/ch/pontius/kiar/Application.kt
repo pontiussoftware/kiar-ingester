@@ -19,6 +19,7 @@ import ch.pontius.kiar.database.institution.DbInstitution
 import ch.pontius.kiar.database.institution.DbParticipant
 import ch.pontius.kiar.database.institution.DbRole
 import ch.pontius.kiar.database.institution.DbUser
+import ch.pontius.kiar.ingester.processors.transformers.Transformers
 import ch.pontius.kiar.utilities.KotlinxJsonMapper
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.KotlinFeature
@@ -34,6 +35,10 @@ import io.javalin.openapi.plugin.swagger.SwaggerConfiguration
 import io.javalin.openapi.plugin.swagger.SwaggerPlugin
 import jetbrains.exodus.database.TransientEntityStore
 import kotlinx.dnq.XdModel
+import kotlinx.dnq.query.FilteringContext.isEmpty
+import kotlinx.dnq.query.filter
+import kotlinx.dnq.query.first
+import kotlinx.dnq.query.isEmpty
 import kotlinx.dnq.store.container.StaticStoreContainer
 import kotlinx.dnq.util.initMetaData
 import kotlinx.serialization.json.Json
@@ -135,8 +140,90 @@ private fun initializeDatabase(config: Config): TransientEntityStore {
         DbUser
     )
     initMetaData(XdModel.hierarchy, store)
-    return store;
+    return store
 }
+
+/**
+ * Persist [Config]
+ */
+private fun persistConfig(store: TransientEntityStore, config: Config) = store.transactional {
+    /* Persist Apache Solr configurations. */
+    for (solr in config.solr) {
+        if (DbSolr.filter { it.name eq solr.name }.isEmpty) {
+            DbSolr.new {
+                name = solr.name
+                server = solr.server
+                username = solr.user
+                password = solr.password
+                for (c in solr.collections) {
+                    collections.add(DbCollection.new{
+                        name = c.name
+                        type = DbCollectionType.OBJECT
+                        filters = c.filter.joinToString(",")
+                        acceptEmptyFilter = c.acceptEmptyFilter
+                        deleteBeforeIngest = c.deleteBeforeImport
+                    })
+                }
+            }
+        }
+    }
+
+    /* Persist Attribute mappings. */
+    for (mapping in config.mappers) {
+        if (DbEntityMapping.filter { it.name eq mapping.name }.isEmpty) {
+            DbEntityMapping.new {
+                name = mapping.name
+                description = mapping.description
+                type = DbFormat.XML
+                for (a in mapping.values) {
+                    attributes.add(DbAttributeMapping.new {
+                        source = a.source
+                        destination = a.destination
+                        parser = a.parser.toDb()
+                        required = a.required
+                        multiValued = a.multiValued
+                        for (p in a.parameters) {
+                            parameters.add(DbAttributeMappingParameters.new {
+                                key = p.key
+                                value = p.value
+                            })
+                        }
+                    })
+                }
+            }
+        }
+    }
+
+    /* Persist Job configurations. */
+    for (job in config.jobs) {
+        if (DbJobTemplate.filter { it.name eq job.name }.isEmpty) {
+            DbJobTemplate.new {
+                name = job.name
+                solr = DbSolr.filter { it.name eq job.solrConfig }.first()
+                mapping = DbEntityMapping.filter { it.name eq job.mappingConfig }.first()
+                type = DbJobType.XML
+                startAutomatically = job.startOnCreation
+                deleted = false
+
+                /* Persist transformers. */
+                for (t in job.transformers) {
+                    transformers.add(DbTransformer.new {
+                        type = t.type.toDb()
+                        for (p in t.parameters) {
+                            parameters.add(
+                                DbTransformerParameter.new {
+                                    key = p.key
+                                    value = p.value
+                                }
+                            )
+                        }
+                    })
+                }
+            }
+        }
+    }
+}
+
 
 /**
  * Initializes and returns the [TransientEntityStore] based on the provided [Config].

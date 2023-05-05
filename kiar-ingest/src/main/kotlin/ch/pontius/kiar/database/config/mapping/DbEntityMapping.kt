@@ -1,7 +1,6 @@
 package ch.pontius.kiar.database.config.mapping
 
 import ch.pontius.kiar.config.MappingConfig
-import ch.pontius.kiar.database.config.jobs.DbJobTemplate
 import jetbrains.exodus.entitystore.Entity
 import kotlinx.dnq.*
 import kotlinx.dnq.query.asSequence
@@ -23,13 +22,10 @@ class DbEntityMapping(entity: Entity) : XdEntity(entity) {
     var description by xdStringProp(trimmed = true)
 
     /** The [DbFormat] of this [DbEntityMapping]. */
-    val type by xdLink1(DbFormat)
-
-    /** The [DbJobTemplate] this [DbEntityMapping] belongs to. */
-    val template: DbJobTemplate by xdParent(DbJobTemplate::mapping)
+    var type by xdLink1(DbFormat)
 
     /** The [DbAttributeMapping]s that belong to this [DbEntityMapping]. */
-    val attributes by xdChildren0_N(DbAttributeMapping::config)
+    val attributes by xdChildren0_N(DbAttributeMapping::mapping)
 
     /**
      * A convenience method used to convert this [DbEntityMapping] to a [MappingConfig]. Requires an ongoing transaction!

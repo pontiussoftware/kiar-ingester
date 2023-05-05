@@ -1,5 +1,6 @@
 package ch.pontius.kiar.ingester.processors.transformers
 
+import ch.pontius.kiar.database.config.transformers.DbTransformerType
 import ch.pontius.kiar.ingester.processors.sources.Source
 import org.apache.solr.common.SolrInputDocument
 
@@ -23,5 +24,15 @@ enum class Transformers {
     fun newInstance(input: Source<SolrInputDocument>, parameters: Map<String,String>) = when (this) {
         IMAGE -> ImageTransformer(input, parameters)
         SYSTEM -> SystemTransformer(input, parameters)
+    }
+
+    /**
+     * Converts this [Transformers] into a [DbTransformerType]. Requires an ongoing transaction.
+     *
+     * @return [DbTransformerType].
+     */
+    fun toDb(): DbTransformerType = when(this) {
+        IMAGE -> DbTransformerType.IMAGE
+        SYSTEM -> DbTransformerType.SYSTEM
     }
 }

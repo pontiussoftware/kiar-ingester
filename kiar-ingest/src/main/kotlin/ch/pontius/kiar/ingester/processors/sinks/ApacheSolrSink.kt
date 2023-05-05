@@ -7,7 +7,7 @@ import ch.pontius.kiar.ingester.solrj.Constants.FIELD_NAME_CANTON
 import ch.pontius.kiar.ingester.solrj.Constants.FIELD_NAME_OUTPUT
 import ch.pontius.kiar.ingester.solrj.Constants.FIELD_NAME_PARTICIPANT
 import ch.pontius.kiar.ingester.solrj.Constants.SYSTEM_FIELDS
-import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.runBlocking
 import org.apache.logging.log4j.LogManager
 import org.apache.solr.client.solrj.SolrServerException
@@ -23,7 +23,7 @@ import java.lang.IllegalStateException
  * A [Sink] that processes [SolrInputDocument]s and ingests them into Apache Solr.
  *
  * @author Ralph Gasser
- * @version 1.0.0
+ * @version 1.1.0
  */
 class ApacheSolrSink(override val input: Source<SolrInputDocument>, private val config: SolrConfig): Sink<SolrInputDocument>, Closeable {
 
@@ -54,12 +54,12 @@ class ApacheSolrSink(override val input: Source<SolrInputDocument>, private val 
      *
      * @return [Flow]
      */
-    override fun execute() = runBlocking {
-        /* Prepare collection for data ingest. */
+    override fun toFlow(): Flow<Unit> = flow {
+        /* Prepare ingest. */
         this@ApacheSolrSink.prepareIngest()
 
-        /* Consume incoming flow of documents. */
-        this@ApacheSolrSink.input.toFlow().collect { doc ->
+        /* Start collection of incoming flow. */
+        this@ApacheSolrSink.input.toFlow().collect() { doc ->
             val uuid = doc[Constants.FIELD_NAME_UUID]
             try {
                 LOGGER.debug("Incoming document (name = ${this@ApacheSolrSink.context}, uuid = $uuid).")
@@ -89,6 +89,8 @@ class ApacheSolrSink(override val input: Source<SolrInputDocument>, private val 
 
         /* Finalize ingest for all collections. */
         this@ApacheSolrSink.finalizeIngest()
+
+        emit(Unit)
     }
 
     /**
