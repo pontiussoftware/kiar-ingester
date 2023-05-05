@@ -3,8 +3,8 @@ package ch.pontius.kiar.config
 import ch.pontius.kiar.ingester.processors.sinks.Sinks
 import ch.pontius.kiar.ingester.processors.sources.Sources
 import ch.pontius.kiar.ingester.processors.transformers.Transformers
-import ch.pontius.kiar.ingester.serializers.PathSerializer
 import ch.pontius.kiar.ingester.watcher.FileWatcher
+import ch.pontius.kiar.utilities.serialization.PathSerializer
 import kotlinx.serialization.Serializable
 import java.nio.file.Path
 

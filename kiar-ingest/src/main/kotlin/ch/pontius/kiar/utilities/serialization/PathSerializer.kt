@@ -1,4 +1,4 @@
-package ch.pontius.kiar.ingester.serializers
+package ch.pontius.kiar.utilities.serialization
 
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.KSerializer
@@ -12,7 +12,7 @@ import java.nio.file.Path
 import java.nio.file.Paths
 
 /**
- * A [KSerializer] to serialize and deserialize [Path] objects.
+ * A [KSerializer] for [Path] objects.
  *
  * @author Ralph Gasser
  * @version 1.0.0

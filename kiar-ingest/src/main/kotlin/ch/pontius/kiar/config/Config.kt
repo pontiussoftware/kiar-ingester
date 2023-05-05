@@ -1,5 +1,6 @@
 package ch.pontius.kiar.config
 
+import ch.pontius.kiar.utilities.serialization.PathSerializer
 import kotlinx.serialization.Serializable
 import java.nio.file.Path
 
@@ -21,12 +22,15 @@ data class Config(
     val webPort: Int = 7070,
 
     /** Path to database folder. */
+    @Serializable(with = PathSerializer::class)
     val dbPath: Path,
 
     /** Path to ingest main folder. */
+    @Serializable(with = PathSerializer::class)
     val ingestPath: Path,
 
     /** Path to log file. */
+    @Serializable(with = PathSerializer::class)
     val logPath: Path,
 
     /** A [List] of registered [SolrConfig] instances. */
