@@ -18,6 +18,8 @@ class DbJobStatus(entity: Entity) : XdEnumEntity(entity)  {
         val HARVESTED by enumField { description = "HARVESTED" }
         val RUNNING by enumField { description = "RUNNING" }
         val INGESTED by enumField { description = "INGESTED" }
+        val FAILED by enumField { description = "FAILED" }
+
     }
 
     var description by xdRequiredStringProp(unique = true)

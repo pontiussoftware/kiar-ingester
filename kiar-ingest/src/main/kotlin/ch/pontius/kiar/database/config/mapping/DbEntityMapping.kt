@@ -1,8 +1,10 @@
 package ch.pontius.kiar.database.config.mapping
 
+import ch.pontius.kiar.config.MappingConfig
 import ch.pontius.kiar.database.config.jobs.DbJobTemplate
 import jetbrains.exodus.entitystore.Entity
 import kotlinx.dnq.*
+import kotlinx.dnq.query.asSequence
 
 /**
  * A storable entity mapping configuration as used by the KIAR Tools.
@@ -28,4 +30,15 @@ class DbEntityMapping(entity: Entity) : XdEntity(entity) {
 
     /** The [DbAttributeMapping]s that belong to this [DbEntityMapping]. */
     val attributes by xdChildren0_N(DbAttributeMapping::config)
+
+    /**
+     * A convenience method used to convert this [DbEntityMapping] to a [MappingConfig]. Requires an ongoing transaction!
+     *
+     * @return [MappingConfig]
+     */
+    fun toApi() = MappingConfig(
+        this.name,
+        this.description,
+        this.attributes.asSequence().map { it.toApi() }.toList()
+    )
 }

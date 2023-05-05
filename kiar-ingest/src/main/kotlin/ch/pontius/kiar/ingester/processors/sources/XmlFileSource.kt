@@ -1,7 +1,7 @@
 package ch.pontius.kiar.ingester.processors.sources
 
 import ch.pontius.kiar.config.MappingConfig
-import ch.pontius.kiar.ingester.parsing.xml.XmlAttributeMapping
+import ch.pontius.kiar.ingester.parsing.xml.AttributeMapping
 import ch.pontius.kiar.ingester.parsing.xml.XmlParsingContext
 import ch.pontius.kiar.ingester.solrj.Constants.FIELD_NAME_UUID
 import kotlinx.coroutines.Dispatchers
@@ -28,8 +28,8 @@ class XmlFileSource(override val context: String, private val file: Path, privat
         private val LOGGER = LogManager.getLogger()
     }
 
-    /** List of required [XmlAttributeMapping]. */
-    private val required: List<XmlAttributeMapping> = this.config.values.filter { it.required }
+    /** List of required [AttributeMapping]. */
+    private val required: List<AttributeMapping> = this.config.values.filter { it.required }
 
     /**
      * Creates and returns a [Flow] for this [XmlFileSource].

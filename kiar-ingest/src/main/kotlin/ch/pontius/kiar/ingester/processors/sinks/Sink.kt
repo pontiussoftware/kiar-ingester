@@ -2,13 +2,13 @@ package ch.pontius.kiar.ingester.processors.sinks
 
 import ch.pontius.kiar.ingester.processors.sources.Source
 import ch.pontius.kiar.ingester.processors.transformers.Transformer
-
+import kotlinx.coroutines.flow.Flow
 
 /**
  * A [Sink] builds the endpoint of a processing pipeline.
  *
  * @author Ralph Gasser
- * @version 1.0.0
+ * @version 1.1.0
  */
 interface Sink<I> {
     /** The [Source] that acts as input to this [Sink]. */
@@ -20,6 +20,8 @@ interface Sink<I> {
 
     /**
      * Transforms this [Sink] to a flow and returns that flow.
+     *
+     * @return [Flow] of this [Sink].
      */
-    fun execute()
+    fun toFlow(): Flow<Unit>
 }

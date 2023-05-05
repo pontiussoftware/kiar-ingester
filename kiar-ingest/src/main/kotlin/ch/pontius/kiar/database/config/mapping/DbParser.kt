@@ -1,5 +1,6 @@
 package ch.pontius.kiar.database.config.mapping
 
+import ch.pontius.kiar.ingester.parsing.values.ValueParsers
 import jetbrains.exodus.entitystore.Entity
 import kotlinx.dnq.XdEnumEntity
 import kotlinx.dnq.XdEnumEntityType
@@ -12,10 +13,22 @@ import kotlinx.dnq.xdRequiredStringProp
  */
 class DbParser(entity: Entity): XdEnumEntity(entity) {
     companion object : XdEnumEntityType<DbParser>() {
-        val XML by DbParser.enumField { description = "XML" }
-        val JSON by DbParser.enumField { description = "JSON" }
+        val UUID by DbParser.enumField { description = "UUID" }
+        val STRING by DbParser.enumField { description = "STRING" }
+        val MULTISTRING by DbParser.enumField { description = "MULTISTRING" }
+        val DATE by DbParser.enumField { description = "DATE" }
+        val INTEGER by DbParser.enumField { description = "INTEGER" }
+        val DOUBLE by DbParser.enumField { description = "DOUBLE" }
+        val IMAGE by DbParser.enumField { description = "IMAGE" }
     }
 
     /** The name of this [DbParser]. */
     var description by xdRequiredStringProp(unique = true)
+
+    /**
+     * A convenience method used to convert this [DbEntityMapping] to a [ValueParsers] instance.
+     *
+     * @return This [ValueParsers].
+     */
+    fun toApi(): ValueParsers = ValueParsers.valueOf(this.description)
 }

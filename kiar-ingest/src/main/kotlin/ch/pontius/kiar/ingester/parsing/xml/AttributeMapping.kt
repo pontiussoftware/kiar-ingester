@@ -1,15 +1,16 @@
 package ch.pontius.kiar.ingester.parsing.xml
 
 import ch.pontius.kiar.ingester.parsing.values.ValueParsers
+import kotlinx.serialization.Serializable
 
 /**
- * A [XmlAttributeMapping] definition defines how an individual XML attribute should be mapped to a destination attribute.
+ * A [AttributeMapping] definition defines how an individual XML attribute should be mapped to a destination attribute.
  *
  * @author Ralph Gasser
  * @version 1.0.0
  */
-@kotlinx.serialization.Serializable
-data class XmlAttributeMapping(
+@Serializable
+data class AttributeMapping(
     val source: String,
     val destination: String,
     val parser: ValueParsers,

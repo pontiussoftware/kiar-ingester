@@ -6,10 +6,7 @@ import ch.pontius.kiar.cli.Cli
 import ch.pontius.kiar.config.Config
 import ch.pontius.kiar.database.config.jobs.DbJobTemplate
 import ch.pontius.kiar.database.config.jobs.DbJobType
-import ch.pontius.kiar.database.config.mapping.DbAttributeMapping
-import ch.pontius.kiar.database.config.mapping.DbEntityMapping
-import ch.pontius.kiar.database.config.mapping.DbFormat
-import ch.pontius.kiar.database.config.mapping.DbParser
+import ch.pontius.kiar.database.config.mapping.*
 import ch.pontius.kiar.database.config.solr.DbCollection
 import ch.pontius.kiar.database.config.solr.DbCollectionType
 import ch.pontius.kiar.database.config.solr.DbSolr
@@ -62,10 +59,11 @@ fun main(args: Array<String>) {
         val config: Config = loadConfig(args.firstOrNull() ?: "./config.json")
         System.setProperty("log4j.saveDirectory", config.logPath.toString()) /* Set log path for Log4j2. */
 
-        SERVER = IngesterServer(config)
-
         /* Initializes the embedded Xodus database. */
-        DB = initializeDatabase(config)
+        val database = initializeDatabase(config)
+
+        /* Initializes the IngestServer. */
+        SERVER = IngesterServer(database, config)
 
         /* Start Javalin web-server (if configured). */
         if (config.web) {
@@ -123,6 +121,7 @@ private fun initializeDatabase(config: Config): TransientEntityStore {
         DbJobType,
         DbEntityMapping,
         DbAttributeMapping,
+        DbAttributeMappingParameters,
         DbFormat,
         DbParser,
         DbTransformer,

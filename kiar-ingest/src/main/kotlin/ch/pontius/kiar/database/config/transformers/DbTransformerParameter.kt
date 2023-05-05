@@ -1,10 +1,7 @@
 package ch.pontius.kiar.database.config.transformers
 
 import jetbrains.exodus.entitystore.Entity
-import kotlinx.dnq.XdEntity
-import kotlinx.dnq.XdNaturalEntityType
-import kotlinx.dnq.xdParent
-import kotlinx.dnq.xdStringProp
+import kotlinx.dnq.*
 
 /**
  * A parameter used to configure a [DbTransformer]
@@ -16,10 +13,10 @@ class DbTransformerParameter(entity: Entity) : XdEntity(entity) {
     companion object: XdNaturalEntityType<DbTransformerParameter>()
 
     /** The key of this [DbTransformerParameter]. */
-    var key by xdStringProp()
+    var key by xdRequiredStringProp()
 
     /** The value of this [DbTransformerParameter]. */
-    var value by xdStringProp()
+    var value by xdRequiredStringProp()
 
     /** The value of this [DbTransformerParameter]. */
     var transformer: DbTransformer by xdParent(DbTransformer::parameters)

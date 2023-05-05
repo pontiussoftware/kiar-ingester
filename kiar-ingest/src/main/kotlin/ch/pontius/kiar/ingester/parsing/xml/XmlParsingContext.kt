@@ -33,12 +33,12 @@ class XmlParsingContext(config: MappingConfig, val callback: (SolrInputDocument)
     private val stack = Stack<String>()
 
     /** The current XPath this [XmlParsingContext] is currently in. */
-    private val parsers = HashMap<XmlAttributeMapping, ValueParser<*>>()
+    private val parsers = HashMap<AttributeMapping, ValueParser<*>>()
 
-    /** The longest, common prefix found for all [XmlAttributeMapping]. This prefix will be used to distinguish between different objects. */
-    private val mappings = HashMap<String, MutableList<XmlAttributeMapping>>()
+    /** The longest, common prefix found for all [AttributeMapping]. This prefix will be used to distinguish between different objects. */
+    private val mappings = HashMap<String, MutableList<AttributeMapping>>()
 
-    /** The longest, common prefix found for all [XmlAttributeMapping]. This prefix will be used to distinguish between different objects. */
+    /** The longest, common prefix found for all [AttributeMapping]. This prefix will be used to distinguish between different objects. */
     private val newDocumentOn: String
 
     /** An internal error flag */

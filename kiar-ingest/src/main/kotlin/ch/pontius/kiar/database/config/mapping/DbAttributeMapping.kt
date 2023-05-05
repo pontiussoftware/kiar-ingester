@@ -1,7 +1,9 @@
 package ch.pontius.kiar.database.config.mapping
 
+import ch.pontius.kiar.ingester.parsing.xml.AttributeMapping
 import jetbrains.exodus.entitystore.Entity
 import kotlinx.dnq.*
+import kotlinx.dnq.query.asSequence
 
 /**
  * A storable attribute mapping configuration as used by the KIAR Tools.
@@ -27,6 +29,21 @@ class DbAttributeMapping(entity: Entity) : XdEntity(entity) {
     /** The [DbParser] this [DbAttributeMapping] should use. */
     val parser by xdLink1(DbParser)
 
+    /** The [DbAttributeMappingParameters] used to configure this [DbAttributeMapping]. */
+    val parameters by xdChildren0_N(DbAttributeMappingParameters::mapping)
+
     /** The [DbEntityMapping] this [DbAttributeMapping] belongs to.  */
     val config: DbEntityMapping by xdParent(DbEntityMapping::attributes)
+
+    /**
+     * A convenience method used to convert this [DbEntityMapping] to a [AttributeMapping].
+     *
+     * Requires an ongoing transaction!
+     *
+     * @return [AttributeMapping]
+     */
+    fun toApi(): AttributeMapping {
+        val parameters = this.parameters.asSequence().associate { it.key to it.value }
+        return AttributeMapping(this.source, this.destination, this.parser.toApi(), this.required, this.multiValued, parameters)
+    }
 }

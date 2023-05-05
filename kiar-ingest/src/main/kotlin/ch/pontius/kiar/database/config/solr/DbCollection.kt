@@ -1,5 +1,6 @@
 package ch.pontius.kiar.database.config.solr
 
+import ch.pontius.kiar.config.CollectionConfig
 import jetbrains.exodus.entitystore.Entity
 import kotlinx.dnq.*
 
@@ -20,4 +21,17 @@ class DbCollection(entity: Entity) : XdEntity(entity) {
 
     /** [DbSolr] instance this [DbCollection] belongs to. */
     var solr: DbSolr by xdParent(DbSolr::collections)
+
+    /** Flag indicating, that the [DbCollection] should be deleted before starting an ingest. */
+    var deleteBeforeIngest by xdBooleanProp()
+
+    /** A flag indicating, that this [DbCollection] accepts empty filters. */
+    val acceptEmptyFilter: Boolean = false
+
+    /**
+     * A convenience method used to convert this [DbCollection] to a [CollectionConfig]. Requires an ongoing transaction!
+     *
+     * @return [CollectionConfig]
+     */
+    fun toApi() = CollectionConfig(this.name, emptyList(), this.deleteBeforeIngest, this.acceptEmptyFilter)
 }

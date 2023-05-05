@@ -1,7 +1,6 @@
 package ch.pontius.kiar.ingester.watcher
 
 import ch.pontius.kiar.ingester.IngesterServer
-import ch.pontius.kiar.config.JobConfig
 import org.apache.logging.log4j.LogManager
 import java.io.IOException
 import java.nio.file.*
@@ -14,17 +13,11 @@ import kotlin.system.measureTimeMillis
  * @author Ralph Gasser
  * @version 1.0.0
  */
-class FileWatcher(private val server: IngesterServer, jobConfig: JobConfig): Runnable {
+class FileWatcher(private val server: IngesterServer, private val jobName: String, private val file: Path): Runnable {
 
     companion object {
         private val LOGGER = LogManager.getLogger()
     }
-
-    /** The path to the file this [FileWatcher] is waiting for. */
-    private val file: Path = jobConfig.file
-
-    /** The name of the job that should be executed once the file is created. */
-    private val jobName = jobConfig.name
 
     /** Flag indicating whether file should be deleted once processing has concluded. */
     private val delete: Boolean = false
