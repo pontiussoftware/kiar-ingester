@@ -9,7 +9,7 @@ val kotlinVersion: String by project
 val kotlinCoroutines: String by project
 val kotlinSerializaion: String by project
 val log4jVersion: String by project
-val postgresVersion: String by project
+val picnicVersion: String by project
 val solrjVersion: String by project
 val slf4jVersion: String by project
 val twelveMonkeysVersion: String by project
@@ -77,4 +77,5 @@ dependencies {
     implementation("com.github.ajalt.clikt:clikt:$cliktVersion")
     implementation("org.jline:jline:$jlineVersion")
     implementation("org.jline:jline-terminal-jna:$jlineVersion")
+    implementation("com.jakewharton.picnic:picnic:$picnicVersion")
 }

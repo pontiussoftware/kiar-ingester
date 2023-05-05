@@ -19,7 +19,7 @@ class DbUser(entity: Entity) : XdEntity(entity) {
     var name by xdRequiredStringProp(unique = true, trimmed = true) { alphaNumeric("Username can only consist of digits and numbers.") }
 
     /** The email of this [DbUser]. Must be unique!*/
-    var email by xdRequiredStringProp(unique = true, trimmed = true) { email("A user requires a a proper e-mail address.") }
+    var email by xdStringProp(trimmed = true) { email("A user requires a a proper e-mail address.") }
 
     /** The password of this [DbUser].*/
     var password by xdRequiredStringProp(trimmed = true)

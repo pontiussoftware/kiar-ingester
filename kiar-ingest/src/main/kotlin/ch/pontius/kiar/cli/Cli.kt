@@ -4,6 +4,7 @@ import ch.pontius.kiar.config.Config
 import ch.pontius.kiar.ingester.IngesterServer
 import com.github.ajalt.clikt.core.NoOpCliktCommand
 import com.github.ajalt.clikt.core.subcommands
+import jetbrains.exodus.database.TransientEntityStore
 import org.jline.reader.EndOfFileException
 import org.jline.reader.LineReaderBuilder
 import org.jline.reader.UserInterruptException
@@ -17,7 +18,7 @@ import java.util.regex.Pattern
  * @author Ralph Gasser
  * @version 1.0.0
  */
-class Cli(config: Config, server: IngesterServer) {
+class Cli(config: Config, server: IngesterServer, store: TransientEntityStore) {
 
     companion object {
         /** The default prompt -- just fancification */
@@ -31,6 +32,7 @@ class Cli(config: Config, server: IngesterServer) {
     private val clikt = object : NoOpCliktCommand(name = "ingester", help = "The base command for all CLI commands.") {
         init {
             subcommands(
+                UserCommand(store),
                 ScheduleCommand(server),
                 ExecuteCommand(server),
                 QuitCommand(server)

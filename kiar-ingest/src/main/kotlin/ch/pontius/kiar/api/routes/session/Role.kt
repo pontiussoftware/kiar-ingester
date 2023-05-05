@@ -1,5 +1,6 @@
 package ch.pontius.kiar.api.routes.session
 
+import ch.pontius.kiar.database.institution.DbRole
 import io.javalin.security.RouteRole
 
 /**
@@ -9,8 +10,16 @@ import io.javalin.security.RouteRole
  * @version 1.0.0
  */
 enum class Role : RouteRole {
-    ANYONE,
-    ADMINISTRATOR,
-    MANAGER,
-    VIEWER
+    ADMINISTRATOR, MANAGER, VIEWER;
+
+    /**
+     * Converts hit [Role] to a [DbRole]. Requires an active transaction.
+     *
+     * @return [DbRole]
+     */
+    fun toDb(): DbRole = when(this) {
+        ADMINISTRATOR -> DbRole.ADMINISTRATOR
+        MANAGER -> DbRole.MANAGER
+        VIEWER -> DbRole.VIEWER
+    }
 }

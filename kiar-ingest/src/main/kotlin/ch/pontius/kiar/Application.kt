@@ -30,7 +30,6 @@ import io.javalin.openapi.plugin.OpenApiPluginConfiguration
 import io.javalin.openapi.plugin.SecurityComponentConfiguration
 import io.javalin.openapi.plugin.swagger.SwaggerConfiguration
 import io.javalin.openapi.plugin.swagger.SwaggerPlugin
-import io.javalin.security.AccessManager
 import jetbrains.exodus.database.TransientEntityStore
 import kotlinx.dnq.XdModel
 import kotlinx.dnq.query.filter
@@ -54,19 +53,19 @@ fun main(args: Array<String>) {
         System.setProperty("log4j.saveDirectory", config.logPath.toString()) /* Set log path for Log4j2. */
 
         /* Initializes the embedded Xodus database. */
-        val database = initializeDatabase(config)
+        val store = initializeDatabase(config)
 
         /* Initializes the IngestServer. */
-        val server = IngesterServer(database, config)
+        val server = IngesterServer(store, config)
 
         /* Start Javalin web-server (if configured). */
         if (config.web) {
-            initializeWebserver(database).start(config.webPort)
+            initializeWebserver(store).start(config.webPort)
         }
 
         /* Start CLI (if configured). */
         if (config.cli) {
-            Cli(config, server).loop()
+            Cli(config, server, store).loop()
         }
     } catch (e: Throwable) {
         System.err.println("Failed to start IngesterServer due to error:")

@@ -15,7 +15,7 @@ fun configureApiRoutes(store: TransientEntityStore) {
     path("api") {
         /** All paths related to session, login and logout handling. */
         path("session") {
-            post("login", { ctx -> login(ctx, store) }, Role.ANYONE)
+            post("login") { ctx -> login(ctx, store) }
             get("logout", { ctx -> login(ctx, store) }, Role.ADMINISTRATOR, Role.VIEWER, Role.MANAGER )
         }
     }

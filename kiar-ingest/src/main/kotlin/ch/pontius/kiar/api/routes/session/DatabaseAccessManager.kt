@@ -19,7 +19,6 @@ class DatabaseAccessManager(private val store: TransientEntityStore): AccessMana
 
     override fun manage(handler: Handler, ctx: Context, routeRoles: Set<RouteRole>) = when {
         routeRoles.isEmpty() -> handler.handle(ctx)
-        routeRoles.contains(Role.ANYONE) -> handler.handle(ctx)
         else -> {
             this.store.transactional(true) {
                 val userId = ctx.sessionAttribute<String>(SESSION_USER_ID) ?: throw ErrorStatusException(401, "Unknown user: You cannot access this resource.")
