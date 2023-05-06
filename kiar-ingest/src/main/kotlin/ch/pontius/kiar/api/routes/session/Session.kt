@@ -36,6 +36,13 @@ fun login(ctx: Context, store: TransientEntityStore) {
         throw ErrorStatusException(400, "Malformed login request.")
     }
 
+    /* Check if user is already logged-in.*/
+    if (ctx.sessionAttribute<String>(SESSION_USER_ID) != null && ctx.sessionAttribute<String>(SESSION_USER_NAME) == request.username) {
+        ctx.json(SuccessStatus("Already logged in."));
+        return
+    }
+
+    /* Validate credentials and log-in user. */
     store.transactional (true) {
         val user = DbUser.filter { (it.name eq request.username) and (it.inactive eq false) }.firstOrNull()
             ?: throw ErrorStatusException(401, "The provided credentials are invalid.")
