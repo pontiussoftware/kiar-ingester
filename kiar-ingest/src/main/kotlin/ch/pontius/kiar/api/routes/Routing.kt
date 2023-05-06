@@ -5,9 +5,12 @@ import ch.pontius.kiar.api.routes.session.login
 import ch.pontius.kiar.api.routes.session.logout
 import ch.pontius.kiar.api.routes.session.status
 import ch.pontius.kiar.api.routes.config.listJobTemplates
+import createEntityMapping
+import deleteEntityMapping
 import io.javalin.apibuilder.ApiBuilder.*
 import jetbrains.exodus.database.TransientEntityStore
 import listEntityMappings
+import updateEntityMapping
 
 /**
  * Configures all the API routes.
@@ -25,7 +28,13 @@ fun configureApiRoutes(store: TransientEntityStore) {
         }
 
         get("templates", { ctx -> listJobTemplates(ctx, store) }, Role.ADMINISTRATOR, Role.MANAGER )
-        get("mappings", { ctx -> listEntityMappings(ctx, store) }, Role.ADMINISTRATOR )
 
+        /* Endpoints related to entity mappings. */
+        get("mappings", { ctx -> listEntityMappings(ctx, store) }, Role.ADMINISTRATOR )
+        post("mappings", { ctx -> createEntityMapping(ctx, store) }, Role.ADMINISTRATOR )
+        path("mappings") {
+            put("{id}",  { ctx -> updateEntityMapping(ctx, store) }, Role.ADMINISTRATOR )
+            delete("{id}",  { ctx -> deleteEntityMapping(ctx, store) }, Role.ADMINISTRATOR )
+        }
     }
 }

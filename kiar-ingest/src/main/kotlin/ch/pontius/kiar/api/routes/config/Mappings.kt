@@ -91,7 +91,7 @@ fun createEntityMapping(ctx: Context, store: TransientEntityStore) {
         OpenApiResponse("500", [OpenApiContent(ErrorStatus::class)])
     ]
 )
-fun deleteMapping(ctx: Context, store: TransientEntityStore) {
+fun deleteEntityMapping(ctx: Context, store: TransientEntityStore) {
     val mappingId = ctx.pathParam("id")
     store.transactional {
         val mapping = try {
@@ -123,7 +123,7 @@ fun deleteMapping(ctx: Context, store: TransientEntityStore) {
         OpenApiResponse("500", [OpenApiContent(ErrorStatus::class)])
     ]
 )
-fun updateMapping(ctx: Context, store: TransientEntityStore) {
+fun updateEntityMapping(ctx: Context, store: TransientEntityStore) {
     /* Extract the ID and the request body. */
     val mappingId = ctx.pathParam("id")
     val request = try {

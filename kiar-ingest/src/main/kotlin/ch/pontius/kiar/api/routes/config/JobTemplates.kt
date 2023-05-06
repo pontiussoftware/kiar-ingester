@@ -14,9 +14,9 @@ import kotlinx.dnq.query.*
 @OpenApi(
     path = "/api/templates",
     methods = [HttpMethod.GET],
-    summary = "Attempts a login using the credentials provided in the request body.",
+    summary = "Lists all available job templates.",
     operationId = "getListJobTemplates",
-    tags = ["Job Templates"],
+    tags = ["Config", "Job Templates"],
     pathParams = [],
     responses = [
         OpenApiResponse("200", [OpenApiContent(Array<JobTemplate>::class)]),
