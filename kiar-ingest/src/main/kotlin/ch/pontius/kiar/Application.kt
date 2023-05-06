@@ -1,7 +1,10 @@
 package ch.pontius.kiar
 
+import ch.pontius.kiar.api.model.status.ErrorStatus
+import ch.pontius.kiar.api.model.status.ErrorStatusException
 import ch.pontius.kiar.api.routes.configureApiRoutes
 import ch.pontius.kiar.api.routes.session.DatabaseAccessManager
+import ch.pontius.kiar.api.routes.session.SALT
 import ch.pontius.kiar.ingester.IngesterServer
 import ch.pontius.kiar.cli.Cli
 import ch.pontius.kiar.config.Config
@@ -22,6 +25,7 @@ import ch.pontius.kiar.database.institution.DbRole
 import ch.pontius.kiar.database.institution.DbUser
 import ch.pontius.kiar.database.job.DbJobSource
 import ch.pontius.kiar.utilities.KotlinxJsonMapper
+import ch.pontius.kiar.utilities.generatePassword
 import io.javalin.Javalin
 import io.javalin.http.staticfiles.Location
 import io.javalin.openapi.CookieAuth
@@ -35,9 +39,11 @@ import kotlinx.dnq.XdModel
 import kotlinx.dnq.query.filter
 import kotlinx.dnq.query.first
 import kotlinx.dnq.query.isEmpty
+import kotlinx.dnq.query.size
 import kotlinx.dnq.store.container.StaticStoreContainer
 import kotlinx.dnq.util.initMetaData
 import kotlinx.serialization.json.Json
+import org.mindrot.jbcrypt.BCrypt
 import java.io.FileNotFoundException
 import java.nio.file.Files
 import java.nio.file.Paths
@@ -129,89 +135,118 @@ private fun initializeDatabase(config: Config): TransientEntityStore {
         DbUser
     )
     initMetaData(XdModel.hierarchy, store)
+
+    /* Perform basic setup if needed. */
+    checkAndSetup(store, config)
+
     return store
 }
 
 /**
- * Persist [Config]
+ * Checks for an empty database and performs basic setup if needed.
+ *
+ * @param store [TransientEntityStore]
+ * @param config The [Config]
  */
-private fun persistConfig(store: TransientEntityStore, config: Config) = store.transactional {
-    /* Persist Apache Solr configurations. */
-    for (solr in config.solr) {
-        if (DbSolr.filter { it.name eq solr.name }.isEmpty) {
-            DbSolr.new {
-                name = solr.name
-                server = solr.server
-                username = solr.user
-                password = solr.password
-                for (c in solr.collections) {
-                    collections.add(DbCollection.new{
-                        name = c.name
-                        type = DbCollectionType.OBJECT
-                        filters = c.filter.joinToString(",")
-                        acceptEmptyFilter = c.acceptEmptyFilter
-                        deleteBeforeIngest = c.deleteBeforeImport
-                    })
+private fun checkAndSetup(store: TransientEntityStore, config: Config) = store.transactional {
+    /** */
+    if (DbUser.all().size() == 0) {
+
+        println("Empty database encountered... starting setup.")
+        val pw = generatePassword(10)
+        DbUser.new {
+            name = "admin"
+            role = DbRole.ADMINISTRATOR
+            password = BCrypt.hashpw(pw, SALT)
+            inactive = false
+        }
+        println("Generated a new user 'admin' with password '$pw'.")
+
+        println("Importing configuration settings.")
+        /* Persist Apache Solr configurations. */
+        for (solr in config.solr) {
+            if (DbSolr.filter { it.name eq solr.name }.isEmpty) {
+                DbSolr.new {
+                    name = solr.name
+                    server = solr.server
+                    username = solr.user
+                    password = solr.password
+                    for (c in solr.collections) {
+                        collections.add(DbCollection.new{
+                            name = c.name
+                            type = DbCollectionType.OBJECT
+                            filters = c.filter.joinToString(",")
+                            acceptEmptyFilter = c.acceptEmptyFilter
+                            deleteBeforeIngest = c.deleteBeforeImport
+                        })
+                    }
                 }
             }
         }
-    }
 
-    /* Persist Attribute mappings. */
-    for (mapping in config.mappers) {
-        if (DbEntityMapping.filter { it.name eq mapping.name }.isEmpty) {
-            DbEntityMapping.new {
-                name = mapping.name
-                description = mapping.description
-                type = DbFormat.XML
-                for (a in mapping.values) {
-                    attributes.add(DbAttributeMapping.new {
-                        source = a.source
-                        destination = a.destination
-                        parser = a.parser.toDb()
-                        required = a.required
-                        multiValued = a.multiValued
-                        for (p in a.parameters) {
-                            parameters.add(DbAttributeMappingParameters.new {
-                                key = p.key
-                                value = p.value
-                            })
-                        }
-                    })
-                }
-            }
-        }
-    }
-
-    /* Persist Job configurations. */
-    for (job in config.jobs) {
-        if (DbJobTemplate.filter { it.name eq job.name }.isEmpty) {
-            DbJobTemplate.new {
-                name = job.name
-                solr = DbSolr.filter { it.name eq job.solrConfig }.first()
-                mapping = DbEntityMapping.filter { it.name eq job.mappingConfig }.first()
-                type = DbJobType.XML
-                startAutomatically = job.startOnCreation
-                deleted = false
-
-                /* Persist transformers. */
-                for (t in job.transformers) {
-                    transformers.add(DbTransformer.new {
-                        type = t.type.toDb()
-                        for (p in t.parameters) {
-                            parameters.add(
-                                DbTransformerParameter.new {
+        /* Persist Attribute mappings. */
+        for (mapping in config.mappers) {
+            if (DbEntityMapping.filter { it.name eq mapping.name }.isEmpty) {
+                DbEntityMapping.new {
+                    name = mapping.name
+                    description = mapping.description
+                    type = DbFormat.XML
+                    for (a in mapping.values) {
+                        attributes.add(DbAttributeMapping.new {
+                            source = a.source
+                            destination = a.destination
+                            parser = a.parser.toDb()
+                            required = a.required
+                            multiValued = a.multiValued
+                            for (p in a.parameters) {
+                                parameters.add(DbAttributeMappingParameters.new {
                                     key = p.key
                                     value = p.value
-                                }
-                            )
-                        }
-                    })
+                                })
+                            }
+                        })
+                    }
                 }
             }
         }
+
+        /* Persist Job configurations. */
+        for (job in config.jobs) {
+            if (DbJobTemplate.filter { it.name eq job.name }.isEmpty) {
+                val p = DbParticipant.new {
+                    name = job.name
+                }
+                DbJobTemplate.new {
+                    name = job.name
+                    participant = p
+                    solr = DbSolr.filter { it.name eq job.solrConfig }.first()
+                    mapping = DbEntityMapping.filter { it.name eq job.mappingConfig }.first()
+                    type = DbJobType.XML
+                    startAutomatically = job.startOnCreation
+                    deleted = false
+
+                    /* Persist transformers. */
+                    for (t in job.transformers) {
+                        transformers.add(DbTransformer.new {
+                            type = t.type.toDb()
+                            for (p in t.parameters) {
+                                parameters.add(
+                                    DbTransformerParameter.new {
+                                        key = p.key
+                                        value = p.value
+                                    }
+                                )
+                            }
+                        })
+                    }
+                }
+            }
+        }
+        println("Setup completed!")
     }
 }
+
+
 
 
 /**
@@ -271,4 +306,8 @@ private fun initializeWebserver(store: TransientEntityStore) = Javalin.create { 
     )
 }.routes {
     configureApiRoutes(store)
+}.exception(ErrorStatusException::class.java) { e, ctx ->
+    ctx.status(e.code).json(ErrorStatus(e.code, e.message))
+}.exception(Exception::class.java) { e, ctx ->
+    ctx.status(500).json(ErrorStatus(500, "Internal server error: ${e.localizedMessage}"))
 }

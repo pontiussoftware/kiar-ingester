@@ -15,4 +15,4 @@ const val MIN_LENGTH_PASSWORD = 8
 const val MIN_LENGTH_USERNAME = 5
 
 /** The salt used for password encryption. */
-val SALT = BCrypt.gensalt()
+val SALT: String = BCrypt.gensalt()

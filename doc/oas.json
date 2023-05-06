@@ -83,6 +83,38 @@
         "deprecated" : false,
         "security" : [ ]
       }
+    },
+    "/api/session/status" : {
+      "get" : {
+        "tags" : [ "Session" ],
+        "summary" : "Checks and returns the status of the current session.",
+        "operationId" : "status",
+        "parameters" : [ ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/SessionStatus"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Forbidden",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorStatus"
+                }
+              }
+            }
+          }
+        },
+        "deprecated" : false,
+        "security" : [ ]
+      }
     }
   },
   "components" : {
@@ -99,6 +131,19 @@
           }
         },
         "required" : [ "username", "password" ]
+      },
+      "SessionStatus" : {
+        "type" : "object",
+        "additionalProperties" : false,
+        "properties" : {
+          "username" : {
+            "type" : "string"
+          },
+          "role" : {
+            "$ref" : "#/components/schemas/Role"
+          }
+        },
+        "required" : [ "username", "role" ]
       },
       "ErrorStatus" : {
         "type" : "object",
@@ -123,6 +168,10 @@
           }
         },
         "required" : [ "description" ]
+      },
+      "Role" : {
+        "type" : "string",
+        "enum" : [ "ADMINISTRATOR", "MANAGER", "VIEWER" ]
       }
     },
     "securitySchemes" : {

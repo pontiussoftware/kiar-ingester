@@ -1,6 +1,7 @@
 package ch.pontius.kiar.api.routes.session
 
 import ch.pontius.kiar.api.model.session.LoginRequest
+import ch.pontius.kiar.api.model.session.SessionStatus
 import ch.pontius.kiar.api.model.status.ErrorStatus
 import ch.pontius.kiar.api.model.status.ErrorStatusException
 import ch.pontius.kiar.api.model.status.SuccessStatus
@@ -11,6 +12,7 @@ import io.javalin.openapi.*
 import jetbrains.exodus.database.TransientEntityStore
 import kotlinx.dnq.query.filter
 import kotlinx.dnq.query.firstOrNull
+import kotlinx.dnq.util.findById
 import org.mindrot.jbcrypt.BCrypt
 
 @OpenApi(
@@ -43,7 +45,7 @@ fun login(ctx: Context, store: TransientEntityStore) {
         }
 
         ctx.sessionAttribute(SESSION_USER_ID, user.xdId) /* Store ID of the user. */
-        ctx.sessionAttribute(SESSION_USER_ID, user.name) /* Store ID of the user. */
+        ctx.sessionAttribute(SESSION_USER_NAME, user.name) /* Name of the user. */
 
         ctx.json(SuccessStatus("Login successful!"))
     }
@@ -67,4 +69,32 @@ fun logout(ctx: Context) {
 
     /* Return success status. */
     ctx.json(SuccessStatus("Logout successful!"))
+}
+
+@OpenApi(
+    path = "/api/session/status",
+    methods = [HttpMethod.GET],
+    summary = "Checks and returns the status of the current session.",
+    operationId = "status",
+    tags = ["Session"],
+    pathParams = [],
+    responses = [
+        OpenApiResponse("200", [OpenApiContent(SessionStatus::class)]),
+        OpenApiResponse("403", [OpenApiContent(ErrorStatus::class)])
+    ]
+)
+fun status(ctx: Context, store: TransientEntityStore) {
+    val userID = ctx.sessionAttribute<String>(SESSION_USER_ID) ?: throw ErrorStatusException(403, "Your are not logged in.")
+    store.transactional(true) {
+        val user = try {
+            DbUser.findById(userID)
+        } catch (e: Throwable) {
+            ctx.sessionAttribute(SESSION_USER_ID, null)
+            ctx.sessionAttribute(SESSION_USER_NAME, null)
+            throw ErrorStatusException(403, "Unable to find user associated with session.")
+        }
+
+        /* Return success status. */
+        ctx.json(SessionStatus(user.name, user.role.toApi()))
+    }
 }
