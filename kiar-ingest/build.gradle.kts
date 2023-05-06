@@ -79,3 +79,4 @@ dependencies {
     implementation("org.jline:jline-terminal-jna:$jlineVersion")
     implementation("com.jakewharton.picnic:picnic:$picnicVersion")
 }
+

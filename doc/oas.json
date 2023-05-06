@@ -1,0 +1,138 @@
+{
+  "openapi" : "3.0.3",
+  "info" : {
+    "title" : "KIAR Dashboard API",
+    "summary" : null,
+    "description" : "API for the KIAR Dashboard.",
+    "termsOfService" : null,
+    "contact" : null,
+    "license" : null,
+    "version" : "1.0.0"
+  },
+  "paths" : {
+    "/api/session/login" : {
+      "post" : {
+        "tags" : [ "Session" ],
+        "summary" : "Attempts a login using the credentials provided in the request body.",
+        "operationId" : "login",
+        "parameters" : [ ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/LoginRequest"
+              }
+            }
+          },
+          "required" : false
+        },
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/SuccessStatus"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorStatus"
+                }
+              }
+            }
+          },
+          "500" : {
+            "description" : "Server Error",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorStatus"
+                }
+              }
+            }
+          }
+        },
+        "deprecated" : false,
+        "security" : [ ]
+      }
+    },
+    "/api/session/logout" : {
+      "get" : {
+        "tags" : [ "Session" ],
+        "summary" : "Performs a logout for the currently logged-in user.",
+        "operationId" : "logout",
+        "parameters" : [ ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/SuccessStatus"
+                }
+              }
+            }
+          }
+        },
+        "deprecated" : false,
+        "security" : [ ]
+      }
+    }
+  },
+  "components" : {
+    "schemas" : {
+      "LoginRequest" : {
+        "type" : "object",
+        "additionalProperties" : false,
+        "properties" : {
+          "username" : {
+            "type" : "string"
+          },
+          "password" : {
+            "type" : "string"
+          }
+        },
+        "required" : [ "username", "password" ]
+      },
+      "ErrorStatus" : {
+        "type" : "object",
+        "additionalProperties" : false,
+        "properties" : {
+          "code" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "description" : {
+            "type" : "string"
+          }
+        },
+        "required" : [ "code", "description" ]
+      },
+      "SuccessStatus" : {
+        "type" : "object",
+        "additionalProperties" : false,
+        "properties" : {
+          "description" : {
+            "type" : "string"
+          }
+        },
+        "required" : [ "description" ]
+      }
+    },
+    "securitySchemes" : {
+      "CookieAuth" : {
+        "name" : "SESSIONID",
+        "in" : "cookie",
+        "type" : "apiKey"
+      }
+    }
+  },
+  "servers" : [ ],
+  "security" : [ ]
+}

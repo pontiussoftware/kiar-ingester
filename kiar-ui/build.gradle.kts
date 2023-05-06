@@ -1,5 +1,5 @@
-import org.gradle.api.tasks.Copy
 import org.gradle.kotlin.dsl.*
+import org.openapitools.codegen.languages.OpenAPIGenerator
 
 plugins {
     id("com.github.node-gradle.node") version "4.0.0"

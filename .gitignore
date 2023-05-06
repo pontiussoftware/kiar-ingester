@@ -9,6 +9,7 @@ out
 # Files related to angular
 node_modules
 .angular
+openapi
 
 # Java Dependencies
 *.jar

@@ -3,7 +3,7 @@
   "logFolder": "/path/to/logs",
   "solr": [
     {
-      "name": "KIM.ch Solr Confi",
+      "name": "KIM.ch Solr Config",
       "server": "http://localhost:8983/solr",
       "collections": [
         {"name": "kimch-objects", "deleteBeforeImport": true, "filter": ["Kulturgüterportal NWCH"]},
