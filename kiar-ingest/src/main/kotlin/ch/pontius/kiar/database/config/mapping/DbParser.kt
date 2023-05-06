@@ -1,6 +1,6 @@
 package ch.pontius.kiar.database.config.mapping
 
-import ch.pontius.kiar.ingester.parsing.values.ValueParsers
+import ch.pontius.kiar.api.model.config.mappings.ValueParser
 import jetbrains.exodus.entitystore.Entity
 import kotlinx.dnq.XdEnumEntity
 import kotlinx.dnq.XdEnumEntityType
@@ -26,9 +26,9 @@ class DbParser(entity: Entity): XdEnumEntity(entity) {
     var description by xdRequiredStringProp(unique = true)
 
     /**
-     * A convenience method used to convert this [DbEntityMapping] to a [ValueParsers] instance.
+     * A convenience method used to convert this [DbEntityMapping] to a [ValueParser] instance.
      *
-     * @return This [ValueParsers].
+     * @return This [ValueParser].
      */
-    fun toApi(): ValueParsers = ValueParsers.valueOf(this.description)
+    fun toApi(): ValueParser = ValueParser.valueOf(this.description)
 }

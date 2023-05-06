@@ -21,10 +21,12 @@ import org.mindrot.jbcrypt.BCrypt
     summary = "Attempts a login using the credentials provided in the request body.",
     operationId = "login",
     tags = ["Session"],
-    requestBody = OpenApiRequestBody([OpenApiContent(LoginRequest::class)], required = false),
+    requestBody = OpenApiRequestBody([OpenApiContent(LoginRequest::class)], required = true),
     pathParams = [],
     responses = [
         OpenApiResponse("200", [OpenApiContent(SuccessStatus::class)]),
+        OpenApiResponse("400", [OpenApiContent(ErrorStatus::class)]),
+
         OpenApiResponse("401", [OpenApiContent(ErrorStatus::class)]),
         OpenApiResponse("500", [OpenApiContent(ErrorStatus::class)]),
     ]
@@ -49,12 +51,10 @@ fun login(ctx: Context, store: TransientEntityStore) {
 
         if (!BCrypt.checkpw(request.password, user.password)) {
             throw ErrorStatusException(401, "The provided credentials are invalid.")
+        } else {
+            ctx.setUser(user)
+            ctx.json(SuccessStatus("Login successful!"))
         }
-
-        ctx.sessionAttribute(SESSION_USER_ID, user.xdId) /* Store ID of the user. */
-        ctx.sessionAttribute(SESSION_USER_NAME, user.name) /* Name of the user. */
-
-        ctx.json(SuccessStatus("Login successful!"))
     }
 }
 
@@ -70,11 +70,7 @@ fun login(ctx: Context, store: TransientEntityStore) {
     ]
 )
 fun logout(ctx: Context) {
-    /* Logout user. */
-    ctx.sessionAttribute(SESSION_USER_ID, null)
-    ctx.sessionAttribute(SESSION_USER_NAME, null)
-
-    /* Return success status. */
+    ctx.invalidateUser()
     ctx.json(SuccessStatus("Logout successful!"))
 }
 
@@ -91,17 +87,8 @@ fun logout(ctx: Context) {
     ]
 )
 fun status(ctx: Context, store: TransientEntityStore) {
-    val userID = ctx.sessionAttribute<String>(SESSION_USER_ID) ?: throw ErrorStatusException(403, "Your are not logged in.")
     store.transactional(true) {
-        val user = try {
-            DbUser.findById(userID)
-        } catch (e: Throwable) {
-            ctx.sessionAttribute(SESSION_USER_ID, null)
-            ctx.sessionAttribute(SESSION_USER_NAME, null)
-            throw ErrorStatusException(403, "Unable to find user associated with session.")
-        }
-
-        /* Return success status. */
+        val user = ctx.currentUser()
         ctx.json(SessionStatus(user.name, user.role.toApi()))
     }
 }

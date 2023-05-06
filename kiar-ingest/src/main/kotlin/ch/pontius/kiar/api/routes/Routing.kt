@@ -1,11 +1,13 @@
 package ch.pontius.kiar.api.routes
 
-import ch.pontius.kiar.api.routes.session.Role
+import ch.pontius.kiar.api.model.session.Role
 import ch.pontius.kiar.api.routes.session.login
 import ch.pontius.kiar.api.routes.session.logout
 import ch.pontius.kiar.api.routes.session.status
+import ch.pontius.kiar.api.routes.config.listJobTemplates
 import io.javalin.apibuilder.ApiBuilder.*
 import jetbrains.exodus.database.TransientEntityStore
+import listEntityMappings
 
 /**
  * Configures all the API routes.
@@ -21,5 +23,9 @@ fun configureApiRoutes(store: TransientEntityStore) {
             get("logout", { ctx -> logout(ctx) }, Role.ADMINISTRATOR, Role.VIEWER, Role.MANAGER )
             get("status", { ctx -> status(ctx, store) }, Role.ADMINISTRATOR, Role.VIEWER, Role.MANAGER )
         }
+
+        get("templates", { ctx -> listJobTemplates(ctx, store) }, Role.ADMINISTRATOR, Role.MANAGER )
+        get("mappings", { ctx -> listEntityMappings(ctx, store) }, Role.ADMINISTRATOR )
+
     }
 }

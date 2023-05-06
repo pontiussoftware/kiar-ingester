@@ -1,5 +1,7 @@
 package ch.pontius.kiar.database.config.jobs
 
+import ch.pontius.kiar.api.model.config.templates.JobTemplate
+import ch.pontius.kiar.api.model.config.templates.JobType
 import ch.pontius.kiar.config.Config
 import ch.pontius.kiar.database.config.mapping.DbEntityMapping
 import ch.pontius.kiar.database.config.solr.DbCollection
@@ -37,17 +39,17 @@ class DbJobTemplate(entity: Entity) : XdEntity(entity) {
     /** The [DbCollection]s this [DbJobTemplate] maps to. */
     var solr by xdLink1(DbSolr)
 
-    /** The [DbEntityMapping] this [DbJobTemplate] employs. */
-    var mapping: DbEntityMapping by xdLink1(DbEntityMapping)
-
-    /** The [DbEntityMapping] this [DbJobTemplate] employs. */
-    val transformers by xdChildren0_N(DbTransformer::template)
-
     /** Flag indicating, if this [DbJobTemplate] should be started automatically once the file appears. */
     var startAutomatically by xdBooleanProp()
 
     /** Flag indicating, if this [DbJobTemplate] should be started automatically once the file appears. */
     var deleted by xdBooleanProp()
+
+    /** The [DbEntityMapping] this [DbJobTemplate] employs. */
+    var mapping: DbEntityMapping by xdLink1(DbEntityMapping)
+
+    /** The [DbEntityMapping] this [DbJobTemplate] employs. */
+    val transformers by xdChildren0_N(DbTransformer::template)
 
     /**
      * Returns the [Path] to the expected ingest file for this [DbJobTemplate].
@@ -55,6 +57,16 @@ class DbJobTemplate(entity: Entity) : XdEntity(entity) {
      * Requires an ongoing transaction!
      */
     fun sourcePath(config: Config): Path = config.ingestPath.resolve(this.participant.name).resolve("${this.name} + ${this.type.suffix}")
+
+    /**
+     * Convenience method to convert this [DbJobType] to a [JobType].
+     *
+     * Requires an ongoing transaction.
+     *
+     * @return [JobType]
+     */
+    fun toApi() = JobTemplate(this.name, this.type.toApi(), this.participant.name, this.solr.name, this.mapping.name)
+
 
     /**
      * Generates and returns a new [Transformer] instance from this [DbTransformer] entry.

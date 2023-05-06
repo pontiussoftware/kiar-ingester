@@ -1,6 +1,7 @@
-package ch.pontius.kiar.api.routes.session
+package ch.pontius.kiar.api.routes
 
 import ch.pontius.kiar.api.model.status.ErrorStatusException
+import ch.pontius.kiar.api.routes.session.SESSION_USER_ID
 import ch.pontius.kiar.database.institution.DbUser
 import io.javalin.http.Context
 import io.javalin.http.Handler

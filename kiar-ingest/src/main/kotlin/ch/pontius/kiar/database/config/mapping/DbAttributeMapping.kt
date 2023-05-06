@@ -1,6 +1,6 @@
 package ch.pontius.kiar.database.config.mapping
 
-import ch.pontius.kiar.ingester.parsing.xml.AttributeMapping
+import ch.pontius.kiar.api.model.config.mappings.AttributeMapping
 import jetbrains.exodus.entitystore.Entity
 import kotlinx.dnq.*
 import kotlinx.dnq.query.asSequence

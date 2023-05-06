@@ -1,6 +1,5 @@
 package ch.pontius.kiar.api.model.session
 
-import ch.pontius.kiar.api.routes.session.Role
 import kotlinx.serialization.Serializable
 
 /**

@@ -1,6 +1,6 @@
 package ch.pontius.kiar.database.config.jobs
 
-import ch.pontius.kiar.database.config.mapping.DbEntityMapping
+import ch.pontius.kiar.api.model.config.templates.JobType
 import jetbrains.exodus.entitystore.Entity
 import kotlinx.dnq.XdEnumEntity
 import kotlinx.dnq.XdEnumEntityType
@@ -24,4 +24,14 @@ class DbJobType(entity: Entity): XdEnumEntity(entity) {
 
     /** The suffix of input files of this [DbJobType]. */
     var suffix by xdRequiredStringProp(unique = true)
+
+
+    /**
+     * Convenience method to convert this [DbJobType] to a [JobType].
+     *
+     * Requires an ongoing transaction.
+     *
+     * @return [JobType]
+     */
+    fun toApi() = JobType.valueOf(this.description)
 }

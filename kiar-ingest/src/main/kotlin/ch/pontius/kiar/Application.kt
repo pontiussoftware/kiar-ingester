@@ -3,7 +3,7 @@ package ch.pontius.kiar
 import ch.pontius.kiar.api.model.status.ErrorStatus
 import ch.pontius.kiar.api.model.status.ErrorStatusException
 import ch.pontius.kiar.api.routes.configureApiRoutes
-import ch.pontius.kiar.api.routes.session.DatabaseAccessManager
+import ch.pontius.kiar.api.routes.DatabaseAccessManager
 import ch.pontius.kiar.api.routes.session.SALT
 import ch.pontius.kiar.ingester.IngesterServer
 import ch.pontius.kiar.cli.Cli

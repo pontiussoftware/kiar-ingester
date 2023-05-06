@@ -1,5 +1,6 @@
 package ch.pontius.kiar.database.config.mapping
 
+import ch.pontius.kiar.api.model.config.mappings.MappingType
 import jetbrains.exodus.entitystore.Entity
 import kotlinx.dnq.XdEnumEntity
 import kotlinx.dnq.XdEnumEntityType
@@ -19,4 +20,11 @@ class DbFormat(entity: Entity): XdEnumEntity(entity) {
 
     /** The name of this [DbEntityMapping]. */
     var description by xdRequiredStringProp(unique = true)
+
+    /**
+     * Convenience method used to convert this [DbFormat] to a [MappingType].
+     *
+     * @return [MappingType]
+     */
+    fun toApi() = MappingType.valueOf(this.description)
 }

@@ -1,5 +1,7 @@
 package ch.pontius.kiar.ingester.parsing.xml
 
+import ch.pontius.kiar.api.model.config.mappings.AttributeMapping
+import ch.pontius.kiar.api.model.config.mappings.EntityMapping
 import ch.pontius.kiar.config.MappingConfig
 import ch.pontius.kiar.ingester.parsing.values.ValueParser
 import ch.pontius.kiar.ingester.solrj.Constants
@@ -18,7 +20,7 @@ import java.util.*
  * @author Ralph Gasser
  * @version 1.0.0
  */
-class XmlParsingContext(config: MappingConfig, val callback: (SolrInputDocument) -> Unit): DefaultHandler() {
+class XmlParsingContext(config: EntityMapping, val callback: (SolrInputDocument) -> Unit): DefaultHandler() {
     companion object {
         private val LOGGER = LogManager.getLogger()
     }
@@ -45,8 +47,8 @@ class XmlParsingContext(config: MappingConfig, val callback: (SolrInputDocument)
     private var error: Boolean = false
 
     init {
-        var commonPrefix = config.values.first().source
-        config.values.forEach {
+        var commonPrefix = config.attributes.first().source
+        config.attributes.forEach {
             this.mappings.compute(it.source) { k, v ->
                 var list = v
                 if (list == null) {

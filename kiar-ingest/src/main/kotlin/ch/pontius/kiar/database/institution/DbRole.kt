@@ -1,8 +1,6 @@
 package ch.pontius.kiar.database.institution
 
-import ch.pontius.kiar.api.routes.session.Role
-import ch.pontius.kiar.database.config.mapping.DbEntityMapping
-import ch.pontius.kiar.ingester.parsing.values.ValueParsers
+import ch.pontius.kiar.api.model.session.Role
 import jetbrains.exodus.entitystore.Entity
 import kotlinx.dnq.XdEnumEntity
 import kotlinx.dnq.XdEnumEntityType

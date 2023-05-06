@@ -1,4 +1,4 @@
-package ch.pontius.kiar.api.routes.session
+package ch.pontius.kiar.api.model.session
 
 import ch.pontius.kiar.database.institution.DbRole
 import io.javalin.security.RouteRole

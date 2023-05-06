@@ -1,15 +1,17 @@
-package ch.pontius.kiar.ingester.parsing.values
+package ch.pontius.kiar.api.model.config.mappings
 
 import ch.pontius.kiar.database.config.mapping.DbParser
 import ch.pontius.kiar.ingester.parsing.values.primitive.*
+import kotlinx.serialization.Serializable
 
 /**
- * An enumeration of all [ValueParsers] supported by Ingester.
+ * An enumeration of all [ValueParser] supported by Ingester.
  *
  * @author Ralph Gasser
  * @version 1.0.0
  */
-enum class ValueParsers {
+@Serializable
+enum class ValueParser {
     UUID,
     STRING,
     MULTISTRING,
@@ -19,7 +21,7 @@ enum class ValueParsers {
     IMAGE;
 
     /**
-     * Converts this [ValueParsers] into a [DbParser]. Requires an ongoing transaction.
+     * Converts this [ValueParser] into a [DbParser]. Requires an ongoing transaction.
      *
      * @return [DbParser].
      */
@@ -34,7 +36,7 @@ enum class ValueParsers {
     }
 
     /**
-     * Returns a new [ValueParser] instance for this [ValueParsers] value.
+     * Returns a new [ValueParser] instance for this [ValueParser] value.
      *
      * @return [ValueParser].
      */

@@ -1,6 +1,5 @@
-package ch.pontius.kiar.ingester.parsing.xml
+package ch.pontius.kiar.api.model.config.mappings
 
-import ch.pontius.kiar.ingester.parsing.values.ValueParsers
 import kotlinx.serialization.Serializable
 
 /**
@@ -13,7 +12,7 @@ import kotlinx.serialization.Serializable
 data class AttributeMapping(
     val source: String,
     val destination: String,
-    val parser: ValueParsers,
+    val parser: ValueParser,
     val required: Boolean = false,
     val multiValued: Boolean = false,
     val parameters: Map<String,String> = emptyMap(),

@@ -1,5 +1,6 @@
 package ch.pontius.kiar.database.config.mapping
 
+import ch.pontius.kiar.api.model.config.mappings.EntityMapping
 import ch.pontius.kiar.config.MappingConfig
 import jetbrains.exodus.entitystore.Entity
 import kotlinx.dnq.*
@@ -32,9 +33,11 @@ class DbEntityMapping(entity: Entity) : XdEntity(entity) {
      *
      * @return [MappingConfig]
      */
-    fun toApi() = MappingConfig(
+    fun toApi() = EntityMapping(
+        this.xdId,
         this.name,
         this.description,
+        this.type.toApi(),
         this.attributes.asSequence().map { it.toApi() }.toList()
     )
 }

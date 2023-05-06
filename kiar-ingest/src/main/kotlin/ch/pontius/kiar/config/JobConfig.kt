@@ -1,7 +1,7 @@
 package ch.pontius.kiar.config
 
 import ch.pontius.kiar.ingester.processors.sinks.Sinks
-import ch.pontius.kiar.ingester.processors.sources.Sources
+import ch.pontius.kiar.api.model.config.templates.JobType
 import ch.pontius.kiar.ingester.processors.transformers.Transformers
 import ch.pontius.kiar.ingester.watcher.FileWatcher
 import ch.pontius.kiar.utilities.serialization.PathSerializer
@@ -19,12 +19,12 @@ data class JobConfig(
     /** The name of this [JobConfig]. */
     val name: String,
 
-    /** Path to the source file. Must be compatible with selected [Sources]. */
+    /** Path to the source file. Must be compatible with selected [JobType]. */
     @Serializable(with = PathSerializer::class)
     val file: Path,
 
-    /** The type of [Sources] that should be used for the [JobConfig]. */
-    val source: Sources,
+    /** The type of [JobType] that should be used for the [JobConfig]. */
+    val source: JobType,
 
     /** The type of [Sinks] that should be used for the [JobConfig]. */
     val sink: Sinks,

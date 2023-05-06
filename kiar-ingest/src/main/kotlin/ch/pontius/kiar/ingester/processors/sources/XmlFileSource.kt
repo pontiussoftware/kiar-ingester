@@ -1,7 +1,8 @@
 package ch.pontius.kiar.ingester.processors.sources
 
 import ch.pontius.kiar.config.MappingConfig
-import ch.pontius.kiar.ingester.parsing.xml.AttributeMapping
+import ch.pontius.kiar.api.model.config.mappings.AttributeMapping
+import ch.pontius.kiar.api.model.config.mappings.EntityMapping
 import ch.pontius.kiar.ingester.parsing.xml.XmlParsingContext
 import ch.pontius.kiar.ingester.solrj.Constants.FIELD_NAME_UUID
 import kotlinx.coroutines.Dispatchers
@@ -22,14 +23,14 @@ import javax.xml.parsers.SAXParserFactory
  * @author Ralph Gasser
  * @version 1.1.0
  */
-class XmlFileSource(override val context: String, private val file: Path, private val config: MappingConfig): Source<SolrInputDocument> {
+class XmlFileSource(override val context: String, private val file: Path, private val config: EntityMapping): Source<SolrInputDocument> {
 
     companion object {
         private val LOGGER = LogManager.getLogger()
     }
 
     /** List of required [AttributeMapping]. */
-    private val required: List<AttributeMapping> = this.config.values.filter { it.required }
+    private val required: List<AttributeMapping> = this.config.attributes.filter { it.required }
 
     /**
      * Creates and returns a [Flow] for this [XmlFileSource].

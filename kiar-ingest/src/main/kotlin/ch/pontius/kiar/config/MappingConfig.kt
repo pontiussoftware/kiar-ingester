@@ -1,6 +1,6 @@
 package ch.pontius.kiar.config
 
-import ch.pontius.kiar.ingester.parsing.xml.AttributeMapping
+import ch.pontius.kiar.api.model.config.mappings.AttributeMapping
 import kotlinx.serialization.Serializable
 
 /**
