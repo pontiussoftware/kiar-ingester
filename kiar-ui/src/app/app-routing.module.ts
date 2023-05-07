@@ -1,9 +1,10 @@
 import {NgModule} from '@angular/core';
 import {RouterModule, Routes} from '@angular/router';
 import {LoginComponent} from "./components/session/login/login.component";
-import {canActivateDashboard} from "./services/guards";
+import {canActivateAdministrator, canActivateViewer} from "./services/guards";
 import {DashboardComponent} from "./components/dashboard/dashboard.component";
 import {ForbiddenComponent} from "./components/session/forbidden/forbidden.component";
+import {AdminDashboardComponent} from "./components/admin/dashboard/admin-dashboard.component";
 
 const routes: Routes = [
 
@@ -12,11 +13,14 @@ const routes: Routes = [
   { path: 'forbidden', component: ForbiddenComponent },
 
   /* Now come all the routes that require authentication. */
-  { path: 'dashboard', component: DashboardComponent, canActivate: [canActivateDashboard] },
+  { path: 'admin/dashboard', component: AdminDashboardComponent, canActivate: [canActivateAdministrator] },
+
+  /* Now come all the routes that require authentication. */
+  { path: 'manager/dashboard', component: DashboardComponent, canActivate: [canActivateViewer] },
 
   // otherwise redirect to home
-  { path: '**', redirectTo: 'dashboard' },
-  { path: '', redirectTo: 'dashboard', pathMatch: 'full' }
+  { path: '**', redirectTo: 'manager/dashboard' },
+  { path: '', redirectTo: 'manager/dashboard', pathMatch: 'full' }
 ];
 
 @NgModule({

@@ -3,7 +3,7 @@ import {SuccessStatus} from "../../../../../openapi";
 import {FormControl, FormGroup} from "@angular/forms";
 import {ActivatedRoute, Router} from "@angular/router";
 import {MatSnackBar} from "@angular/material/snack-bar";
-import {Observer} from "rxjs";
+import {first, Observer} from "rxjs";
 import {AuthenticationService} from "../../../services/authentication.service";
 
 @Component({
@@ -36,9 +36,9 @@ export class LoginComponent implements AfterViewInit {
    * Initializes the return URL based on the referrer and triggers navigation, if the user has already been logged in.
    */
   public ngAfterViewInit(): void {
-    this.authentication.isLoggedIn.subscribe((b) => {
+    this.authentication.isLoggedIn.pipe(first()).subscribe((b) => {
       if (b) {
-        this.router.navigateByUrl(this.returnUrl).then(r => { /* No op. */});
+        this.router.navigateByUrl(this.returnUrl, {skipLocationChange: true}).then(r => { /* No op. */});
       }
     });
   }

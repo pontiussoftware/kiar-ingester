@@ -1,7 +1,8 @@
 import { Component } from '@angular/core';
 import {AuthenticationService} from "./services/authentication.service";
-import {Observable} from "rxjs";
+import {map, Observable} from "rxjs";
 import {Router} from "@angular/router";
+import {Role} from "../../openapi";
 
 @Component({
   selector: 'app-root',
@@ -13,11 +14,58 @@ export class AppComponent {
   }
 
   /**
-   * Checks, if the user is currently logged in.
+   * Returns an {@link Observable} of the current login status.
+   *
+   * @return {@link Observable} of the current login status.
    */
   get isLoggedIn(): Observable<boolean> {
     return this.authentication.isLoggedIn
   }
+
+  /**
+   * Returns an {@link Observable} of the username of the currently active user.
+   *
+   * @return {@link Observable} of {@link Role}
+   */
+  get username(): Observable<string | undefined> {
+    return this.authentication.status.pipe(
+        map(s => s?.username)
+    )
+  }
+
+  /**
+   * Returns an {@link Observable} that indicates, if current user is an admin.
+   *
+   * @return {@link Observable}
+   */
+  get isAdmin(): Observable<boolean> {
+    return this.authentication.status.pipe(
+        map(s => s != null && s.role == Role.ADMINISTRATOR)
+    )
+  }
+
+  /**
+   * Returns an {@link Observable} that indicates, if current user is a manager (or higher).
+   *
+   * @return {@link Observable}
+   */
+  get isManager(): Observable<boolean> {
+    return this.authentication.status.pipe(
+        map(s => s != null && (s.role == Role.ADMINISTRATOR || s.role == Role.MANAGER))
+    )
+  }
+
+  /**
+   * Returns an {@link Observable} that indicates, if current user is a viewer (or higher).
+   *
+   * @return {@link Observable}
+   */
+  get isViewer(): Observable<boolean> {
+    return this.authentication.status.pipe(
+        map(s => s != null && (s.role == Role.ADMINISTRATOR || s.role == Role.MANAGER || s.role == Role.VIEWER))
+    )
+  }
+
 
   /**
    * Logs the current user out.

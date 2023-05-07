@@ -1,20 +1,15 @@
-import {inject, Injectable} from "@angular/core";
+import {Injectable} from "@angular/core";
 import {LoginRequest, Role, SessionService, SessionStatus, SuccessStatus} from "../../../openapi";
 import {BehaviorSubject, catchError, firstValueFrom, map, Observable, of, shareReplay, tap} from "rxjs";
 import {ActivatedRouteSnapshot, CanActivateFn, Router, RouterStateSnapshot, UrlTree} from "@angular/router";
-
-
-
-
-
 
 @Injectable({
   providedIn: 'root',
 })
 export class AuthenticationService {
 
-  /** A {@link BehaviorSubject} that indicates if currently, a user is logged in. */
-  private _loggedIn = new BehaviorSubject<boolean>(false)
+  /** A {@link BehaviorSubject} of the current {@link SessionStatus}. */
+  private _status = new BehaviorSubject<SessionStatus | null>(null)
 
   constructor(private session: SessionService, private router: Router) {}
 
@@ -27,10 +22,7 @@ export class AuthenticationService {
    */
   public login(username: string, password: string): Observable<SuccessStatus> {
     return this.session.login({username: username, password: password} as LoginRequest).pipe(
-        tap(() => {
-            this._loggedIn.next(true);
-            console.log(`User was logged in.`);
-        })
+        tap(() => console.log(`User was logged in.`))
     );
   }
 
@@ -40,34 +32,26 @@ export class AuthenticationService {
   public logout(): Observable<SuccessStatus> {
     return this.session.logout().pipe(
         tap(() => {
-          this._loggedIn.next(false);
+          this._status.next(null);
           console.log(`User was logged out.`);
         })
     );
   }
 
   /**
-   * Queries and returns the {@link SessionStatus} with the API.
+   * Returns an {@link Observable} of the current {@link SessionStatus}
    *
-   * @return An {@link Observable} containing the current {@link SessionStatus}.
+   * @return {@link Observable}
    */
-  public status(): Observable<SessionStatus> {
-    return this.session.status().pipe(
-        catchError((err, caught) => {
-          if (err.status == 401 || err.status == 403) {
-            this._loggedIn.next(false) /* Automatically log-out. */
-          }
-          return caught
-        }),
-        shareReplay(1, 60000) /* Is cached for 60s. */
-    );
+  get status() {
+    return this._status.asObservable()
   }
-  
+
   /**
-   * Returns the current login state as Observable.
+   * Returns an {@link Observable} of the current login state.
    */
   get isLoggedIn(): Observable<boolean> {
-    return this._loggedIn.asObservable()
+    return this._status.pipe(map(s => s != null))
   }
 
   /**
@@ -81,7 +65,7 @@ export class AuthenticationService {
   public canActivate(rolesAllows: Array<Role>, route: ActivatedRouteSnapshot, state: RouterStateSnapshot): Promise<boolean | UrlTree> {
     return firstValueFrom(this.session.status().pipe(
         map(s => {
-            this._loggedIn.next(true) /* Automatically set status to 'logged-in'. */
+            this._status.next(s);
             if (rolesAllows.indexOf(s.role) > -1) {
               return true
             } else {
@@ -89,11 +73,11 @@ export class AuthenticationService {
             }
         }),
         catchError((err, caught) => {
-          if (err.status == 401 || err.status == 403) {
-            this._loggedIn.next(false) /* Automatically log-out. */
-            return of(this.router.parseUrl(`/login?returnUrl=${state.url}`))
-          }
-          return of(false)
+            if (err.status == 401 || err.status == 403) {
+              this._status.next(null) /* Automatically log-out. */
+              return of(this.router.parseUrl(`/login?returnUrl=${state.url}`))
+            }
+            return of(this.router.parseUrl('/forbidden'))
         })
     ))
   }

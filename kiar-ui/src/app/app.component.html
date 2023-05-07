@@ -1,18 +1,41 @@
+<header>
+  <mat-toolbar>
+    <span>KIM.ch Ingest Dashboard</span>
 
-<mat-toolbar>
-  <button mat-icon-button class="example-icon" aria-label="Example icon-button with menu icon">
-    <mat-icon>menu</mat-icon>
-  </button>
-  <span>KIM.ch Ingest Dashboard</span>
-  <span class="space-flexible"></span>
-  <button *ngIf="isLoggedIn | async" mat-icon-button [matMenuTriggerFor]="userMenu" aria-label="Example icon-button with a menu">
-    <mat-icon>more_vert</mat-icon>
-  </button>
-  <mat-menu #userMenu="matMenu">
-    <button mat-menu-item (click)="logout()">
-      <mat-icon>dialpad</mat-icon>
-      <span>Logout</span>
+    <span class="space-flexible"></span>
+
+    <button mat-icon-button *ngIf="(isViewer | async)" [routerLink]="['/manager/dashboard']" >
+      <mat-icon>dashboard</mat-icon>
     </button>
-  </mat-menu>
-</mat-toolbar>
-<router-outlet></router-outlet>
+
+    <button mat-icon-button *ngIf="(isAdmin | async)" [routerLink]="['/admin/dashboard']">
+      <mat-icon>admin_panel_settings</mat-icon>
+    </button>
+
+    <span class="space-flexible"></span>
+
+
+    <button *ngIf="isLoggedIn | async" mat-button [matMenuTriggerFor]="userMenu">{{(username | async)}}</button>
+
+    <mat-menu #userMenu="matMenu">
+      <button mat-menu-item>
+        <mat-icon>person</mat-icon>
+        <span>Manager User Profile</span>
+      </button>
+
+      <button mat-menu-item (click)="logout()">
+        <mat-icon>logout</mat-icon>
+        <span>Logout</span>
+      </button>
+    </mat-menu>
+  </mat-toolbar>
+</header>
+
+<article id="page-container">
+  <div id="content-wrap">
+    <router-outlet></router-outlet>
+  </div>
+
+</article>
+
+<footer id="footer"></footer>

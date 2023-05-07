@@ -13,6 +13,8 @@ import {MatIconModule} from "@angular/material/icon";
 import {ServiceModule} from "./services/service.module";
 import {MatMenuModule} from "@angular/material/menu";
 import {DashboardModule} from "./components/dashboard/dashboard.module";
+import {AdminDashboardComponent} from "./components/admin/dashboard/admin-dashboard.component";
+import {AdminModule} from "./components/admin/admin.module";
 
 
 /**
@@ -41,6 +43,7 @@ export function initializeApiConfig() {
     MatToolbarModule,
 
     /* Own modules. */
+    AdminModule,
     DashboardModule,
     SessionModule,
     ServiceModule
