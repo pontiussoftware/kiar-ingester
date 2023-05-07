@@ -1,5 +1,6 @@
 package ch.pontius.kiar.database.config.transformers
 
+import ch.pontius.kiar.api.model.config.transformers.TransformerType
 import jetbrains.exodus.entitystore.Entity
 import kotlinx.dnq.XdEnumEntity
 import kotlinx.dnq.XdEnumEntityType
@@ -19,4 +20,13 @@ class DbTransformerType(entity: Entity): XdEnumEntity(entity) {
 
     /** The name of this [DbTransformerType]. */
     var description by xdRequiredStringProp(unique = true)
+
+    /**
+     * Convenience method to convert this [DbTransformerType] to a [TransformerType].
+     *
+     * Requires an ongoing transaction.
+     *
+     * @return [TransformerType]
+     */
+    fun toApi() = TransformerType.valueOf(this.description)
 }

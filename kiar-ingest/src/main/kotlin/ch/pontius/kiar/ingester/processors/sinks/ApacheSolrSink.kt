@@ -1,6 +1,6 @@
 package ch.pontius.kiar.ingester.processors.sinks
 
-import ch.pontius.kiar.config.SolrConfig
+import ch.pontius.kiar.api.model.config.solr.SolrConfig
 import ch.pontius.kiar.ingester.processors.sources.Source
 import ch.pontius.kiar.ingester.solrj.Constants
 import ch.pontius.kiar.ingester.solrj.Constants.FIELD_NAME_PARTICIPANT

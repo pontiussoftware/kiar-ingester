@@ -1,11 +1,13 @@
 import ch.pontius.kiar.api.model.config.mappings.AttributeMapping
 import ch.pontius.kiar.api.model.config.mappings.EntityMapping
+import ch.pontius.kiar.api.model.config.mappings.ValueParser
 import ch.pontius.kiar.api.model.status.ErrorStatus
 import ch.pontius.kiar.api.model.status.ErrorStatusException
 import ch.pontius.kiar.api.model.status.SuccessStatus
 import ch.pontius.kiar.database.config.mapping.DbAttributeMapping
 import ch.pontius.kiar.database.config.mapping.DbAttributeMappingParameters
 import ch.pontius.kiar.database.config.mapping.DbEntityMapping
+import ch.pontius.kiar.database.config.mapping.DbParser
 import ch.pontius.kiar.utilities.mapToArray
 import io.javalin.http.BadRequestResponse
 import io.javalin.http.Context
@@ -18,7 +20,7 @@ import kotlinx.dnq.util.findById
     methods = [HttpMethod.GET],
     summary = "Lists all available entity mappings.",
     operationId = "getListEntityMappings",
-    tags = ["Config", "Mappings"],
+    tags = ["Config", "Entity Mapping"],
     pathParams = [],
     responses = [
         OpenApiResponse("200", [OpenApiContent(Array<EntityMapping>::class)]),
@@ -35,11 +37,33 @@ fun listEntityMappings(ctx: Context, store: TransientEntityStore) {
 }
 
 @OpenApi(
+    path = "/api/mappings/parsers",
+    methods = [HttpMethod.GET],
+    summary = "Lists all available parses available for entity mapping.",
+    operationId = "getListParsers",
+    tags = ["Config", "Entity Mapping"],
+    pathParams = [],
+    responses = [
+        OpenApiResponse("200", [OpenApiContent(Array<ValueParser>::class)]),
+        OpenApiResponse("401", [OpenApiContent(ErrorStatus::class)]),
+        OpenApiResponse("403", [OpenApiContent(ErrorStatus::class)]),
+        OpenApiResponse("500", [OpenApiContent(ErrorStatus::class)]),
+    ]
+)
+fun listParsers(ctx: Context, store: TransientEntityStore) {
+    store.transactional (true) {
+        val parsers = DbParser.all()
+        ctx.json(parsers.mapToArray { it.toApi() })
+    }
+}
+
+
+@OpenApi(
     path = "/api/mappings",
     methods = [HttpMethod.POST],
     summary = "Creates a new entity mapping.",
     operationId = "postCreateEntityMapping",
-    tags = ["Config", "Mappings"],
+    tags = ["Config", "Entity Mapping"],
     pathParams = [],
     requestBody = OpenApiRequestBody([OpenApiContent(EntityMapping::class)], required = true),
     responses = [
@@ -57,9 +81,6 @@ fun createEntityMapping(ctx: Context, store: TransientEntityStore) {
         throw ErrorStatusException(400, "Malformed request body.")
     }
     val created = store.transactional {
-        val mappings = DbEntityMapping.all()
-        ctx.json(mappings.mapToArray { it.toApi() })
-
         /* Update basic properties. */
         val mapping = DbEntityMapping.new {
             name = request.name
@@ -77,11 +98,11 @@ fun createEntityMapping(ctx: Context, store: TransientEntityStore) {
 @OpenApi(
     path = "/api/mappings/{id}",
     methods = [HttpMethod.DELETE],
-    summary = "Tries to delete an existing entity mapping.",
+    summary = "Deletes an existing entity mapping.",
     operationId = "deleteEntityMapping",
-    tags = ["Config", "Mappings"],
+    tags = ["Config", "Entity Mapping"],
     pathParams = [
-        OpenApiParam(name = "id", description = "The ID of the mapping that should be deleted.", required = true)
+        OpenApiParam(name = "id", description = "The ID of the entity mapping that should be deleted.", required = true)
     ],
     responses = [
         OpenApiResponse("200", [OpenApiContent(SuccessStatus::class)]),
@@ -107,11 +128,11 @@ fun deleteEntityMapping(ctx: Context, store: TransientEntityStore) {
 @OpenApi(
     path = "/api/mappings/{id}",
     methods = [HttpMethod.PUT],
-    summary = "Tries to update an existing entity mapping.",
+    summary = "Updates an existing entity mapping.",
     operationId = "updateEntityMapping",
-    tags = ["Config", "Mappings"],
+    tags = ["Config", "Entity Mapping"],
     pathParams = [
-        OpenApiParam(name = "id", description = "The ID of the mapping that should be updated.", required = true)
+        OpenApiParam(name = "id", description = "The ID of the entity mapping that should be updated.", required = true)
     ],
     requestBody = OpenApiRequestBody([OpenApiContent(EntityMapping::class)], required = true),
     responses = [

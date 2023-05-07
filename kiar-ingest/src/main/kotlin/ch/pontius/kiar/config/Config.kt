@@ -1,5 +1,6 @@
 package ch.pontius.kiar.config
 
+import ch.pontius.kiar.api.model.config.solr.SolrConfig
 import ch.pontius.kiar.utilities.serialization.PathSerializer
 import kotlinx.serialization.Serializable
 import java.nio.file.Path

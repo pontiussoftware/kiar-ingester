@@ -11,7 +11,9 @@ import kotlinx.dnq.*
  * @version 1.0.0
  */
 class DbCollection(entity: Entity) : XdEntity(entity) {
-    companion object: XdNaturalEntityType<DbCollection>()
+    companion object: XdNaturalEntityType<DbCollection>() {
+         const val FILTER_ENTRY_DELIMITER = ","
+    }
 
     /** The name held by this [DbCollection]. Must be unique!*/
     var name by xdRequiredStringProp(unique = false, trimmed = true)
@@ -36,5 +38,13 @@ class DbCollection(entity: Entity) : XdEntity(entity) {
      *
      * @return [CollectionConfig]
      */
-    fun toApi() = CollectionConfig(this.name, emptyList(), this.deleteBeforeIngest, this.acceptEmptyFilter)
+    fun toApi() = CollectionConfig(this.name, this.filters(), this.deleteBeforeIngest, this.acceptEmptyFilter)
+
+
+    /**
+     * Generates and returns a list of filters used for this [DbCollection].
+     *
+     * @return [List] of [String] filters.
+     */
+    fun filters(): List<String> = this.filters?.split(FILTER_ENTRY_DELIMITER) ?: emptyList()
 }

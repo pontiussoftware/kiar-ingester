@@ -1,7 +1,6 @@
 package ch.pontius.kiar.config
 
 import ch.pontius.kiar.ingester.solrj.Constants
-import org.apache.solr.common.SolrDocument
 import org.apache.solr.common.SolrInputDocument
 
 /**

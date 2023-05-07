@@ -30,20 +30,20 @@ class DbJobTemplate(entity: Entity) : XdEntity(entity) {
     /** The name of this [DbJobTemplate]. */
     var name by xdRequiredStringProp(unique = true, trimmed = true)
 
+    /** An optional description of this [DbJobTemplate]. */
+    var description by xdStringProp(trimmed = true)
+
     /** The [DbJobType] of this [DbJobTemplate]. */
     var type by xdLink1(DbJobType)
+
+    /** Flag indicating, if this [DbJobTemplate] should be started automatically once the file appears. */
+    var startAutomatically by xdBooleanProp()
 
     /** The [DbParticipant] this [DbJobTemplate] belongs to. */
     var participant by xdLink1(DbParticipant)
 
     /** The [DbCollection]s this [DbJobTemplate] maps to. */
     var solr by xdLink1(DbSolr)
-
-    /** Flag indicating, if this [DbJobTemplate] should be started automatically once the file appears. */
-    var startAutomatically by xdBooleanProp()
-
-    /** Flag indicating, if this [DbJobTemplate] should be started automatically once the file appears. */
-    var deleted by xdBooleanProp()
 
     /** The [DbEntityMapping] this [DbJobTemplate] employs. */
     var mapping: DbEntityMapping by xdLink1(DbEntityMapping)
@@ -65,7 +65,16 @@ class DbJobTemplate(entity: Entity) : XdEntity(entity) {
      *
      * @return [JobType]
      */
-    fun toApi() = JobTemplate(this.name, this.type.toApi(), this.participant.name, this.solr.name, this.mapping.name)
+    fun toApi() = JobTemplate(
+        this.xdId,
+        this.name,
+        this.description,
+        this.type.toApi(),
+        this.startAutomatically,
+        this.participant.name,
+        this.solr.name,
+        this.mapping.name
+    )
 
 
     /**

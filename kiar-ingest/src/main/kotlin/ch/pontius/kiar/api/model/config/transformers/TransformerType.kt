@@ -1,25 +1,27 @@
-package ch.pontius.kiar.ingester.processors.transformers
+package ch.pontius.kiar.api.model.config.transformers
 
 import ch.pontius.kiar.database.config.transformers.DbTransformerType
 import ch.pontius.kiar.ingester.processors.sources.Source
+import ch.pontius.kiar.ingester.processors.transformers.ImageTransformer
+import ch.pontius.kiar.ingester.processors.transformers.SystemTransformer
 import org.apache.solr.common.SolrInputDocument
 
 /**
- * List of [Transformer]s supported by t
+ * Enumeration of [TransformerConfig]s supported by the KIAR tools
  *
  * @author Ralph Gasser
  * @version 1.0.0
  */
-enum class Transformers {
+enum class TransformerType {
     IMAGE,
     SYSTEM;
 
     /**
-     * Generates and returns a new [Transformer] instance from this [Transformers] enumeration.
+     * Generates and returns a new [TransformerConfig] instance from this [TransformerType] enumeration.
      *
      * @param input The input [Source]
      * @param parameters The map of named parameters.
-     * @return [Transformer]
+     * @return [TransformerConfig]
      */
     fun newInstance(input: Source<SolrInputDocument>, parameters: Map<String,String>) = when (this) {
         IMAGE -> ImageTransformer(input, parameters)
@@ -27,7 +29,7 @@ enum class Transformers {
     }
 
     /**
-     * Converts this [Transformers] into a [DbTransformerType]. Requires an ongoing transaction.
+     * Converts this [TransformerType] into a [DbTransformerType]. Requires an ongoing transaction.
      *
      * @return [DbTransformerType].
      */

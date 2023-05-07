@@ -1,5 +1,6 @@
 package ch.pontius.kiar.database.config.transformers
 
+import ch.pontius.kiar.api.model.config.transformers.TransformerConfig
 import ch.pontius.kiar.database.config.jobs.DbJobTemplate
 import ch.pontius.kiar.ingester.processors.sources.Source
 import ch.pontius.kiar.ingester.processors.transformers.ImageTransformer
@@ -27,6 +28,15 @@ class DbTransformer(entity: Entity) : XdEntity(entity) {
 
     /** The [DbJobTemplate] this [DbTransformer] belongs to. */
     val template: DbJobTemplate by xdParent(DbJobTemplate::transformers)
+
+    /**
+     * Convenience method to convert this [DbTransformer] to a [TransformerConfig].
+     *
+     * Requires an ongoing transaction.
+     *
+     * @return [TransformerConfig]
+     */
+    fun toApi() = TransformerConfig(this.type.toApi(), this.parameters.asSequence().associate { it.key to it.value })
 
     /**
      * Generates and returns a new [Transformer] instance from this [DbTransformer] entry.

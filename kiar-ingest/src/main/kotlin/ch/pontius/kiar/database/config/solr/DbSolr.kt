@@ -1,6 +1,6 @@
 package ch.pontius.kiar.database.config.solr
 
-import ch.pontius.kiar.config.SolrConfig
+import ch.pontius.kiar.api.model.config.solr.SolrConfig
 import jetbrains.exodus.entitystore.Entity
 import kotlinx.dnq.*
 import kotlinx.dnq.query.asSequence
@@ -17,6 +17,9 @@ class DbSolr(entity: Entity) : XdEntity(entity) {
     /** The name held by this [DbSolr]. Must be unique!*/
     var name by xdRequiredStringProp(unique = true, trimmed = true)
 
+    /** An optional description of this Apache Solr configuration. */
+    var description by xdStringProp(trimmed = true)
+
     /** The URL held by this [DbSolr]. Must be unique!*/
     var server by xdRequiredStringProp(unique = true, trimmed = true)
 
@@ -29,11 +32,10 @@ class DbSolr(entity: Entity) : XdEntity(entity) {
     /** List of [DbCollection]s this [DbSolr] holds- */
     val collections by xdChildren0_N(DbCollection::solr)
 
-
     /**
      * A convenience method used to convert this [DbSolr] to a [SolrConfig]. Requires an ongoing transaction!
      *
      * @return [SolrConfig]
      */
-    fun toApi() = SolrConfig(this.name, this.server, this.username, this.password, this.collections.asSequence().map { it.toApi() }.toList())
+    fun toApi() = SolrConfig(this.xdId, this.name, this.description, this.server, this.username, this.password, this.collections.asSequence().map { it.toApi() }.toList())
 }

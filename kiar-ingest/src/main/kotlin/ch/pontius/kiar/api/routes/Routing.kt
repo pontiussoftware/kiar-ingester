@@ -1,15 +1,16 @@
 package ch.pontius.kiar.api.routes
 
 import ch.pontius.kiar.api.model.session.Role
+import ch.pontius.kiar.api.routes.config.*
 import ch.pontius.kiar.api.routes.session.login
 import ch.pontius.kiar.api.routes.session.logout
 import ch.pontius.kiar.api.routes.session.status
-import ch.pontius.kiar.api.routes.config.listJobTemplates
 import createEntityMapping
 import deleteEntityMapping
 import io.javalin.apibuilder.ApiBuilder.*
 import jetbrains.exodus.database.TransientEntityStore
 import listEntityMappings
+import listParsers
 import updateEntityMapping
 
 /**
@@ -27,12 +28,33 @@ fun configureApiRoutes(store: TransientEntityStore) {
             get("status", { ctx -> status(ctx, store) }, Role.ADMINISTRATOR, Role.VIEWER, Role.MANAGER )
         }
 
+        /* Endpoints related to job templates. */
         get("templates", { ctx -> listJobTemplates(ctx, store) }, Role.ADMINISTRATOR, Role.MANAGER )
+        post("templates", { ctx -> createJobTemplate(ctx, store) }, Role.ADMINISTRATOR )
+        path("templates") {
+            get("types",  { ctx -> listJobTemplateTypes(ctx, store) }, Role.ADMINISTRATOR )
+            put("{id}",  { ctx -> updateJobTemplate(ctx, store) }, Role.ADMINISTRATOR )
+            delete("{id}",  { ctx -> deleteJobTemplate(ctx, store) }, Role.ADMINISTRATOR )
+        }
+
+        /* Endpoint related to Apache Solr configurations. */
+        get("solr", { ctx -> listSolrConfigurations(ctx, store) }, Role.ADMINISTRATOR, Role.MANAGER )
+        post("solr", { ctx -> createSolrConfig(ctx, store) }, Role.ADMINISTRATOR )
+        path("solr") {
+            put("{id}",  { ctx -> updateSolrConfig(ctx, store) }, Role.ADMINISTRATOR )
+            delete("{id}",  { ctx -> deleteSolrConfig(ctx, store) }, Role.ADMINISTRATOR )
+        }
+
+        /* Endpoints related to transformers. */
+        path("transformers") {
+            get("types", { ctx -> listTransformerTypes(ctx, store) }, Role.ADMINISTRATOR )
+        }
 
         /* Endpoints related to entity mappings. */
         get("mappings", { ctx -> listEntityMappings(ctx, store) }, Role.ADMINISTRATOR )
         post("mappings", { ctx -> createEntityMapping(ctx, store) }, Role.ADMINISTRATOR )
         path("mappings") {
+            get("parsers",  { ctx -> listParsers(ctx, store) }, Role.ADMINISTRATOR )
             put("{id}",  { ctx -> updateEntityMapping(ctx, store) }, Role.ADMINISTRATOR )
             delete("{id}",  { ctx -> deleteEntityMapping(ctx, store) }, Role.ADMINISTRATOR )
         }

@@ -80,7 +80,7 @@ class IngesterServer(private val store: TransientEntityStore, private val config
         /* Start transaction. */
         val (job, pipeline) = this.store.transactional {
             /* Load template. */
-            val template = DbJobTemplate.filter { (it.name eq jobName) and (it.deleted eq false) }.firstOrNull()
+            val template = DbJobTemplate.filter { (it.name eq jobName) }.firstOrNull()
                 ?: throw IllegalArgumentException("Could not find with name $jobName.")
 
             /* Create job object. */

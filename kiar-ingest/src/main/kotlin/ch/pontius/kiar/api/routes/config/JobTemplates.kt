@@ -2,21 +2,32 @@ package ch.pontius.kiar.api.routes.config
 
 import ch.pontius.kiar.api.model.status.ErrorStatus
 import ch.pontius.kiar.api.model.config.templates.JobTemplate
+import ch.pontius.kiar.api.model.config.transformers.TransformerConfig
+import ch.pontius.kiar.api.model.status.ErrorStatusException
+import ch.pontius.kiar.api.model.status.SuccessStatus
 import ch.pontius.kiar.api.routes.session.currentUser
 import ch.pontius.kiar.database.config.jobs.DbJobTemplate
+import ch.pontius.kiar.database.config.jobs.DbJobType
+import ch.pontius.kiar.database.config.mapping.DbEntityMapping
+import ch.pontius.kiar.database.config.solr.DbSolr
+import ch.pontius.kiar.database.config.transformers.DbTransformer
+import ch.pontius.kiar.database.config.transformers.DbTransformerParameter
+import ch.pontius.kiar.database.institution.DbParticipant
 import ch.pontius.kiar.database.institution.DbRole
 import ch.pontius.kiar.utilities.mapToArray
+import io.javalin.http.BadRequestResponse
 import io.javalin.http.Context
 import io.javalin.openapi.*
 import jetbrains.exodus.database.TransientEntityStore
 import kotlinx.dnq.query.*
+import kotlinx.dnq.util.findById
 
 @OpenApi(
     path = "/api/templates",
     methods = [HttpMethod.GET],
     summary = "Lists all available job templates.",
     operationId = "getListJobTemplates",
-    tags = ["Config", "Job Templates"],
+    tags = ["Config", "Job Template"],
     pathParams = [],
     responses = [
         OpenApiResponse("200", [OpenApiContent(Array<JobTemplate>::class)]),
@@ -26,7 +37,6 @@ import kotlinx.dnq.query.*
     ]
 )
 fun listJobTemplates(ctx: Context, store: TransientEntityStore) {
-    /* Validate credentials and log-in user. */
     store.transactional (true) {
         val user = ctx.currentUser()
         val templates = if (user.role == DbRole.ADMINISTRATOR) {
@@ -37,5 +47,177 @@ fun listJobTemplates(ctx: Context, store: TransientEntityStore) {
             DbJobTemplate.emptyQuery()
         }
         ctx.json(templates.mapToArray { it.toApi() })
+    }
+}
+
+@OpenApi(
+    path = "/api/templates/types",
+    methods = [HttpMethod.GET],
+    summary = "Lists all available job template types.",
+    operationId = "getListJobTemplateTypes",
+    tags = ["Config", "Job Template"],
+    pathParams = [],
+    responses = [
+        OpenApiResponse("200", [OpenApiContent(Array<JobTemplate>::class)]),
+        OpenApiResponse("401", [OpenApiContent(ErrorStatus::class)]),
+        OpenApiResponse("403", [OpenApiContent(ErrorStatus::class)]),
+        OpenApiResponse("500", [OpenApiContent(ErrorStatus::class)]),
+    ]
+)
+fun listJobTemplateTypes(ctx: Context, store: TransientEntityStore) {
+    store.transactional (true) {
+        ctx.json(DbJobType.all().mapToArray { it.toApi() })
+    }
+}
+
+@OpenApi(
+    path = "/api/TEMPLATES",
+    methods = [HttpMethod.POST],
+    summary = "Creates a new job template",
+    operationId = "postCreateJobTemplate",
+    tags = ["Config", "Job Template"],
+    pathParams = [],
+    requestBody = OpenApiRequestBody([OpenApiContent(JobTemplate::class)], required = true),
+    responses = [
+        OpenApiResponse("200", [OpenApiContent(JobTemplate::class)]),
+        OpenApiResponse("400", [OpenApiContent(ErrorStatus::class)]),
+        OpenApiResponse("401", [OpenApiContent(ErrorStatus::class)]),
+        OpenApiResponse("403", [OpenApiContent(ErrorStatus::class)]),
+        OpenApiResponse("500", [OpenApiContent(ErrorStatus::class)]),
+    ]
+)
+fun createJobTemplate(ctx: Context, store: TransientEntityStore) {
+    val request = try {
+        ctx.bodyAsClass(JobTemplate::class.java)
+    } catch (e: BadRequestResponse) {
+        throw ErrorStatusException(400, "Malformed request body.")
+    }
+    val created = store.transactional {
+        /* Update basic properties. */
+        val mapping = DbJobTemplate.new {
+            name = request.name
+            description = request.description
+            type = request.type.toDb()
+            startAutomatically = request.startAutomatically
+            participant = DbParticipant.filter { it.name eq request.participantName }.firstOrNull()
+                ?: throw ErrorStatusException(404, "Could not find participant with name ${request.participantName}.")
+            solr = DbSolr.filter { it.name eq request.solrConfigName }.firstOrNull()
+                ?: throw ErrorStatusException(404, "Could not find Apache Solr configuration with name ${request.solrConfigName}.")
+            mapping = DbEntityMapping.filter { it.name eq request.solrConfigName }.firstOrNull()
+                ?: throw ErrorStatusException(404, "Could not find entity mapping configuration with name ${request.entityMappingName}.")
+
+            /* Adds all transformer configuration to template. */
+            this.merge(request.transformers)
+        }
+
+        /* Now merge attribute mappings. */
+        mapping.toApi()
+    }
+    ctx.json(created)
+}
+
+@OpenApi(
+    path = "/api/templates/{id}",
+    methods = [HttpMethod.DELETE],
+    summary = "Deletes an existing job template.",
+    operationId = "deleteJobTemplates",
+    tags = ["Config", "Job Template"],
+    pathParams = [
+        OpenApiParam(name = "id", description = "The ID of the job template that should be deleted.", required = true)
+    ],
+    responses = [
+        OpenApiResponse("200", [OpenApiContent(SuccessStatus::class)]),
+        OpenApiResponse("401", [OpenApiContent(ErrorStatus::class)]),
+        OpenApiResponse("403", [OpenApiContent(ErrorStatus::class)]),
+        OpenApiResponse("404", [OpenApiContent(ErrorStatus::class)]),
+        OpenApiResponse("500", [OpenApiContent(ErrorStatus::class)])
+    ]
+)
+fun deleteJobTemplate(ctx: Context, store: TransientEntityStore) {
+    val templateId = ctx.pathParam("id")
+    store.transactional {
+        val template = try {
+            DbJobTemplate.findById(templateId)
+        } catch (e: Throwable) {
+            throw ErrorStatusException(404, "Job template with ID $templateId could not be found.")
+        }
+        template.delete()
+    }
+    ctx.json(SuccessStatus("Job emplate $templateId deleted successfully."))
+}
+
+@OpenApi(
+    path = "/api/templates/{id}",
+    methods = [HttpMethod.PUT],
+    summary = "Updates an existing job template.",
+    operationId = "updateJobTemplate",
+    tags = ["Config", "Job Template"],
+    pathParams = [
+        OpenApiParam(name = "id", description = "The ID of the job template that should be updated.", required = true)
+    ],
+    requestBody = OpenApiRequestBody([OpenApiContent(JobTemplate::class)], required = true),
+    responses = [
+        OpenApiResponse("200", [OpenApiContent(JobTemplate::class)]),
+        OpenApiResponse("400", [OpenApiContent(ErrorStatus::class)]),
+        OpenApiResponse("401", [OpenApiContent(ErrorStatus::class)]),
+        OpenApiResponse("403", [OpenApiContent(ErrorStatus::class)]),
+        OpenApiResponse("404", [OpenApiContent(ErrorStatus::class)]),
+        OpenApiResponse("500", [OpenApiContent(ErrorStatus::class)])
+    ]
+)
+fun updateJobTemplate(ctx: Context, store: TransientEntityStore) {
+    /* Extract the ID and the request body. */
+    val templateId = ctx.pathParam("id")
+    val request = try {
+        ctx.bodyAsClass(JobTemplate::class.java)
+    } catch (e: BadRequestResponse) {
+        throw ErrorStatusException(400, "Malformed request body.")
+    }
+
+    /* Start transaction. */
+    val updated = store.transactional {
+        val template = try {
+            DbJobTemplate.findById(templateId)
+        } catch (e: Throwable) {
+            throw ErrorStatusException(404, "Job template with ID $templateId could not be found.")
+        }
+
+        /* Update basic properties. */
+        template.name = request.name
+        template. description = request.description
+        template.type = request.type.toDb()
+        template.startAutomatically = request.startAutomatically
+        template.participant = DbParticipant.filter { it.name eq request.participantName }.firstOrNull()
+            ?: throw ErrorStatusException(404, "Could not find participant with name ${request.participantName}.")
+        template.solr = DbSolr.filter { it.name eq request.solrConfigName }.firstOrNull()
+            ?: throw ErrorStatusException(404, "Could not find Apache Solr configuration with name ${request.solrConfigName}.")
+        template.mapping = DbEntityMapping.filter { it.name eq request.solrConfigName }.firstOrNull()
+            ?: throw ErrorStatusException(404, "Could not find entity mapping configuration with name ${request.entityMappingName}.")
+
+        /* Now merge transformers. */
+        template.merge(request.transformers)
+        template.toApi()
+    }
+
+    ctx.json(updated)
+}
+
+/**
+ * Overrides a [DbJobTemplate]'s [DbTransformer]s using the provided list.
+ *
+ * @param transformers [List] of [TransformerConfig]s to merge [DbJobTemplate] with.
+ */
+private fun DbJobTemplate.merge(transformers: List<TransformerConfig>) {
+    this.transformers.clear()
+    for (t in transformers) {
+        this.transformers.add(DbTransformer.new {
+            type = t.type.toDb()
+            for (p in t.parameters) {
+                parameters.add(DbTransformerParameter.new {
+                    key = p.key
+                    value = p.value
+                })
+            }
+        })
     }
 }

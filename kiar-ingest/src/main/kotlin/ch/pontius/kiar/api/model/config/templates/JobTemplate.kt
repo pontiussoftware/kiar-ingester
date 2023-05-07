@@ -1,6 +1,6 @@
 package ch.pontius.kiar.api.model.config.templates
 
-import ch.pontius.kiar.api.model.config.templates.JobType
+import ch.pontius.kiar.api.model.config.transformers.TransformerConfig
 import kotlinx.serialization.Serializable
 
 /**
@@ -10,4 +10,14 @@ import kotlinx.serialization.Serializable
  * @version 1.0.0
  */
 @Serializable
-data class JobTemplate(val name: String, val type: JobType, val participant: String, val solr: String, val mapping: String)
+data class JobTemplate(
+    val id: String? = null,
+    val name: String,
+    val description: String? = null,
+    val type: JobType,
+    val startAutomatically: Boolean = false,
+    val participantName: String,
+    val solrConfigName: String,
+    val entityMappingName: String,
+    val transformers: List<TransformerConfig> = emptyList()
+)

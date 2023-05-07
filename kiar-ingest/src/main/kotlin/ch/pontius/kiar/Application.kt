@@ -223,7 +223,6 @@ private fun checkAndSetup(store: TransientEntityStore, config: Config) = store.t
                     mapping = DbEntityMapping.filter { it.name eq job.mappingConfig }.first()
                     type = DbJobType.XML
                     startAutomatically = job.startOnCreation
-                    deleted = false
 
                     /* Persist transformers. */
                     for (t in job.transformers) {

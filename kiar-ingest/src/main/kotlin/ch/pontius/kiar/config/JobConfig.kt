@@ -2,7 +2,7 @@ package ch.pontius.kiar.config
 
 import ch.pontius.kiar.ingester.processors.sinks.Sinks
 import ch.pontius.kiar.api.model.config.templates.JobType
-import ch.pontius.kiar.ingester.processors.transformers.Transformers
+import ch.pontius.kiar.api.model.config.transformers.TransformerType
 import ch.pontius.kiar.ingester.watcher.FileWatcher
 import ch.pontius.kiar.utilities.serialization.PathSerializer
 import kotlinx.serialization.Serializable
@@ -29,7 +29,7 @@ data class JobConfig(
     /** The type of [Sinks] that should be used for the [JobConfig]. */
     val sink: Sinks,
 
-    /** List of [Transformers] to apply. Can be empty. */
+    /** List of [TransformerType] to apply. Can be empty. */
     val transformers: List<TransformerConfig> = emptyList(),
 
     /** The named mapping configuration to use. Must correspond to an existing configuration. */
