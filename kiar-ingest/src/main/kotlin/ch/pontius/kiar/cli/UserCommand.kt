@@ -28,7 +28,7 @@ import org.mindrot.jbcrypt.BCrypt
  * @author Ralph Gasser
  * @version 2.0.0
  */
-class UserCommand(store: TransientEntityStore) : NoOpCliktCommand(name = "user") {
+class UserCommand(store: TransientEntityStore) : NoOpCliktCommand(name = "user", help = "Commands surrounding the management of users.", printHelpOnEmptyArgs = true) {
     init {
         this.subcommands(Create(store), Delete(store), List(store), Roles(store) )
     }
@@ -44,7 +44,7 @@ class UserCommand(store: TransientEntityStore) : NoOpCliktCommand(name = "user")
     /**
      * [CliktCommand] to create a new [DbUser].
      */
-    inner class Create(private val store: TransientEntityStore) : CliktCommand(name = "create", help = "Creates a new User", printHelpOnEmptyArgs = true) {
+    inner class Create(private val store: TransientEntityStore) : CliktCommand(name = "create", help = "Creates a new user.", printHelpOnEmptyArgs = true) {
         /** The name of the newly created user. */
         private val username: String by option("-u", "--username", help = "Username of at least $MIN_LENGTH_USERNAME characters length. Must be unique!")
             .required()
@@ -61,7 +61,7 @@ class UserCommand(store: TransientEntityStore) : NoOpCliktCommand(name = "user")
         override fun run() {
             val username = this.store.transactional {
                 val user = DbUser.new {
-                    name = this@Create.username
+                    name = this@Create.username.lowercase()
                     password = BCrypt.hashpw(this@Create.password, SALT)
                     inactive = false
                     role = this@Create.role.toDb()
