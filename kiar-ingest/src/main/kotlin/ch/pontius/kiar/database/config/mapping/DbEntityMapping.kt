@@ -40,4 +40,17 @@ class DbEntityMapping(entity: Entity) : XdEntity(entity) {
         this.type.toApi(),
         this.attributes.asSequence().map { it.toApi() }.toList()
     )
+
+    /**
+     * A convenience method used to convert this [DbEntityMapping] to a [MappingConfig] without any attribute mappings. Requires an ongoing transaction!
+     *
+     * @return [MappingConfig]
+     */
+    fun toApiNoAttributes() = EntityMapping(
+        this.xdId,
+        this.name,
+        this.description,
+        this.type.toApi(),
+        emptyList()
+    )
 }

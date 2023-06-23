@@ -9,25 +9,46 @@ import {AdminDashboardComponent} from "./dashboard/admin-dashboard.component";
 import {MatListModule} from "@angular/material/list";
 import {CommonModule} from "@angular/common";
 import {MatIconModule} from "@angular/material/icon";
+import {RouterLink} from "@angular/router";
+import {EntityMappingComponent} from "./mapping/entity-mapping.component";
+import {MatTableModule} from "@angular/material/table";
+import {MatToolbarModule} from "@angular/material/toolbar";
+import {AttributeMappingDialogComponent} from "./mapping/attribute-mapping-dialog.component";
+import {MatDialogModule} from "@angular/material/dialog";
+import {MatSelectModule} from "@angular/material/select";
+import {MatCheckboxModule} from "@angular/material/checkbox";
 
 @NgModule({
   declarations: [
-      AdminDashboardComponent
+      AdminDashboardComponent,
+      AttributeMappingDialogComponent,
+      EntityMappingComponent
   ],
   imports: [
     CommonModule,
     BrowserModule,
     FormsModule,
+    ReactiveFormsModule,
+    RouterLink,
+
     MatButtonModule,
     MatCardModule,
+    MatDialogModule,
     MatInputModule,
     MatSnackBarModule,
-    ReactiveFormsModule,
     MatListModule,
     MatIconModule,
+    MatTableModule,
+    MatToolbarModule,
+    MatSelectModule,
+    MatCheckboxModule
   ],
   exports: [
-    AdminDashboardComponent
+    AdminDashboardComponent,
+    EntityMappingComponent
+  ],
+  providers: [
+      AttributeMappingDialogComponent
   ]
 })
 export class AdminModule {}

@@ -7,6 +7,7 @@ import ch.pontius.kiar.api.routes.session.logout
 import ch.pontius.kiar.api.routes.session.status
 import createEntityMapping
 import deleteEntityMapping
+import getEntityMapping
 import io.javalin.apibuilder.ApiBuilder.*
 import jetbrains.exodus.database.TransientEntityStore
 import listEntityMappings
@@ -55,6 +56,7 @@ fun configureApiRoutes(store: TransientEntityStore) {
         post("mappings", { ctx -> createEntityMapping(ctx, store) }, Role.ADMINISTRATOR )
         path("mappings") {
             get("parsers",  { ctx -> listParsers(ctx, store) }, Role.ADMINISTRATOR )
+            get("{id}",  { ctx -> getEntityMapping(ctx, store) }, Role.ADMINISTRATOR )
             put("{id}",  { ctx -> updateEntityMapping(ctx, store) }, Role.ADMINISTRATOR )
             delete("{id}",  { ctx -> deleteEntityMapping(ctx, store) }, Role.ADMINISTRATOR )
         }

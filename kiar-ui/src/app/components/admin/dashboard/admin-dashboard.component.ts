@@ -1,4 +1,4 @@
-import {AfterViewInit, Component} from "@angular/core";
+import {Component} from "@angular/core";
 import {ConfigService, EntityMapping, JobTemplate, SolrConfig} from "../../../../../openapi";
 import {Observable, shareReplay} from "rxjs";
 

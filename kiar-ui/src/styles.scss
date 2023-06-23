@@ -4,6 +4,12 @@ html, body { height: 100%; }
 body { margin: 0; font-family: Roboto, "Helvetica Neue", sans-serif; }
 
 
+.button-group {
+  display: flex;
+  gap: 10px;
+}
+
+
 .space-flexible {
   flex: 1 1 auto;
 }

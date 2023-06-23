@@ -1,0 +1,47 @@
+<h1 mat-dialog-title>{{title}}</h1>
+<div mat-dialog-content>
+  <form [formGroup]="data.form">
+    <mat-form-field appearance="fill" [style.width]="'100%'">
+      <mat-label>Source</mat-label>
+      <input matInput type="text" required formControlName="source">
+    </mat-form-field>
+
+    <mat-form-field appearance="fill" [style.width]="'100%'">
+      <mat-label>Destination</mat-label>
+      <input matInput type="text" formControlName="destination">
+    </mat-form-field>
+
+    <mat-form-field appearance="fill" [style.width]="'50%'">
+      <mat-label>Destination</mat-label>
+      <mat-select formControlName="parser">
+        <mat-option *ngFor="let parser of (parsers | async)" [value]="parser">
+          {{parser}}
+        </mat-option>
+      </mat-select>
+    </mat-form-field>
+
+    <mat-checkbox formControlName="required">
+      Required
+    </mat-checkbox>
+
+    <mat-checkbox formControlName="multiValued">
+      Multi-valued
+    </mat-checkbox>
+
+    <ng-container *ngFor="let parameterForm of parameterForms?.controls; let i = index" [formGroup]="parameterForm">
+      <div [formGroup]="parameterForm">
+        <mat-form-field appearance="fill" [style.width]="'25%'">
+          <mat-label>Key</mat-label>
+          <input matInput type="text" formControlName="key">
+        </mat-form-field>
+        <mat-form-field appearance="fill" [style.width]="'75%'">
+          <mat-label>Value</mat-label>
+          <input matInput type="text" formControlName="value">
+        </mat-form-field>
+      </div>
+    </ng-container>
+  </form>
+</div>
+<div mat-dialog-actions>
+  <button mat-button color="primary" (click)="close()">Save</button>
+</div>

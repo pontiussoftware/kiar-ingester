@@ -13,6 +13,7 @@ import io.javalin.http.BadRequestResponse
 import io.javalin.http.Context
 import io.javalin.openapi.*
 import jetbrains.exodus.database.TransientEntityStore
+import kotlinx.dnq.query.asSequence
 import kotlinx.dnq.util.findById
 
 @OpenApi(
@@ -32,7 +33,7 @@ import kotlinx.dnq.util.findById
 fun listEntityMappings(ctx: Context, store: TransientEntityStore) {
     store.transactional (true) {
         val mappings = DbEntityMapping.all()
-        ctx.json(mappings.mapToArray { it.toApi() })
+        ctx.json(mappings.mapToArray { it.toApiNoAttributes() })
     }
 }
 
@@ -94,6 +95,36 @@ fun createEntityMapping(ctx: Context, store: TransientEntityStore) {
     }
     ctx.json(created)
 }
+
+@OpenApi(
+    path = "/api/mappings/{id}",
+    methods = [HttpMethod.GET],
+    summary = "Retrieves all the details about an entity mapping.",
+    operationId = "getEntityMapping",
+    tags = ["Config", "Entity Mapping"],
+    pathParams = [
+        OpenApiParam(name = "id", description = "The ID of the entity mapping that should be retrieved.", required = true)
+    ],
+    responses = [
+        OpenApiResponse("200", [OpenApiContent(EntityMapping::class)]),
+        OpenApiResponse("401", [OpenApiContent(ErrorStatus::class)]),
+        OpenApiResponse("403", [OpenApiContent(ErrorStatus::class)]),
+        OpenApiResponse("404", [OpenApiContent(ErrorStatus::class)]),
+        OpenApiResponse("500", [OpenApiContent(ErrorStatus::class)])
+    ]
+)
+fun getEntityMapping(ctx: Context, store: TransientEntityStore) {
+    val mappingId = ctx.pathParam("id")
+    val mapping = store.transactional(true) {
+        try {
+            DbEntityMapping.findById(mappingId).toApi()
+        } catch (e: Throwable) {
+            throw ErrorStatusException(404, "Entity mapping with ID $mappingId could not be found.")
+        }
+    }
+    ctx.json(mapping)
+}
+
 
 @OpenApi(
     path = "/api/mappings/{id}",
@@ -180,7 +211,12 @@ fun updateEntityMapping(ctx: Context, store: TransientEntityStore) {
  * @param attributes [List] of [AttributeMapping]s to merge [DbEntityMapping] with.
  */
 private fun DbEntityMapping.merge(attributes: List<AttributeMapping>) {
-    this.attributes.clear()
+    /* Explicitly delete all existing attribute mappings (Note: this.attributes.clear() doesn't work). */
+    for (a in this.attributes.asSequence()) {
+        a.delete()
+    }
+
+    /* Re-add attributes. */
     for (a in attributes) {
         this.attributes.add(DbAttributeMapping.new {
             source = a.source

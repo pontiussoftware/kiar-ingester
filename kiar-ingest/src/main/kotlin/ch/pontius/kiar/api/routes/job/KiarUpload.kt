@@ -1,4 +1,4 @@
-package ch.pontius.kiar.api.routes.kiar
+package ch.pontius.kiar.api.routes.job
 
 import io.javalin.http.Context
 
