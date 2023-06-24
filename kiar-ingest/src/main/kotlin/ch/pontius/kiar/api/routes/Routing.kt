@@ -29,6 +29,13 @@ fun configureApiRoutes(store: TransientEntityStore) {
             post("user", { ctx -> updateUser(ctx, store) }, Role.ADMINISTRATOR, Role.VIEWER, Role.MANAGER )
         }
 
+        /* Endpoints related to participants. */
+        get("participants", { ctx -> listParticipants(ctx, store) }, Role.ADMINISTRATOR, Role.MANAGER )
+        post("participants", { ctx -> createParticipants(ctx, store) }, Role.ADMINISTRATOR )
+        path("participants") {
+            delete("{id}",  { ctx -> deleteParticipants(ctx, store) }, Role.ADMINISTRATOR )
+        }
+
         /* Endpoints related to job templates. */
         get("templates", { ctx -> listJobTemplates(ctx, store) }, Role.ADMINISTRATOR, Role.MANAGER )
         post("templates", { ctx -> createJobTemplate(ctx, store) }, Role.ADMINISTRATOR )

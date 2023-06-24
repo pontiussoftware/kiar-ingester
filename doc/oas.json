@@ -418,6 +418,165 @@
         "security" : [ ]
       }
     },
+    "/api/participants" : {
+      "get" : {
+        "tags" : [ "Config", "Participant" ],
+        "summary" : "Lists all available participants.",
+        "operationId" : "getListParticipants",
+        "parameters" : [ ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "array",
+                  "items" : {
+                    "type" : "string"
+                  }
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorStatus"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Forbidden",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorStatus"
+                }
+              }
+            }
+          },
+          "500" : {
+            "description" : "Server Error",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorStatus"
+                }
+              }
+            }
+          }
+        },
+        "deprecated" : false,
+        "security" : [ ]
+      }
+    },
+    "/api/participants/{id}" : {
+      "delete" : {
+        "tags" : [ "Config", "Participant" ],
+        "summary" : "Deletes and existing participant.",
+        "operationId" : "getListParticipants",
+        "parameters" : [ {
+          "name" : "id",
+          "in" : "path",
+          "description" : "The ID of the participant to delete.",
+          "required" : true,
+          "deprecated" : false,
+          "allowEmptyValue" : false,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/SuccessStatus"
+                }
+              }
+            }
+          },
+          "404" : {
+            "description" : "Not Found",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorStatus"
+                }
+              }
+            }
+          },
+          "500" : {
+            "description" : "Server Error",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorStatus"
+                }
+              }
+            }
+          }
+        },
+        "deprecated" : false,
+        "security" : [ ]
+      }
+    },
+    "/api/participants/{name}" : {
+      "post" : {
+        "tags" : [ "Config", "Participant" ],
+        "summary" : "Creates a new participant.",
+        "operationId" : "getListParticipants",
+        "parameters" : [ {
+          "name" : "name",
+          "in" : "path",
+          "description" : "The name of the new participant. Must be unique!",
+          "required" : true,
+          "deprecated" : false,
+          "allowEmptyValue" : false,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/SuccessStatus"
+                }
+              }
+            }
+          },
+          "400" : {
+            "description" : "Bad Request",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorStatus"
+                }
+              }
+            }
+          },
+          "500" : {
+            "description" : "Server Error",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorStatus"
+                }
+              }
+            }
+          }
+        },
+        "deprecated" : false,
+        "security" : [ ]
+      }
+    },
     "/api/session/login" : {
       "post" : {
         "tags" : [ "Session" ],
@@ -515,6 +674,48 @@
               "application/json" : {
                 "schema" : {
                   "$ref" : "#/components/schemas/SessionStatus"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Forbidden",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorStatus"
+                }
+              }
+            }
+          }
+        },
+        "deprecated" : false,
+        "security" : [ ]
+      }
+    },
+    "/api/session/user" : {
+      "get" : {
+        "tags" : [ "Session" ],
+        "summary" : "Returns information about the currently logged-in user.",
+        "operationId" : "putUpdateUser",
+        "parameters" : [ ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/SessionStatus"
+                }
+              }
+            }
+          },
+          "400" : {
+            "description" : "Bad Request",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorStatus"
                 }
               }
             }
@@ -1400,6 +1601,31 @@
           },
           "role" : {
             "$ref" : "#/components/schemas/Role"
+          }
+        },
+        "required" : [ "username", "role" ]
+      },
+      "User" : {
+        "type" : "object",
+        "additionalProperties" : false,
+        "properties" : {
+          "id" : {
+            "type" : "string"
+          },
+          "username" : {
+            "type" : "string"
+          },
+          "password" : {
+            "type" : "string"
+          },
+          "email" : {
+            "type" : "string"
+          },
+          "role" : {
+            "$ref" : "#/components/schemas/Role"
+          },
+          "institution" : {
+            "type" : "string"
           }
         },
         "required" : [ "username", "role" ]

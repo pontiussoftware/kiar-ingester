@@ -3,6 +3,7 @@ package ch.pontius.kiar.database.institution
 import jetbrains.exodus.entitystore.Entity
 import kotlinx.dnq.XdEntity
 import kotlinx.dnq.XdNaturalEntityType
+import kotlinx.dnq.xdBooleanProp
 import kotlinx.dnq.xdRequiredStringProp
 
 /**

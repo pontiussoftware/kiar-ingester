@@ -19,11 +19,6 @@ import kotlinx.dnq.query.firstOrNull
 import org.mindrot.jbcrypt.BCrypt
 
 /**
- *
- * @author Ralph Gasser
- * @version 1.0
- */
-/**
  * A collection of [CliktCommand]s for [DbUser] management
  *
  * @author Ralph Gasser
