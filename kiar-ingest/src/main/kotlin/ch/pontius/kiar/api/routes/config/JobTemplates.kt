@@ -104,7 +104,7 @@ fun createJobTemplate(ctx: Context, store: TransientEntityStore) {
                 ?: throw ErrorStatusException(404, "Could not find participant with name ${request.participantName}.")
             solr = DbSolr.filter { it.name eq request.solrConfigName }.firstOrNull()
                 ?: throw ErrorStatusException(404, "Could not find Apache Solr configuration with name ${request.solrConfigName}.")
-            mapping = DbEntityMapping.filter { it.name eq request.solrConfigName }.firstOrNull()
+            mapping = DbEntityMapping.filter { it.name eq request.entityMappingName }.firstOrNull()
                 ?: throw ErrorStatusException(404, "Could not find entity mapping configuration with name ${request.entityMappingName}.")
 
             /* Adds all transformer configuration to template. */
