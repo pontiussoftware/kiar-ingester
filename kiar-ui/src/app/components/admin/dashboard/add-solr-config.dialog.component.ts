@@ -13,7 +13,7 @@ export class AddSolrConfigDialogComponent {
   public formControl: FormGroup =  new FormGroup({
     name: new FormControl('', [Validators.required, Validators.minLength(3)]),
     description: new FormControl(''),
-    server: new FormControl('', [Validators.required]),
+    server: new FormControl('', [Validators.required, Validators.pattern('(https?://)?([\\da-z.-]+)\\.([a-z.]{2,6})[/\\w .-]*/?')]),
     username: new FormControl('', [Validators.required]),
     password: new FormControl('', [Validators.required])
   })
