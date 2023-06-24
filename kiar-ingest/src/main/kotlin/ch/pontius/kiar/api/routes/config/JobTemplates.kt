@@ -2,6 +2,7 @@ package ch.pontius.kiar.api.routes.config
 
 import ch.pontius.kiar.api.model.status.ErrorStatus
 import ch.pontius.kiar.api.model.config.templates.JobTemplate
+import ch.pontius.kiar.api.model.config.templates.JobType
 import ch.pontius.kiar.api.model.config.transformers.TransformerConfig
 import ch.pontius.kiar.api.model.status.ErrorStatusException
 import ch.pontius.kiar.api.model.status.SuccessStatus
@@ -58,7 +59,7 @@ fun listJobTemplates(ctx: Context, store: TransientEntityStore) {
     tags = ["Config", "Job Template"],
     pathParams = [],
     responses = [
-        OpenApiResponse("200", [OpenApiContent(Array<JobTemplate>::class)]),
+        OpenApiResponse("200", [OpenApiContent(Array<JobType>::class)]),
         OpenApiResponse("401", [OpenApiContent(ErrorStatus::class)]),
         OpenApiResponse("403", [OpenApiContent(ErrorStatus::class)]),
         OpenApiResponse("500", [OpenApiContent(ErrorStatus::class)]),
@@ -71,9 +72,9 @@ fun listJobTemplateTypes(ctx: Context, store: TransientEntityStore) {
 }
 
 @OpenApi(
-    path = "/api/TEMPLATES",
+    path = "/api/templates",
     methods = [HttpMethod.POST],
-    summary = "Creates a new job template",
+    summary = "Creates a new job template.",
     operationId = "postCreateJobTemplate",
     tags = ["Config", "Job Template"],
     pathParams = [],

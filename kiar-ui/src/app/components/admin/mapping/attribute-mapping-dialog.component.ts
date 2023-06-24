@@ -25,7 +25,7 @@ export class AttributeMappingDialogComponent {
   constructor(
       private dialogRef: MatDialogRef<AttributeMappingDialogComponent>,
       @Inject(MAT_DIALOG_DATA) public data: AttributeMappingData,
-      private _service: EntityMappingService,) {
+      private _service: EntityMappingService) {
     this.parsers = this._service.getListParsers().pipe(shareReplay(1, 30000))
   }
 

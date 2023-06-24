@@ -2,86 +2,10 @@
   "openapi" : "3.0.3",
   "info" : {
     "title" : "KIAR Dashboard API",
-    "summary" : null,
     "description" : "API for the KIAR Dashboard.",
-    "termsOfService" : null,
-    "contact" : null,
-    "license" : null,
     "version" : "1.0.0"
   },
   "paths" : {
-    "/api/TEMPLATES" : {
-      "post" : {
-        "tags" : [ "Config", "Job Template" ],
-        "summary" : "Creates a new job template",
-        "operationId" : "postCreateJobTemplate",
-        "parameters" : [ ],
-        "requestBody" : {
-          "content" : {
-            "application/json" : {
-              "schema" : {
-                "$ref" : "#/components/schemas/JobTemplate"
-              }
-            }
-          },
-          "required" : true
-        },
-        "responses" : {
-          "200" : {
-            "description" : "OK",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/JobTemplate"
-                }
-              }
-            }
-          },
-          "400" : {
-            "description" : "Bad Request",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorStatus"
-                }
-              }
-            }
-          },
-          "401" : {
-            "description" : "Unauthorized",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorStatus"
-                }
-              }
-            }
-          },
-          "403" : {
-            "description" : "Forbidden",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorStatus"
-                }
-              }
-            }
-          },
-          "500" : {
-            "description" : "Server Error",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorStatus"
-                }
-              }
-            }
-          }
-        },
-        "deprecated" : false,
-        "security" : [ ]
-      }
-    },
     "/api/mappings" : {
       "get" : {
         "tags" : [ "Config", "Entity Mapping" ],
@@ -950,6 +874,76 @@
         },
         "deprecated" : false,
         "security" : [ ]
+      },
+      "post" : {
+        "tags" : [ "Config", "Job Template" ],
+        "summary" : "Creates a new job template.",
+        "operationId" : "postCreateJobTemplate",
+        "parameters" : [ ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/JobTemplate"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/JobTemplate"
+                }
+              }
+            }
+          },
+          "400" : {
+            "description" : "Bad Request",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorStatus"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorStatus"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Forbidden",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorStatus"
+                }
+              }
+            }
+          },
+          "500" : {
+            "description" : "Server Error",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorStatus"
+                }
+              }
+            }
+          }
+        },
+        "deprecated" : false,
+        "security" : [ ]
       }
     },
     "/api/templates/types" : {
@@ -966,7 +960,7 @@
                 "schema" : {
                   "type" : "array",
                   "items" : {
-                    "$ref" : "#/components/schemas/JobTemplate"
+                    "$ref" : "#/components/schemas/JobType"
                   }
                 }
               }
@@ -1462,8 +1456,8 @@
     },
     "securitySchemes" : {
       "CookieAuth" : {
-        "name" : "SESSIONID",
         "in" : "cookie",
+        "name" : "SESSIONID",
         "type" : "apiKey"
       }
     }

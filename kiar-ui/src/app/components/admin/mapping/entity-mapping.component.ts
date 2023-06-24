@@ -1,9 +1,9 @@
 import {Component, ViewChild} from "@angular/core";
 import {AttributeMapping, EntityMapping, EntityMappingService, MappingType, ValueParser} from "../../../../../openapi";
-import {ActivatedRoute} from "@angular/router";
+import {ActivatedRoute, Router} from "@angular/router";
 import {catchError, map, mergeMap, Observable, of} from "rxjs";
 import {MatSnackBar, MatSnackBarConfig} from "@angular/material/snack-bar";
-import {FormArray, FormBuilder, FormControl, FormGroup} from "@angular/forms";
+import {FormArray, FormControl, FormGroup, Validators} from "@angular/forms";
 import {MatTable, MatTableDataSource} from "@angular/material/table";
 import {MatDialog} from "@angular/material/dialog";
 import {AttributeMappingData, AttributeMappingDialogComponent} from "./attribute-mapping-dialog.component";
@@ -29,9 +29,9 @@ export class EntityMappingComponent {
 
   /** The {@link FormControl} that backs this {@link EntityMappingComponent}. */
   public formControl = new FormGroup({
-    name: new FormControl('', {nonNullable: true}),
+    name: new FormControl('', [Validators.required]),
     description: new FormControl(''),
-    type: new FormControl('', {nonNullable: true}),
+    type: new FormControl('', [Validators.required]),
     attributes: new FormArray(this.attributes)
   })
 
@@ -39,13 +39,13 @@ export class EntityMappingComponent {
   @ViewChild(MatTable) table: MatTable<FormGroup>;
 
   constructor(
-      private _service: EntityMappingService,
-      private _route: ActivatedRoute,
-      private _snackBar: MatSnackBar,
-      private _formBuilder: FormBuilder,
-      public _dialog: MatDialog
+      private service: EntityMappingService,
+      private router: Router,
+      private route: ActivatedRoute,
+      private snackBar: MatSnackBar,
+      public dialog: MatDialog
   ) {
-    this.mappingId = this._route.paramMap.pipe(
+    this.mappingId = this.route.paramMap.pipe(
         map(params => params.get('id')!!)
     );
     this.refresh()
@@ -55,9 +55,9 @@ export class EntityMappingComponent {
   /**
    * Opens a {@link AttributeMappingDialogComponent} to add an existing  {@link AttributeMapping}.
    */
-  public addAttribute() {
+  public addAttributeMapping() {
     let mapping = {form: this.newAttributeMappingFormGroup(null), new: true} as AttributeMappingData
-    this._dialog.open(AttributeMappingDialogComponent, {data: mapping, width: '750px'}).afterClosed().subscribe(data => {
+    this.dialog.open(AttributeMappingDialogComponent, {data: mapping, width: '750px'}).afterClosed().subscribe(data => {
       if (data != null && data.new) {
         (this.formControl.get('attributes') as FormArray<FormGroup>).push(data.form)
         this.table.renderRows()
@@ -70,8 +70,8 @@ export class EntityMappingComponent {
    *
    * @param index The index of the {@link AttributeMapping} to edit.
    */
-  public editAttribute(index: number) {
-    this._dialog.open(AttributeMappingDialogComponent, {
+  public editAttributeMapping(index: number) {
+    this.dialog.open(AttributeMappingDialogComponent, {
       data: {form: this.attributes[index], new: false} as AttributeMappingData,
       width: '750px'
     })
@@ -88,23 +88,44 @@ export class EntityMappingComponent {
   }
 
   /**
-   * Handles form submission.
+   * Tries to save the current state of the {@link EntityMapping} represented by the local {@link FormControl}
    */
   public save() {
     this.mappingId.pipe(
         mergeMap(s => {
           let mapping = this.fromToEntityMapping(s)
-          return this._service.updateEntityMapping(s, mapping).pipe(
+          return this.service.updateEntityMapping(s, mapping).pipe(
               catchError((err) => {
-                this._snackBar.open(`Error occurred while trying to update entity mapping: ${err?.error?.description}.`, "Dismiss", { duration: 2000 } as MatSnackBarConfig);
+                this.snackBar.open(`Error occurred while trying to update entity mapping: ${err?.error?.description}.`, "Dismiss", { duration: 2000 } as MatSnackBarConfig);
                 return of(null)
               })
           )
         })
     ).subscribe(m => {
-      this._snackBar.open(`Successfully saved updated entity mapping.`, "Dismiss", { duration: 2000 } as MatSnackBarConfig);
+      this.snackBar.open(`Successfully saved updated entity mapping.`, "Dismiss", { duration: 2000 } as MatSnackBarConfig);
       this.updateForm(m)
     })
+  }
+
+  /**
+   * Opens a {@link AttributeMappingDialogComponent} to add an existing  {@link AttributeMapping}.
+   */
+  public delete() {
+    if (confirm("Are you sure that you want to delete this entity mapping?\nAfter deletion, it can no longer be retrieved.")) {
+      this.mappingId.pipe(
+          mergeMap(s => {
+            return this.service.deleteEntityMapping(s).pipe(
+                catchError((err) => {
+                  this.snackBar.open(`Error occurred while trying to delete entity mapping: ${err?.error?.description}.`, "Dismiss", { duration: 2000 } as MatSnackBarConfig);
+                  return of(null)
+                })
+            )
+          })
+      ).subscribe(m => {
+        this.snackBar.open(`Successfully deleted entity mapping.`, "Dismiss", { duration: 2000 } as MatSnackBarConfig);
+        this.router.navigate(['admin', 'dashboard']).then(r => {})
+      })
+    }
   }
 
   /**
@@ -112,9 +133,9 @@ export class EntityMappingComponent {
    */
   public refresh() {
     this.mappingId.pipe(
-        mergeMap(id => this._service.getEntityMapping(id)),
+        mergeMap(id => this.service.getEntityMapping(id)),
         catchError((err) => {
-          this._snackBar.open(`Error occurred while trying to load entity mapping: ${err?.error?.description}.`, "Dismiss", { duration: 2000 } as MatSnackBarConfig);
+          this.snackBar.open(`Error occurred while trying to load entity mapping: ${err?.error?.description}.`, "Dismiss", { duration: 2000 } as MatSnackBarConfig);
           return of(null)
         })
     ).subscribe(m => this.updateForm(m))
@@ -179,9 +200,9 @@ export class EntityMappingComponent {
    */
   private newAttributeMappingFormGroup(a: AttributeMapping | null) {
     return new FormGroup({
-      source: new FormControl(a?.source),
-      destination: new FormControl(a?.destination),
-      parser: new FormControl(a?.parser),
+      source: new FormControl(a?.source, [Validators.required]),
+      destination: new FormControl(a?.destination, [Validators.required]),
+      parser: new FormControl(a?.parser, [Validators.required]),
       required: new FormControl(a?.required || false),
       multiValued: new FormControl(a?.multiValued || false),
       parameters: new FormArray(Object.entries(a?.parameters || {}).map((k) => new FormGroup({

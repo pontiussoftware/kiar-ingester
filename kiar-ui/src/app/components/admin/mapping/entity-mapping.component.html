@@ -22,13 +22,24 @@
     </mat-form-field>
 
     <div class="button-group" [style.margin-top]="'10px'">
-      <button mat-raised-button color="primary" (click)="save()">Save</button>
-      <button mat-raised-button color="warn" (click)="refresh()">Reload</button>
-      <button mat-raised-button (click)="addAttribute()">Add Attribute Mapping</button>
+      <button mat-raised-button color="primary" matTooltip="Saves all changes made to this entity mapping." (click)="save()">
+        Save
+      </button>
+      <button mat-raised-button matTooltip="Reloads this entity mapping, reverting all unsaved changes."  (click)="refresh()">
+        Reload
+      </button>
+      <button mat-raised-button color="warn" matTooltip="Deletes this entity mapping." (click)="delete()">
+        Delete
+      </button>
     </div>
   </div>
 
-  <h2>Attribute Mappings ({{attributes.length}})</h2>
+  <h2>Attribute Mappings ({{attributes.length}})
+    <button mat-mini-fab color="primary" aria-label="Adds a new attribute mapping to this entity mapping." (click)="addAttributeMapping()">
+      <mat-icon>add</mat-icon>
+    </button>
+  </h2>
+
 
   <table mat-table [dataSource]="tableDataSource" class="mat-elevation-z8" formArrayName="attributes">
     <!-- Source Column -->
@@ -85,7 +96,7 @@
     <ng-container matColumnDef="action">
       <th mat-header-cell *matHeaderCellDef> Action </th>
       <td mat-cell *matCellDef="let element; let i = index">
-        <button mat-icon-button (click)="editAttribute(i)" color="primary"><mat-icon>edit</mat-icon></button>
+        <button mat-icon-button (click)="editAttributeMapping(i)" color="primary"><mat-icon>edit</mat-icon></button>
         <button mat-icon-button (click)="removeAttribute(i)" color="warn"><mat-icon>delete</mat-icon></button>
       </td>
     </ng-container>

@@ -2,6 +2,10 @@
   <mat-card [style.width]="'25%'">
     <mat-card-header>
       <mat-card-title>Job Templates ({{(templates | async)?.length}})</mat-card-title>
+      <div class="space-flexible"></div>
+      <button mat-mini-fab color="primary" aria-label="Adds a new job template." (click)="addJobTemplate()">
+        <mat-icon>add</mat-icon>
+      </button>
     </mat-card-header>
     <mat-card-content>
       <mat-list>
@@ -22,6 +26,10 @@
   <mat-card [style.width]="'25%'">
     <mat-card-header>
       <mat-card-title>Entity Mappings ({{(mappings | async)?.length}})</mat-card-title>
+      <div class="space-flexible"></div>
+      <button mat-mini-fab color="primary" aria-label="Adds a new entity mapping." (click)="addEntityMapping()">
+        <mat-icon>add</mat-icon>
+      </button>
     </mat-card-header>
     <mat-card-content>
       <mat-list>
@@ -37,6 +45,10 @@
   <mat-card [style.width]="'25%'">
     <mat-card-header>
       <mat-card-title>Apache Solr Configurations ({{(solr | async)?.length}})</mat-card-title>
+      <div class="space-flexible"></div>
+      <button mat-mini-fab color="primary" aria-label="Adds a new Apache Solr configuration." (click)="addSolrConfigMapping()">
+        <mat-icon>add</mat-icon>
+      </button>
     </mat-card-header>
     <mat-card-content>
       <mat-list>
@@ -48,4 +60,5 @@
       </mat-list>
     </mat-card-content>
   </mat-card>
+
 </div>

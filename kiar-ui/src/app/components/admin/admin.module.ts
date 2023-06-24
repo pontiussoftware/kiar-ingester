@@ -17,12 +17,19 @@ import {AttributeMappingDialogComponent} from "./mapping/attribute-mapping-dialo
 import {MatDialogModule} from "@angular/material/dialog";
 import {MatSelectModule} from "@angular/material/select";
 import {MatCheckboxModule} from "@angular/material/checkbox";
+import {AddEntityMappingDialogComponent} from "./dashboard/add-entity-mapping-dialog.component";
+import {MatTooltipModule} from "@angular/material/tooltip";
+import {AddSolrConfigDialogComponent} from "./dashboard/add-solr-config.dialog.component";
+import {AddJobTemplateDialogComponent} from "./dashboard/add-job-template-dialog.component";
 
 @NgModule({
   declarations: [
-      AdminDashboardComponent,
-      AttributeMappingDialogComponent,
-      EntityMappingComponent
+    AddEntityMappingDialogComponent,
+    AddJobTemplateDialogComponent,
+    AddSolrConfigDialogComponent,
+    AdminDashboardComponent,
+    AttributeMappingDialogComponent,
+    EntityMappingComponent,
   ],
   imports: [
     CommonModule,
@@ -41,7 +48,8 @@ import {MatCheckboxModule} from "@angular/material/checkbox";
     MatTableModule,
     MatToolbarModule,
     MatSelectModule,
-    MatCheckboxModule
+    MatCheckboxModule,
+    MatTooltipModule
   ],
   exports: [
     AdminDashboardComponent,
