@@ -1,5 +1,6 @@
 package ch.pontius.kiar.database.institution
 
+import ch.pontius.kiar.api.model.session.User
 import jetbrains.exodus.entitystore.Entity
 import jetbrains.exodus.entitystore.constraints.email
 import kotlinx.dnq.*
@@ -32,4 +33,13 @@ class DbUser(entity: Entity) : XdEntity(entity) {
 
     /** The [DbInstitution] this [DbUser] belongs to. */
     var institution: DbInstitution? by xdLink0_1(DbInstitution::users, onDelete = OnDeletePolicy.CLEAR, onTargetDelete = OnDeletePolicy.CASCADE)
+
+    /**
+     * Convenience method to convert this [DbUser] to a [User].
+     *
+     * Requires an ongoing transaction.
+     *
+     * @return [User]
+     */
+    fun toApi() = User(this.xdId, this.name, null, this.email, this.role.toApi(), this.institution?.name)
 }

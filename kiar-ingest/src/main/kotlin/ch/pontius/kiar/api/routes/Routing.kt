@@ -2,9 +2,7 @@ package ch.pontius.kiar.api.routes
 
 import ch.pontius.kiar.api.model.session.Role
 import ch.pontius.kiar.api.routes.config.*
-import ch.pontius.kiar.api.routes.session.login
-import ch.pontius.kiar.api.routes.session.logout
-import ch.pontius.kiar.api.routes.session.status
+import ch.pontius.kiar.api.routes.session.*
 import createEntityMapping
 import deleteEntityMapping
 import getEntityMapping
@@ -27,6 +25,8 @@ fun configureApiRoutes(store: TransientEntityStore) {
             post("login") { ctx -> login(ctx, store) }
             get("logout", { ctx -> logout(ctx) }, Role.ADMINISTRATOR, Role.VIEWER, Role.MANAGER )
             get("status", { ctx -> status(ctx, store) }, Role.ADMINISTRATOR, Role.VIEWER, Role.MANAGER )
+            get("user", { ctx -> getUser(ctx, store) }, Role.ADMINISTRATOR, Role.VIEWER, Role.MANAGER )
+            post("user", { ctx -> updateUser(ctx, store) }, Role.ADMINISTRATOR, Role.VIEWER, Role.MANAGER )
         }
 
         /* Endpoints related to job templates. */

@@ -4,7 +4,7 @@ import ch.pontius.kiar.database.institution.DbRole
 import io.javalin.security.RouteRole
 
 /**
- * The [Role] a user can have.
+ * The [Role] a [User] can have.
  *
  * @author Ralph Gasser
  * @version 1.0.0

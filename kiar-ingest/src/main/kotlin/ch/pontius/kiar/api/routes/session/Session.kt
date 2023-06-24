@@ -2,14 +2,18 @@ package ch.pontius.kiar.api.routes.session
 
 import ch.pontius.kiar.api.model.session.LoginRequest
 import ch.pontius.kiar.api.model.session.SessionStatus
+import ch.pontius.kiar.api.model.session.User
 import ch.pontius.kiar.api.model.status.ErrorStatus
 import ch.pontius.kiar.api.model.status.ErrorStatusException
 import ch.pontius.kiar.api.model.status.SuccessStatus
 import ch.pontius.kiar.database.institution.DbUser
+import ch.pontius.kiar.utilities.validateEmail
+import ch.pontius.kiar.utilities.validatePassword
 import io.javalin.http.BadRequestResponse
 import io.javalin.http.Context
 import io.javalin.openapi.*
 import jetbrains.exodus.database.TransientEntityStore
+import jetbrains.exodus.kotlin.notNull
 import kotlinx.dnq.query.filter
 import kotlinx.dnq.query.firstOrNull
 import kotlinx.dnq.util.findById
@@ -91,4 +95,67 @@ fun status(ctx: Context, store: TransientEntityStore) {
         val user = ctx.currentUser()
         ctx.json(SessionStatus(user.name, user.role.toApi()))
     }
+}
+
+
+@OpenApi(
+    path = "/api/session/user",
+    methods = [HttpMethod.GET],
+    summary = "Returns information about the currently logged-in user.",
+    operationId = "getUser",
+    tags = ["Session"],
+    pathParams = [],
+    responses = [
+        OpenApiResponse("200", [OpenApiContent(User::class)]),
+        OpenApiResponse("403", [OpenApiContent(ErrorStatus::class)])
+    ]
+)
+fun getUser(ctx: Context, store: TransientEntityStore) {
+    store.transactional(true) {
+        val user = ctx.currentUser()
+        ctx.json(user.toApi())
+    }
+}
+
+@OpenApi(
+    path = "/api/session/user",
+    methods = [HttpMethod.GET],
+    summary = "Returns information about the currently logged-in user.",
+    operationId = "putUpdateUser",
+    tags = ["Session"],
+    pathParams = [],
+    responses = [
+        OpenApiResponse("200", [OpenApiContent(SessionStatus::class)]),
+        OpenApiResponse("400", [OpenApiContent(ErrorStatus::class)]),
+        OpenApiResponse("403", [OpenApiContent(ErrorStatus::class)])
+    ]
+)
+fun updateUser(ctx: Context, store: TransientEntityStore) {
+    val request = try {
+        ctx.bodyAsClass(User::class.java)
+    } catch (e: BadRequestResponse) {
+        throw ErrorStatusException(400, "Malformed login request.")
+    }
+
+    store.transactional {
+        val user = ctx.currentUser()
+
+        if (user.xdId != request.id || user.name != request.username) {
+            throw ErrorStatusException(400, "Provided user does not correspond with currently logged in user.")
+        }
+
+        /* Update user password. */
+        if (request.password != null) {
+            if(!request.password.validatePassword()) throw ErrorStatusException(400, "Invalid password. Password must have at least a length of eight characters and it must contain at least one upper- and lowercase letter and one digit.")
+            user.password = BCrypt.hashpw(request.password, SALT)
+        }
+
+        /* Update user e-mail. */
+        if (request.email != null) {
+            if(!request.email.validateEmail()) throw ErrorStatusException(400, "Invalid e-mail address.")
+            user.email = request.email
+        }
+    }
+
+    ctx.json(SuccessStatus("User ${request.username} updated successfully."))
 }

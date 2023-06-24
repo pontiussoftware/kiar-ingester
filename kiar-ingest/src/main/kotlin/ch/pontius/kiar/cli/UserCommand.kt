@@ -6,6 +6,7 @@ import ch.pontius.kiar.api.model.session.Role
 import ch.pontius.kiar.api.routes.session.SALT
 import ch.pontius.kiar.database.institution.DbRole
 import ch.pontius.kiar.database.institution.DbUser
+import ch.pontius.kiar.utilities.validatePassword
 import com.github.ajalt.clikt.core.CliktCommand
 import com.github.ajalt.clikt.core.NoOpCliktCommand
 import com.github.ajalt.clikt.core.subcommands
@@ -60,6 +61,11 @@ class UserCommand(store: TransientEntityStore) : NoOpCliktCommand(name = "user",
 
         override fun run() {
             val username = this.store.transactional {
+                if (!this@Create.password.validatePassword()) {
+                    System.err.println("Invalid password. Password must consist of printable ASCII characters and have at least a length of eight characters and it must contain at least one upper- and lowercase letter and one digit.")
+                    return@transactional
+                }
+
                 val user = DbUser.new {
                     name = this@Create.username.lowercase()
                     password = BCrypt.hashpw(this@Create.password, SALT)
