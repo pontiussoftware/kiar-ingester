@@ -35,7 +35,7 @@ fun listParticipants(ctx: Context, store: TransientEntityStore) {
     path = "/api/participants/{name}",
     methods = [HttpMethod.POST],
     summary = "Creates a new participant.",
-    operationId = "getListParticipants",
+    operationId = "postCreateParticipant",
     tags = ["Config", "Participant"],
     pathParams = [
         OpenApiParam("name", String::class, description = "The name of the new participant. Must be unique!", required = true)
@@ -60,7 +60,7 @@ fun createParticipants(ctx: Context, store: TransientEntityStore) {
     path = "/api/participants/{id}",
     methods = [HttpMethod.DELETE],
     summary = "Deletes and existing participant.",
-    operationId = "getListParticipants",
+    operationId = "deleteParticipant",
     tags = ["Config", "Participant"],
     pathParams = [
         OpenApiParam("id", String::class, description = "The ID of the participant to delete.", required = true)

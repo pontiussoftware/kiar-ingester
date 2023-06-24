@@ -477,7 +477,7 @@
       "delete" : {
         "tags" : [ "Config", "Participant" ],
         "summary" : "Deletes and existing participant.",
-        "operationId" : "getListParticipants",
+        "operationId" : "deleteParticipant",
         "parameters" : [ {
           "name" : "id",
           "in" : "path",
@@ -529,7 +529,7 @@
       "post" : {
         "tags" : [ "Config", "Participant" ],
         "summary" : "Creates a new participant.",
-        "operationId" : "getListParticipants",
+        "operationId" : "postCreateParticipant",
         "parameters" : [ {
           "name" : "name",
           "in" : "path",
