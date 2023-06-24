@@ -58,15 +58,15 @@ export class AuthenticationService {
    * This function is used to check if a particular route can be activated. It is
    * used by the {@link CanActivateFn} defined in guards.ts
    *
-   * @param rolesAllows The list of {@link Role}s allowed
+   * @param rolesAllowed The list of {@link Role}s allowed
    * @param route
    * @param state
    */
-  public canActivate(rolesAllows: Array<Role>, route: ActivatedRouteSnapshot, state: RouterStateSnapshot): Promise<boolean | UrlTree> {
+  public canActivate(rolesAllowed: Array<Role>, route: ActivatedRouteSnapshot, state: RouterStateSnapshot): Promise<boolean | UrlTree> {
     return firstValueFrom(this.session.status().pipe(
         map(s => {
             this._status.next(s);
-            if (rolesAllows.indexOf(s.role) > -1) {
+            if (rolesAllowed.length == 0 || rolesAllowed.indexOf(s.role) > -1) {
               return true
             } else {
               return this.router.parseUrl('/forbidden')

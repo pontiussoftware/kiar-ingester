@@ -7,11 +7,13 @@ import {BrowserModule} from "@angular/platform-browser";
 import {FormsModule, ReactiveFormsModule} from "@angular/forms";
 import {MatSnackBarModule} from "@angular/material/snack-bar";
 import {ForbiddenComponent} from "./forbidden/forbidden.component";
+import {ProfileComponent} from "./user/profile.component";
 
 @NgModule({
   declarations: [
       LoginComponent,
-    ForbiddenComponent
+      ForbiddenComponent,
+      ProfileComponent
   ],
   imports: [
       BrowserModule,
@@ -24,7 +26,8 @@ import {ForbiddenComponent} from "./forbidden/forbidden.component";
   ],
   exports: [
       LoginComponent,
-      ForbiddenComponent
+      ForbiddenComponent,
+      ProfileComponent
   ]
 })
 export class SessionModule {}

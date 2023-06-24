@@ -24,3 +24,10 @@ export const canActivateManager: CanActivateFn = (route: ActivatedRouteSnapshot,
 export const canActivateViewer: CanActivateFn = (route: ActivatedRouteSnapshot, state: RouterStateSnapshot) => {
   return inject(AuthenticationService).canActivate([Role.ADMINISTRATOR, Role.MANAGER, Role.VIEWER], route, state);
 };
+
+/**
+ * Guard used to determine if a view can be activated. Used for views that can be activated by everybody, as long as they are logged in.
+ */
+export const canActivateEverybody: CanActivateFn = (route: ActivatedRouteSnapshot, state: RouterStateSnapshot) => {
+  return inject(AuthenticationService).canActivate([], route, state);
+};
