@@ -6,6 +6,7 @@ import {AddEntityMappingDialogComponent} from "./add-entity-mapping-dialog.compo
 import {MatSnackBar, MatSnackBarConfig} from "@angular/material/snack-bar";
 import {AddSolrConfigDialogComponent} from "./add-solr-config.dialog.component";
 import {AddJobTemplateDialogComponent} from "./add-job-template-dialog.component";
+import {AddParticipantDialogComponent} from "./add-participant-dialog.component";
 
 @Component({
   selector: 'kiar-admin-dashboard',
@@ -24,6 +25,9 @@ export class AdminDashboardComponent implements AfterViewInit {
   /** {@link Observable} of all available {@link SolrConfig}s. */
   public readonly solr: Observable<Array<SolrConfig>>
 
+  /** {@link Observable} of all available participants. */
+  public readonly participant: Observable<Array<String>>
+
   /** A {@link Subject} that can be used to trigger a data reload. */
   private reload = new Subject<void>()
 
@@ -40,6 +44,11 @@ export class AdminDashboardComponent implements AfterViewInit {
 
     this.solr = this.reload.pipe(
         mergeMap(m => this.config.getListSolrConfiguration()),
+        shareReplay(1)
+    );
+
+    this.participant = this.reload.pipe(
+        mergeMap(m => this.config.getListParticipants()),
         shareReplay(1)
     );
   }
@@ -90,7 +99,7 @@ export class AdminDashboardComponent implements AfterViewInit {
   /**
    * Opens a dialog to create a new {@link EntityMapping}.
    */
-  public addSolrConfigMapping() {
+  public addSolrConfig() {
     this._dialog.open(AddSolrConfigDialogComponent).afterClosed().subscribe(config => {
       if (config != null) {
         this.config.postCreateSolrConfig(config).subscribe({
@@ -101,6 +110,24 @@ export class AdminDashboardComponent implements AfterViewInit {
           error: err => this._snackBar.open(`Error occurred while trying to create Apache Solr config: ${err?.error?.description}.`, "Dismiss", { duration: 2000 } as MatSnackBarConfig),
           complete: () => {}
         } as Observer<SolrConfig>)
+      }
+    })
+  }
+
+  /**
+   * Opens a dialog to create a new {@link EntityMapping}.
+   */
+  public addParticipant() {
+    this._dialog.open(AddParticipantDialogComponent).afterClosed().subscribe(participant => {
+      if (participant != null) {
+        this.config.postCreateParticipant(participant).subscribe({
+          next: value => {
+            this._snackBar.open(`Successfully created participant.`, "Dismiss", { duration: 2000 } as MatSnackBarConfig);
+            this.reload.next()
+          },
+          error: err => this._snackBar.open(`Error occurred while trying to create participant: ${err?.error?.description}.`, "Dismiss", { duration: 2000 } as MatSnackBarConfig),
+          complete: () => {}
+        })
       }
     })
   }

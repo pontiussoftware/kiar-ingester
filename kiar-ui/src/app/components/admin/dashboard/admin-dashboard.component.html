@@ -1,5 +1,5 @@
 <div id="content">
-  <mat-card [style.width]="'25%'">
+  <mat-card [style.width]="'22.5%'">
     <mat-card-header>
       <mat-card-title>Job Templates ({{(templates | async)?.length}})</mat-card-title>
       <div class="space-flexible"></div>
@@ -23,7 +23,7 @@
     </mat-card-content>
   </mat-card>
 
-  <mat-card [style.width]="'25%'">
+  <mat-card [style.width]="'22.5%'">
     <mat-card-header>
       <mat-card-title>Entity Mappings ({{(mappings | async)?.length}})</mat-card-title>
       <div class="space-flexible"></div>
@@ -42,11 +42,11 @@
     </mat-card-content>
   </mat-card>
 
-  <mat-card [style.width]="'25%'">
+  <mat-card [style.width]="'22.5%'">
     <mat-card-header>
       <mat-card-title>Apache Solr Configurations ({{(solr | async)?.length}})</mat-card-title>
       <div class="space-flexible"></div>
-      <button mat-mini-fab color="primary" aria-label="Adds a new Apache Solr configuration." (click)="addSolrConfigMapping()">
+      <button mat-mini-fab color="primary" aria-label="Adds a new Apache Solr configuration." (click)="addSolrConfig()">
         <mat-icon>add</mat-icon>
       </button>
     </mat-card-header>
@@ -61,4 +61,21 @@
     </mat-card-content>
   </mat-card>
 
+
+  <mat-card [style.width]="'22.5%'">
+    <mat-card-header>
+      <mat-card-title>Participants ({{(participant | async)?.length}})</mat-card-title>
+      <div class="space-flexible"></div>
+      <button mat-mini-fab color="primary" aria-label="Adds a new Apache Solr configuration." (click)="addParticipant()">
+        <mat-icon>add</mat-icon>
+      </button>
+    </mat-card-header>
+    <mat-card-content>
+      <mat-list>
+        <mat-list-item *ngFor="let p of (participant | async)">
+          <span matListItemTitle>{{p}}</span>
+        </mat-list-item>
+      </mat-list>
+    </mat-card-content>
+  </mat-card>
 </div>

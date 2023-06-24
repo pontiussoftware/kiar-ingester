@@ -21,11 +21,13 @@ import {AddEntityMappingDialogComponent} from "./dashboard/add-entity-mapping-di
 import {MatTooltipModule} from "@angular/material/tooltip";
 import {AddSolrConfigDialogComponent} from "./dashboard/add-solr-config.dialog.component";
 import {AddJobTemplateDialogComponent} from "./dashboard/add-job-template-dialog.component";
+import {AddParticipantDialogComponent} from "./dashboard/add-participant-dialog.component";
 
 @NgModule({
   declarations: [
     AddEntityMappingDialogComponent,
     AddJobTemplateDialogComponent,
+    AddParticipantDialogComponent,
     AddSolrConfigDialogComponent,
     AdminDashboardComponent,
     AttributeMappingDialogComponent,

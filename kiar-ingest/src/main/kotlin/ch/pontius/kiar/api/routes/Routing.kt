@@ -31,8 +31,8 @@ fun configureApiRoutes(store: TransientEntityStore) {
 
         /* Endpoints related to participants. */
         get("participants", { ctx -> listParticipants(ctx, store) }, Role.ADMINISTRATOR, Role.MANAGER )
-        post("participants", { ctx -> createParticipants(ctx, store) }, Role.ADMINISTRATOR )
         path("participants") {
+            post("{name}", { ctx -> createParticipants(ctx, store) }, Role.ADMINISTRATOR )
             delete("{id}",  { ctx -> deleteParticipants(ctx, store) }, Role.ADMINISTRATOR )
         }
 

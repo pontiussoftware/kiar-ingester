@@ -16,7 +16,7 @@ export class AddJobTemplateDialogComponent {
       description: new FormControl(''),
       type: new FormControl(JobType.KIAR, [Validators.required]),
       startAutomatically: new FormControl(false),
-      participantName: new FormControl('test', [Validators.required]),
+      participantName: new FormControl('', [Validators.required]),
       entityMappingName: new FormControl('', [Validators.required]),
       solrConfigName: new FormControl('', [Validators.required]),
   })
@@ -30,10 +30,14 @@ export class AddJobTemplateDialogComponent {
   /** An {@link Observable} of available {@link SolrConfig}. */
   public readonly types: Observable<Array<JobType>>
 
+  /** An {@link Observable} of available participants. */
+  public readonly participants: Observable<Array<String>>
+
   constructor(private config: ConfigService, private dialogRef: MatDialogRef<AddJobTemplateDialogComponent>) {
     this.mappings = this.config.getListEntityMappings().pipe(shareReplay(1, 30000))
     this.solr = this.config.getListSolrConfiguration().pipe(shareReplay(1, 30000))
     this.types = this.config.getListJobTemplateTypes().pipe(shareReplay(1, 30000))
+    this.participants = this.config.getListParticipants().pipe(shareReplay(1, 30000))
   }
 
   /**
