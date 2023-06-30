@@ -4,7 +4,9 @@ import ch.pontius.kiar.api.model.session.Role
 import ch.pontius.kiar.api.routes.config.*
 import ch.pontius.kiar.api.routes.job.getActiveJobs
 import ch.pontius.kiar.api.routes.job.getInactiveJobs
+import ch.pontius.kiar.api.routes.job.uploadKiar
 import ch.pontius.kiar.api.routes.session.*
+import ch.pontius.kiar.config.Config
 import createEntityMapping
 import deleteEntityMapping
 import getEntityMapping
@@ -19,7 +21,7 @@ import updateEntityMapping
  *
  * @param store The [TransientEntityStore] used for persistence.
  */
-fun configureApiRoutes(store: TransientEntityStore) {
+fun configureApiRoutes(store: TransientEntityStore, config: Config) {
     /** Path to API related functionality. */
     path("api") {
         /** All paths related to session, login and logout handling. */
@@ -35,6 +37,9 @@ fun configureApiRoutes(store: TransientEntityStore) {
         path("jobs") {
             get("active", { ctx -> getActiveJobs(ctx, store) }, Role.ADMINISTRATOR, Role.MANAGER, Role.VIEWER )
             get("inactive",  { ctx -> getInactiveJobs(ctx, store) }, Role.ADMINISTRATOR, Role.MANAGER, Role.VIEWER )
+            path("{id}") {
+                post("upload",  { ctx -> uploadKiar(ctx, store, config) }, Role.ADMINISTRATOR, Role.MANAGER )
+            }
         }
 
         /* Endpoints related to participants. */

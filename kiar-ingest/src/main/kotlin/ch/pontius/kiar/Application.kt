@@ -66,7 +66,7 @@ fun main(args: Array<String>) {
 
         /* Start Javalin web-server (if configured). */
         if (config.web) {
-            initializeWebserver(store).start(config.webPort)
+            initializeWebserver(store, config).start(config.webPort)
         }
 
         /* Start CLI (if configured). */
@@ -253,19 +253,19 @@ private fun checkAndSetup(store: TransientEntityStore, config: Config) = store.t
  *
  * @return [TransientEntityStore]
  */
-private fun initializeWebserver(store: TransientEntityStore) = Javalin.create { config ->
+private fun initializeWebserver(store: TransientEntityStore, config: Config) = Javalin.create { c ->
 
 
     /* Access to resources is determined by database users. */
-    config.accessManager(DatabaseAccessManager(store))
+    c.accessManager(DatabaseAccessManager(store))
 
     /* Configure static routes for SPA. */
-    config.staticFiles.add{
+    c.staticFiles.add{
         it.directory = "html"
         it.location = Location.CLASSPATH
     }
-    config.spaRoot.addFile("/", "html/index.html")
-    config.plugins.enableCors { cors ->
+    c.spaRoot.addFile("/", "html/index.html")
+    c.plugins.enableCors { cors ->
         cors.add {
             it.reflectClientOrigin = true // anyHost() has similar implications and might be used in production? I'm not sure how to cope with production and dev here simultaneously
             it.allowCredentials = true
@@ -273,10 +273,10 @@ private fun initializeWebserver(store: TransientEntityStore) = Javalin.create { 
     }
 
     /* We use Kotlinx serialization for de-/serialization. */
-    config.jsonMapper(KotlinxJsonMapper)
+    c.jsonMapper(KotlinxJsonMapper)
 
     /* Registers Open API plugin. */
-    config.plugins.register(
+    c.plugins.register(
         OpenApiPlugin(
             OpenApiPluginConfiguration()
                 .withDocumentationPath("/swagger-docs")
@@ -294,7 +294,7 @@ private fun initializeWebserver(store: TransientEntityStore) = Javalin.create { 
     )
 
     /* Registers Swagger Plugin. */
-    config.plugins.register(
+    c.plugins.register(
         SwaggerPlugin(
             SwaggerConfiguration().apply {
                 this.version = "4.10.3"
@@ -304,7 +304,7 @@ private fun initializeWebserver(store: TransientEntityStore) = Javalin.create { 
         )
     )
 }.routes {
-    configureApiRoutes(store)
+    configureApiRoutes(store, config)
 }.exception(ErrorStatusException::class.java) { e, ctx ->
     ctx.status(e.code).json(ErrorStatus(e.code, e.message))
 }.exception(Exception::class.java) { e, ctx ->
