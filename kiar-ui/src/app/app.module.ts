@@ -13,7 +13,6 @@ import {MatIconModule} from "@angular/material/icon";
 import {ServiceModule} from "./services/service.module";
 import {MatMenuModule} from "@angular/material/menu";
 import {DashboardModule} from "./components/dashboard/dashboard.module";
-import {AdminDashboardComponent} from "./components/admin/dashboard/admin-dashboard.component";
 import {AdminModule} from "./components/admin/admin.module";
 
 
@@ -23,7 +22,7 @@ import {AdminModule} from "./components/admin/admin.module";
  * @param appConfig Reference (provided by DI).
  */
 export function initializeApiConfig() {
-  return new Configuration({ basePath: "http://localhost:7070", withCredentials: true }); /* TODO: Change. */
+  return new Configuration({ basePath: window.location.origin, withCredentials: true });
 }
 
 @NgModule({
