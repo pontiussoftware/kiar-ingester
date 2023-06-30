@@ -93,6 +93,7 @@ class IngesterServer(private val store: TransientEntityStore, private val config
                 this.source = DbJobSource.WATCHER
                 this.status = DbJobStatus.RUNNING
                 this.createdAt = DateTime.now()
+                this.createdByName = "SYSTEM"
             }
             job to pipeline
         }

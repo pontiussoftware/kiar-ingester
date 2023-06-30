@@ -2,6 +2,8 @@ package ch.pontius.kiar.api.routes
 
 import ch.pontius.kiar.api.model.session.Role
 import ch.pontius.kiar.api.routes.config.*
+import ch.pontius.kiar.api.routes.job.getActiveJobs
+import ch.pontius.kiar.api.routes.job.getInactiveJobs
 import ch.pontius.kiar.api.routes.session.*
 import createEntityMapping
 import deleteEntityMapping
@@ -27,6 +29,12 @@ fun configureApiRoutes(store: TransientEntityStore) {
             get("status", { ctx -> status(ctx, store) }, Role.ADMINISTRATOR, Role.VIEWER, Role.MANAGER )
             get("user", { ctx -> getUser(ctx, store) }, Role.ADMINISTRATOR, Role.VIEWER, Role.MANAGER )
             post("user", { ctx -> updateUser(ctx, store) }, Role.ADMINISTRATOR, Role.VIEWER, Role.MANAGER )
+        }
+
+        /* Endpoints related to jobs. */
+        path("jobs") {
+            get("active", { ctx -> getActiveJobs(ctx, store) }, Role.ADMINISTRATOR, Role.MANAGER, Role.VIEWER )
+            get("inactive",  { ctx -> getInactiveJobs(ctx, store) }, Role.ADMINISTRATOR, Role.MANAGER, Role.VIEWER )
         }
 
         /* Endpoints related to participants. */

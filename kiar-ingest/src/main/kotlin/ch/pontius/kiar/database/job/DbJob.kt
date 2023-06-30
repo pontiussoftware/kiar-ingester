@@ -1,5 +1,6 @@
 package ch.pontius.kiar.database.job
 
+import ch.pontius.kiar.api.model.job.Job
 import ch.pontius.kiar.database.config.jobs.DbJobTemplate
 import ch.pontius.kiar.database.institution.DbUser
 import jetbrains.exodus.entitystore.Entity
@@ -30,5 +31,17 @@ class DbJob(entity: Entity) : XdEntity(entity) {
     var createdAt by xdRequiredDateTimeProp()
 
     /** The [DbUser] that started this [DbJob]. */
+    var createdByName by xdRequiredStringProp {  }
+
+    /** The [DbUser] that started this [DbJob]. */
     var createdBy by xdLink0_1(DbUser)
+
+    /**
+     * Convenience method to convert this [DbJob] to a [Job].
+     *
+     * Requires an ongoing transaction.
+     *
+     * @return [Job]
+     */
+    fun toApi() = Job(this.xdId, this.name, this.status.toApi(), this.source.toApi(), this.template?.name, this.createdAt.millis, this.createdByName)
 }
