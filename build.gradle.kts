@@ -78,7 +78,7 @@ tasks.register("generateOpenApi") {
         val outputDir = project.file("kiar-ui/openapi")
         val configOptions = mapOf(
             "npmName" to "@kiar-openapi/api",
-            "ngVersion" to "15.2.8",
+            "ngVersion" to "16.0.2",
             "snapshot" to "true", /// I suggest to remove this, as soon as we automate this,
             "enumPropertyNaming" to "original"
         )
