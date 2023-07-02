@@ -5,9 +5,11 @@ import ch.pontius.kiar.api.model.status.ErrorStatus
 import ch.pontius.kiar.api.routes.session.currentUser
 import ch.pontius.kiar.database.institution.DbRole
 import ch.pontius.kiar.database.job.DbJob
+import ch.pontius.kiar.utilities.mapToArray
 import io.javalin.http.Context
 import io.javalin.openapi.*
 import jetbrains.exodus.database.TransientEntityStore
+import kotlinx.dnq.query.asSequence
 import kotlinx.dnq.query.emptyQuery
 import kotlinx.dnq.query.filter
 import kotlinx.dnq.query.toList
@@ -42,7 +44,7 @@ fun getActiveJobs(ctx: Context, store: TransientEntityStore) {
             }
             else -> DbJob.emptyQuery()
         }
-        ctx.json(jobs.toList())
+        ctx.json(jobs.mapToArray { it.toApi() })
     }
 }
 
@@ -75,6 +77,6 @@ fun getInactiveJobs(ctx: Context, store: TransientEntityStore) {
             }
             else -> DbJob.emptyQuery()
         }
-        ctx.json(jobs.toList())
+        ctx.json(jobs.mapToArray { it.toApi() })
     }
 }

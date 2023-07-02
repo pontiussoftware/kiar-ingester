@@ -1,9 +1,110 @@
 <p>Your dashboard!</p>
 <mat-tab-group>
   <mat-tab label="Running" i18n-label="@@TabLabelRunning">
-    Content 1
+    <table mat-table [dataSource]="(activeJobs | async)" class="mat-elevation-z8">
+
+      <!--- Note that these columns can be defined in any order.
+            The actual rendered columns are set as a property on the row definition" -->
+
+      <!-- Name Column -->
+      <ng-container matColumnDef="name">
+        <th mat-header-cell *matHeaderCellDef i18n="@@ColHeaderName"> Name </th>
+        <td mat-cell *matCellDef="let element"> {{element.name}} </td>
+      </ng-container>
+
+      <!-- Name Column -->
+      <ng-container matColumnDef="status">
+        <th mat-header-cell *matHeaderCellDef i18n="@@ColHeaderStatus"> Status </th>
+        <td mat-cell *matCellDef="let element"> {{element.status}} </td>
+      </ng-container>
+
+      <!-- Weight Column -->
+      <ng-container matColumnDef="source">
+        <th mat-header-cell *matHeaderCellDef i18n="@@ColHeaderSource"> Source </th>
+        <td mat-cell *matCellDef="let element"> {{element.source}} </td>
+      </ng-container>
+
+      <!-- Symbol Column -->
+      <ng-container matColumnDef="template">
+        <th mat-header-cell *matHeaderCellDef i18n="@@ColHeaderTemplate"> Template </th>
+        <td mat-cell *matCellDef="let element"> {{element.templateName}} </td>
+      </ng-container>
+
+      <!-- Created At Column -->
+      <ng-container matColumnDef="createdAt">
+        <th mat-header-cell *matHeaderCellDef i18n="@@ColHeaderCreatedAt"> Created At </th>
+        <td mat-cell *matCellDef="let element"> {{element.createdAt}} </td>
+      </ng-container>
+
+
+      <!-- Created By Column -->
+      <ng-container matColumnDef="createdBy">
+        <th mat-header-cell *matHeaderCellDef i18n="@@ColHeaderCreatedBy"> Created By </th>
+        <td mat-cell *matCellDef="let element"> {{element.createdBy}} </td>
+      </ng-container>
+
+
+      <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+      <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
+
+      <!-- Row shown when there is no matching data that will be provided to the wrapper table. -->
+      <tr class="mat-row" *matNoDataRow>
+        <td class="mat-cell" colspan="6">No data</td>
+      </tr>
+    </table>
   </mat-tab>
+
   <mat-tab label="History" i18n-label="@@TabLabelHistory">
-    Content 2
+    <table mat-table [dataSource]="(jobHistory | async)" class="mat-elevation-z8">
+
+      <!--- Note that these columns can be defined in any order.
+            The actual rendered columns are set as a property on the row definition" -->
+
+      <!-- Name Column -->
+      <ng-container matColumnDef="name">
+        <th mat-header-cell *matHeaderCellDef i18n="@@ColHeaderName"> Name </th>
+        <td mat-cell *matCellDef="let element"> {{element.name}} </td>
+      </ng-container>
+
+      <!-- Name Column -->
+      <ng-container matColumnDef="status">
+        <th mat-header-cell *matHeaderCellDef i18n="@@ColHeaderStatus"> Status </th>
+        <td mat-cell *matCellDef="let element"> {{element.status}} </td>
+      </ng-container>
+
+      <!-- Weight Column -->
+      <ng-container matColumnDef="source">
+        <th mat-header-cell *matHeaderCellDef i18n="@@ColHeaderSource"> Source </th>
+        <td mat-cell *matCellDef="let element"> {{element.source}} </td>
+      </ng-container>
+
+      <!-- Symbol Column -->
+      <ng-container matColumnDef="template">
+        <th mat-header-cell *matHeaderCellDef i18n="@@ColHeaderTemplate"> Template </th>
+        <td mat-cell *matCellDef="let element"> {{element.templateName}} </td>
+      </ng-container>
+
+      <!-- Created At Column -->
+      <ng-container matColumnDef="createdAt">
+        <th mat-header-cell *matHeaderCellDef i18n="@@ColHeaderCreatedAt"> Created At </th>
+        <td mat-cell *matCellDef="let element"> {{element.createdAt}} </td>
+      </ng-container>
+
+
+      <!-- Created By Column -->
+      <ng-container matColumnDef="createdBy">
+        <th mat-header-cell *matHeaderCellDef i18n="@@ColHeaderCreatedBy"> Created By </th>
+        <td mat-cell *matCellDef="let element"> {{element.createdBy}} </td>
+      </ng-container>
+
+
+      <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+      <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
+
+      <!-- Row shown when there is no matching data that will be provided to the wrapper table. -->
+      <tr class="mat-row" *matNoDataRow>
+        <td class="mat-cell" colspan="6">No data</td>
+      </tr>
+    </table>
   </mat-tab>
 </mat-tab-group>

@@ -1,6 +1,5 @@
 import {AfterViewInit, Component} from "@angular/core";
 import {MatDialog} from "@angular/material/dialog";
-import {KiarUploadComponent} from "./job/kiar-upload.component";
 import {Job, JobService} from "../../../../openapi";
 import {mergeMap, Observable, shareReplay, Subject} from "rxjs";
 
@@ -10,6 +9,10 @@ import {mergeMap, Observable, shareReplay, Subject} from "rxjs";
   styleUrls: ['./dashboard.component.scss']
 })
 export class DashboardComponent implements AfterViewInit {
+
+  /** Name of the columns being displayed by the data table. */
+  public readonly displayedColumns: string[] = ['name', 'status', 'source', 'template', 'createdAt', 'createdBy'];
+
   /** {@link Observable} of all available participants. */
   public readonly activeJobs: Observable<Array<Job>>
 
@@ -32,6 +35,7 @@ export class DashboardComponent implements AfterViewInit {
   }
 
   ngAfterViewInit(): void {
+    this.reload.next()
   }
 
 }
