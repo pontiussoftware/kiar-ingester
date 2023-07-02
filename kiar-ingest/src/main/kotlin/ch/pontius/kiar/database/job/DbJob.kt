@@ -19,13 +19,13 @@ class DbJob(entity: Entity) : XdEntity(entity) {
     var name by xdRequiredStringProp(unique = true, trimmed = true)
 
     /** The number of items processed by this [DbJob]. */
-    var processed by xdRequiredLongProp()
+    var processed by xdLongProp()
 
     /** The number of items skipped by this [DbJob]. */
-    var skipped by xdRequiredLongProp()
+    var skipped by xdLongProp()
 
     /** The number of errors that occurred while processing this [DbJob]. */
-    var error by xdRequiredLongProp()
+    var error by xdLongProp()
 
     /** The [DbJobStatus] this [DbJob]. */
     var status by xdLink1(DbJobStatus)
