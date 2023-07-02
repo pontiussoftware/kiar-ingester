@@ -17,13 +17,11 @@ import ch.pontius.kiar.database.config.solr.DbSolr
 import ch.pontius.kiar.database.config.transformers.DbTransformer
 import ch.pontius.kiar.database.config.transformers.DbTransformerParameter
 import ch.pontius.kiar.database.config.transformers.DbTransformerType
-import ch.pontius.kiar.database.job.DbJob
-import ch.pontius.kiar.database.job.DbJobStatus
 import ch.pontius.kiar.database.institution.DbInstitution
 import ch.pontius.kiar.database.institution.DbParticipant
 import ch.pontius.kiar.database.institution.DbRole
 import ch.pontius.kiar.database.institution.DbUser
-import ch.pontius.kiar.database.job.DbJobSource
+import ch.pontius.kiar.database.job.*
 import ch.pontius.kiar.utilities.KotlinxJsonMapper
 import ch.pontius.kiar.utilities.generatePassword
 import io.javalin.Javalin
@@ -129,6 +127,9 @@ private fun initializeDatabase(config: Config): TransientEntityStore {
         DbTransformerType,
         DbParticipant,
         DbJob,
+        DbJobLog,
+        DbJobLogLevel,
+        DbJobLogContext,
         DbJobStatus,
         DbInstitution,
         DbRole,

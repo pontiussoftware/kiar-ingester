@@ -1,5 +1,6 @@
 package ch.pontius.kiar.ingester.processors.sources
 
+import ch.pontius.kiar.ingester.processors.ProcessingContext
 import kotlinx.coroutines.flow.Flow
 
 /**
@@ -9,13 +10,11 @@ import kotlinx.coroutines.flow.Flow
  * @version 1.0.0
  */
 interface Source<O> {
-    /** Name of this [Source]'s context. */
-    val context: String
-
     /**
      * Transforms this [Source] to a flow and returns that flow.
      *
+     * @param context The [ProcessingContext] for this [Source].
      * @return [Flow] of this [Source].
      */
-    fun toFlow(): Flow<O>
+    fun toFlow(context: ProcessingContext): Flow<O>
 }

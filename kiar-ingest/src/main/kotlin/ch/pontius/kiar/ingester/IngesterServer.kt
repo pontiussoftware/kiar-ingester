@@ -4,8 +4,10 @@ import ch.pontius.kiar.config.Config
 import ch.pontius.kiar.database.config.jobs.DbJobTemplate
 import ch.pontius.kiar.database.institution.DbUser
 import ch.pontius.kiar.database.job.DbJob
+import ch.pontius.kiar.database.job.DbJobLog
 import ch.pontius.kiar.database.job.DbJobSource
 import ch.pontius.kiar.database.job.DbJobStatus
+import ch.pontius.kiar.ingester.processors.ProcessingContext
 import ch.pontius.kiar.ingester.watcher.FileWatcher
 import jetbrains.exodus.database.TransientEntityStore
 import kotlinx.coroutines.flow.collect
@@ -134,7 +136,8 @@ class IngesterServer(private val store: TransientEntityStore, val config: Config
 
 
         /* Prepare flow including finalization. */
-        val flow = pipeline.toFlow().onCompletion { e ->
+        val context = ProcessingContext(templateName)
+        val flow = pipeline.toFlow(context).onCompletion { e ->
             this@IngesterServer.store.transactional {
                 job.reattach(it)
                 if (e != null) {
@@ -144,13 +147,25 @@ class IngesterServer(private val store: TransientEntityStore, val config: Config
                     LOGGER.info("Data ingest (name = ${job.name}) completed successfully!")
                     job.status = DbJobStatus.FAILED
                 }
+
+                /* Update job with collected metrics. */
+                job.processed = context.processed
+                job.error = context.error
+                job.skipped = context.skipped
+
+                for (log in context.log) {
+                    job.log.add(DbJobLog.new {
+                        this.documentId = log.documentId
+                        this.context = log.context.toDb()
+                        this.level = log.level.toDb()
+                        this.description = log.description
+                    })
+                }
             }
         }
 
         /* Execute job. */
-        this.service.execute {
-            runBlocking { flow.collect() }
-        }
+        runBlocking { flow.collect() }
     }
 
     /**

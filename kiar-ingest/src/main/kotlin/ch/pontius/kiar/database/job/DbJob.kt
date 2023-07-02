@@ -18,6 +18,15 @@ class DbJob(entity: Entity) : XdEntity(entity) {
     /** Name of this [DbJob]. */
     var name by xdRequiredStringProp(unique = true, trimmed = true)
 
+    /** The number of items processed by this [DbJob]. */
+    var processed by xdRequiredLongProp()
+
+    /** The number of items skipped by this [DbJob]. */
+    var skipped by xdRequiredLongProp()
+
+    /** The number of errors that occurred while processing this [DbJob]. */
+    var error by xdRequiredLongProp()
+
     /** The [DbJobStatus] this [DbJob]. */
     var status by xdLink1(DbJobStatus)
 
@@ -35,6 +44,9 @@ class DbJob(entity: Entity) : XdEntity(entity) {
 
     /** The [DbUser] that started this [DbJob]. */
     var createdBy by xdLink0_1(DbUser)
+
+    /** The [DbJobLog] entries associated with this [DbJob]. */
+    val log by xdChildren0_N(DbJobLog::job)
 
     /**
      * Convenience method to convert this [DbJob] to a [Job].

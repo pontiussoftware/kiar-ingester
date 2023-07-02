@@ -88,7 +88,7 @@ class DbJobTemplate(entity: Entity) : XdEntity(entity) {
     fun newInstance(config: Config): ApacheSolrSink {
         /* Generate file source. */
         val source: Source<SolrInputDocument> = when (this.type.description) {
-            "XML" -> XmlFileSource(this.name, this.sourcePath(config), this.mapping.toApi())
+            "XML" -> XmlFileSource(this.sourcePath(config), this.mapping.toApi())
             else -> throw IllegalStateException("Unsupported transformer type '${this.type.description}'. This is a programmer's error!")
         }
         var root = source

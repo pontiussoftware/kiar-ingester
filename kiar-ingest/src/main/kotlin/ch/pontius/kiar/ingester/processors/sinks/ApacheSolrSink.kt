@@ -1,6 +1,10 @@
 package ch.pontius.kiar.ingester.processors.sinks
 
 import ch.pontius.kiar.api.model.config.solr.SolrConfig
+import ch.pontius.kiar.api.model.job.JobLog
+import ch.pontius.kiar.api.model.job.JobLogContext
+import ch.pontius.kiar.api.model.job.JobLogLevel
+import ch.pontius.kiar.ingester.processors.ProcessingContext
 import ch.pontius.kiar.ingester.processors.sources.Source
 import ch.pontius.kiar.ingester.solrj.Constants
 import ch.pontius.kiar.ingester.solrj.Constants.FIELD_NAME_PARTICIPANT
@@ -51,41 +55,43 @@ class ApacheSolrSink(override val input: Source<SolrInputDocument>, private val 
      *
      * @return [Flow]
      */
-    override fun toFlow(): Flow<Unit> = flow {
+    override fun toFlow(context: ProcessingContext): Flow<Unit> = flow {
         /* Prepare ingest. */
-        this@ApacheSolrSink.prepareIngest()
+        this@ApacheSolrSink.prepareIngest(context)
 
         /* Start collection of incoming flow. */
-        this@ApacheSolrSink.input.toFlow().collect() { doc ->
-            val uuid = doc[Constants.FIELD_NAME_UUID]
-            try {
-                LOGGER.debug("Incoming document (name = ${this@ApacheSolrSink.context}, uuid = $uuid).")
+        this@ApacheSolrSink.input.toFlow(context).collect() { doc ->
+            val uuid = doc[Constants.FIELD_NAME_UUID]?.value as? String ?: throw IllegalArgumentException("Field 'uuid' is either missing or has wrong type.")
+            LOGGER.debug("Incoming document (name = ${context.name}, uuid = $uuid).")
 
-                /* Add necessary system fields. */
-                doc.addField(FIELD_NAME_PARTICIPANT, this@ApacheSolrSink.context)
+            /* Add necessary system fields. */
+            doc.addField(FIELD_NAME_PARTICIPANT, context.name)
 
-                LOGGER.debug("Starting document ingest (name = ${this@ApacheSolrSink.context}, uuid = $uuid).")
-                for (c in this@ApacheSolrSink.config.collections) {
-                    try {
-                        if (c.isMatch(doc) && this@ApacheSolrSink.validate(c.name, doc)) {
+            LOGGER.debug("Starting document ingest (name = ${context.name}, uuid = $uuid).")
+            for (c in this@ApacheSolrSink.config.collections) {
+                try {
+                    if (c.isMatch(doc)) {
+                        if (this@ApacheSolrSink.validate(c.name, uuid, doc, context)) {
                             val response = this@ApacheSolrSink.client.add(c.name, this@ApacheSolrSink.sanitize(c.name, doc))
                             if (response.status == 0) {
-                                LOGGER.info("Successfully added document (name = ${this@ApacheSolrSink.context}, uuid = $uuid, collection = ${c.name}).")
+                                context.processed += 1
                             } else {
-                                LOGGER.warn("Error while adding document (name = ${this@ApacheSolrSink.context}, uuid = $uuid, collection = ${c.name}).")
+                                context.error += 1
+                                context.log.add(JobLog(null, uuid, JobLogContext.SYSTEM, JobLogLevel.SEVERE, "Failed to add document due to Apache Solr error."))
                             }
+                        } else {
+                            context.skipped += 1
                         }
-                    } catch (e: SolrServerException) {
-                        LOGGER.warn("Server reported error while adding document (name = ${this@ApacheSolrSink.context}, uuid = $uuid, collection = ${c.name}).")
                     }
+                } catch (e: SolrServerException) {
+                    context.error += 1
+                    context.log.add(JobLog(null, uuid, JobLogContext.SYSTEM, JobLogLevel.ERROR, "Failed to add document due to Apache Solr error: ${e.message}."))
                 }
-            } catch (e: Throwable) {
-                LOGGER.error("Serious error occurred while adding a document (name = ${this@ApacheSolrSink.context}, uuid = $uuid): $e")
             }
         }
 
         /* Finalize ingest for all collections. */
-        this@ApacheSolrSink.finalizeIngest()
+        this@ApacheSolrSink.finalizeIngest(context)
 
         emit(Unit)
     }
@@ -115,14 +121,15 @@ class ApacheSolrSink(override val input: Source<SolrInputDocument>, private val 
      * Validates the provided [SolrInputDocument]
      *
      * @param collection The name of the collection to validate the [SolrInputDocument] for.
+     * @param uuid The UUID of the [SolrInputDocument]
      * @param doc The [SolrInputDocument] to validate.
      * @return True on successful validation, false otherwise.
      */
-    private fun validate(collection: String, doc: SolrInputDocument): Boolean {
+    private fun validate(collection: String, uuid: String, doc: SolrInputDocument, context: ProcessingContext): Boolean {
         val validators = this.validators[collection] ?: throw IllegalStateException("No validators for collection ${collection}. This is a programmer's error!")
         for (v in validators) {
             if (!v.isValid(doc)) {
-                LOGGER.warn("Error while validating document (name = ${this@ApacheSolrSink.context}, uuid = ${doc[Constants.FIELD_NAME_UUID]}, collection = ${collection}): ${v.isInvalidReason(doc)}")
+                context.log.add(JobLog(null, uuid, JobLogContext.METADATA, JobLogLevel.ERROR, "Failed to validate document: ${v.isInvalidReason(doc)}."))
                 return false
             }
         }
@@ -148,26 +155,26 @@ class ApacheSolrSink(override val input: Source<SolrInputDocument>, private val 
     }
 
     /** Purge all collections that were configured. */
-    private fun prepareIngest() {
+    private fun prepareIngest(context: ProcessingContext) {
         /* Purge all collections that were configured. */
         for (c in this.config.collections) {
             if (c.deleteBeforeImport) {
-                LOGGER.info("Purging collection (name = ${this@ApacheSolrSink.context} collection = ${c.name}).")
-                val response = this.client.deleteByQuery(c.name, "$FIELD_NAME_PARTICIPANT:\"${this.context}\"")
+                LOGGER.info("Purging collection (name = ${context.name} collection = ${c.name}).")
+                val response = this.client.deleteByQuery(c.name, "$FIELD_NAME_PARTICIPANT:\"${context.name}\"")
                 if (response.status != 0) {
-                    LOGGER.error("Purge of collection failed (name = ${this@ApacheSolrSink.context} collection = ${c.name}). Aborting...")
-                    throw IllegalArgumentException("Data ingest (name = ${this.context}, collection = ${c.name}) failed because delete before import could not be executed.")
+                    LOGGER.error("Purge of collection failed (name = ${context.name} collection = ${c.name}). Aborting...")
+                    throw IllegalArgumentException("Data ingest (name = ${context.name}, collection = ${c.name}) failed because delete before import could not be executed.")
                 }
-                LOGGER.info("Purge of collection successful (name = ${this@ApacheSolrSink.context} collection = ${c.name}).")
+                LOGGER.info("Purge of collection successful (name = ${context.name} collection = ${c.name}).")
             }
         }
     }
 
     /* Purge all collections that were configured. */
-    private fun finalizeIngest() {
+    private fun finalizeIngest(context: ProcessingContext) {
         /* Purge all collections that were configured. */
         for (c in this.config.collections) {
-            LOGGER.info("Data ingest (name = ${this@ApacheSolrSink.context}, collection = ${c.name}) completed; committing...")
+            LOGGER.info("Data ingest (name = ${context.name}, collection = ${c.name}) completed; committing...")
             try {
                 val response = this.client.commit(c.name)
                 if (response.status == 0) {

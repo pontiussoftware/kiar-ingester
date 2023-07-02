@@ -1,6 +1,10 @@
 package ch.pontius.kiar.ingester.processors.transformers
 
+import ch.pontius.kiar.api.model.job.JobLog
+import ch.pontius.kiar.api.model.job.JobLogContext
+import ch.pontius.kiar.api.model.job.JobLogLevel
 import ch.pontius.kiar.config.TransformerConfig
+import ch.pontius.kiar.ingester.processors.ProcessingContext
 import ch.pontius.kiar.ingester.processors.sources.Source
 import ch.pontius.kiar.ingester.solrj.Constants.FIELD_NAME_RAW
 import ch.pontius.kiar.ingester.solrj.Constants.FIELD_NAME_UUID
@@ -46,23 +50,23 @@ class ImageTransformer(override val input: Source<SolrInputDocument>, parameters
     /**
      * Returns a [Flow] of this [ImageTransformer].
      */
-    override fun toFlow(): Flow<SolrInputDocument> {
+    override fun toFlow(context: ProcessingContext): Flow<SolrInputDocument> {
         /** The temporary directory to deploy images to. */
         if (!Files.exists(this.deployTo)) {
             throw IllegalArgumentException("Directory ${this.deployTo} does not exist!")
         }
 
         /* Prepare temporary directory. */
-        val ctxPath = this.deployTo.resolve(this.context)
+        val ctxPath = this.deployTo.resolve(context.name)
         val dst = ctxPath.resolve(this.name)
         val timestamp = System.currentTimeMillis()                         /* Destination directory, i.e., the directory that will contain all the generated images */
         val old = ctxPath.resolve("${this.name}-old-$timestamp")     /* Temporary location of the previous version of the destination directory (if exists). This is used to maintain atomicity. */
         val tmp = ctxPath.resolve("${this.name}-$timestamp")         /* Temporary location destination directory. This is used to maintain atomicity. */
 
         Files.createDirectories(tmp)
-        return this.input.toFlow().map {
+        return this.input.toFlow(context).map {
             if (it.containsKey(FIELD_NAME_RAW) && it.containsKey(FIELD_NAME_UUID)) {
-                val uuid = it[FIELD_NAME_UUID]!!.value as String
+                val uuid = it[FIELD_NAME_UUID]?.value as? String ?: throw IllegalArgumentException("Field 'uuid' is either missing or has wrong type.")
                 val images = it.getFieldValues(FIELD_NAME_RAW)
                 var counter = 1
                 for (original in images) {
@@ -75,6 +79,8 @@ class ImageTransformer(override val input: Source<SolrInputDocument>, parameters
                             } else {
                                 it.addField(this.name, "${this.host}${this.deployTo.relativize(actualPath)}")
                             }
+                        } else {
+                            context.log.add(JobLog(null, uuid, JobLogContext.RESOURCE, JobLogLevel.WARNING, "Failed to create preview image for document."))
                         }
                         counter += 1
                     }

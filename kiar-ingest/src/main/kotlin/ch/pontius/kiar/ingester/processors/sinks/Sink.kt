@@ -1,7 +1,7 @@
 package ch.pontius.kiar.ingester.processors.sinks
 
+import ch.pontius.kiar.ingester.processors.ProcessingContext
 import ch.pontius.kiar.ingester.processors.sources.Source
-import ch.pontius.kiar.ingester.processors.transformers.Transformer
 import kotlinx.coroutines.flow.Flow
 
 /**
@@ -14,14 +14,11 @@ interface Sink<I> {
     /** The [Source] that acts as input to this [Sink]. */
     val input: Source<I>
 
-    /** The [context]name  of this [Sink] is inherited from the [input]. */
-    val context: String
-        get() = this.input.context
-
     /**
      * Transforms this [Sink] to a flow and returns that flow.
      *
+     * @param context The [ProcessingContext] used by this [Sink].
      * @return [Flow] of this [Sink].
      */
-    fun toFlow(): Flow<Unit>
+    fun toFlow(context: ProcessingContext): Flow<Unit>
 }

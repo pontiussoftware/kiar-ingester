@@ -1,9 +1,9 @@
 package ch.pontius.kiar.ingester.processors.sources
 
-import ch.pontius.kiar.config.MappingConfig
 import ch.pontius.kiar.api.model.config.mappings.AttributeMapping
 import ch.pontius.kiar.api.model.config.mappings.EntityMapping
 import ch.pontius.kiar.ingester.parsing.xml.XmlParsingContext
+import ch.pontius.kiar.ingester.processors.ProcessingContext
 import ch.pontius.kiar.ingester.solrj.Constants.FIELD_NAME_UUID
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
@@ -23,7 +23,7 @@ import javax.xml.parsers.SAXParserFactory
  * @author Ralph Gasser
  * @version 1.1.0
  */
-class XmlFileSource(override val context: String, private val file: Path, private val config: EntityMapping): Source<SolrInputDocument> {
+class XmlFileSource(private val file: Path, private val config: EntityMapping): Source<SolrInputDocument> {
 
     companion object {
         private val LOGGER = LogManager.getLogger()
@@ -37,7 +37,7 @@ class XmlFileSource(override val context: String, private val file: Path, privat
      *
      * @return [Flow]
      */
-    override fun toFlow(): Flow<SolrInputDocument> = channelFlow {
+    override fun toFlow(context: ProcessingContext): Flow<SolrInputDocument> = channelFlow {
         val channel = this
         val factory: SAXParserFactory = SAXParserFactory.newInstance()
         val saxParser: SAXParser = factory.newSAXParser()
@@ -46,6 +46,8 @@ class XmlFileSource(override val context: String, private val file: Path, privat
                 runBlocking {
                     if (this@XmlFileSource.validate(doc)) {
                         channel.send(doc)
+                    } else {
+                        context.error += 1L
                     }
                 }
             }

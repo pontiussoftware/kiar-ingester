@@ -12,8 +12,4 @@ import ch.pontius.kiar.ingester.processors.sources.Source
 interface Transformer<I,O>: Source<O> {
     /** The [Source] that acts as input to this [Transformer]. */
     val input: Source<I>
-
-    /** The [context]name  of this [Transformer] is inherited from the [input]. */
-    override val context: String
-        get() = this.input.context
 }
