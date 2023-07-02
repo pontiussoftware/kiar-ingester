@@ -56,7 +56,7 @@ class DbJobTemplate(entity: Entity) : XdEntity(entity) {
      *
      * Requires an ongoing transaction!
      */
-    fun sourcePath(config: Config): Path = config.ingestPath.resolve(this.participant.name).resolve("${this.name} + ${this.type.suffix}")
+    fun sourcePath(config: Config): Path = config.ingestPath.resolve(this.participant.name).resolve("${this.name}.${this.type.suffix}")
 
     /**
      * Convenience method to convert this [DbJobType] to a [JobType].
