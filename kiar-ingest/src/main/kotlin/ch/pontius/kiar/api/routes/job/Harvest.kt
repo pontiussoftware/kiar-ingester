@@ -3,21 +3,25 @@ package ch.pontius.kiar.api.routes.job
 import ch.pontius.kiar.api.model.status.ErrorStatus
 import ch.pontius.kiar.api.model.status.ErrorStatusException
 import ch.pontius.kiar.api.model.status.SuccessStatus
+import ch.pontius.kiar.api.routes.session.currentUser
 import ch.pontius.kiar.config.Config
+import ch.pontius.kiar.database.institution.DbRole
 import ch.pontius.kiar.database.job.DbJob
 import ch.pontius.kiar.database.job.DbJobStatus
+import ch.pontius.kiar.ingester.IngesterServer
 import io.javalin.http.Context
 import io.javalin.openapi.*
 import jetbrains.exodus.database.TransientEntityStore
 import kotlinx.dnq.util.findById
 import java.nio.ByteBuffer
 import java.nio.file.Files
+import java.nio.file.StandardOpenOption
 
 @OpenApi(
     path = "/api/jobs/{id}/upload",
-    methods = [HttpMethod.POST],
+    methods = [HttpMethod.PUT],
     summary = "Uploads a KIAR for the given job.",
-    operationId = "uploadKiar",
+    operationId = "putUploadKiar",
     tags = ["Job"],
     pathParams = [
         OpenApiParam(name = "id", description = "The ID of the Job for which a KIAR should be uploaded.", required = true)
@@ -40,7 +44,7 @@ fun uploadKiar(ctx: Context, store: TransientEntityStore, config: Config) {
         }
 
         if (job.status != DbJobStatus.CREATED) {
-            throw ErrorStatusException(400, "Job with ID $jobId is in wrong status for KIAR upload.")
+            throw ErrorStatusException(400, "Job with ID $jobId is in wrong state.")
         }
 
         job.template?.participant?.name ?: throw ErrorStatusException(400, "Jov with ID $jobId is not associated with a proper participant.")
@@ -49,7 +53,7 @@ fun uploadKiar(ctx: Context, store: TransientEntityStore, config: Config) {
     /* Upload file. */
     val file = ctx.uploadedFile("kiar") ?: throw ErrorStatusException(400, "KIAR file is missing from upload.")
     file.content().use { input ->
-        Files.newOutputStream(config.ingestPath.resolve(participant).resolve("$jobId.kiar")).use { output ->
+        Files.newOutputStream(config.ingestPath.resolve(participant).resolve(jobId), StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING, StandardOpenOption.WRITE).use { output ->
             val buffer = ByteArray(10_000_000) /* 10 MB buffer. */
             var read = input.read(buffer)
             if (read > -1) {
@@ -81,4 +85,50 @@ fun uploadKiar(ctx: Context, store: TransientEntityStore, config: Config) {
 
     /* Return success. */
     ctx.json(SuccessStatus("KIAR file ${file.filename()} uploaded successfully."))
+}
+
+@OpenApi(
+    path = "/api/jobs/{id}/schedule",
+    methods = [HttpMethod.PUT],
+    summary = "Starts execution of a job.",
+    operationId = "putScheduleJob",
+    tags = ["Job"],
+    pathParams = [
+        OpenApiParam(name = "id", description = "The ID of the Job that should be started.", required = true)
+    ],
+    responses = [
+        OpenApiResponse("200", [OpenApiContent(SuccessStatus::class)]),
+        OpenApiResponse("401", [OpenApiContent(ErrorStatus::class)]),
+        OpenApiResponse("403", [OpenApiContent(ErrorStatus::class)]),
+        OpenApiResponse("500", [OpenApiContent(ErrorStatus::class)])
+    ]
+)
+fun scheduleJob(ctx: Context, store: TransientEntityStore, server: IngesterServer) {
+    val jobId = ctx.pathParam("id")
+
+    /* Perform sanity checks. */
+    store.transactional(true) {
+        val currentUser = ctx.currentUser()
+        val job = try {
+            DbJob.findById(jobId)
+        } catch (e: Throwable) {
+            throw ErrorStatusException(404, "Job with ID $jobId could not be found.")
+        }
+
+        /* Check status of the job. */
+        if (job.status != DbJobStatus.HARVESTED) {
+            throw ErrorStatusException(400, "Job with ID $jobId is in wrong state.")
+        }
+
+        /* Check if user is actually allowed to start the job. */
+        if (currentUser.role != DbRole.ADMINISTRATOR && job.template?.participant != currentUser.institution?.participant) {
+            throw ErrorStatusException(403, "You are not allowed to start job $jobId.")
+        }
+    }
+
+    /* Schedule job for execution. */
+    server.scheduleJob(jobId)
+
+    /* Return success. */
+    ctx.json(SuccessStatus("Job $jobId scheduled successfully."))
 }

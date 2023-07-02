@@ -2,9 +2,7 @@ package ch.pontius.kiar.api.routes
 
 import ch.pontius.kiar.api.model.session.Role
 import ch.pontius.kiar.api.routes.config.*
-import ch.pontius.kiar.api.routes.job.getActiveJobs
-import ch.pontius.kiar.api.routes.job.getInactiveJobs
-import ch.pontius.kiar.api.routes.job.uploadKiar
+import ch.pontius.kiar.api.routes.job.*
 import ch.pontius.kiar.api.routes.session.*
 import ch.pontius.kiar.config.Config
 import ch.pontius.kiar.ingester.IngesterServer
@@ -38,8 +36,10 @@ fun configureApiRoutes(store: TransientEntityStore, server: IngesterServer, conf
         path("jobs") {
             get("active", { ctx -> getActiveJobs(ctx, store) }, Role.ADMINISTRATOR, Role.MANAGER, Role.VIEWER )
             get("inactive",  { ctx -> getInactiveJobs(ctx, store) }, Role.ADMINISTRATOR, Role.MANAGER, Role.VIEWER )
+            post("create", { ctx -> createJob(ctx, store) }, Role.ADMINISTRATOR, Role.MANAGER)
             path("{id}") {
-                post("upload",  { ctx -> uploadKiar(ctx, store, config) }, Role.ADMINISTRATOR, Role.MANAGER )
+                put("upload",  { ctx -> uploadKiar(ctx, store, config) }, Role.ADMINISTRATOR, Role.MANAGER )
+                put("schedule",  { ctx -> scheduleJob(ctx, store, server) }, Role.ADMINISTRATOR, Role.MANAGER )
             }
         }
 

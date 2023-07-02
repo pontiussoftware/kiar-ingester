@@ -1,10 +1,14 @@
 package ch.pontius.kiar.ingester.watcher
 
+import ch.pontius.kiar.database.config.jobs.DbJobTemplate
+import ch.pontius.kiar.database.job.DbJob
+import ch.pontius.kiar.database.job.DbJobSource
+import ch.pontius.kiar.database.job.DbJobStatus
 import ch.pontius.kiar.ingester.IngesterServer
+import kotlinx.dnq.util.findById
 import org.apache.logging.log4j.LogManager
-import java.io.IOException
+import org.joda.time.DateTime
 import java.nio.file.*
-import kotlin.system.measureTimeMillis
 
 
 /**
@@ -13,14 +17,11 @@ import kotlin.system.measureTimeMillis
  * @author Ralph Gasser
  * @version 1.1.0
  */
-class FileWatcher(private val server: IngesterServer, private val templateName: String, private val file: Path): Runnable {
+class FileWatcher(private val server: IngesterServer, private val templateId: String, private val file: Path): Runnable {
 
     companion object {
         private val LOGGER = LogManager.getLogger()
     }
-
-    /** Flag indicating whether file should be deleted once processing has concluded. */
-    private val delete: Boolean = false
 
     /** Flag indicating, that this [FileWatcher] has been cancelled. */
     @Volatile
@@ -43,24 +44,26 @@ class FileWatcher(private val server: IngesterServer, private val templateName: 
             /* Process the file by launching a Job. */
             LOGGER.info("New file detected: ${this.file}; scheduling job...")
             try {
-                val duration = measureTimeMillis {
-                    this.server.execute(this.templateName)
+                /* Create new job. */
+                val jobId = this@FileWatcher.server.store.transactional {
+                    val template = DbJobTemplate.findById(this@FileWatcher.templateId)
+                    DbJob.new {
+                        this.name = template.name + "-${System.currentTimeMillis()}"
+                        this.template = template
+                        this.source = DbJobSource.WATCHER
+                        this.status = DbJobStatus.CREATED
+                        this.createdAt = DateTime.now()
+                        this.createdByName = "SYSTEM"
+                    }.xdId
                 }
-                LOGGER.info("Processing of ${this.file} completed in $duration ms.")
-            } catch (e: Throwable) {
-                LOGGER.error("Processing of ${this.file} failed due to exception: ${e.message}.")
-            }
 
-            /* Perform cleanup. */
-            try {
-                if (this.delete) {
-                    Files.delete(this.file)
-                } else {
-                    Files.move(this.file, this.file.parent.resolve("${this.file.fileName}~${System.currentTimeMillis()}"))
-                }
-            } catch (e: IOException) {
-                LOGGER.error("Cleanup of ${this.file} failed due to IO exception: ${e.message}. Polling is aborted...")
-                break
+                /* Move file to new location. */
+                Files.move(this.file, this.file.parent.resolve(jobId), StandardCopyOption.ATOMIC_MOVE)
+
+                /* Schedule job. */
+                this.server.scheduleJob(jobId)
+            } catch (e: Throwable) {
+                LOGGER.error("Filed ${this.file} could not be processed due to exception: ${e.message}.")
             }
         }
 

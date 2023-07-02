@@ -75,30 +75,4 @@ class DbJobTemplate(entity: Entity) : XdEntity(entity) {
         this.solr.name,
         this.mapping.name
     )
-
-
-    /**
-     * Generates and returns a new [Transformer] instance from this [DbTransformer] entry.
-     *
-     * Requires an ongoing transactional context!
-     *
-     * @param config The KIAR tools [Config] object.
-     * @return [Transformer]
-     */
-    fun newInstance(config: Config): ApacheSolrSink {
-        /* Generate file source. */
-        val source: Source<SolrInputDocument> = when (this.type.description) {
-            "XML" -> XmlFileSource(this.sourcePath(config), this.mapping.toApi())
-            else -> throw IllegalStateException("Unsupported transformer type '${this.type.description}'. This is a programmer's error!")
-        }
-        var root = source
-
-        /* Generate all transformers source. */
-        for (t in this.transformers.asSequence()) {
-            root = t.newInstance(root)
-        }
-
-        /* Return ApacheSolrSink. */
-        return ApacheSolrSink(root, this.solr.toApi())
-    }
 }

@@ -19,6 +19,9 @@ export interface Job {
     status: JobStatus;
     source: JobSource;
     templateName?: string;
+    processed: number;
+    skipped: number;
+    error: number;
     createdAt: number;
     createdBy: string;
 }

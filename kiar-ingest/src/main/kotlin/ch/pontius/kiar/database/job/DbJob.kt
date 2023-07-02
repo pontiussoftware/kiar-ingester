@@ -1,10 +1,18 @@
 package ch.pontius.kiar.database.job
 
 import ch.pontius.kiar.api.model.job.Job
+import ch.pontius.kiar.config.Config
 import ch.pontius.kiar.database.config.jobs.DbJobTemplate
+import ch.pontius.kiar.database.config.transformers.DbTransformer
 import ch.pontius.kiar.database.institution.DbUser
+import ch.pontius.kiar.ingester.processors.sinks.ApacheSolrSink
+import ch.pontius.kiar.ingester.processors.sources.Source
+import ch.pontius.kiar.ingester.processors.sources.XmlFileSource
+import ch.pontius.kiar.ingester.processors.transformers.Transformer
 import jetbrains.exodus.entitystore.Entity
 import kotlinx.dnq.*
+import kotlinx.dnq.query.asSequence
+import org.apache.solr.common.SolrInputDocument
 
 /**
  * A [DbJob] as managed by the KIAR Tools.
@@ -47,6 +55,34 @@ class DbJob(entity: Entity) : XdEntity(entity) {
 
     /** The [DbJobLog] entries associated with this [DbJob]. */
     val log by xdChildren0_N(DbJobLog::job)
+
+
+    /**
+     * Generates and returns a new [Transformer] instance from this [DbTransformer] entry.
+     *
+     * Requires an ongoing transactional context!
+     *
+     * @param config The KIAR tools [Config] object.
+     * @return [Transformer]
+     */
+    fun toPipeline(config: Config): ApacheSolrSink {
+        val template = this.template ?: throw IllegalStateException("Failed to generated execution pipeline for job ${this.xdId}: Missing template.")
+
+        /* Generate file source. */
+        val source: Source<SolrInputDocument> = when (template.type.description) {
+            "XML" -> XmlFileSource(template.sourcePath(config), template.mapping.toApi())
+            else -> throw IllegalStateException("Unsupported transformer type '${template.type.description}'. This is a programmer's error!")
+        }
+        var root = source
+
+        /* Generate all transformers source. */
+        for (t in template.transformers.asSequence()) {
+            root = t.newInstance(root)
+        }
+
+        /* Return ApacheSolrSink. */
+        return ApacheSolrSink(root, template.solr.toApi())
+    }
 
     /**
      * Convenience method to convert this [DbJob] to a [Job].

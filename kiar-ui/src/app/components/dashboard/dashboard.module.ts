@@ -8,6 +8,8 @@ import {MatSnackBarModule} from "@angular/material/snack-bar";
 import {DashboardComponent} from "./dashboard.component";
 import {MatTabsModule} from "@angular/material/tabs";
 import {MatTableModule} from "@angular/material/table";
+import {MatIconModule} from "@angular/material/icon";
+import {MatTooltipModule} from "@angular/material/tooltip";
 
 @NgModule({
   declarations: [
@@ -23,6 +25,8 @@ import {MatTableModule} from "@angular/material/table";
     ReactiveFormsModule,
     MatTabsModule,
     MatTableModule,
+    MatIconModule,
+    MatTooltipModule,
   ],
   exports: [
     DashboardComponent

@@ -33,7 +33,6 @@ class Cli(config: Config, server: IngesterServer, store: TransientEntityStore) {
         init {
             subcommands(
                 UserCommand(store),
-                ScheduleCommand(server),
                 ExecuteCommand(server),
                 QuitCommand(server)
             )

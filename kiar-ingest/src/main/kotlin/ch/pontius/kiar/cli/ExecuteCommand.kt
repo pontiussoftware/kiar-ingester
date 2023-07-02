@@ -18,7 +18,7 @@ class ExecuteCommand(private val server: IngesterServer): CliktCommand(name = "e
     )
 
     override fun run() = try {
-        this.server.execute(this.jobName)
+        this.server.executeJob(this.jobName)
     } catch (e: IllegalArgumentException) {
         println("Failed to execute job: ${e.message}")
     }

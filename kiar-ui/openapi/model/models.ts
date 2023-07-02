@@ -1,5 +1,6 @@
 export * from './attributeMapping';
 export * from './collectionConfig';
+export * from './createJobRequest';
 export * from './entityMapping';
 export * from './errorStatus';
 export * from './job';

@@ -38,4 +38,10 @@ export class DashboardComponent implements AfterViewInit {
     this.reload.next()
   }
 
+  /**
+   *
+   */
+  public viewLog() {
+
+  }
 }

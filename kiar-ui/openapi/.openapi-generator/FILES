@@ -16,6 +16,7 @@ git_push.sh
 index.ts
 model/attributeMapping.ts
 model/collectionConfig.ts
+model/createJobRequest.ts
 model/entityMapping.ts
 model/errorStatus.ts
 model/job.ts

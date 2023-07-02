@@ -18,6 +18,7 @@ class DbJobStatus(entity: Entity) : XdEnumEntity(entity)  {
         val CREATED by enumField { description = "CREATED"; active = true }
         val HARVESTED by enumField { description = "HARVESTED"; active = true }
         val RUNNING by enumField { description = "RUNNING"; active = true }
+        val SCHEDULED by enumField { description = "SCHEDULED"; active = true }
         val ABORTED by enumField { description = "ABORTED"; active = false }
         val INGESTED by enumField { description = "INGESTED"; active = false }
         val FAILED by enumField { description = "FAILED"; active = false }
