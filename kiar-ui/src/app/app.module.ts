@@ -22,7 +22,7 @@ import {AdminModule} from "./components/admin/admin.module";
  * @param appConfig Reference (provided by DI).
  */
 export function initializeApiConfig() {
-  return new Configuration({ basePath: "http://localhost:7070", withCredentials: true }); /* TODO: Change. */
+  return new Configuration({ basePath: window.location.origin, withCredentials: true }); /* TODO: Change. */
 }
 
 @NgModule({
