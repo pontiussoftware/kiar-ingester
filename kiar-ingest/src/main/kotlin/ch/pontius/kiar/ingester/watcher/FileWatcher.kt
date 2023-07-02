@@ -1,10 +1,6 @@
 package ch.pontius.kiar.ingester.watcher
 
-import ch.pontius.kiar.database.config.jobs.DbJobTemplate
 import ch.pontius.kiar.ingester.IngesterServer
-import kotlinx.dnq.query.filter
-import kotlinx.dnq.query.isNotEmpty
-import kotlinx.dnq.query.size
 import org.apache.logging.log4j.LogManager
 import java.io.IOException
 import java.nio.file.*
@@ -26,6 +22,10 @@ class FileWatcher(private val server: IngesterServer, private val templateName: 
     /** Flag indicating whether file should be deleted once processing has concluded. */
     private val delete: Boolean = false
 
+    /** Flag indicating, that this [FileWatcher] has been cancelled. */
+    @Volatile
+    private var cancelled: Boolean = false
+
     /**
      * Runs and polls for changes to the watched directory until canceled. Whenever a file is detected,
      * the file is forwarded to the [FileSource].
@@ -33,12 +33,7 @@ class FileWatcher(private val server: IngesterServer, private val templateName: 
     override fun run() {
         /* Spinning loop polling for new file. */
         LOGGER.info("Added a file watcher for: ${this.file}")
-        while (true) {
-            /* Checks if template still exists; terminates watcher if template has been removed. */
-            if (!this.templateStillValid()) {
-                break
-            }
-
+        while (!this.cancelled) {
             /* Now checks if file exists. Otherwise we'll just continue polling... */
             if (!Files.exists(this.file)) {
                 Thread.sleep(10_000)
@@ -73,12 +68,11 @@ class FileWatcher(private val server: IngesterServer, private val templateName: 
         LOGGER.info("Terminated file watcher for: ${this.file}")
     }
 
+
     /**
-     * Checks if the [DbJobTemplate] backing this [FileWatcher] is still valid (i.e., has not been deleted).
-     *
-     * @return True, if [DbJobTemplate] still exists.
+     * Cancels this [FileWatcher].
      */
-    private fun templateStillValid(): Boolean = this.server.store.transactional(true) {
-        DbJobTemplate.filter { (it.name eq this@FileWatcher.templateName) and (it.startAutomatically eq true) }.isNotEmpty
+    fun cancel() {
+        this.cancelled = true
     }
 }

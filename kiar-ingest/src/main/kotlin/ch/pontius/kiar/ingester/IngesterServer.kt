@@ -2,6 +2,7 @@ package ch.pontius.kiar.ingester
 
 import ch.pontius.kiar.config.Config
 import ch.pontius.kiar.database.config.jobs.DbJobTemplate
+import ch.pontius.kiar.database.institution.DbUser
 import ch.pontius.kiar.database.job.DbJob
 import ch.pontius.kiar.database.job.DbJobSource
 import ch.pontius.kiar.database.job.DbJobStatus
@@ -17,6 +18,7 @@ import kotlinx.dnq.util.reattach
 import org.apache.logging.log4j.LogManager
 import org.apache.logging.log4j.Logger
 import org.joda.time.DateTime
+import java.nio.file.Path
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
@@ -28,7 +30,7 @@ import java.util.concurrent.atomic.AtomicLong
  * @author Ralph Gasser
  * @version 1.0.0
  */
-class IngesterServer(val store: TransientEntityStore, private val config: Config) {
+class IngesterServer(private val store: TransientEntityStore, val config: Config) {
 
     companion object {
         /** Number of watchers. */
@@ -37,6 +39,9 @@ class IngesterServer(val store: TransientEntityStore, private val config: Config
         /** The [Logger] used by this [IngesterServer]. */
         private val LOGGER: Logger = LogManager.getLogger()
     }
+
+    /** A [Map] of [FileWatcher]s that are currently running. */
+    private val watchers = HashMap<String,FileWatcher>()
 
     /**
      * The [ExecutorService] used to execute continuous jobs, e.g., driven by file watchers.
@@ -57,9 +62,36 @@ class IngesterServer(val store: TransientEntityStore, private val config: Config
         this.store.transactional(true) {
             /* Install file watchers for jobs that should be started automatically. */
             for (template in DbJobTemplate.filter { it.startAutomatically eq true }.asSequence()) {
-                this.service.execute(FileWatcher(this, template.name, template.sourcePath(this.config)))
+                this.scheduleWatcher(template.name, template.sourcePath(this.config))
             }
         }
+    }
+
+    /**
+     * Schedules the [FileWatcher] for the provided [name].
+     *
+     * @param name The name of the [FileWatcher] to terminate.
+     * @param path The [Path] to the file to watch for.
+     * @return True on success, false otherwise.
+     */
+    fun scheduleWatcher(name: String, path: Path): Boolean {
+        if (this.watchers.contains(name)) return false
+        val watcher = FileWatcher(this, name, path)
+        this.watchers[name] = watcher
+        this.service.execute(watcher)
+        return true
+    }
+
+    /**
+     * Terminates the [FileWatcher] for the provided [name].
+     *
+     * @param name The name of the [FileWatcher] to terminate.
+     * @return True on success, false otherwise.
+     */
+    fun terminateWatcher(name: String): Boolean {
+        val watcher = this.watchers.remove(name) ?: return false
+        watcher.cancel()
+        return true
     }
 
     /**
@@ -67,21 +99,22 @@ class IngesterServer(val store: TransientEntityStore, private val config: Config
      *
      * @param jobName The name of the job to schedule.
      */
-    fun schedule(jobName: String) = this.service.execute {
-        this.execute(jobName)
+    fun schedule(jobName: String, username: String = "SYSTEM") = this.service.execute {
+        this.execute(jobName, username)
     }
 
     /**
      * Executes the [Job] with the given name.
      *
-     * @param jobName The name of the job to schedule.
+     * @param templateName The name of the [DbJobTemplate] to schedule.
+     * @param username The name of the user who scheduled the [DbJobTemplate].
      */
-    fun execute(jobName: String) {
+    fun execute(templateName: String, username: String = "SYSTEM") {
         /* Start transaction. */
         val (job, pipeline) = this.store.transactional {
             /* Load template. */
-            val template = DbJobTemplate.filter { (it.name eq jobName) }.firstOrNull()
-                ?: throw IllegalArgumentException("Could not find with name $jobName.")
+            val template = DbJobTemplate.filter { (it.name eq templateName) }.firstOrNull()
+                ?: throw IllegalArgumentException("Could not find template with name $templateName.")
 
             /* Create job object. */
             val pipeline = template.newInstance(this.config)
@@ -93,7 +126,8 @@ class IngesterServer(val store: TransientEntityStore, private val config: Config
                 this.source = DbJobSource.WATCHER
                 this.status = DbJobStatus.RUNNING
                 this.createdAt = DateTime.now()
-                this.createdByName = "SYSTEM"
+                this.createdBy = DbUser.filter { it.name eq username }.firstOrNull()
+                this.createdByName = username
             }
             job to pipeline
         }

@@ -7,6 +7,7 @@ import ch.pontius.kiar.api.model.config.transformers.TransformerConfig
 import ch.pontius.kiar.api.model.status.ErrorStatusException
 import ch.pontius.kiar.api.model.status.SuccessStatus
 import ch.pontius.kiar.api.routes.session.currentUser
+import ch.pontius.kiar.config.Config
 import ch.pontius.kiar.database.config.jobs.DbJobTemplate
 import ch.pontius.kiar.database.config.jobs.DbJobType
 import ch.pontius.kiar.database.config.mapping.DbEntityMapping
@@ -15,6 +16,7 @@ import ch.pontius.kiar.database.config.transformers.DbTransformer
 import ch.pontius.kiar.database.config.transformers.DbTransformerParameter
 import ch.pontius.kiar.database.institution.DbParticipant
 import ch.pontius.kiar.database.institution.DbRole
+import ch.pontius.kiar.ingester.IngesterServer
 import ch.pontius.kiar.utilities.mapToArray
 import io.javalin.http.BadRequestResponse
 import io.javalin.http.Context
@@ -87,12 +89,13 @@ fun listJobTemplateTypes(ctx: Context, store: TransientEntityStore) {
         OpenApiResponse("500", [OpenApiContent(ErrorStatus::class)]),
     ]
 )
-fun createJobTemplate(ctx: Context, store: TransientEntityStore) {
+fun createJobTemplate(ctx: Context, store: TransientEntityStore, server: IngesterServer) {
     val request = try {
         ctx.bodyAsClass(JobTemplate::class.java)
     } catch (e: BadRequestResponse) {
         throw ErrorStatusException(400, "Malformed request body.")
     }
+
     val created = store.transactional {
         /* Update basic properties. */
         val mapping = DbJobTemplate.new {
@@ -112,9 +115,15 @@ fun createJobTemplate(ctx: Context, store: TransientEntityStore) {
         }
 
         /* Now merge attribute mappings. */
-        mapping.toApi()
+        mapping.toApi() to mapping.sourcePath(server.config)
     }
-    ctx.json(created)
+
+    /* Schedule a file watcher. */
+    if (created.first.startAutomatically) {
+        server.scheduleWatcher(created.first.name, created.second)
+    }
+
+    ctx.json(created.first)
 }
 
 @OpenApi(
@@ -134,17 +143,31 @@ fun createJobTemplate(ctx: Context, store: TransientEntityStore) {
         OpenApiResponse("500", [OpenApiContent(ErrorStatus::class)])
     ]
 )
-fun deleteJobTemplate(ctx: Context, store: TransientEntityStore) {
+fun deleteJobTemplate(ctx: Context, store: TransientEntityStore, server: IngesterServer) {
     val templateId = ctx.pathParam("id")
-    store.transactional {
+    var terminateWatcher = false
+    val templateName = store.transactional {
         val template = try {
             DbJobTemplate.findById(templateId)
         } catch (e: Throwable) {
             throw ErrorStatusException(404, "Job template with ID $templateId could not be found.")
         }
+
+        /* If template was started automatically, watcher must be terminated. */
+        if (template.startAutomatically) {
+            terminateWatcher = true
+        }
+
         template.delete()
+        template.name
     }
-    ctx.json(SuccessStatus("Job emplate $templateId deleted successfully."))
+
+    /* Terminate watcher if necessary. */
+    if (terminateWatcher) {
+        server.terminateWatcher(templateName)
+    }
+
+    ctx.json(SuccessStatus("Job template '$templateName' (id: $templateId) deleted successfully."))
 }
 
 @OpenApi(

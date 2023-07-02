@@ -66,7 +66,7 @@ fun main(args: Array<String>) {
 
         /* Start Javalin web-server (if configured). */
         if (config.web) {
-            initializeWebserver(store, config).start(config.webPort)
+            initializeWebserver(store, server, config).start(config.webPort)
         }
 
         /* Start CLI (if configured). */
@@ -253,7 +253,7 @@ private fun checkAndSetup(store: TransientEntityStore, config: Config) = store.t
  *
  * @return [TransientEntityStore]
  */
-private fun initializeWebserver(store: TransientEntityStore, config: Config) = Javalin.create { c ->
+private fun initializeWebserver(store: TransientEntityStore, server: IngesterServer, config: Config) = Javalin.create { c ->
 
 
     /* Access to resources is determined by database users. */
@@ -303,7 +303,7 @@ private fun initializeWebserver(store: TransientEntityStore, config: Config) = J
         )
     )
 }.routes {
-    configureApiRoutes(store, config)
+    configureApiRoutes(store, server, config)
 }.exception(ErrorStatusException::class.java) { e, ctx ->
     ctx.status(e.code).json(ErrorStatus(e.code, e.message))
 }.exception(Exception::class.java) { e, ctx ->

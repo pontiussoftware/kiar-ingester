@@ -7,6 +7,7 @@ import ch.pontius.kiar.api.routes.job.getInactiveJobs
 import ch.pontius.kiar.api.routes.job.uploadKiar
 import ch.pontius.kiar.api.routes.session.*
 import ch.pontius.kiar.config.Config
+import ch.pontius.kiar.ingester.IngesterServer
 import createEntityMapping
 import deleteEntityMapping
 import getEntityMapping
@@ -21,7 +22,7 @@ import updateEntityMapping
  *
  * @param store The [TransientEntityStore] used for persistence.
  */
-fun configureApiRoutes(store: TransientEntityStore, config: Config) {
+fun configureApiRoutes(store: TransientEntityStore, server: IngesterServer, config: Config) {
     /** Path to API related functionality. */
     path("api") {
         /** All paths related to session, login and logout handling. */
@@ -51,11 +52,11 @@ fun configureApiRoutes(store: TransientEntityStore, config: Config) {
 
         /* Endpoints related to job templates. */
         get("templates", { ctx -> listJobTemplates(ctx, store) }, Role.ADMINISTRATOR, Role.MANAGER )
-        post("templates", { ctx -> createJobTemplate(ctx, store) }, Role.ADMINISTRATOR )
+        post("templates", { ctx -> createJobTemplate(ctx, store, server) }, Role.ADMINISTRATOR )
         path("templates") {
             get("types",  { ctx -> listJobTemplateTypes(ctx, store) }, Role.ADMINISTRATOR )
             put("{id}",  { ctx -> updateJobTemplate(ctx, store) }, Role.ADMINISTRATOR )
-            delete("{id}",  { ctx -> deleteJobTemplate(ctx, store) }, Role.ADMINISTRATOR )
+            delete("{id}",  { ctx -> deleteJobTemplate(ctx, store, server) }, Role.ADMINISTRATOR )
         }
 
         /* Endpoint related to Apache Solr configurations. */
