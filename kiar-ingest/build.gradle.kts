@@ -62,7 +62,7 @@ dependencies {
     implementation("io.javalin.community.ssl:ssl-plugin:$javalinVersion")
     kapt("io.javalin.community.openapi:openapi-annotation-processor:$javalinVersion")
 
-    /* Jackson databind. */
+    /** Jackson databind. */
     implementation("com.fasterxml.jackson.core:jackson-databind:$jacksonVersion")
     implementation("com.fasterxml.jackson.module:jackson-module-kotlin:$jacksonVersion")
 
