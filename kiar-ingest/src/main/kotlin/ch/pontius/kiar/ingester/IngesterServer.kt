@@ -28,7 +28,7 @@ import java.util.concurrent.atomic.AtomicLong
  * @author Ralph Gasser
  * @version 1.0.0
  */
-class IngesterServer(private val store: TransientEntityStore, private val config: Config) {
+class IngesterServer(val store: TransientEntityStore, private val config: Config) {
 
     companion object {
         /** Number of watchers. */
