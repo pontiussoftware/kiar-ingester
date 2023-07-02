@@ -55,5 +55,16 @@ class DbJob(entity: Entity) : XdEntity(entity) {
      *
      * @return [Job]
      */
-    fun toApi() = Job(this.xdId, this.name, this.status.toApi(), this.source.toApi(), this.template?.name, this.createdAt.millis, this.createdByName)
+    fun toApi() = Job(
+        this.xdId,
+        this.name,
+        this.status.toApi(),
+        this.source.toApi(),
+        this.template?.name,
+        this.processed,
+        this.skipped,
+        this.error,
+        this.createdAt.millis,
+        this.createdByName
+    )
 }

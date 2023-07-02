@@ -5,7 +5,7 @@ import kotlinx.serialization.Serializable
 /**
  *
  * @author Ralph Gasser
- * @version 1.0
+ * @version 1.0.0
  */
 @Serializable
 data class Job(
@@ -23,6 +23,15 @@ data class Job(
 
     /** The [JobTemplate] of this [Job]. */
     val templateName: String? = null,
+
+    /** The entries processed by this [Job]. */
+    val processed: Long,
+
+    /** The entries skipped by this [Job]. */
+    val skipped: Long,
+
+    /** The number of processing errors encountered by this [Job]. */
+    val error: Long,
 
     /** Timestamp of this [Job]'s creation. */
     val createdAt: Long,
