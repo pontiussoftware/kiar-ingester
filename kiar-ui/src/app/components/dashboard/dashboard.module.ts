@@ -6,10 +6,13 @@ import {MatCardModule} from "@angular/material/card";
 import {MatInputModule} from "@angular/material/input";
 import {MatSnackBarModule} from "@angular/material/snack-bar";
 import {DashboardComponent} from "./dashboard.component";
+import {KiarUploadComponent} from "./job/kiar-upload.component";
+import {MatTabsModule} from "@angular/material/tabs";
 
 @NgModule({
   declarations: [
-    DashboardComponent
+    DashboardComponent,
+    KiarUploadComponent
   ],
   imports: [
     BrowserModule,
@@ -19,6 +22,7 @@ import {DashboardComponent} from "./dashboard.component";
     MatInputModule,
     MatSnackBarModule,
     ReactiveFormsModule,
+    MatTabsModule,
   ],
   exports: [
     DashboardComponent
