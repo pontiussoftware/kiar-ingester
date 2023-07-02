@@ -6,6 +6,116 @@
     "version" : "1.0.0"
   },
   "paths" : {
+    "/api/jobs/active" : {
+      "get" : {
+        "tags" : [ "Job" ],
+        "summary" : "Retrieves all jobs that are currently active. Non-administrator users can only see Jobs that belong to them.",
+        "operationId" : "getActiveJobs",
+        "parameters" : [ ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "array",
+                  "items" : {
+                    "$ref" : "#/components/schemas/Job"
+                  }
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorStatus"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Forbidden",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorStatus"
+                }
+              }
+            }
+          },
+          "500" : {
+            "description" : "Server Error",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorStatus"
+                }
+              }
+            }
+          }
+        },
+        "deprecated" : false,
+        "security" : [ ]
+      }
+    },
+    "/api/jobs/inactive" : {
+      "get" : {
+        "tags" : [ "Job" ],
+        "summary" : "Retrieves all jobs that are currently inactive (job history). Non-administrator users can only see Jobs that belong to them.",
+        "operationId" : "getInactiveJobs",
+        "parameters" : [ ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "array",
+                  "items" : {
+                    "$ref" : "#/components/schemas/Job"
+                  }
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorStatus"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Forbidden",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorStatus"
+                }
+              }
+            }
+          },
+          "500" : {
+            "description" : "Server Error",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorStatus"
+                }
+              }
+            }
+          }
+        },
+        "deprecated" : false,
+        "security" : [ ]
+      }
+    },
     "/api/mappings" : {
       "get" : {
         "tags" : [ "Config", "Entity Mapping" ],
@@ -1574,6 +1684,43 @@
       "TransformerType" : {
         "type" : "string",
         "enum" : [ "IMAGE", "SYSTEM" ]
+      },
+      "Job" : {
+        "type" : "object",
+        "additionalProperties" : false,
+        "properties" : {
+          "id" : {
+            "type" : "string"
+          },
+          "name" : {
+            "type" : "string"
+          },
+          "status" : {
+            "$ref" : "#/components/schemas/JobStatus"
+          },
+          "source" : {
+            "$ref" : "#/components/schemas/JobSource"
+          },
+          "templateName" : {
+            "type" : "string"
+          },
+          "createdAt" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "createdBy" : {
+            "type" : "string"
+          }
+        },
+        "required" : [ "name", "status", "source", "createdAt", "createdBy" ]
+      },
+      "JobSource" : {
+        "type" : "string",
+        "enum" : [ "WATCHER", "WEB" ]
+      },
+      "JobStatus" : {
+        "type" : "string",
+        "enum" : [ "CREATED", "ABORTED", "HARVESTED", "RUNNING", "INGESTED", "FAILED" ]
       },
       "LoginRequest" : {
         "type" : "object",
