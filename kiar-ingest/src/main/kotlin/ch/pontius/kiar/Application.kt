@@ -297,7 +297,6 @@ private fun initializeWebserver(store: TransientEntityStore, config: Config) = J
     c.plugins.register(
         SwaggerPlugin(
             SwaggerConfiguration().apply {
-                this.version = "4.10.3"
                 this.documentationPath = "/swagger-docs"
                 this.uiPath = "/swagger-ui"
             }
