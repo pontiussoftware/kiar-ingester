@@ -119,10 +119,11 @@ fun getUser(ctx: Context, store: TransientEntityStore) {
 
 @OpenApi(
     path = "/api/session/user",
-    methods = [HttpMethod.GET],
-    summary = "Returns information about the currently logged-in user.",
+    methods = [HttpMethod.PUT],
+    summary = "Updates the currently active user.",
     operationId = "putUpdateUser",
     tags = ["Session"],
+    requestBody = OpenApiRequestBody([OpenApiContent(User::class)], required = true),
     pathParams = [],
     responses = [
         OpenApiResponse("200", [OpenApiContent(SessionStatus::class)]),

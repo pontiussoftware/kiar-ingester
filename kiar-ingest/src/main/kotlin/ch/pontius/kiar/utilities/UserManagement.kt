@@ -18,11 +18,11 @@ fun generatePassword(length: Int): String {
 /**
  * Validates a password; it must contain at least 8 digits, an upper- and lowercase letter, a number and a special character
  */
-fun String.validatePassword(): Boolean = this.length < MIN_LENGTH_PASSWORD &&
-    !Regex("^\\p{ASCII}*$").containsMatchIn(this) &&
-    !Regex("[A-Z]").containsMatchIn(this) &&
-    !Regex("[a-z]").containsMatchIn(this) &&
-    !Regex("[0-9]").containsMatchIn(this)
+fun String.validatePassword(): Boolean = this.length > MIN_LENGTH_PASSWORD &&
+    Regex("^\\p{ASCII}*$").containsMatchIn(this) &&
+    Regex("[A-Z]").containsMatchIn(this) &&
+    Regex("[a-z]").containsMatchIn(this) &&
+    Regex("[0-9]").containsMatchIn(this)
 
 /**
  * Validates an e-mail address.

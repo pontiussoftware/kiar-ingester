@@ -18,7 +18,7 @@
     <button *ngIf="isLoggedIn | async" mat-button [matMenuTriggerFor]="userMenu">{{(username | async)}}</button>
 
     <mat-menu #userMenu="matMenu">
-      <button mat-menu-item>
+      <button mat-menu-item (click)="userProfile()">
         <mat-icon>person</mat-icon>
         <span>Manager User Profile</span>
       </button>

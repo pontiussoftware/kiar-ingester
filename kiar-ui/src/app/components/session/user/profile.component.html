@@ -1,24 +1,43 @@
-<mat-card appearance="outlined">
-  <mat-card-title>Login</mat-card-title>
-  <mat-card-content>
+<h1 mat-dialog-title i18n="@@TitleUserProfile">User profile</h1>
+<div mat-dialog-content>
     <form [formGroup]="formControl">
-      <p>
-        <mat-form-field>
-          <mat-label>Username:</mat-label>
-          <input type="text" matInput placeholder="Username" formControlName="username" autocomplete="username" />
-        </mat-form-field>
-      </p>
+      <mat-form-field [style.width]="'60%'">
+        <mat-label i18n="@@LabelPassword">Username:</mat-label>
+        <input type="text" matInput placeholder="Username" formControlName="username"  />
+      </mat-form-field>
 
-      <p>
-        <mat-form-field>
-          <mat-label>Password:</mat-label>
-          <input type="password" matInput placeholder="Password" formControlName="password" autocomplete="current-password" />
-        </mat-form-field>
-      </p>
+      <mat-form-field [style.width]="'40%'">
+        <mat-label i18n="@@LabelRole">Role:</mat-label>
+        <input type="text" matInput placeholder="Role" formControlName="role"/>
+      </mat-form-field>
 
-      <div class="button">
-        <button type="submit" mat-button color="primary">Login</button>
+      <mat-form-field [style.width]="'100%'">
+        <mat-label i18n="@@LabelEmail">E-Mail:</mat-label>
+        <input type="email" matInput placeholder="E-Mail" formControlName="email"  />
+        <mat-error *ngIf="formControl.get('email')?.hasError('email')">Not a valid e-mail address.</mat-error>
+      </mat-form-field>
+
+      <mat-form-field [style.width]="'100%'">
+        <mat-label i18n="@@LabelInstitution">Institution:</mat-label>
+        <input type="text" matInput placeholder="Institution" formControlName="institution" />
+      </mat-form-field>
+
+      <div formGroupName="password">
+        <mat-form-field [style.width]="'100%'">
+          <mat-label i18n="@@LabelPassword">Password:</mat-label>
+          <input type="password" matInput placeholder="Minimum of 8 characters" formControlName="passwordFirst" />
+          <mat-error *ngIf="formControl.get('password')?.get('passwordFirst')?.hasError('minlength')">Password must have at least 8 characters.</mat-error>
+        </mat-form-field>
+
+        <mat-form-field [style.width]="'100%'">
+          <mat-label i18n="@@LabelPasswordRepeat">Password (repeat):</mat-label>
+          <input type="password" matInput placeholder="Minimum of 8 characters" formControlName="passwordSecond"  />
+          <mat-error *ngIf="formControl.get('password')?.hasError('notSame')">Passwords do not match.</mat-error>
+        </mat-form-field>
       </div>
     </form>
-  </mat-card-content>
-</mat-card>
+</div>
+<div mat-dialog-actions>
+  <button mat-flat-button color="primary" i18n="@@LabelUpdate" (click)="update()">Update</button>
+  <button mat-flat-button color="warn" i18n="@@LabelReload" (click)="reload()">Reload</button>
+</div>

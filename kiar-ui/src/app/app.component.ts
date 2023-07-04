@@ -3,6 +3,10 @@ import {AuthenticationService} from "./services/authentication.service";
 import {map, Observable} from "rxjs";
 import {Router} from "@angular/router";
 import {Role} from "../../openapi";
+import {AttributeMappingDialogComponent} from "./components/admin/mapping/attribute-mapping-dialog.component";
+import {FormArray, FormGroup} from "@angular/forms";
+import {MatDialog} from "@angular/material/dialog";
+import {ProfileComponent} from "./components/session/user/profile.component";
 
 @Component({
   selector: 'app-root',
@@ -10,7 +14,7 @@ import {Role} from "../../openapi";
   styleUrls: ['./app.component.scss']
 })
 export class AppComponent {
-  constructor(private authentication: AuthenticationService, private router: Router) {
+  constructor(private authentication: AuthenticationService, private dialog: MatDialog, private router: Router) {
   }
 
   /**
@@ -66,6 +70,12 @@ export class AppComponent {
     )
   }
 
+  /**
+   *
+   */
+  public userProfile() {
+    this.dialog.open(ProfileComponent, {width: '500px'})
+  }
 
   /**
    * Logs the current user out.

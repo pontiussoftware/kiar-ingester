@@ -8,6 +8,7 @@ import {FormsModule, ReactiveFormsModule} from "@angular/forms";
 import {MatSnackBarModule} from "@angular/material/snack-bar";
 import {ForbiddenComponent} from "./forbidden/forbidden.component";
 import {ProfileComponent} from "./user/profile.component";
+import {MatDialogModule} from "@angular/material/dialog";
 
 @NgModule({
   declarations: [
@@ -16,13 +17,14 @@ import {ProfileComponent} from "./user/profile.component";
       ProfileComponent
   ],
   imports: [
-      BrowserModule,
-      FormsModule,
-      MatButtonModule,
-      MatCardModule,
-      MatInputModule,
-      MatSnackBarModule,
-      ReactiveFormsModule,
+    BrowserModule,
+    FormsModule,
+    MatButtonModule,
+    MatCardModule,
+    MatInputModule,
+    MatSnackBarModule,
+    ReactiveFormsModule,
+    MatDialogModule,
   ],
   exports: [
       LoginComponent,
