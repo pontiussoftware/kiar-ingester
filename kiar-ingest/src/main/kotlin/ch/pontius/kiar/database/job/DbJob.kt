@@ -96,7 +96,7 @@ class DbJob(entity: Entity) : XdEntity(entity) {
         this.name,
         this.status.toApi(),
         this.source.toApi(),
-        this.template?.name,
+        this.template?.toApi(),
         this.processed,
         this.skipped,
         this.error,

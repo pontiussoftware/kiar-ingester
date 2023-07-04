@@ -10,9 +10,14 @@ import {MatTabsModule} from "@angular/material/tabs";
 import {MatTableModule} from "@angular/material/table";
 import {MatIconModule} from "@angular/material/icon";
 import {MatTooltipModule} from "@angular/material/tooltip";
+import {CreateJobDialogComponent} from "./job/create-job-dialog.component";
+import {MatDialogModule} from "@angular/material/dialog";
+import {MatSelectModule} from "@angular/material/select";
+import {MatProgressSpinnerModule} from "@angular/material/progress-spinner";
 
 @NgModule({
   declarations: [
+    CreateJobDialogComponent,
     DashboardComponent
   ],
   imports: [
@@ -27,6 +32,9 @@ import {MatTooltipModule} from "@angular/material/tooltip";
     MatTableModule,
     MatIconModule,
     MatTooltipModule,
+    MatDialogModule,
+    MatSelectModule,
+    MatProgressSpinnerModule,
   ],
   exports: [
     DashboardComponent

@@ -12,13 +12,13 @@ import com.github.ajalt.clikt.parameters.arguments.argument
  */
 class ExecuteCommand(private val server: IngesterServer): CliktCommand(name = "execute", help = "Executes a job with the given name.") {
     /** Name of the index to drop. */
-    private val jobName: String by argument(
+    private val jobId: String by argument(
         name = "job",
         help = "Name of the job that should be executed."
     )
 
     override fun run() = try {
-        this.server.executeJob(this.jobName)
+        this.server.scheduleJob(this.jobId)
     } catch (e: IllegalArgumentException) {
         println("Failed to execute job: ${e.message}")
     }

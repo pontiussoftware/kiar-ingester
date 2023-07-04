@@ -198,6 +198,88 @@
         "security" : [ ]
       }
     },
+    "/api/jobs/{id}" : {
+      "delete" : {
+        "tags" : [ "Job" ],
+        "summary" : "Aborts a running job.",
+        "operationId" : "deleteAbortJob",
+        "parameters" : [ {
+          "name" : "id",
+          "in" : "path",
+          "description" : "The ID of the Job that should be aborted.",
+          "required" : true,
+          "deprecated" : false,
+          "allowEmptyValue" : false,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/SuccessStatus"
+                }
+              }
+            }
+          },
+          "400" : {
+            "description" : "Bad Request",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorStatus"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorStatus"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Forbidden",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorStatus"
+                }
+              }
+            }
+          },
+          "404" : {
+            "description" : "Not Found",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorStatus"
+                }
+              }
+            }
+          },
+          "500" : {
+            "description" : "Server Error",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorStatus"
+                }
+              }
+            }
+          }
+        },
+        "deprecated" : false,
+        "security" : [ ]
+      }
+    },
     "/api/jobs/{id}/schedule" : {
       "put" : {
         "tags" : [ "Job" ],
@@ -276,6 +358,23 @@
             "type" : "string"
           }
         } ],
+        "requestBody" : {
+          "description" : "The uploaded KIAR file.",
+          "content" : {
+            "multipart/form-data" : {
+              "schema" : {
+                "type" : "object",
+                "properties" : {
+                  "kiar" : {
+                    "type" : "string",
+                    "format" : "binary"
+                  }
+                }
+              }
+            }
+          },
+          "required" : true
+        },
         "responses" : {
           "200" : {
             "description" : "OK",
@@ -1380,7 +1479,7 @@
     },
     "/api/templates" : {
       "get" : {
-        "tags" : [ "Config", "Job Template" ],
+        "tags" : [ "Config", "Job Template", "Job" ],
         "summary" : "Lists all available job templates.",
         "operationId" : "getListJobTemplates",
         "parameters" : [ ],
@@ -1960,8 +2059,8 @@
           "source" : {
             "$ref" : "#/components/schemas/JobSource"
           },
-          "templateName" : {
-            "type" : "string"
+          "template" : {
+            "$ref" : "#/components/schemas/JobTemplate"
           },
           "processed" : {
             "type" : "integer",

@@ -1,5 +1,6 @@
 package ch.pontius.kiar.api.model.job
 
+import ch.pontius.kiar.api.model.config.templates.JobTemplate
 import kotlinx.serialization.Serializable
 
 /**
@@ -22,7 +23,7 @@ data class Job(
     val source: JobSource,
 
     /** The [JobTemplate] of this [Job]. */
-    val templateName: String? = null,
+    val template: JobTemplate? = null,
 
     /** The entries processed by this [Job]. */
     val processed: Long,

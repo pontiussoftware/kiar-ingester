@@ -30,7 +30,7 @@ import kotlinx.dnq.util.findById
     methods = [HttpMethod.GET],
     summary = "Lists all available job templates.",
     operationId = "getListJobTemplates",
-    tags = ["Config", "Job Template"],
+    tags = ["Config", "Job Template", "Job"],
     pathParams = [],
     responses = [
         OpenApiResponse("200", [OpenApiContent(Array<JobTemplate>::class)]),

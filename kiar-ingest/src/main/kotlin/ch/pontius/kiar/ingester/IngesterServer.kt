@@ -8,14 +8,15 @@ import ch.pontius.kiar.database.job.DbJobStatus
 import ch.pontius.kiar.ingester.processors.ProcessingContext
 import ch.pontius.kiar.ingester.watcher.FileWatcher
 import jetbrains.exodus.database.TransientEntityStore
-import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.cancellable
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.onCompletion
-import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.flow.onStart
 import kotlinx.dnq.query.asSequence
 import kotlinx.dnq.query.filter
 import kotlinx.dnq.util.findById
+import kotlinx.dnq.util.reattach
 import org.apache.logging.log4j.LogManager
 import org.apache.logging.log4j.Logger
 import java.nio.file.Path
@@ -45,7 +46,7 @@ class IngesterServer(val store: TransientEntityStore, val config: Config) {
     private val activeWatchers = ConcurrentHashMap<String,FileWatcher>()
 
     /** A [Map] of [FileWatcher]s that are currently running. */
-    private val activeJobs = ConcurrentHashMap<String,Pair<ProcessingContext, Flow<Unit>>>()
+    private val activeJobs = ConcurrentHashMap<String,Pair<DbJob,Job>>()
 
     /**
      * The [ExecutorService] used to execute continuous jobs, e.g., driven by file watchers.
@@ -66,6 +67,11 @@ class IngesterServer(val store: TransientEntityStore, val config: Config) {
         thread.isDaemon = false
         thread
     }
+
+    /**
+     * An [ExecutorCoroutineDispatcher] for executing [Job]s.
+     */
+    private val jobDispatcher = this.jobService.asCoroutineDispatcher()
 
     /** Flag indicating that the [IngesterServer] is still running. */
     @Volatile
@@ -113,67 +119,46 @@ class IngesterServer(val store: TransientEntityStore, val config: Config) {
      *
      * @param jobId The ID of the job to schedule.
      */
-    fun scheduleJob(jobId: String): Boolean {
-        val ret = this.store.transactional {
-            val job = try {
-                DbJob.findById(jobId)
-            } catch (e: Throwable) {
-                return@transactional false
-            }
-            if (job.status == DbJobStatus.CREATED || job.status == DbJobStatus.HARVESTED) {
-                job.status = DbJobStatus.SCHEDULED
-                true
-            } else {
-                false
-            }
-        }
-        this.jobService.execute { this.executeJob(jobId) } /* Submit job to executor. */
-        return ret
-    }
-
-    /**
-     * Executes the [Job] with the given name.
-     *
-     * @param jobId The ID of the [DbJob] to schedule.
-     */
-    fun executeJob(jobId: String) {
-        /* Prepare pipeline and job execution context. */
-        val (pipeline, context) = this.store.transactional {
-            val job = try {
-                DbJob.findById(jobId)
-            } catch (e: Throwable) {
-                throw e
-            }
+    fun scheduleJob(jobId: String) {
+        val (pipeline, job) = this.store.transactional {
+            val job = DbJob.findById(jobId)
 
             /* Perform sanity check. */
-            require(job.status == DbJobStatus.SCHEDULED) { "Job $jobId cannot be executed because it is in wrong state." }
+            require(job.status == DbJobStatus.CREATED || job.status == DbJobStatus.HARVESTED) { "Job $jobId cannot be executed because it is in wrong state." }
+            job.status = DbJobStatus.SCHEDULED
 
-            /* Generate pipeline. */
+            /* Return pipeline and job*/
             val pipeline = job.toPipeline(this.config)
             job.status = DbJobStatus.RUNNING
-            pipeline to ProcessingContext(jobId)
+            pipeline to job
         }
 
-
         /* Prepare flow including finalization. */
-        val flow = pipeline.toFlow(context).onCompletion { e ->
+        val context = ProcessingContext(jobId)
+        val flow = pipeline.toFlow(context).onStart {
+            this@IngesterServer.store.transactional {
+                job.reattach()
+                job.status = DbJobStatus.RUNNING
+            }
+        }.onCompletion { e ->
             /* Remove job from list of active jobs. */
             this@IngesterServer.activeJobs.remove(jobId)
 
             /* Store information about finished job. */
             this@IngesterServer.store.transactional {
-                val job = try {
-                    DbJob.findById(jobId)
-                } catch (e: Throwable) {
-                    throw e
-                }
-
-                if (e != null) {
-                    LOGGER.error("Data ingest for job (name = ${job.name}) failed: ${e.message}")
-                    job.status = DbJobStatus.FAILED
-                } else {
-                    LOGGER.info("Data ingest (name = ${job.name}) completed successfully!")
-                    job.status = DbJobStatus.INGESTED
+                job.reattach()
+                when (e) {
+                    null -> {
+                        LOGGER.info("Data ingest (name = ${job.name}) completed successfully!")
+                        job.status = DbJobStatus.INGESTED
+                    }
+                    is CancellationException -> {
+                        job.status = DbJobStatus.ABORTED
+                    }
+                    else -> {
+                        LOGGER.error("Data ingest for job (name = ${job.name}) failed: ${e.message}")
+                        job.status = DbJobStatus.FAILED
+                    }
                 }
 
                 /* Update job with collected metrics. */
@@ -193,18 +178,40 @@ class IngesterServer(val store: TransientEntityStore, val config: Config) {
             }
         }.cancellable()
 
-        /* Add job to list of active jobs. */
-        this.activeJobs[jobId] = Pair(context, flow)
-
-        /* Execute job. */
+        /* Schedule job for execution. */
         runBlocking {
-            flow.collect()
+            this@IngesterServer.activeJobs[jobId] = job to launch(this@IngesterServer.jobDispatcher) {
+                flow.collect()
+            }
         }
+    }
+
+
+    /**
+     * Tries to terminate a running job identified by the given job ID.
+     *
+     * @param jobId The ID of the job to terminate.
+     * @return True on success, false otherwise.
+     */
+    fun terminateJob(jobId: String): Boolean {
+        val job = this.activeJobs[jobId]
+        if (job != null) {
+            this.store.transactional {
+                job.first.reattach()
+                if (job.first.status.active) {
+                    job.second.cancel("The job $jobId has been cancelled by a user.")
+                    job.first.status = DbJobStatus.ABORTED
+                }
+            }
+            return true
+        }
+        return false
     }
 
     /**
      * Stops this [IngesterServer] and all periodic task registered with it.
      */
+    @Synchronized
     fun stop() {
         if (this.isRunning) {
             this.watcherService.shutdown()

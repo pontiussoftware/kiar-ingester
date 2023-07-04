@@ -11,6 +11,7 @@
  */
 import { JobStatus } from './jobStatus';
 import { JobSource } from './jobSource';
+import { JobTemplate } from './jobTemplate';
 
 
 export interface Job { 
@@ -18,7 +19,7 @@ export interface Job {
     name: string;
     status: JobStatus;
     source: JobSource;
-    templateName?: string;
+    template?: JobTemplate;
     processed: number;
     skipped: number;
     error: number;

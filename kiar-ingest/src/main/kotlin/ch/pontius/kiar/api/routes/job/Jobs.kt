@@ -5,6 +5,7 @@ import ch.pontius.kiar.api.model.job.Job
 import ch.pontius.kiar.api.model.session.LoginRequest
 import ch.pontius.kiar.api.model.status.ErrorStatus
 import ch.pontius.kiar.api.model.status.ErrorStatusException
+import ch.pontius.kiar.api.model.status.SuccessStatus
 import ch.pontius.kiar.api.routes.session.currentUser
 import ch.pontius.kiar.database.config.jobs.DbJobTemplate
 import ch.pontius.kiar.database.institution.DbRole
@@ -12,6 +13,7 @@ import ch.pontius.kiar.database.institution.DbUser
 import ch.pontius.kiar.database.job.DbJob
 import ch.pontius.kiar.database.job.DbJobSource
 import ch.pontius.kiar.database.job.DbJobStatus
+import ch.pontius.kiar.ingester.IngesterServer
 import ch.pontius.kiar.utilities.mapToArray
 import io.javalin.http.BadRequestResponse
 import io.javalin.http.Context
@@ -41,7 +43,8 @@ fun getActiveJobs(ctx: Context, store: TransientEntityStore) {
         val currentUser = ctx.currentUser()
         val jobs = when (currentUser.role) {
             DbRole.ADMINISTRATOR -> DbJob.filter { it.status.active eq true }
-            DbRole.MANAGER, DbRole.VIEWER -> {
+            DbRole.MANAGER,
+            DbRole.VIEWER -> {
                 val participant = currentUser.institution?.participant
                 if (participant == null) {
                     DbJob.emptyQuery()
@@ -74,7 +77,8 @@ fun getInactiveJobs(ctx: Context, store: TransientEntityStore) {
         val currentUser = ctx.currentUser()
         val jobs = when (currentUser.role) {
             DbRole.ADMINISTRATOR -> DbJob.filter { it.status.active eq false }
-            DbRole.MANAGER, DbRole.VIEWER -> {
+            DbRole.MANAGER,
+            DbRole.VIEWER -> {
                 val participant = currentUser.institution?.participant
                 if (participant == null) {
                     DbJob.emptyQuery()
@@ -129,7 +133,7 @@ fun createJob(ctx: Context, store: TransientEntityStore) {
 
         /* Create new job. */
         DbJob.new {
-            this.name = request.jobName ?: (template.name + "-${System.currentTimeMillis()}")
+            this.name = if (request.jobName.isNullOrEmpty()) { (template.name + "-${System.currentTimeMillis()}") } else { request.jobName }
             this.template = template
             this.source = DbJobSource.WEB
             this.status = DbJobStatus.CREATED
@@ -141,4 +145,52 @@ fun createJob(ctx: Context, store: TransientEntityStore) {
 
     /* Return job object. */
     ctx.json(job)
+}
+
+@OpenApi(
+    path = "/api/jobs/{id}",
+    methods = [HttpMethod.DELETE],
+    summary = "Aborts a running job.",
+    operationId = "deleteAbortJob",
+    tags = ["Job"],
+    pathParams = [
+        OpenApiParam(name = "id", description = "The ID of the Job that should be aborted.", required = true)
+    ],
+    responses = [
+        OpenApiResponse("200", [OpenApiContent(SuccessStatus::class)]),
+        OpenApiResponse("400", [OpenApiContent(ErrorStatus::class)]),
+        OpenApiResponse("401", [OpenApiContent(ErrorStatus::class)]),
+        OpenApiResponse("403", [OpenApiContent(ErrorStatus::class)]),
+        OpenApiResponse("404", [OpenApiContent(ErrorStatus::class)]),
+        OpenApiResponse("500", [OpenApiContent(ErrorStatus::class)])
+    ]
+)
+fun abortJob(ctx: Context, store: TransientEntityStore, server: IngesterServer) {
+    val jobId = ctx.pathParam("id")
+    store.transactional(true) {
+        val currentUser = ctx.currentUser()
+        val job = try {
+            DbJob.findById(jobId)
+        } catch (e: Throwable) {
+            throw ErrorStatusException(404, "Job with ID $jobId could not be found.")
+        }
+
+        /* Check if user's participant is the same as the one associated with the template. */
+        if (currentUser.role != DbRole.ADMINISTRATOR) {
+            if (job.template?.participant != currentUser.institution?.participant) {
+                throw ErrorStatusException(403, "You are not allowed to abort a job that has been created for another participant.")
+            }
+        }
+
+        /* Check if job is still active. */
+        if (!job.status.active) {
+            throw ErrorStatusException(400, "Job with ID $jobId could not be aborted because it is already inactive.")
+        }
+    }
+
+    /* Inform ingest server that job should be terminated.*/
+    server.terminateJob(jobId)
+
+    /* Return job object. */
+    ctx.json(SuccessStatus("Successfully terminated job $jobId."))
 }

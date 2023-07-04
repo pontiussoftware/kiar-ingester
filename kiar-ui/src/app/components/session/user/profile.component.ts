@@ -1,7 +1,7 @@
 import {AfterViewInit, Component} from "@angular/core";
 import {AbstractControl, FormControl, FormGroup, ValidationErrors, ValidatorFn, Validators} from "@angular/forms";
-import {Role, SessionService, SessionStatus, SuccessStatus, User} from "../../../../../openapi";
-import {Observable, Observer, tap} from "rxjs";
+import {Role, SessionService, SessionStatus, User} from "../../../../../openapi";
+import {Observer} from "rxjs";
 import {MatSnackBar, MatSnackBarConfig} from "@angular/material/snack-bar";
 
 @Component({
@@ -18,7 +18,7 @@ export class ProfileComponent implements AfterViewInit {
     return passwordFirst === passwordSecond ? null : { notSame: true }
   }
 
-  /** */
+  /** The minimum length of a password (for validation). */
   public readonly passwordMinLength = 8
 
   /** The {@link FormControl} that backs this {@link AddJobTemplateDialogComponent}. */
@@ -44,7 +44,7 @@ export class ProfileComponent implements AfterViewInit {
 
 
   /**
-   *
+   * Reloads the user data that backs this form.
    */
   public reload() {
     this.service.getUser().subscribe(u => {
@@ -57,7 +57,7 @@ export class ProfileComponent implements AfterViewInit {
   }
 
   /**
-   *
+   * Submits update user data to the server.
    */
   public update() {
     if (this.formControl.valid) {
@@ -69,7 +69,6 @@ export class ProfileComponent implements AfterViewInit {
             this.snackBar.open(`Error occurred while trying to update user profile: ${err?.error?.description}.`, "Dismiss", { duration: 2000 } as MatSnackBarConfig)
           }
         } as Observer<SessionStatus>
-
 
         this.service.putUpdateUser({
           id: this.formControl.get('id')?.value,
