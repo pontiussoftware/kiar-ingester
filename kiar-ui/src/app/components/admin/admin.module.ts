@@ -22,6 +22,7 @@ import {MatTooltipModule} from "@angular/material/tooltip";
 import {AddSolrConfigDialogComponent} from "./dashboard/add-solr-config.dialog.component";
 import {AddJobTemplateDialogComponent} from "./dashboard/add-job-template-dialog.component";
 import {AddParticipantDialogComponent} from "./dashboard/add-participant-dialog.component";
+import {ApacheSolrComponent} from "./solr/apache-solr.component";
 
 @NgModule({
   declarations: [
@@ -30,6 +31,7 @@ import {AddParticipantDialogComponent} from "./dashboard/add-participant-dialog.
     AddParticipantDialogComponent,
     AddSolrConfigDialogComponent,
     AdminDashboardComponent,
+    ApacheSolrComponent,
     AttributeMappingDialogComponent,
     EntityMappingComponent,
   ],

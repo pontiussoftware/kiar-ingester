@@ -1,7 +1,7 @@
 import {Component} from "@angular/core";
 import {FormControl, FormGroup, Validators} from "@angular/forms";
 import {MatDialogRef} from "@angular/material/dialog";
-import {ConfigService, EntityMapping, JobTemplate, JobType, SolrConfig} from "../../../../../openapi";
+import {ApacheSolrConfig, ConfigService, EntityMapping, JobTemplate, JobType} from "../../../../../openapi";
 import {Observable, shareReplay} from "rxjs";
 
 @Component({
@@ -25,7 +25,7 @@ export class AddJobTemplateDialogComponent {
   public readonly mappings: Observable<Array<EntityMapping>>
 
   /** An {@link Observable} of available {@link SolrConfig}. */
-  public readonly solr: Observable<Array<SolrConfig>>
+  public readonly solr: Observable<Array<ApacheSolrConfig>>
 
   /** An {@link Observable} of available {@link SolrConfig}. */
   public readonly types: Observable<Array<JobType>>

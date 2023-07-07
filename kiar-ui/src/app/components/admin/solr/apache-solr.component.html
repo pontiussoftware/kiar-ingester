@@ -1,0 +1,90 @@
+<form [formGroup]="formControl">
+
+  <h1>Apache Solr Configuration (ID: {{solrId | async}})</h1>
+
+  <div id="main" [style.display]="'flex'">
+    <mat-form-field appearance="fill" [style.width]="'15%'">
+      <mat-label i18n="@@LabelName">Name</mat-label>
+      <input matInput type="text" required formControlName="name">
+    </mat-form-field>
+
+    <mat-form-field appearance="fill" [style.width]="'25%'">
+      <mat-label i18n="@@LabelDescription">Description</mat-label>
+      <input matInput type="textarea" formControlName="description">
+    </mat-form-field>
+
+    <mat-form-field appearance="fill" [style.width]="'15%'">
+      <mat-label i18n="@@LabelServer">Server</mat-label>
+      <input matInput type="url" formControlName="server">
+    </mat-form-field>
+
+    <mat-form-field appearance="fill" [style.width]="'10%'">
+      <mat-label i18n="@@UserName">Username</mat-label>
+      <input matInput type="text" formControlName="username">
+    </mat-form-field>
+
+    <mat-form-field appearance="fill" [style.width]="'10%'">
+      <mat-label  i18n="@@Password">Password</mat-label>
+      <input matInput type="password" formControlName="password">
+    </mat-form-field>
+
+    <div class="button-group" [style.margin-top]="'10px'">
+      <button mat-raised-button color="primary" i18n="@@ButtonSave" matTooltip="Saves all changes made to this entity mapping." (click)="save()">
+        Save
+      </button>
+      <button mat-raised-button i18n="@@ButtonReload" matTooltip="Reloads this entity mapping, reverting all unsaved changes."  (click)="refresh()">
+        Reload
+      </button>
+      <button mat-raised-button color="warn"  i18n="@@ButtonDelete" matTooltip="Deletes this entity mapping." (click)="delete()">
+        Delete
+      </button>
+    </div>
+  </div>
+
+  <h2>Collections
+    <button mat-mini-fab color="primary" aria-label="Adds a new attribute mapping to this entity mapping." (click)="addCollection()">
+      <mat-icon>add</mat-icon>
+    </button>
+  </h2>
+
+  <table formArrayName="collections" [style.width]="'100%'">
+    <thead>
+      <tr>
+        <th>Name</th>
+        <th>Type</th>
+        <th>Selector</th>
+        <th>&nbsp;</th>
+      </tr>
+    </thead>
+    <tr *ngFor="let e of collections; let i = index" [formGroupName]="i">
+      <td>
+        <mat-form-field appearance="fill" [style.width]="'100%'">
+          <mat-label i18n="@@LabelName">Name</mat-label>
+          <input matInput type="text" formControlName="name"/>
+        </mat-form-field>
+      </td>
+
+      <td>
+        <mat-form-field appearance="fill" [style.width]="'100%'">
+          <mat-label i18n="@@LabelType">Type</mat-label>
+          <select matNativeControl required formControlName="type">
+            <option value="OBJECT">OBJECT</option>
+            <option value="MUSEUM">MUSEUM</option>
+            <option value="PERSON">PERSON</option>
+          </select>
+        </mat-form-field>
+      </td>
+
+      <td>
+        <mat-form-field appearance="fill" [style.width]="'100%'">
+          <mat-label i18n="@@LabelSelector">Selector</mat-label>
+          <input matInput type="text" formControlName="selector"/>
+        </mat-form-field>
+      </td>
+
+      <td>
+        <button mat-icon-button color="warn" (click)="removeCollection(i)"><mat-icon>delete</mat-icon></button>
+      </td>
+    </tr>
+  </table>
+</form>

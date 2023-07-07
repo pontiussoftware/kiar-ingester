@@ -1204,7 +1204,7 @@
                 "schema" : {
                   "type" : "array",
                   "items" : {
-                    "$ref" : "#/components/schemas/SolrConfig"
+                    "$ref" : "#/components/schemas/ApacheSolrConfig"
                   }
                 }
               }
@@ -1253,7 +1253,7 @@
           "content" : {
             "application/json" : {
               "schema" : {
-                "$ref" : "#/components/schemas/SolrConfig"
+                "$ref" : "#/components/schemas/ApacheSolrConfig"
               }
             }
           },
@@ -1265,7 +1265,7 @@
             "content" : {
               "application/json" : {
                 "schema" : {
-                  "$ref" : "#/components/schemas/SolrConfig"
+                  "$ref" : "#/components/schemas/ApacheSolrConfig"
                 }
               }
             }
@@ -1316,6 +1316,76 @@
       }
     },
     "/api/solr/{id}" : {
+      "get" : {
+        "tags" : [ "Config", "Apache Solr" ],
+        "summary" : "Retrieves all the details about an Apache Solr configuration.",
+        "operationId" : "getSolrConfig",
+        "parameters" : [ {
+          "name" : "id",
+          "in" : "path",
+          "description" : "The ID of the Apache Solr configuration that should be deleted.",
+          "required" : true,
+          "deprecated" : false,
+          "allowEmptyValue" : false,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ApacheSolrConfig"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorStatus"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Forbidden",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorStatus"
+                }
+              }
+            }
+          },
+          "404" : {
+            "description" : "Not Found",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorStatus"
+                }
+              }
+            }
+          },
+          "500" : {
+            "description" : "Server Error",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorStatus"
+                }
+              }
+            }
+          }
+        },
+        "deprecated" : false,
+        "security" : [ ]
+      },
       "delete" : {
         "tags" : [ "Config", "Apache Solr" ],
         "summary" : "Deletes an existing Apache Solr configuration.",
@@ -1405,7 +1475,7 @@
           "content" : {
             "application/json" : {
               "schema" : {
-                "$ref" : "#/components/schemas/SolrConfig"
+                "$ref" : "#/components/schemas/ApacheSolrConfig"
               }
             }
           },
@@ -1417,7 +1487,7 @@
             "content" : {
               "application/json" : {
                 "schema" : {
-                  "$ref" : "#/components/schemas/SolrConfig"
+                  "$ref" : "#/components/schemas/ApacheSolrConfig"
                 }
               }
             }
@@ -1938,7 +2008,32 @@
         "type" : "string",
         "enum" : [ "UUID", "STRING", "MULTISTRING", "DATE", "INTEGER", "DOUBLE", "IMAGE" ]
       },
-      "SolrConfig" : {
+      "ApacheSolrCollection" : {
+        "type" : "object",
+        "additionalProperties" : false,
+        "properties" : {
+          "name" : {
+            "type" : "string"
+          },
+          "type" : {
+            "$ref" : "#/components/schemas/CollectionType"
+          },
+          "selector" : {
+            "type" : "string"
+          },
+          "deleteBeforeImport" : {
+            "type" : "boolean"
+          },
+          "acceptEmptyFilter" : {
+            "type" : "boolean"
+          },
+          "match" : {
+            "type" : "boolean"
+          }
+        },
+        "required" : [ "name", "type", "deleteBeforeImport", "acceptEmptyFilter", "match" ]
+      },
+      "ApacheSolrConfig" : {
         "type" : "object",
         "additionalProperties" : false,
         "properties" : {
@@ -1954,7 +2049,7 @@
           "server" : {
             "type" : "string"
           },
-          "user" : {
+          "username" : {
             "type" : "string"
           },
           "password" : {
@@ -1963,11 +2058,15 @@
           "collections" : {
             "type" : "array",
             "items" : {
-              "$ref" : "#/components/schemas/CollectionConfig"
+              "$ref" : "#/components/schemas/ApacheSolrCollection"
             }
           }
         },
         "required" : [ "name", "server", "collections" ]
+      },
+      "CollectionType" : {
+        "type" : "string",
+        "enum" : [ "OBJECT", "PERSON", "MUSEUM" ]
       },
       "JobTemplate" : {
         "type" : "object",
@@ -2170,31 +2269,6 @@
           }
         },
         "required" : [ "description" ]
-      },
-      "CollectionConfig" : {
-        "type" : "object",
-        "additionalProperties" : false,
-        "properties" : {
-          "name" : {
-            "type" : "string"
-          },
-          "filter" : {
-            "type" : "array",
-            "items" : {
-              "type" : "string"
-            }
-          },
-          "deleteBeforeImport" : {
-            "type" : "boolean"
-          },
-          "acceptEmptyFilter" : {
-            "type" : "boolean"
-          },
-          "match" : {
-            "type" : "boolean"
-          }
-        },
-        "required" : [ "name", "filter", "deleteBeforeImport", "acceptEmptyFilter", "match" ]
       }
     },
     "securitySchemes" : {

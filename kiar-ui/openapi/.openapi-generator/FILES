@@ -14,8 +14,10 @@ configuration.ts
 encoder.ts
 git_push.sh
 index.ts
+model/apacheSolrCollection.ts
+model/apacheSolrConfig.ts
 model/attributeMapping.ts
-model/collectionConfig.ts
+model/collectionType.ts
 model/createJobRequest.ts
 model/entityMapping.ts
 model/errorStatus.ts
@@ -29,7 +31,6 @@ model/mappingType.ts
 model/models.ts
 model/role.ts
 model/sessionStatus.ts
-model/solrConfig.ts
 model/successStatus.ts
 model/transformerConfig.ts
 model/transformerType.ts

@@ -49,7 +49,7 @@
     </mat-card-header>
     <mat-card-content>
       <mat-list>
-        <mat-list-item *ngFor="let s of (solr | async)">
+        <mat-list-item *ngFor="let s of (solr | async)" [routerLink]="['/admin/solr', s.id]">
           <span matListItemTitle>{{s.name}}</span>
           <span matListItemLine *ngIf="s.description">{{s.description}}</span>
           <span matListItemLine>{{s.server}}</span>

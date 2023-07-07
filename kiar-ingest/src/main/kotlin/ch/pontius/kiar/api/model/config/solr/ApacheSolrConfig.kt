@@ -10,25 +10,25 @@ import kotlinx.serialization.Serializable
  * @version 1.1.0
  */
 @Serializable
-class SolrConfig(
-    /** The (optional) database ID of this [SolrConfig]. */
+class ApacheSolrConfig(
+    /** The (optional) database ID of this [ApacheSolrConfig]. */
     val id: String? = null,
 
-    /** The name of this [SolrConfig]. */
+    /** The name of this [ApacheSolrConfig]. */
     val name: String,
 
-    /** An optional description  of this [SolrConfig]. */
+    /** An optional description  of this [ApacheSolrConfig]. */
     val description: String? = null,
 
     /** URL of the Apache Solr server. */
     val server: String = "http://localhost:8983",
 
     /** Username to use when authenticating with Apache Solr. */
-    val user: String? = null,
+    val username: String? = null,
 
     /** Password to use when authentication with Apache Solr. */
     val password: String? = null,
 
-    /** A list of [CollectionConfig] for this [SolrConfig]. */
-    val collections: List<CollectionConfig> = emptyList()
+    /** A list of [CollectionConfig] for this [ApacheSolrConfig]. */
+    val collections: List<ApacheSolrCollection> = emptyList()
 )

@@ -64,6 +64,7 @@ fun configureApiRoutes(store: TransientEntityStore, server: IngesterServer, conf
         get("solr", { ctx -> listSolrConfigurations(ctx, store) }, Role.ADMINISTRATOR, Role.MANAGER )
         post("solr", { ctx -> createSolrConfig(ctx, store) }, Role.ADMINISTRATOR )
         path("solr") {
+            get("{id}", { ctx -> getSolrConfig(ctx, store) }, Role.ADMINISTRATOR, Role.MANAGER )
             put("{id}",  { ctx -> updateSolrConfig(ctx, store) }, Role.ADMINISTRATOR )
             delete("{id}",  { ctx -> deleteSolrConfig(ctx, store) }, Role.ADMINISTRATOR )
         }

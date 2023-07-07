@@ -1,6 +1,6 @@
 package ch.pontius.kiar.ingester.processors.sinks
 
-import ch.pontius.kiar.api.model.config.solr.SolrConfig
+import ch.pontius.kiar.api.model.config.solr.ApacheSolrConfig
 import ch.pontius.kiar.api.model.job.JobLog
 import ch.pontius.kiar.api.model.job.JobLogContext
 import ch.pontius.kiar.api.model.job.JobLogLevel
@@ -26,7 +26,7 @@ import java.lang.IllegalStateException
  * @author Ralph Gasser
  * @version 1.1.0
  */
-class ApacheSolrSink(override val input: Source<SolrInputDocument>, private val config: SolrConfig): Sink<SolrInputDocument>, Closeable {
+class ApacheSolrSink(override val input: Source<SolrInputDocument>, private val config: ApacheSolrConfig): Sink<SolrInputDocument>, Closeable {
 
     companion object {
         private val LOGGER = LogManager.getLogger()
@@ -41,8 +41,8 @@ class ApacheSolrSink(override val input: Source<SolrInputDocument>, private val 
     init {
         /* Prepare HTTP client builder. */
         var httpBuilder = Http2SolrClient.Builder(this.config.server)
-        if (this.config.user != null && this.config.password != null) {
-            httpBuilder = httpBuilder.withBasicAuthCredentials(this.config.user, this.config.password)
+        if (this.config.username != null && this.config.password != null) {
+            httpBuilder = httpBuilder.withBasicAuthCredentials(this.config.username, this.config.password)
         }
         this.client = httpBuilder.build()
 

@@ -1,5 +1,7 @@
+export * from './apacheSolrCollection';
+export * from './apacheSolrConfig';
 export * from './attributeMapping';
-export * from './collectionConfig';
+export * from './collectionType';
 export * from './createJobRequest';
 export * from './entityMapping';
 export * from './errorStatus';
@@ -12,7 +14,6 @@ export * from './loginRequest';
 export * from './mappingType';
 export * from './role';
 export * from './sessionStatus';
-export * from './solrConfig';
 export * from './successStatus';
 export * from './transformerConfig';
 export * from './transformerType';

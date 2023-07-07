@@ -170,14 +170,13 @@ private fun checkAndSetup(store: TransientEntityStore, config: Config) = store.t
                 DbSolr.new {
                     name = solr.name
                     server = solr.server
-                    username = solr.user
+                    username = solr.username
                     password = solr.password
                     for (c in solr.collections) {
                         collections.add(DbCollection.new{
                             name = c.name
-                            type = DbCollectionType.OBJECT
-                            filters = c.filter.joinToString(",")
-                            acceptEmptyFilter = c.acceptEmptyFilter
+                            type = c.type.toDb()
+                            selector = c.selector
                             deleteBeforeIngest = c.deleteBeforeImport
                         })
                     }

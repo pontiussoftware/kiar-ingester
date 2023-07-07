@@ -1,5 +1,5 @@
 import {AfterViewInit, Component} from "@angular/core";
-import {ConfigService, EntityMapping, JobTemplate, SolrConfig} from "../../../../../openapi";
+import {ApacheSolrConfig, ConfigService, EntityMapping, JobTemplate} from "../../../../../openapi";
 import {mergeMap, Observable, Observer, shareReplay, Subject} from "rxjs";
 import {MatDialog} from "@angular/material/dialog";
 import {AddEntityMappingDialogComponent} from "./add-entity-mapping-dialog.component";
@@ -23,7 +23,7 @@ export class AdminDashboardComponent implements AfterViewInit {
   public readonly mappings: Observable<Array<EntityMapping>>
 
   /** {@link Observable} of all available {@link SolrConfig}s. */
-  public readonly solr: Observable<Array<SolrConfig>>
+  public readonly solr: Observable<Array<ApacheSolrConfig>>
 
   /** {@link Observable} of all available participants. */
   public readonly participant: Observable<Array<String>>
@@ -109,7 +109,7 @@ export class AdminDashboardComponent implements AfterViewInit {
           },
           error: err => this._snackBar.open(`Error occurred while trying to create Apache Solr config: ${err?.error?.description}.`, "Dismiss", { duration: 2000 } as MatSnackBarConfig),
           complete: () => {}
-        } as Observer<SolrConfig>)
+        } as Observer<ApacheSolrConfig>)
       }
     })
   }

@@ -1,7 +1,7 @@
 import {Component} from "@angular/core";
 import {FormControl, FormGroup, Validators} from "@angular/forms";
 import {MatDialogRef} from "@angular/material/dialog";
-import {SolrConfig} from "../../../../../openapi";
+import {ApacheSolrConfig} from "../../../../../openapi";
 
 @Component({
   selector: 'kiar-add-solr-config-dialog',
@@ -32,7 +32,7 @@ export class AddSolrConfigDialogComponent {
         username: this.formControl.get('username')?.value,
         password: this.formControl.get('password')?.value,
         collections: []
-      } as SolrConfig)
+      } as ApacheSolrConfig)
     }
   }
 }

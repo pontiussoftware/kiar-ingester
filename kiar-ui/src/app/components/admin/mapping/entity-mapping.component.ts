@@ -1,4 +1,4 @@
-import {Component, ViewChild} from "@angular/core";
+import {AfterViewInit, Component, ViewChild} from "@angular/core";
 import {AttributeMapping, EntityMapping, EntityMappingService, MappingType, ValueParser} from "../../../../../openapi";
 import {ActivatedRoute, Router} from "@angular/router";
 import {catchError, map, mergeMap, Observable, of} from "rxjs";
@@ -9,26 +9,26 @@ import {MatDialog} from "@angular/material/dialog";
 import {AttributeMappingData, AttributeMappingDialogComponent} from "./attribute-mapping-dialog.component";
 
 @Component({
-  selector: 'kiar-admin-dashboard',
+  selector: 'kiar-entity-mapping-admin',
   templateUrl: './entity-mapping.component.html',
   styleUrls: ['./entity-mapping.component.scss']
 })
-export class EntityMappingComponent {
+export class EntityMappingComponent implements AfterViewInit {
 
   /** An {@link Observable} of the mapping ID that is being inspected by this {@link EntityMappingComponent}. */
   public mappingId: Observable<string>
 
   /** The list of columns displayed by the table. */
-  public columns = ['source', 'destination', 'parser', 'required', 'multiValued', 'parameters', 'action']
+  public readonly columns = ['source', 'destination', 'parser', 'required', 'multiValued', 'parameters', 'action']
 
   /** List of attribute {@link FormGroup}s. */
-  public attributes: Array<FormGroup> = []
+  public readonly attributes: Array<FormGroup> = []
 
   /** A {@link MatTableDataSource} for the table. */
-  public tableDataSource = new MatTableDataSource(this.attributes)
+  public readonly tableDataSource = new MatTableDataSource(this.attributes)
 
   /** The {@link FormControl} that backs this {@link EntityMappingComponent}. */
-  public formControl = new FormGroup({
+  public readonly formControl = new FormGroup({
     name: new FormControl('', [Validators.required]),
     description: new FormControl(''),
     type: new FormControl('', [Validators.required]),
@@ -48,8 +48,13 @@ export class EntityMappingComponent {
     this.mappingId = this.route.paramMap.pipe(
         map(params => params.get('id')!!)
     );
-    this.refresh()
+  }
 
+  /**
+   *
+   */
+  public ngAfterViewInit() {
+    this.refresh()
   }
 
   /**
@@ -93,7 +98,7 @@ export class EntityMappingComponent {
   public save() {
     this.mappingId.pipe(
         mergeMap(s => {
-          let mapping = this.fromToEntityMapping(s)
+          let mapping = this.formToEntityMapping(s)
           return this.service.updateEntityMapping(s, mapping).pipe(
               catchError((err) => {
                 this.snackBar.open(`Error occurred while trying to update entity mapping: ${err?.error?.description}.`, "Dismiss", { duration: 2000 } as MatSnackBarConfig);
@@ -167,7 +172,7 @@ export class EntityMappingComponent {
    * @param id The ID of the {@link EntityMapping}
    * @return {@link EntityMapping}
    */
-  private fromToEntityMapping(id: string): EntityMapping {
+  private formToEntityMapping(id: string): EntityMapping {
     return {
       id: id,
       name: this.formControl.get('name')?.value,

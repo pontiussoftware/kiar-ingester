@@ -1,6 +1,7 @@
 package ch.pontius.kiar.api.routes.config
 
-import ch.pontius.kiar.api.model.config.solr.SolrConfig
+import ch.pontius.kiar.api.model.config.solr.ApacheSolrCollection
+import ch.pontius.kiar.api.model.config.solr.ApacheSolrConfig
 import ch.pontius.kiar.api.model.status.ErrorStatus
 import ch.pontius.kiar.api.model.status.ErrorStatusException
 import ch.pontius.kiar.api.model.status.SuccessStatus
@@ -22,7 +23,7 @@ import kotlinx.dnq.util.findById
     tags = ["Config", "Apache Solr"],
     pathParams = [],
     responses = [
-        OpenApiResponse("200", [OpenApiContent(Array<SolrConfig>::class)]),
+        OpenApiResponse("200", [OpenApiContent(Array<ApacheSolrConfig>::class)]),
         OpenApiResponse("401", [OpenApiContent(ErrorStatus::class)]),
         OpenApiResponse("403", [OpenApiContent(ErrorStatus::class)]),
         OpenApiResponse("500", [OpenApiContent(ErrorStatus::class)]),
@@ -41,9 +42,9 @@ fun listSolrConfigurations(ctx: Context, store: TransientEntityStore) {
     operationId = "postCreateSolrConfig",
     tags = ["Config", "Apache Solr"],
     pathParams = [],
-    requestBody = OpenApiRequestBody([OpenApiContent(SolrConfig::class)], required = true),
+    requestBody = OpenApiRequestBody([OpenApiContent(ApacheSolrConfig::class)], required = true),
     responses = [
-        OpenApiResponse("200", [OpenApiContent(SolrConfig::class)]),
+        OpenApiResponse("200", [OpenApiContent(ApacheSolrConfig::class)]),
         OpenApiResponse("400", [OpenApiContent(ErrorStatus::class)]),
         OpenApiResponse("401", [OpenApiContent(ErrorStatus::class)]),
         OpenApiResponse("403", [OpenApiContent(ErrorStatus::class)]),
@@ -52,7 +53,7 @@ fun listSolrConfigurations(ctx: Context, store: TransientEntityStore) {
 )
 fun createSolrConfig(ctx: Context, store: TransientEntityStore) {
     val request = try {
-        ctx.bodyAsClass(SolrConfig::class.java)
+        ctx.bodyAsClass(ApacheSolrConfig::class.java)
     } catch (e: BadRequestResponse) {
         throw ErrorStatusException(400, "Malformed request body.")
     }
@@ -61,7 +62,7 @@ fun createSolrConfig(ctx: Context, store: TransientEntityStore) {
         val solr = DbSolr.new {
             name = request.name
             server = request.server
-            username = request.user
+            username = request.username
             password = request.password
         }
 
@@ -70,6 +71,35 @@ fun createSolrConfig(ctx: Context, store: TransientEntityStore) {
         solr.toApi()
     }
     ctx.json(created)
+}
+
+@OpenApi(
+    path = "/api/solr/{id}",
+    methods = [HttpMethod.GET],
+    summary = "Retrieves all the details about an Apache Solr configuration.",
+    operationId = "getSolrConfig",
+    tags = ["Config", "Apache Solr"],
+    pathParams = [
+        OpenApiParam(name = "id", description = "The ID of the Apache Solr configuration that should be deleted.", required = true)
+    ],
+    responses = [
+        OpenApiResponse("200", [OpenApiContent(ApacheSolrConfig::class)]),
+        OpenApiResponse("401", [OpenApiContent(ErrorStatus::class)]),
+        OpenApiResponse("403", [OpenApiContent(ErrorStatus::class)]),
+        OpenApiResponse("404", [OpenApiContent(ErrorStatus::class)]),
+        OpenApiResponse("500", [OpenApiContent(ErrorStatus::class)])
+    ]
+)
+fun getSolrConfig(ctx: Context, store: TransientEntityStore) {
+    val solrId = ctx.pathParam("id")
+    val mapping = store.transactional(true) {
+        try {
+            DbSolr.findById(solrId).toApi()
+        } catch (e: Throwable) {
+            throw ErrorStatusException(404, "Apache Solr configuration with ID $solrId could not be found.")
+        }
+    }
+    ctx.json(mapping)
 }
 
 @OpenApi(
@@ -111,9 +141,9 @@ fun deleteSolrConfig(ctx: Context, store: TransientEntityStore) {
     pathParams = [
         OpenApiParam(name = "id", description = "The ID of the Apache Solr configuration that should be updated.", required = true)
     ],
-    requestBody = OpenApiRequestBody([OpenApiContent(SolrConfig::class)], required = true),
+    requestBody = OpenApiRequestBody([OpenApiContent(ApacheSolrConfig::class)], required = true),
     responses = [
-        OpenApiResponse("200", [OpenApiContent(SolrConfig::class)]),
+        OpenApiResponse("200", [OpenApiContent(ApacheSolrConfig::class)]),
         OpenApiResponse("400", [OpenApiContent(ErrorStatus::class)]),
         OpenApiResponse("401", [OpenApiContent(ErrorStatus::class)]),
         OpenApiResponse("403", [OpenApiContent(ErrorStatus::class)]),
@@ -125,7 +155,7 @@ fun updateSolrConfig(ctx: Context, store: TransientEntityStore) {
     /* Extract the ID and the request body. */
     val solrId = ctx.pathParam("id")
     val request = try {
-        ctx.bodyAsClass(SolrConfig::class.java)
+        ctx.bodyAsClass(ApacheSolrConfig::class.java)
     } catch (e: BadRequestResponse) {
         throw ErrorStatusException(400, "Malformed request body.")
     }
@@ -140,8 +170,9 @@ fun updateSolrConfig(ctx: Context, store: TransientEntityStore) {
 
         /* Update basic properties. */
         solr.name = request.name
+        solr.description = request.description
         solr.server = request.server
-        solr.username = request.user
+        solr.username = request.username
         solr.password = request.password
 
         /* Now merge attribute mappings. */
@@ -157,13 +188,13 @@ fun updateSolrConfig(ctx: Context, store: TransientEntityStore) {
  *
  * @param collections [List] of [CollectionConfig]s to merge [DbSolr] with.
  */
-private fun DbSolr.merge(collections: List<CollectionConfig>) {
+private fun DbSolr.merge(collections: List<ApacheSolrCollection>) {
     this.collections.clear()
     for (c in collections) {
         this.collections.add(DbCollection.new {
             name = c.name
-            filters = c.filter.joinToString(DbCollection.FILTER_ENTRY_DELIMITER)
-            acceptEmptyFilter = c.acceptEmptyFilter
+            type = c.type.toDb()
+            selector = c.selector
             deleteBeforeIngest = c.deleteBeforeImport
         })
     }

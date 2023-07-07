@@ -7,6 +7,7 @@ import {ForbiddenComponent} from "./components/session/forbidden/forbidden.compo
 import {AdminDashboardComponent} from "./components/admin/dashboard/admin-dashboard.component";
 import {EntityMappingComponent} from "./components/admin/mapping/entity-mapping.component";
 import {ProfileComponent} from "./components/session/user/profile.component";
+import {ApacheSolrComponent} from "./components/admin/solr/apache-solr.component";
 
 const routes: Routes = [
 
@@ -20,6 +21,7 @@ const routes: Routes = [
   /* Now come all the routes that require authentication as an ADMINISTRATOR */
   { path: 'admin/dashboard', component: AdminDashboardComponent, canActivate: [canActivateAdministrator] },
   { path: 'admin/mapping/:id', component: EntityMappingComponent, canActivate: [canActivateAdministrator] },
+  { path: 'admin/solr/:id', component: ApacheSolrComponent, canActivate: [canActivateAdministrator] },
 
   /* Now come all the routes that require authentication as a VIEWER, MANAGER or ADMINISTRATOR */
   { path: 'manager/dashboard', component: DashboardComponent, canActivate: [canActivateViewer] },

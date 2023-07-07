@@ -1,5 +1,6 @@
 package ch.pontius.kiar.database.config.solr
 
+import ch.pontius.kiar.api.model.config.solr.ApacheSolrCollection
 import ch.pontius.kiar.config.CollectionConfig
 import jetbrains.exodus.entitystore.Entity
 import kotlinx.dnq.*
@@ -11,9 +12,7 @@ import kotlinx.dnq.*
  * @version 1.0.0
  */
 class DbCollection(entity: Entity) : XdEntity(entity) {
-    companion object: XdNaturalEntityType<DbCollection>() {
-         const val FILTER_ENTRY_DELIMITER = ","
-    }
+    companion object: XdNaturalEntityType<DbCollection>()
 
     /** The name held by this [DbCollection]. Must be unique!*/
     var name by xdRequiredStringProp(unique = false, trimmed = true)
@@ -21,14 +20,11 @@ class DbCollection(entity: Entity) : XdEntity(entity) {
     /** The [DbCollectionType] of this [DbCollection]*/
     var type by xdLink1(DbCollectionType)
 
-    /** The collection filters employed by this [DbCollection]. */
-    var filters by xdStringProp(trimmed = true)
+    /** The collection selector for this [DbCollection]. */
+    var selector by xdStringProp(trimmed = true)
 
     /** Flag indicating, that the [DbCollection] should be deleted before starting an ingest. */
     var deleteBeforeIngest by xdBooleanProp()
-
-    /** A flag indicating, that this [DbCollection] accepts empty filters. */
-    var acceptEmptyFilter by xdBooleanProp()
 
     /** [DbSolr] instance this [DbCollection] belongs to. */
     var solr: DbSolr by xdParent(DbSolr::collections)
@@ -38,13 +34,5 @@ class DbCollection(entity: Entity) : XdEntity(entity) {
      *
      * @return [CollectionConfig]
      */
-    fun toApi() = CollectionConfig(this.name, this.filters(), this.deleteBeforeIngest, this.acceptEmptyFilter)
-
-
-    /**
-     * Generates and returns a list of filters used for this [DbCollection].
-     *
-     * @return [List] of [String] filters.
-     */
-    fun filters(): List<String> = this.filters?.split(FILTER_ENTRY_DELIMITER) ?: emptyList()
+    fun toApi() = ApacheSolrCollection(this.name, this.type.toApi(), this.selector, this.deleteBeforeIngest)
 }
