@@ -2,17 +2,17 @@
 <div mat-dialog-content>
   <form [formGroup]="data.form">
     <mat-form-field appearance="fill" [style.width]="'100%'">
-      <mat-label>Source</mat-label>
+      <mat-label i18n="@@Source">Source</mat-label>
       <input matInput type="text" required formControlName="source">
     </mat-form-field>
 
     <mat-form-field appearance="fill" [style.width]="'100%'">
-      <mat-label>Destination</mat-label>
+      <mat-label i18n="@@LabelDestination">Destination</mat-label>
       <input matInput type="text" formControlName="destination">
     </mat-form-field>
 
     <mat-form-field appearance="fill" [style.width]="'50%'">
-      <mat-label>Destination</mat-label>
+      <mat-label i18n="@@LabelParser">Parser</mat-label>
       <mat-select formControlName="parser">
         <mat-option *ngFor="let parser of (parsers | async)" [value]="parser">
           {{parser}}

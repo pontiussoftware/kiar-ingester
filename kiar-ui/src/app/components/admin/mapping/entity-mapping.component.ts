@@ -1,10 +1,9 @@
-import {AfterViewInit, Component, ViewChild} from "@angular/core";
+import {AfterViewInit, Component} from "@angular/core";
 import {AttributeMapping, EntityMapping, EntityMappingService, MappingType, ValueParser} from "../../../../../openapi";
 import {ActivatedRoute, Router} from "@angular/router";
-import {catchError, map, mergeMap, Observable, of} from "rxjs";
+import {catchError, map, mergeMap, Observable, of, shareReplay} from "rxjs";
 import {MatSnackBar, MatSnackBarConfig} from "@angular/material/snack-bar";
 import {FormArray, FormControl, FormGroup, Validators} from "@angular/forms";
-import {MatTable, MatTableDataSource} from "@angular/material/table";
 import {MatDialog} from "@angular/material/dialog";
 import {AttributeMappingData, AttributeMappingDialogComponent} from "./attribute-mapping-dialog.component";
 
@@ -16,16 +15,13 @@ import {AttributeMappingData, AttributeMappingDialogComponent} from "./attribute
 export class EntityMappingComponent implements AfterViewInit {
 
   /** An {@link Observable} of the mapping ID that is being inspected by this {@link EntityMappingComponent}. */
-  public mappingId: Observable<string>
+  public readonly mappingId: Observable<string>
 
-  /** The list of columns displayed by the table. */
-  public readonly columns = ['source', 'destination', 'parser', 'required', 'multiValued', 'parameters', 'action']
+  /** An {@link Observable} of the list of available {@link ValueParser}s. */
+  public readonly parsers: Observable<Array<ValueParser>>
 
   /** List of attribute {@link FormGroup}s. */
   public readonly attributes: Array<FormGroup> = []
-
-  /** A {@link MatTableDataSource} for the table. */
-  public readonly tableDataSource = new MatTableDataSource(this.attributes)
 
   /** The {@link FormControl} that backs this {@link EntityMappingComponent}. */
   public readonly formControl = new FormGroup({
@@ -35,9 +31,6 @@ export class EntityMappingComponent implements AfterViewInit {
     attributes: new FormArray(this.attributes)
   })
 
-  /** */
-  @ViewChild(MatTable) table: MatTable<FormGroup>;
-
   constructor(
       private service: EntityMappingService,
       private router: Router,
@@ -45,13 +38,12 @@ export class EntityMappingComponent implements AfterViewInit {
       private snackBar: MatSnackBar,
       public dialog: MatDialog
   ) {
-    this.mappingId = this.route.paramMap.pipe(
-        map(params => params.get('id')!!)
-    );
+    this.mappingId = this.route.paramMap.pipe(map(params => params.get('id')!!));
+    this.parsers = this.service.getListParsers().pipe(shareReplay(1, 30000))
   }
 
   /**
-   *
+   * Refreshes the data after view has been setup.
    */
   public ngAfterViewInit() {
     this.refresh()
@@ -65,7 +57,6 @@ export class EntityMappingComponent implements AfterViewInit {
     this.dialog.open(AttributeMappingDialogComponent, {data: mapping, width: '750px'}).afterClosed().subscribe(data => {
       if (data != null && data.new) {
         (this.formControl.get('attributes') as FormArray<FormGroup>).push(data.form)
-        this.table.renderRows()
       }
     })
   }
@@ -89,7 +80,6 @@ export class EntityMappingComponent implements AfterViewInit {
    */
   public removeAttribute(index: number) {
     (this.formControl.get('attributes') as FormArray<FormGroup>).removeAt(index)
-    this.table.renderRows()
   }
 
   /**
@@ -97,18 +87,13 @@ export class EntityMappingComponent implements AfterViewInit {
    */
   public save() {
     this.mappingId.pipe(
-        mergeMap(s => {
-          let mapping = this.formToEntityMapping(s)
-          return this.service.updateEntityMapping(s, mapping).pipe(
-              catchError((err) => {
-                this.snackBar.open(`Error occurred while trying to update entity mapping: ${err?.error?.description}.`, "Dismiss", { duration: 2000 } as MatSnackBarConfig);
-                return of(null)
-              })
-          )
-        })
-    ).subscribe(m => {
-      this.snackBar.open(`Successfully saved updated entity mapping.`, "Dismiss", { duration: 2000 } as MatSnackBarConfig);
-      this.updateForm(m)
+        mergeMap((id) => this.service.updateEntityMapping(id, this.formToEntityMapping(id)))
+    ).subscribe({
+      next: (m) => {
+        this.snackBar.open(`Successfully saved updated entity mapping.`, "Dismiss", { duration: 2000 } as MatSnackBarConfig);
+        this.updateForm(m)
+      },
+      error: (err) => this.snackBar.open(`Error occurred while trying to update entity mapping: ${err?.error?.description}.`, "Dismiss", { duration: 2000 } as MatSnackBarConfig)
     })
   }
 
@@ -118,17 +103,13 @@ export class EntityMappingComponent implements AfterViewInit {
   public delete() {
     if (confirm("Are you sure that you want to delete this entity mapping?\nAfter deletion, it can no longer be retrieved.")) {
       this.mappingId.pipe(
-          mergeMap(s => {
-            return this.service.deleteEntityMapping(s).pipe(
-                catchError((err) => {
-                  this.snackBar.open(`Error occurred while trying to delete entity mapping: ${err?.error?.description}.`, "Dismiss", { duration: 2000 } as MatSnackBarConfig);
-                  return of(null)
-                })
-            )
-          })
-      ).subscribe(m => {
-        this.snackBar.open(`Successfully deleted entity mapping.`, "Dismiss", { duration: 2000 } as MatSnackBarConfig);
-        this.router.navigate(['admin', 'dashboard']).then(r => {})
+          mergeMap((id) => this.service.deleteEntityMapping(id))
+      ).subscribe({
+        next: () => {
+          this.snackBar.open(`Successfully deleted entity mapping.`, "Dismiss", {duration: 2000} as MatSnackBarConfig);
+          this.router.navigate(['admin', 'dashboard']).then(() => {})
+        },
+        error: (err) => this.snackBar.open(`Error occurred while trying to delete entity mapping: ${err?.error?.description}.`, "Dismiss", {duration: 2000} as MatSnackBarConfig)
       })
     }
   }
@@ -161,9 +142,6 @@ export class EntityMappingComponent implements AfterViewInit {
     for (let a of (mapping?.attributes || [])) {
       this.attributes.push(this.newAttributeMappingFormGroup(a))
     }
-
-    /* Re-render table. */
-    this.table.renderRows();
   }
 
   /**

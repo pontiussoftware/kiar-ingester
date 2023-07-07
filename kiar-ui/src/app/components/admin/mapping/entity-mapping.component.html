@@ -1,6 +1,6 @@
 <form [formGroup]="formControl">
 
-  <h1>Edit Entity Mapping {{mappingId | async}}</h1>
+  <h1>Edit Entity Mapping (ID: {{mappingId | async}})</h1>
 
   <div id="main" [style.display]="'flex'">
     <mat-form-field appearance="fill" [style.width]="'15%'">
@@ -40,69 +40,58 @@
     </button>
   </h2>
 
+  <table formArrayName="attributes" [style.width]="'100%'">
+    <thead>
+    <tr>
+      <th i18n="@@LabelSource" [style.width]="'50%'">Source</th>
+      <th i18n="@@LabelDestination" [style.width]="'20%'">Destination</th>
+      <th i18n="@@LabelParser" [style.width]="'10%'">Parser</th>
+      <th i18n="@@LabelRequired"  [style.width]="'5%'">Required</th>
+      <th i18n="@@LabelMultiValued" [style.width]="'5%'">Multi-Valued</th>
+      <th  [style.width]="'10%'">&nbsp;</th>
+    </tr>
+    </thead>
 
-  <table mat-table [dataSource]="tableDataSource" class="mat-elevation-z8" formArrayName="attributes">
     <!-- Source Column -->
-    <ng-container matColumnDef="source">
-      <th mat-header-cell *matHeaderCellDef> Source </th>
-      <td mat-cell *matCellDef="let element; let i = index">
-        {{element.value['source']}}
+    <tr *ngFor="let e of attributes; let i = index" [formGroupName]="i">
+      <td>
+        <mat-form-field appearance="fill" [style.width]="'100%'">
+          <mat-label i18n="@@LabelSource">Source</mat-label>
+          <input matInput type="text" formControlName="source"/>
+        </mat-form-field>
       </td>
-    </ng-container>
 
-    <!-- Destination Column -->
-    <ng-container matColumnDef="destination">
-      <th mat-header-cell *matHeaderCellDef> Destination </th>
-      <td mat-cell *matCellDef="let element; let i = index">
-        {{element.value['destination']}}
+      <td>
+        <mat-form-field appearance="fill" [style.width]="'100%'">
+          <mat-label i18n="@@LabelDestination">Destination</mat-label>
+          <input matInput type="text" formControlName="destination"/>
+        </mat-form-field>
       </td>
-    </ng-container>
 
-    <!-- Parser Column -->
-    <ng-container matColumnDef="parser">
-      <th mat-header-cell *matHeaderCellDef> Parser </th>
-      <td mat-cell *matCellDef="let element; let i = index">
-        {{element.value['parser']}}
+      <td>
+        <mat-form-field appearance="fill" [style.width]="'100%'">
+          <mat-label i18n="@@LabelParser">Parser</mat-label>
+          <mat-select formControlName="parser">
+            <mat-option *ngFor="let parser of (parsers | async)" [value]="parser">
+              {{parser}}
+            </mat-option>
+          </mat-select>
+        </mat-form-field>
+
       </td>
-    </ng-container>
 
-    <!-- Required Column -->
-    <ng-container matColumnDef="required">
-      <th mat-header-cell *matHeaderCellDef> Required </th>
-      <td mat-cell *matCellDef="let element; let i = index">
-        {{element.value['required']}}
+      <td>
+        <mat-checkbox formControlName="required"></mat-checkbox>
       </td>
-    </ng-container>
 
-    <!-- multiValued Column -->
-    <ng-container matColumnDef="multiValued">
-      <th mat-header-cell *matHeaderCellDef> Multi-Valued </th>
-      <td mat-cell *matCellDef="let element; let i = index">
-        {{element.value['multiValued']}}
+      <td>
+        <mat-checkbox formControlName="multiValued"></mat-checkbox>
       </td>
-    </ng-container>
 
-    <!-- multiValued Column -->
-    <ng-container matColumnDef="parameters">
-      <th mat-header-cell *matHeaderCellDef> Parameters </th>
-      <td mat-cell *matCellDef="let element; let i = index" [style.color]="'#888888'">
-        <ng-container *ngFor="let parameter of element.value['parameters']">
-          {{parameter['key']}}:{{parameter['value']}} <br/>
-        </ng-container>
-      </td>
-    </ng-container>
-
-    <!-- multiValued Column -->
-    <ng-container matColumnDef="action">
-      <th mat-header-cell *matHeaderCellDef> Action </th>
-      <td mat-cell *matCellDef="let element; let i = index">
+      <td>
         <button mat-icon-button (click)="editAttributeMapping(i)" color="primary"><mat-icon>edit</mat-icon></button>
         <button mat-icon-button (click)="removeAttribute(i)" color="warn"><mat-icon>delete</mat-icon></button>
       </td>
-    </ng-container>
-
-    <tr mat-header-row *matHeaderRowDef="columns"></tr>
-    <tr mat-row *matRowDef="let row; let i = index; columns: columns"></tr>
+    </tr>
   </table>
-
 </form>

@@ -1,6 +1,6 @@
 import {Component, Inject} from "@angular/core";
 import {MAT_DIALOG_DATA, MatDialogRef} from "@angular/material/dialog";
-import {AbstractControl, FormArray, FormBuilder, FormControl, FormGroup} from "@angular/forms";
+import {FormArray, FormControl, FormGroup} from "@angular/forms";
 import {EntityMappingService, ValueParser} from "../../../../../openapi";
 import {Observable, shareReplay} from "rxjs";
 
@@ -20,7 +20,7 @@ export interface AttributeMappingData {
 export class AttributeMappingDialogComponent {
 
   /** An {@link Observable} of the list of available {@link ValueParser}s. */
-  public parsers: Observable<Array<ValueParser>>
+  public readonly parsers: Observable<Array<ValueParser>>
 
   constructor(
       private dialogRef: MatDialogRef<AttributeMappingDialogComponent>,

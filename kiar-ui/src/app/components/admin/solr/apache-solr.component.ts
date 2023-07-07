@@ -60,10 +60,7 @@ export class ApacheSolrComponent implements AfterViewInit{
    */
   public save() {
     this.solrId.pipe(
-        mergeMap((id) => {
-          let mapping = this.formToApacheSolrConfig(id)
-          return this.service.updateSolrConfig(id, mapping)
-        })
+        mergeMap((id) => this.service.updateSolrConfig(id, this.formToApacheSolrConfig(id)))
     ).subscribe({
       next: (c) => {
         this.snackBar.open(`Successfully updated  Apache Solr configuration.`, "Dismiss", { duration: 2000 } as MatSnackBarConfig)
