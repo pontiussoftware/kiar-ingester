@@ -8,6 +8,7 @@ import {AdminDashboardComponent} from "./components/admin/dashboard/admin-dashbo
 import {EntityMappingComponent} from "./components/admin/mapping/entity-mapping.component";
 import {ProfileComponent} from "./components/session/user/profile.component";
 import {ApacheSolrComponent} from "./components/admin/solr/apache-solr.component";
+import {JobTemplateComponent} from "./components/admin/template/job-template.component";
 
 const routes: Routes = [
 
@@ -22,6 +23,7 @@ const routes: Routes = [
   { path: 'admin/dashboard', component: AdminDashboardComponent, canActivate: [canActivateAdministrator] },
   { path: 'admin/mapping/:id', component: EntityMappingComponent, canActivate: [canActivateAdministrator] },
   { path: 'admin/solr/:id', component: ApacheSolrComponent, canActivate: [canActivateAdministrator] },
+  { path: 'admin/template/:id', component: JobTemplateComponent, canActivate: [canActivateAdministrator] },
 
   /* Now come all the routes that require authentication as a VIEWER, MANAGER or ADMINISTRATOR */
   { path: 'manager/dashboard', component: DashboardComponent, canActivate: [canActivateViewer] },

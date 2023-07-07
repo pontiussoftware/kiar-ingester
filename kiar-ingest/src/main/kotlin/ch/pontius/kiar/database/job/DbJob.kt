@@ -11,6 +11,7 @@ import ch.pontius.kiar.ingester.processors.sources.XmlFileSource
 import ch.pontius.kiar.ingester.processors.transformers.Transformer
 import jetbrains.exodus.entitystore.Entity
 import kotlinx.dnq.*
+import kotlinx.dnq.link.OnDeletePolicy
 import kotlinx.dnq.query.asSequence
 import org.apache.solr.common.SolrInputDocument
 
@@ -42,7 +43,7 @@ class DbJob(entity: Entity) : XdEntity(entity) {
     var source by xdLink1(DbJobSource)
 
     /** The [DbJobTemplate] this [DbJob] has been created with. */
-    var template by xdLink0_1(DbJobTemplate)
+    var template by xdLink0_1(DbJobTemplate, onTargetDelete = OnDeletePolicy.CLEAR)
 
     /** The date and time this [DbJob] was created. */
     var createdAt by xdRequiredDateTimeProp()

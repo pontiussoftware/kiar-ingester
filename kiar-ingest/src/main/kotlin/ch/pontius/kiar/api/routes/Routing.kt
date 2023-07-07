@@ -56,6 +56,7 @@ fun configureApiRoutes(store: TransientEntityStore, server: IngesterServer, conf
         post("templates", { ctx -> createJobTemplate(ctx, store, server) }, Role.ADMINISTRATOR )
         path("templates") {
             get("types",  { ctx -> listJobTemplateTypes(ctx, store) }, Role.ADMINISTRATOR )
+            get("{id}",  { ctx -> getJobTemplate(ctx, store) }, Role.ADMINISTRATOR, Role.MANAGER )
             put("{id}",  { ctx -> updateJobTemplate(ctx, store) }, Role.ADMINISTRATOR )
             delete("{id}",  { ctx -> deleteJobTemplate(ctx, store, server) }, Role.ADMINISTRATOR )
         }

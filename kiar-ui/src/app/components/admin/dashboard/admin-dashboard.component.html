@@ -9,7 +9,7 @@
     </mat-card-header>
     <mat-card-content>
       <mat-list>
-        <mat-list-item *ngFor="let template of (templates | async)" [style.display]="'flex'">
+        <mat-list-item *ngFor="let template of (templates | async)" [routerLink]="['/admin/template', template.id]">
           <div [style.width]="'60%'">
             <span matListItemTitle>{{template.name}}</span>
             <span matListItemLine *ngIf="template.description">{{template.description}}</span>
@@ -63,7 +63,7 @@
     <mat-card-header>
       <mat-card-title>Participants ({{(participant | async)?.length}})</mat-card-title>
       <div class="space-flexible"></div>
-      <button mat-mini-fab color="primary" aria-label="Adds a new Apache Solr configuration." (click)="addParticipant()">
+      <button mat-mini-fab color="primary" aria-label="Adds a new participant identifier." (click)="addParticipant()">
         <mat-icon>add</mat-icon>
       </button>
     </mat-card-header>

@@ -76,9 +76,7 @@ export class ApacheSolrComponent implements AfterViewInit{
   public delete() {
     if (confirm("Are you sure that you want to delete this Apache Solr configuration?\nAfter deletion, it can no longer be retrieved.")) {
       this.solrId.pipe(
-          mergeMap((id) => {
-            return this.service.deleteSolrConfig(id)
-          })
+          mergeMap((id) =>  this.service.deleteSolrConfig(id))
       ).subscribe({
         next: () => {
           this.snackBar.open(`Successfully deleted Apache Solr configuration.`, "Dismiss", { duration: 2000 } as MatSnackBarConfig);

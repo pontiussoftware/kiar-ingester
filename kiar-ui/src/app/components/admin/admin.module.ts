@@ -23,6 +23,7 @@ import {AddSolrConfigDialogComponent} from "./dashboard/add-solr-config.dialog.c
 import {AddJobTemplateDialogComponent} from "./dashboard/add-job-template-dialog.component";
 import {AddParticipantDialogComponent} from "./dashboard/add-participant-dialog.component";
 import {ApacheSolrComponent} from "./solr/apache-solr.component";
+import {JobTemplateComponent} from "./template/job-template.component";
 
 @NgModule({
   declarations: [
@@ -34,6 +35,7 @@ import {ApacheSolrComponent} from "./solr/apache-solr.component";
     ApacheSolrComponent,
     AttributeMappingDialogComponent,
     EntityMappingComponent,
+    JobTemplateComponent
   ],
   imports: [
     CommonModule,
@@ -57,7 +59,9 @@ import {ApacheSolrComponent} from "./solr/apache-solr.component";
   ],
   exports: [
     AdminDashboardComponent,
-    EntityMappingComponent
+    ApacheSolrComponent,
+    EntityMappingComponent,
+    JobTemplateComponent
   ],
   providers: [
       AttributeMappingDialogComponent

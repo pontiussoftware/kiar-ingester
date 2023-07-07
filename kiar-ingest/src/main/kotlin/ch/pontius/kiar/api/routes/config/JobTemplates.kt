@@ -128,9 +128,38 @@ fun createJobTemplate(ctx: Context, store: TransientEntityStore, server: Ingeste
 
 @OpenApi(
     path = "/api/templates/{id}",
+    methods = [HttpMethod.GET],
+    summary = "Deletes an existing job template.",
+    operationId = "getJobTemplate",
+    tags = ["Config", "Job Template"],
+    pathParams = [
+        OpenApiParam(name = "id", description = "The ID of the job template to retrieve.", required = true)
+    ],
+    responses = [
+        OpenApiResponse("200", [OpenApiContent(JobTemplate::class)]),
+        OpenApiResponse("401", [OpenApiContent(ErrorStatus::class)]),
+        OpenApiResponse("403", [OpenApiContent(ErrorStatus::class)]),
+        OpenApiResponse("404", [OpenApiContent(ErrorStatus::class)]),
+        OpenApiResponse("500", [OpenApiContent(ErrorStatus::class)])
+    ]
+)
+fun getJobTemplate(ctx: Context, store: TransientEntityStore) {
+    val templateId = ctx.pathParam("id")
+    val template = store.transactional {
+        try {
+            DbJobTemplate.findById(templateId).toApi(true)
+        } catch (e: Throwable) {
+            throw ErrorStatusException(404, "Job template with ID $templateId could not be found.")
+        }
+    }
+    ctx.json(template)
+}
+
+@OpenApi(
+    path = "/api/templates/{id}",
     methods = [HttpMethod.DELETE],
     summary = "Deletes an existing job template.",
-    operationId = "deleteJobTemplates",
+    operationId = "deleteJobTemplate",
     tags = ["Config", "Job Template"],
     pathParams = [
         OpenApiParam(name = "id", description = "The ID of the job template that should be deleted.", required = true)
@@ -157,9 +186,9 @@ fun deleteJobTemplate(ctx: Context, store: TransientEntityStore, server: Ingeste
         if (template.startAutomatically) {
             terminateWatcher = true
         }
-
+        val name = template.name
         template.delete()
-        template.name
+        name
     }
 
     /* Terminate watcher if necessary. */

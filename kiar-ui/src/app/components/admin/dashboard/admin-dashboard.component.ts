@@ -22,7 +22,7 @@ export class AdminDashboardComponent implements AfterViewInit {
   /** {@link Observable} of all available {@link EntityMapping}s. */
   public readonly mappings: Observable<Array<EntityMapping>>
 
-  /** {@link Observable} of all available {@link SolrConfig}s. */
+  /** {@link Observable} of all available {@link ApacheSolrConfig}s. */
   public readonly solr: Observable<Array<ApacheSolrConfig>>
 
   /** {@link Observable} of all available participants. */

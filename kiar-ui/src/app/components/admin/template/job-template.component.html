@@ -1,0 +1,97 @@
+<form [formGroup]="formControl">
+
+  <h1>Job Template (ID: {{templateId | async}})</h1>
+
+  <div class="main">
+    <mat-form-field appearance="fill" [style.width]="'10%'">
+      <mat-label i18n="@@LabelName">Name</mat-label>
+      <input matInput type="text" required formControlName="name">
+    </mat-form-field>
+
+    <mat-form-field appearance="fill" [style.width]="'20%'">
+      <mat-label i18n="@@LabelDescription">Description</mat-label>
+      <input matInput type="textarea" formControlName="description">
+    </mat-form-field>
+
+    <mat-form-field appearance="fill" [style.width]="'5%'">
+      <mat-label i18n="@@LabelType">Type</mat-label>
+      <mat-select formControlName="type">
+        <mat-option *ngFor="let type of (types | async)" [value]="type">
+          {{type}}
+        </mat-option>
+      </mat-select>
+    </mat-form-field>
+
+    <mat-form-field appearance="fill" [style.width]="'10%'">
+      <mat-label i18n="@@LabelParticipant">Participant</mat-label>
+      <mat-select formControlName="participantName">
+        <mat-option *ngFor="let participant of (participants | async)" [value]="participant">
+          {{participant}}
+        </mat-option>
+      </mat-select>
+    </mat-form-field>
+
+    <mat-form-field appearance="fill" [style.width]="'15%'">
+      <mat-label i18n="@@LabelEntityMapping">Entity Mapping</mat-label>
+      <mat-select formControlName="entityMappingName">
+        <mat-option *ngFor="let mapping of (mappings | async)" [value]="mapping.name">
+          {{mapping.name}}
+        </mat-option>
+      </mat-select>
+    </mat-form-field>
+
+    <mat-form-field appearance="fill" [style.width]="'15%'">
+      <mat-label i18n="@@ApacheSolrConfig">Apache Solr Config</mat-label>
+      <mat-select formControlName="solrConfigName">
+        <mat-option *ngFor="let config of (solr | async)" [value]="config.name">
+          {{config.name}}
+        </mat-option>
+      </mat-select>
+    </mat-form-field>
+
+    <mat-checkbox formControlName="startAutomatically" i18n="@@LabelStartAutomatically">
+      Start automatically
+    </mat-checkbox>
+
+
+    <div class="button-group" [style.margin-top]="'10px'">
+      <button mat-raised-button color="primary" i18n="@@ButtonSave" matTooltip="Saves all changes made to this entity mapping." (click)="save()">
+        Save
+      </button>
+      <button mat-raised-button i18n="@@ButtonReload" matTooltip="Reloads this entity mapping, reverting all unsaved changes."  (click)="refresh()">
+        Reload
+      </button>
+      <button mat-raised-button color="warn"  i18n="@@ButtonDelete" matTooltip="Deletes this entity mapping." (click)="delete()">
+        Delete
+      </button>
+    </div>
+  </div>
+
+
+  <h2>Transformers
+    <button mat-mini-fab color="primary" aria-label="Adds a new transformer to this job template." (click)="addTransformer()">
+      <mat-icon>add</mat-icon>
+    </button>
+  </h2>
+
+  <table formArrayName="transformers" [style.width]="'100%'">
+    <thead>
+    <tr>
+      <th>Name</th>
+      <th>&nbsp;</th>
+    </tr>
+    </thead>
+    <tr *ngFor="let t of transformers; let i = index" [formGroupName]="i">
+      <td>
+        <mat-form-field appearance="fill" [style.width]="'100%'">
+          <mat-label i18n="@@LabelName">Name</mat-label>
+          <input matInput type="text" formControlName="name"/>
+        </mat-form-field>
+      </td>
+
+      <td>
+        <button mat-icon-button color="warn" ><mat-icon>delete</mat-icon></button>
+      </td>
+    </tr>
+  </table>
+</form>
