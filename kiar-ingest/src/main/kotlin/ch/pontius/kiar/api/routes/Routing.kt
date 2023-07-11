@@ -9,6 +9,7 @@ import ch.pontius.kiar.ingester.IngesterServer
 import createEntityMapping
 import deleteEntityMapping
 import getEntityMapping
+import getListInstitutions
 import io.javalin.apibuilder.ApiBuilder.*
 import jetbrains.exodus.database.TransientEntityStore
 import listEntityMappings
@@ -42,6 +43,11 @@ fun configureApiRoutes(store: TransientEntityStore, server: IngesterServer, conf
                 put("upload",  { ctx -> uploadKiar(ctx, store, config) }, Role.ADMINISTRATOR, Role.MANAGER )
                 put("schedule",  { ctx -> scheduleJob(ctx, store, server) }, Role.ADMINISTRATOR, Role.MANAGER )
             }
+        }
+        /* Endpoints related to institutions. */
+        get("institutions", { ctx -> getListInstitutions(ctx, store) }, Role.ADMINISTRATOR )
+        path("institutions") {
+
         }
 
         /* Endpoints related to participants. */

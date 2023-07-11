@@ -1,5 +1,6 @@
 package ch.pontius.kiar.database.institution
 
+import ch.pontius.kiar.api.model.institution.Institution
 import jetbrains.exodus.entitystore.Entity
 import kotlinx.dnq.*
 import kotlinx.dnq.link.OnDeletePolicy
@@ -52,4 +53,26 @@ class DbInstitution(entity: Entity) : XdEntity(entity) {
 
     /** List of [DbUser]s that belong to this [DbInstitution]. */
     val users by xdLink0_N(DbUser::institution, onDelete = OnDeletePolicy.CASCADE, onTargetDelete = OnDeletePolicy.CLEAR)
+
+    /**
+     * Convenience method to convert this [DbInstitution] to a [Institution].
+     *
+     * Requires an ongoing transaction.
+     *
+     * @return [Institution]
+     */
+    fun toApi(): Institution = Institution(
+        name = this.name,
+        displayName = this.displayName,
+        participant = this.participant.name,
+        description = this.description,
+        isil = this.isil,
+        street = this.street,
+        city = this.city,
+        zip = this.zip,
+        canton = this.canton,
+        email = this.email,
+        homepage = this.homepage,
+        publish = this.publish
+    )
 }
