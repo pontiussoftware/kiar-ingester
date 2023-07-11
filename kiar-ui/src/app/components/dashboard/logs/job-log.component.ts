@@ -37,5 +37,4 @@ export class JobLogComponent implements AfterViewInit, OnInit {
   public ngAfterViewInit() {
     this.paginator.page.pipe(tap(() => this.dataSource.load(this.paginator.pageIndex, this.paginator.pageSize))).subscribe();
   }
-
 }

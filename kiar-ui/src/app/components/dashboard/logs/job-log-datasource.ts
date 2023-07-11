@@ -22,6 +22,13 @@ export class JobLogDatasource implements DataSource<JobLog> {
   }
 
   /**
+   * Returns the total size for this {@link JobLogDatasource} as {@link Observable}.
+   */
+  get totalSize(): number {
+    return this.total.value
+}
+
+  /**
    * Reloads the data using the provided page index and page size.
    * @param page The requested page index.
    * @param pageSize The requested page size.
