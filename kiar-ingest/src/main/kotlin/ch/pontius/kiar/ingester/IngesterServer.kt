@@ -82,34 +82,34 @@ class IngesterServer(val store: TransientEntityStore, val config: Config) {
         this.store.transactional(true) {
             /* Install file watchers for jobs that should be started automatically. */
             for (template in DbJobTemplate.filter { it.startAutomatically eq true }.asSequence()) {
-                this.scheduleWatcher(template.name, template.sourcePath(this.config))
+                this.scheduleWatcher(template.xdId, template.sourcePath(this.config))
             }
         }
     }
 
     /**
-     * Schedules the [FileWatcher] for the provided [name].
+     * Schedules the [FileWatcher] for the provided [templateId].
      *
-     * @param name The name of the [FileWatcher] to terminate.
+     * @param templateId The name of the [FileWatcher] to terminate.
      * @param path The [Path] to the file to watch for.
      * @return True on success, false otherwise.
      */
-    fun scheduleWatcher(name: String, path: Path): Boolean {
-        if (this.activeWatchers.contains(name)) return false
-        val watcher = FileWatcher(this, name, path)
-        this.activeWatchers[name] = watcher
+    fun scheduleWatcher(templateId: String, path: Path): Boolean {
+        if (this.activeWatchers.contains(templateId)) return false
+        val watcher = FileWatcher(this, templateId, path)
+        this.activeWatchers[templateId] = watcher
         this.watcherService.execute(watcher)
         return true
     }
 
     /**
-     * Terminates the [FileWatcher] for the provided [name].
+     * Terminates the [FileWatcher] for the provided [templateId].
      *
-     * @param name The name of the [FileWatcher] to terminate.
+     * @param templateId The name of the [FileWatcher] to terminate.
      * @return True on success, false otherwise.
      */
-    fun terminateWatcher(name: String): Boolean {
-        val watcher = this.activeWatchers.remove(name) ?: return false
+    fun terminateWatcher(templateId: String): Boolean {
+        val watcher = this.activeWatchers.remove(templateId) ?: return false
         watcher.cancel()
         return true
     }

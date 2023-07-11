@@ -35,7 +35,7 @@ class FileWatcher(private val server: IngesterServer, private val templateId: St
         /* Spinning loop polling for new file. */
         LOGGER.info("Added a file watcher for: ${this.file}")
         while (!this.cancelled) {
-            /* Now checks if file exists. Otherwise we'll just continue polling... */
+            /* Now checks if file exists. Otherwise, we'll just continue polling... */
             if (!Files.exists(this.file)) {
                 Thread.sleep(10_000)
                 continue
@@ -64,6 +64,7 @@ class FileWatcher(private val server: IngesterServer, private val templateId: St
                 this.server.scheduleJob(jobId)
             } catch (e: Throwable) {
                 LOGGER.error("Filed ${this.file} could not be processed due to exception: ${e.message}.")
+                Files.move(this.file, this.file.parent.resolve(this.file.fileName.toString() + "~err"), StandardCopyOption.ATOMIC_MOVE)
             }
         }
 
