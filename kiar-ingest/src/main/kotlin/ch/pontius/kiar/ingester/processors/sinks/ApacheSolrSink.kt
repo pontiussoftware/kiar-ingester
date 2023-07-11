@@ -147,6 +147,7 @@ class ApacheSolrSink(override val input: Source<SolrInputDocument>, private val 
         val validators = this.validators[collection] ?: throw IllegalStateException("No validators for collection ${collection}. This is a programmer's error!")
         for (v in validators) {
             if (!v.isValid(doc)) {
+                LOGGER.info("Failed to validate document: {} (jobId = {}, collection = {}, docId = {}).", v.isInvalidReason(doc), context.name, collection, uuid)
                 context.log.add(JobLog(null, uuid, JobLogContext.METADATA, JobLogLevel.ERROR, "Failed to validate document: ${v.isInvalidReason(doc)}."))
                 return false
             }
