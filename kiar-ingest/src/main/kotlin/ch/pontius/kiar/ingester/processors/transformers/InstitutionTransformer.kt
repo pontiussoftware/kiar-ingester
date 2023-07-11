@@ -13,6 +13,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.filter
 import kotlinx.dnq.query.asSequence
 import kotlinx.dnq.query.filter
+import org.apache.logging.log4j.LogManager
 import org.apache.solr.common.SolrInputDocument
 
 /**
@@ -23,14 +24,19 @@ import org.apache.solr.common.SolrInputDocument
  */
 class InstitutionTransformer(override val input: Source<SolrInputDocument>, parameters: Map<String,String>): Transformer<SolrInputDocument, SolrInputDocument> {
 
+    companion object {
+        private val LOGGER = LogManager.getLogger(InstitutionTransformer::class.java)
+    }
+
     /** Fetch all institution information */
     private val institutions = DbInstitution.filter { it.publish eq true }.asSequence().map { it.name to Pair(it.participant.name, it.canton) }.toMap()
 
     override fun toFlow(context: ProcessingContext): Flow<SolrInputDocument> = this.input.toFlow(context).filter {
         /* Fetch institution field from document. */
-        val institution = it[FIELD_NAME_INSTITUTION]?.value
+        val institution = it[FIELD_NAME_INSTITUTION]?.value as? String ?: throw IllegalArgumentException("Field 'uuid' is either missing or has wrong type.")
         val uuid = it[FIELD_NAME_UUID]?.value as String
         if (institution == null) {
+            LOGGER.warn("Failed to verify document: Field 'institution' is missing (jobId = {}, docId = {}).", context.name, uuid)
             context.log.add(JobLog(null, uuid, JobLogContext.METADATA, JobLogLevel.WARNING, "Document skipped: Field 'institution' is missing."))
             return@filter false
         }
@@ -39,6 +45,7 @@ class InstitutionTransformer(override val input: Source<SolrInputDocument>, para
 
         val entry = this@InstitutionTransformer.institutions[institution]
         if (entry == null) {
+            LOGGER.warn("Failed to verify document: Institution '$institution' is unknown (jobId = {}, docId = {}).", context.name, uuid)
             context.log.add(JobLog(null, uuid, JobLogContext.METADATA, JobLogLevel.WARNING, "Document skipped: Could not find database entry for institution '${institution}'."))
             return@filter false
         }

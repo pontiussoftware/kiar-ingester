@@ -108,9 +108,7 @@ class ApacheSolrSink(override val input: Source<SolrInputDocument>, private val 
         if (selector.isNullOrBlank()) return true
         val terms = selector.trim().split(',').map { it.trim().split(':') }
         return terms.all {
-            val match = document[it.getOrNull(0)]?.value == it.getOrNull(1)
-            LOGGER.debug("Checking document {}:{} ({}:{}): Match is {}", it[0], it[1], document[it.getOrNull(0)]?.value, it.getOrNull(1), match)
-            match
+            document[it.getOrNull(0)]?.value == it.getOrNull(1)
         }
     }
 

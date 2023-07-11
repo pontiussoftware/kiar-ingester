@@ -118,7 +118,7 @@ class ImageTransformer(override val input: Source<SolrInputDocument>, parameters
     private fun store(image: BufferedImage, path: Path): Boolean = try {
         Files.newOutputStream(path, StandardOpenOption.CREATE_NEW, StandardOpenOption.WRITE).use {os ->
             ImageIO.write(image, "JPEG", os)
-            LOGGER.debug("Successfully stored image $path!")
+            LOGGER.debug("Successfully stored image {}!", path)
             true
         }
     } catch (e: IOException) {
