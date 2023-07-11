@@ -57,6 +57,13 @@ class DbJobTemplate(entity: Entity) : XdEntity(entity) {
     val jobs by xdLink0_N(DbJob::template, onDelete = OnDeletePolicy.CLEAR, onTargetDelete = OnDeletePolicy.CLEAR)
 
     /**
+     * Returns the [Path] to the expected ingest file for this [DbJobTemplate].
+     *
+     * Requires an ongoing transaction!
+     */
+    fun sourcePath(config: Config): Path = config.ingestPath.resolve(this.participant.name).resolve("${this.name}.${this.type.suffix}")
+
+    /**
      * Convenience method to convert this [DbJobType] to a [JobType].
      *
      * Requires an ongoing transaction.

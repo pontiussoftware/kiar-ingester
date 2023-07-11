@@ -57,11 +57,11 @@ class FileWatcher(private val server: IngesterServer, private val templateId: St
                     }.xdId
                 }
 
-                /* Move file to new location. */
-                Files.move(this.file, this.file.parent.resolve(jobId), StandardCopyOption.ATOMIC_MOVE)
-
                 /* Schedule job. */
                 this.server.scheduleJob(jobId)
+
+                /* Move file to new location. */
+                Files.move(this.file, this.file.parent.resolve(jobId), StandardCopyOption.ATOMIC_MOVE)
             } catch (e: Throwable) {
                 LOGGER.error("Filed ${this.file} could not be processed due to exception: ${e.message}.")
                 Files.move(this.file, this.file.parent.resolve(this.file.fileName.toString() + "~err"), StandardCopyOption.ATOMIC_MOVE)
