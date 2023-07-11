@@ -115,8 +115,9 @@ fun getJobLogs(ctx: Context, store: TransientEntityStore) {
     val page = ctx.queryParam("page")?.toIntOrNull() ?: 0
     val pageSize = ctx.queryParam("pageSize")?.toIntOrNull() ?: 50
     val result = store.transactional(true) {
-        val logs = DbJobLog.filter { it.job.xdId eq jobId }.drop(page * pageSize).take(pageSize).mapToArray { it.toApi() }
-        val total = DbJobLog.filter { it.job.xdId eq jobId }.size()
+        val job = DbJob.findById(jobId)
+        val logs = DbJobLog.filter { it.job eq job }.drop(page * pageSize).take(pageSize).mapToArray { it.toApi() }
+        val total = DbJobLog.filter { it.job eq job }.size()
         total to logs
     }
     ctx.json(JobLogResult(result.first, page, pageSize, result.second))
