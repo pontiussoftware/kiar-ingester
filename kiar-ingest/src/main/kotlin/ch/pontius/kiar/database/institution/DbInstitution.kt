@@ -18,7 +18,7 @@ class DbInstitution(entity: Entity) : XdEntity(entity) {
     var name by xdRequiredStringProp(unique = true, trimmed = true)
 
     /** The [DbParticipant] this [DbInstitution] belongs to. */
-    val participant by xdLink1(DbParticipant)
+    var participant by xdLink1(DbParticipant)
 
     /** The display name held by this [DbInstitution]. */
     var displayName by xdRequiredStringProp(trimmed = true)
@@ -33,13 +33,16 @@ class DbInstitution(entity: Entity) : XdEntity(entity) {
     var street by xdStringProp(trimmed = true)
 
     /** The name held by this [DbInstitution].*/
-    var city by xdStringProp(trimmed = true)
+    var city by xdRequiredStringProp(trimmed = true)
+
+    /** The ZIP code of this [DbInstitution].*/
+    var zip by xdRequiredIntProp()
+
+    /** The canton this [DbInstitution] belongs to. */
+    var canton by xdRequiredStringProp(trimmed = true)
 
     /** The name held by this [DbInstitution].!*/
-    var zip by xdStringProp(trimmed = true)
-
-    /** The name held by this [DbInstitution].!*/
-    var email by xdStringProp(trimmed = true)
+    var email by xdRequiredStringProp(trimmed = true)
 
     /** The name held by this [DbInstitution].!*/
     var homepage by xdStringProp(trimmed = true)
