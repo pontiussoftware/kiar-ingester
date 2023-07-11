@@ -87,9 +87,9 @@ class ImageTransformer(override val input: Source<SolrInputDocument>, parameters
                         counter += 1
                     }
                 }
-                it.addField(FIELD_NAME_IMAGECOUNT, counter)
+                it.setField(FIELD_NAME_IMAGECOUNT, counter)
             } else {
-                it.addField(FIELD_NAME_IMAGECOUNT, 0)
+                it.setField(FIELD_NAME_IMAGECOUNT, 0)
             }
             it
         }.onCompletion {e ->
