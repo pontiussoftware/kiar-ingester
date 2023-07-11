@@ -198,10 +198,10 @@ class IngesterServer(val store: TransientEntityStore, val config: Config) {
     fun terminateJob(jobId: String): Boolean {
         val job = this.activeJobs[jobId]
         if (job != null) {
+            job.second.cancel("The job $jobId has been cancelled by a user.")
             this.store.transactional {
                 job.first.reattach()
                 if (job.first.status.active) {
-                    job.second.cancel("The job $jobId has been cancelled by a user.")
                     job.first.status = DbJobStatus.ABORTED
                 }
             }

@@ -1,5 +1,7 @@
 package ch.pontius.kiar.database.job
 
+import ch.pontius.kiar.api.model.job.Job
+import ch.pontius.kiar.api.model.job.JobLog
 import jetbrains.exodus.entitystore.Entity
 import kotlinx.dnq.*
 
@@ -26,4 +28,13 @@ class DbJobLog(entity: Entity) : XdEntity(entity) {
 
     /** Description of the log entry. */
     var description by xdRequiredStringProp(trimmed = true)
+
+    /**
+     * Convenience method to convert this [DbJobLog] to a [JobLog].
+     *
+     * Requires an ongoing transaction.
+     *
+     * @return [JobLog]
+     */
+    fun toApi(): JobLog = JobLog(this.job.xdId, this.documentId, this.context.toApi(), this.level.toApi(), this.description)
 }

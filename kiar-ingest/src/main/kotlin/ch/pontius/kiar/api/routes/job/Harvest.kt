@@ -142,3 +142,54 @@ fun scheduleJob(ctx: Context, store: TransientEntityStore, server: IngesterServe
     /* Return success. */
     ctx.json(SuccessStatus("Job $jobId scheduled successfully."))
 }
+
+@OpenApi(
+    path = "/api/jobs/{id}",
+    methods = [HttpMethod.DELETE],
+    summary = "Aborts a running job.",
+    operationId = "deleteAbortJob",
+    tags = ["Job"],
+    pathParams = [
+        OpenApiParam(name = "id", description = "The ID of the Job that should be aborted.", required = true)
+    ],
+    responses = [
+        OpenApiResponse("200", [OpenApiContent(SuccessStatus::class)]),
+        OpenApiResponse("400", [OpenApiContent(ErrorStatus::class)]),
+        OpenApiResponse("401", [OpenApiContent(ErrorStatus::class)]),
+        OpenApiResponse("403", [OpenApiContent(ErrorStatus::class)]),
+        OpenApiResponse("404", [OpenApiContent(ErrorStatus::class)]),
+        OpenApiResponse("500", [OpenApiContent(ErrorStatus::class)])
+    ]
+)
+fun abortJob(ctx: Context, store: TransientEntityStore, server: IngesterServer) {
+    val jobId = ctx.pathParam("id")
+    store.transactional {
+        val currentUser = ctx.currentUser()
+        val job = try {
+            DbJob.findById(jobId)
+        } catch (e: Throwable) {
+            throw ErrorStatusException(404, "Job with ID $jobId could not be found.")
+        }
+
+        /* Check if user's participant is the same as the one associated with the template. */
+        if (currentUser.role != DbRole.ADMINISTRATOR) {
+            if (job.template?.participant != currentUser.institution?.participant) {
+                throw ErrorStatusException(403, "You are not allowed to abort a job that has been created for another participant.")
+            }
+        }
+
+        /* Check if job is still active. */
+        if (!job.status.active) {
+            throw ErrorStatusException(400, "Job with ID $jobId could not be aborted because it is already inactive.")
+        }
+        job.status = DbJobStatus.ABORTED
+    }
+
+    /* Inform ingest server that job should be terminated.*/
+    if (!server.terminateJob(jobId)) {
+        ctx.json(SuccessStatus("Successfully updated status of job $jobId."))
+    } else {
+        ctx.json(SuccessStatus("Successfully terminated job $jobId."))
+    }
+
+}

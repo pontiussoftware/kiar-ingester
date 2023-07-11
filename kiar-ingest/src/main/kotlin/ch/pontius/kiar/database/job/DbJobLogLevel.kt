@@ -1,5 +1,8 @@
 package ch.pontius.kiar.database.job
 
+import ch.pontius.kiar.api.model.job.JobLogLevel
+import ch.pontius.kiar.api.model.session.Role
+import ch.pontius.kiar.database.institution.DbRole
 import jetbrains.exodus.entitystore.Entity
 import kotlinx.dnq.XdEnumEntity
 import kotlinx.dnq.XdEnumEntityType
@@ -20,4 +23,11 @@ class DbJobLogLevel(entity: Entity) : XdEnumEntity(entity) {
 
     /** The name / description of this [DbJobLogLevel]. */
     var description by xdRequiredStringProp(unique = true)
+
+    /**
+     * A convenience method used to convert this [DbJobLogLevel] to a [JobLogLevel] instance.
+     *
+     * @return This [JobLogLevel].
+     */
+    fun toApi(): JobLogLevel = JobLogLevel.valueOf(this.description)
 }
