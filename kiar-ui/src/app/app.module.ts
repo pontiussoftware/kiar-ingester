@@ -23,7 +23,7 @@ import {InstitutionModule} from "./components/institution/institution.module";
  * @param appConfig Reference (provided by DI).
  */
 export function initializeApiConfig() {
-  return new Configuration({ withCredentials: true });
+  return new Configuration({ basePath: window.location.origin, withCredentials: true });
 }
 
 @NgModule({
