@@ -65,21 +65,19 @@ class ApacheSolrSink(override val input: Source<SolrInputDocument>, private val 
         /* Start collection of incoming flow. */
         this@ApacheSolrSink.input.toFlow(context).collect() { doc ->
             val uuid = doc[Constants.FIELD_NAME_UUID]?.value as? String ?: throw IllegalArgumentException("Field 'uuid' is either missing or has wrong type.")
-            LOGGER.debug("Incoming document (name = ${context.name}, uuid = $uuid).")
 
             /* Add necessary system fields. */
-            doc.addField(FIELD_NAME_PARTICIPANT, context.name)
-
-            LOGGER.debug("Starting document ingest (name = ${context.name}, uuid = $uuid).")
             for (c in this@ApacheSolrSink.config.collections) {
                 try {
                     if (this@ApacheSolrSink.isMatch(c.selector, doc)) {
                         if (this@ApacheSolrSink.validate(c.name, uuid, doc, context)) {
                             val response = this@ApacheSolrSink.client.add(c.name, this@ApacheSolrSink.sanitize(c.name, doc))
                             if (response.status == 0) {
+                                LOGGER.debug("Ingested document (jobId = {}, collection = {}, docId = {}).", context.name, c, uuid)
                                 context.processed += 1
                             } else {
                                 context.error += 1
+                                LOGGER.error("Failed to ingest document (jobId = ${context.name}, docId = $uuid).")
                                 context.log.add(JobLog(null, uuid, JobLogContext.SYSTEM, JobLogLevel.SEVERE, "Failed to add document due to Apache Solr error."))
                             }
                         } else {
@@ -88,7 +86,7 @@ class ApacheSolrSink(override val input: Source<SolrInputDocument>, private val 
                     }
                 } catch (e: SolrServerException) {
                     context.error += 1
-                    context.log.add(JobLog(null, uuid, JobLogContext.SYSTEM, JobLogLevel.ERROR, "Failed to add document due to Apache Solr error: ${e.message}."))
+                    context.log.add(JobLog(null, uuid, JobLogContext.SYSTEM, JobLogLevel.ERROR, "Failed to ingest document due to Apache Solr error: ${e.message}."))
                 }
             }
         }
