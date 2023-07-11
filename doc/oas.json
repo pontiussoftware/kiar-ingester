@@ -335,6 +335,90 @@
         "security" : [ ]
       }
     },
+    "/api/jobs/{id}/logs" : {
+      "get" : {
+        "tags" : [ "Job" ],
+        "summary" : "Retrieves the job log for the provided job ID.",
+        "operationId" : "getJobLog",
+        "parameters" : [ {
+          "name" : "id",
+          "in" : "path",
+          "description" : "The ID of the Job for which the logs should be retrieved.",
+          "required" : true,
+          "deprecated" : false,
+          "allowEmptyValue" : false,
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "name" : "page",
+          "in" : "query",
+          "description" : "The page index (zero-based) for pagination.",
+          "required" : false,
+          "deprecated" : false,
+          "allowEmptyValue" : false,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int32"
+          }
+        }, {
+          "name" : "pageSize",
+          "in" : "query",
+          "description" : "The page size  for pagination.",
+          "required" : false,
+          "deprecated" : false,
+          "allowEmptyValue" : false,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int32"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/JobLogResult"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorStatus"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Forbidden",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorStatus"
+                }
+              }
+            }
+          },
+          "500" : {
+            "description" : "Server Error",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorStatus"
+                }
+              }
+            }
+          }
+        },
+        "deprecated" : false,
+        "security" : [ ]
+      }
+    },
     "/api/jobs/{id}/schedule" : {
       "put" : {
         "tags" : [ "Job" ],
@@ -2151,12 +2235,9 @@
           },
           "acceptEmptyFilter" : {
             "type" : "boolean"
-          },
-          "match" : {
-            "type" : "boolean"
           }
         },
-        "required" : [ "name", "type", "deleteBeforeImport", "acceptEmptyFilter", "match" ]
+        "required" : [ "name", "type", "deleteBeforeImport", "acceptEmptyFilter" ]
       },
       "ApacheSolrConfig" : {
         "type" : "object",
@@ -2351,6 +2432,61 @@
           }
         },
         "required" : [ "name", "status", "source", "processed", "skipped", "error", "createdAt", "createdBy" ]
+      },
+      "JobLog" : {
+        "type" : "object",
+        "additionalProperties" : false,
+        "properties" : {
+          "jobId" : {
+            "type" : "string"
+          },
+          "documentId" : {
+            "type" : "string"
+          },
+          "context" : {
+            "$ref" : "#/components/schemas/JobLogContext"
+          },
+          "level" : {
+            "$ref" : "#/components/schemas/JobLogLevel"
+          },
+          "description" : {
+            "type" : "string"
+          }
+        },
+        "required" : [ "documentId", "context", "level", "description" ]
+      },
+      "JobLogContext" : {
+        "type" : "string",
+        "enum" : [ "METADATA", "RESOURCE", "SYSTEM" ]
+      },
+      "JobLogLevel" : {
+        "type" : "string",
+        "enum" : [ "WARNING", "ERROR", "SEVERE" ]
+      },
+      "JobLogResult" : {
+        "type" : "object",
+        "additionalProperties" : false,
+        "properties" : {
+          "total" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "page" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "pageSize" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "logs" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/JobLog"
+            }
+          }
+        },
+        "required" : [ "total", "page", "pageSize", "logs" ]
       },
       "JobSource" : {
         "type" : "string",

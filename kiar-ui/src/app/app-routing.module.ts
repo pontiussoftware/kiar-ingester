@@ -10,6 +10,7 @@ import {ProfileComponent} from "./components/session/user/profile.component";
 import {ApacheSolrComponent} from "./components/admin/solr/apache-solr.component";
 import {JobTemplateComponent} from "./components/admin/template/job-template.component";
 import {InstitutionListComponent} from "./components/institution/institution-list.component";
+import {JobLogComponent} from "./components/dashboard/logs/job-log.component";
 
 const routes: Routes = [
 
@@ -31,6 +32,7 @@ const routes: Routes = [
 
   /* Now come all the routes that require authentication as a VIEWER, MANAGER or ADMINISTRATOR */
   { path: 'manager/dashboard', component: DashboardComponent, canActivate: [canActivateViewer] },
+  { path: 'manager/logs/:id', component: JobLogComponent, canActivate: [canActivateViewer] },
 
   // otherwise redirect to home
   { path: '', redirectTo: 'manager/dashboard', pathMatch: 'full' }

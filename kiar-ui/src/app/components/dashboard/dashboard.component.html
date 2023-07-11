@@ -64,6 +64,9 @@
               <mat-icon>cancel</mat-icon>
             </button>
           </div>
+
+
+
           <div *ngIf="element.harvesting">
             <mat-spinner diameter="25"></mat-spinner>
           </div>
@@ -126,7 +129,7 @@
       <ng-container matColumnDef="action">
         <th mat-header-cell *matHeaderCellDef i18n="@@ColHeaderAction"> Action </th>
         <td mat-cell *matCellDef="let element">
-          <button (click)="viewLog()" mat-icon-button aria-label="View log" matTooltip="View log.">
+          <button mat-icon-button aria-label="View log" matTooltip="View log." [routerLink]="['/manager/logs', element.id]">
             <mat-icon>list_alt</mat-icon>
           </button>
         </td>

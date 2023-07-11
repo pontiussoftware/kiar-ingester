@@ -9,17 +9,13 @@
  * https://openapi-generator.tech
  * Do not edit the class manually.
  */
-import { CollectionType } from './collectionType';
 
 
-export interface ApacheSolrCollection { 
-    name: string;
-    type: CollectionType;
-    selector?: string;
-    deleteBeforeImport: boolean;
-    acceptEmptyFilter: boolean;
-}
-export namespace ApacheSolrCollection {
-}
+export type JobLogContext = 'METADATA' | 'RESOURCE' | 'SYSTEM';
 
+export const JobLogContext = {
+    METADATA: 'METADATA' as JobLogContext,
+    RESOURCE: 'RESOURCE' as JobLogContext,
+    SYSTEM: 'SYSTEM' as JobLogContext
+};
 

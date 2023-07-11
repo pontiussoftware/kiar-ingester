@@ -24,6 +24,10 @@ model/entityMapping.ts
 model/errorStatus.ts
 model/institution.ts
 model/job.ts
+model/jobLog.ts
+model/jobLogContext.ts
+model/jobLogLevel.ts
+model/jobLogResult.ts
 model/jobSource.ts
 model/jobStatus.ts
 model/jobTemplate.ts

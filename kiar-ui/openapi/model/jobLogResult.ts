@@ -9,17 +9,13 @@
  * https://openapi-generator.tech
  * Do not edit the class manually.
  */
-import { CollectionType } from './collectionType';
+import { JobLog } from './jobLog';
 
 
-export interface ApacheSolrCollection { 
-    name: string;
-    type: CollectionType;
-    selector?: string;
-    deleteBeforeImport: boolean;
-    acceptEmptyFilter: boolean;
+export interface JobLogResult { 
+    total: number;
+    page: number;
+    pageSize: number;
+    logs: Array<JobLog>;
 }
-export namespace ApacheSolrCollection {
-}
-
 

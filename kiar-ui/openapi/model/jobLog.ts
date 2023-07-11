@@ -9,17 +9,18 @@
  * https://openapi-generator.tech
  * Do not edit the class manually.
  */
-import { CollectionType } from './collectionType';
+import { JobLogLevel } from './jobLogLevel';
+import { JobLogContext } from './jobLogContext';
 
 
-export interface ApacheSolrCollection { 
-    name: string;
-    type: CollectionType;
-    selector?: string;
-    deleteBeforeImport: boolean;
-    acceptEmptyFilter: boolean;
+export interface JobLog { 
+    jobId?: string;
+    documentId: string;
+    context: JobLogContext;
+    level: JobLogLevel;
+    description: string;
 }
-export namespace ApacheSolrCollection {
+export namespace JobLog {
 }
 
 

@@ -3,6 +3,7 @@ package ch.pontius.kiar.api.routes.job
 import ch.pontius.kiar.api.model.job.CreateJobRequest
 import ch.pontius.kiar.api.model.job.Job
 import ch.pontius.kiar.api.model.job.JobLog
+import ch.pontius.kiar.api.model.job.JobLogResult
 import ch.pontius.kiar.api.model.status.ErrorStatus
 import ch.pontius.kiar.api.model.status.ErrorStatusException
 import ch.pontius.kiar.api.routes.session.currentUser
@@ -99,11 +100,11 @@ fun getInactiveJobs(ctx: Context, store: TransientEntityStore) {
         OpenApiParam(name = "id", description = "The ID of the Job for which the logs should be retrieved.", required = true)
     ],
     queryParams = [
-        OpenApiParam(name = "page", description = "The page index (zero-based) for pagination.", required = false),
-        OpenApiParam(name = "pageSize", description = "The page size  for pagination.", required = false)
+        OpenApiParam(name = "page", type = Int::class, description = "The page index (zero-based) for pagination.", required = false),
+        OpenApiParam(name = "pageSize", type = Int::class, description = "The page size  for pagination.", required = false)
     ],
     responses = [
-        OpenApiResponse("200", [OpenApiContent(Array<JobLog>::class)]),
+        OpenApiResponse("200", [OpenApiContent(JobLogResult::class)]),
         OpenApiResponse("401", [OpenApiContent(ErrorStatus::class)]),
         OpenApiResponse("403", [OpenApiContent(ErrorStatus::class)]),
         OpenApiResponse("500", [OpenApiContent(ErrorStatus::class)])
@@ -114,9 +115,11 @@ fun getJobLogs(ctx: Context, store: TransientEntityStore) {
     val page = ctx.queryParam("page")?.toIntOrNull() ?: 0
     val pageSize = ctx.queryParam("pageSize")?.toIntOrNull() ?: 50
     val result = store.transactional(true) {
-        DbJobLog.filter { it.job.xdId eq jobId }.drop(page * pageSize).take(pageSize).mapToArray { it.toApi() }
+        val logs = DbJobLog.filter { it.job.xdId eq jobId }.drop(page * pageSize).take(pageSize).mapToArray { it.toApi() }
+        val total = DbJobLog.filter { it.job.xdId eq jobId }.size()
+        total to logs
     }
-    ctx.json(result)
+    ctx.json(JobLogResult(result.first, page, pageSize, result.second))
 }
 
 

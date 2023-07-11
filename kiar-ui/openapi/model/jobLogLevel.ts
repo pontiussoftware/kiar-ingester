@@ -9,17 +9,13 @@
  * https://openapi-generator.tech
  * Do not edit the class manually.
  */
-import { CollectionType } from './collectionType';
 
 
-export interface ApacheSolrCollection { 
-    name: string;
-    type: CollectionType;
-    selector?: string;
-    deleteBeforeImport: boolean;
-    acceptEmptyFilter: boolean;
-}
-export namespace ApacheSolrCollection {
-}
+export type JobLogLevel = 'WARNING' | 'ERROR' | 'SEVERE';
 
+export const JobLogLevel = {
+    WARNING: 'WARNING' as JobLogLevel,
+    ERROR: 'ERROR' as JobLogLevel,
+    SEVERE: 'SEVERE' as JobLogLevel
+};
 

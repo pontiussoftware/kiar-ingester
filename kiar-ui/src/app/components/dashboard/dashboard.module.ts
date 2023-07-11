@@ -14,11 +14,15 @@ import {CreateJobDialogComponent} from "./job/create-job-dialog.component";
 import {MatDialogModule} from "@angular/material/dialog";
 import {MatSelectModule} from "@angular/material/select";
 import {MatProgressSpinnerModule} from "@angular/material/progress-spinner";
+import {JobLogComponent} from "./logs/job-log.component";
+import {RouterLink} from "@angular/router";
+import {MatPaginatorModule} from "@angular/material/paginator";
 
 @NgModule({
   declarations: [
     CreateJobDialogComponent,
-    DashboardComponent
+    DashboardComponent,
+    JobLogComponent
   ],
   imports: [
     BrowserModule,
@@ -35,9 +39,12 @@ import {MatProgressSpinnerModule} from "@angular/material/progress-spinner";
     MatDialogModule,
     MatSelectModule,
     MatProgressSpinnerModule,
+    RouterLink,
+    MatPaginatorModule,
   ],
   exports: [
-    DashboardComponent
+    DashboardComponent,
+    JobLogComponent
   ]
 })
 export class DashboardModule {}
