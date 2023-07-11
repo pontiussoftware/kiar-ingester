@@ -111,11 +111,18 @@ export class DashboardComponent implements AfterViewInit {
   }
 
   /**
+   * The {@link ActiveJob} to abort.
    *
    * @param job
    */
   public abortJob(job: ActiveJob) {
-
+    this.service.deleteAbortJob(job.id!!).subscribe({
+        next: (next) => {
+          this.snackBar.open(`Successfully aborted job ${job.id}.`, "Dismiss", { duration: 2000 } as MatSnackBarConfig)
+          this.reload.next()
+        },
+        error: (err) => this.snackBar.open(`Error occurred while aborting job ${job.id}: ${err?.error?.description}.`, "Dismiss", { duration: 2000 } as MatSnackBarConfig)
+    })
   }
 
   /**
