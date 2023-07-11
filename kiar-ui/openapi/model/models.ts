@@ -5,6 +5,7 @@ export * from './collectionType';
 export * from './createJobRequest';
 export * from './entityMapping';
 export * from './errorStatus';
+export * from './institution';
 export * from './job';
 export * from './jobSource';
 export * from './jobStatus';

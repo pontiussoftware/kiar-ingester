@@ -2,6 +2,7 @@ import ch.pontius.kiar.api.model.institution.Institution
 import ch.pontius.kiar.api.model.job.Job
 import ch.pontius.kiar.api.model.status.ErrorStatus
 import ch.pontius.kiar.database.institution.DbInstitution
+import ch.pontius.kiar.utilities.mapToArray
 import io.javalin.http.Context
 import io.javalin.openapi.*
 import jetbrains.exodus.database.TransientEntityStore
@@ -24,7 +25,7 @@ import kotlinx.dnq.query.sortedBy
 )
 fun getListInstitutions(ctx: Context, store: TransientEntityStore) {
     val result = store.transactional(true) {
-        DbInstitution.all().sortedBy(DbInstitution::name).asSequence().map { it.toApi() }.toList()
+        DbInstitution.all().sortedBy(DbInstitution::name).mapToArray { it.toApi() }
     }
     ctx.json(result)
 }

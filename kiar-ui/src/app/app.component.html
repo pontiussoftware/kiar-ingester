@@ -12,6 +12,10 @@
       <mat-icon>admin_panel_settings</mat-icon>
     </button>
 
+    <button mat-icon-button *ngIf="(isAdmin | async)" [routerLink]="['/institutions']">
+      <mat-icon>account_balance</mat-icon>
+    </button>
+
     <span class="space-flexible"></span>
 
 

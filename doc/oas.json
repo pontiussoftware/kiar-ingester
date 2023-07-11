@@ -6,6 +6,61 @@
     "version" : "1.0.0"
   },
   "paths" : {
+    "/api/institutions" : {
+      "get" : {
+        "tags" : [ "Institution" ],
+        "summary" : "Retrieves all jobs that are currently active. Non-administrator users can only see Jobs that belong to them.",
+        "operationId" : "getInstitutions",
+        "parameters" : [ ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "array",
+                  "items" : {
+                    "$ref" : "#/components/schemas/Institution"
+                  }
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorStatus"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Forbidden",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorStatus"
+                }
+              }
+            }
+          },
+          "500" : {
+            "description" : "Server Error",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorStatus"
+                }
+              }
+            }
+          }
+        },
+        "deprecated" : false,
+        "security" : [ ]
+      }
+    },
     "/api/jobs" : {
       "post" : {
         "tags" : [ "Job" ],
@@ -2198,6 +2253,50 @@
       "TransformerType" : {
         "type" : "string",
         "enum" : [ "IMAGE", "SYSTEM" ]
+      },
+      "Institution" : {
+        "type" : "object",
+        "additionalProperties" : false,
+        "properties" : {
+          "name" : {
+            "type" : "string"
+          },
+          "displayName" : {
+            "type" : "string"
+          },
+          "participant" : {
+            "type" : "string"
+          },
+          "description" : {
+            "type" : "string"
+          },
+          "isil" : {
+            "type" : "string"
+          },
+          "street" : {
+            "type" : "string"
+          },
+          "zip" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "city" : {
+            "type" : "string"
+          },
+          "canton" : {
+            "type" : "string"
+          },
+          "email" : {
+            "type" : "string"
+          },
+          "homepage" : {
+            "type" : "string"
+          },
+          "publish" : {
+            "type" : "boolean"
+          }
+        },
+        "required" : [ "name", "displayName", "participant", "zip", "city", "canton", "email", "publish" ]
       },
       "CreateJobRequest" : {
         "type" : "object",

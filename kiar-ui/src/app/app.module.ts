@@ -14,6 +14,7 @@ import {ServiceModule} from "./services/service.module";
 import {MatMenuModule} from "@angular/material/menu";
 import {DashboardModule} from "./components/dashboard/dashboard.module";
 import {AdminModule} from "./components/admin/admin.module";
+import {InstitutionModule} from "./components/institution/institution.module";
 
 
 /**
@@ -43,6 +44,7 @@ export function initializeApiConfig() {
 
     /* Own modules. */
     AdminModule,
+    InstitutionModule,
     DashboardModule,
     SessionModule,
     ServiceModule

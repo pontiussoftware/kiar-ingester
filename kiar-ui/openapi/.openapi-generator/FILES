@@ -5,6 +5,7 @@ api/apacheSolr.service.ts
 api/api.ts
 api/config.service.ts
 api/entityMapping.service.ts
+api/institution.service.ts
 api/job.service.ts
 api/jobTemplate.service.ts
 api/participant.service.ts
@@ -21,6 +22,7 @@ model/collectionType.ts
 model/createJobRequest.ts
 model/entityMapping.ts
 model/errorStatus.ts
+model/institution.ts
 model/job.ts
 model/jobSource.ts
 model/jobStatus.ts

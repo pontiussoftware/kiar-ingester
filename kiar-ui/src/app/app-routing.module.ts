@@ -9,6 +9,7 @@ import {EntityMappingComponent} from "./components/admin/mapping/entity-mapping.
 import {ProfileComponent} from "./components/session/user/profile.component";
 import {ApacheSolrComponent} from "./components/admin/solr/apache-solr.component";
 import {JobTemplateComponent} from "./components/admin/template/job-template.component";
+import {InstitutionListComponent} from "./components/institution/institution-list.component";
 
 const routes: Routes = [
 
@@ -18,6 +19,9 @@ const routes: Routes = [
 
   /* Some pages can be activated by everybody that is logged in. */
   { path: 'profile', component: ProfileComponent, canActivate: [canActivateEverybody] },
+
+  /* Some pages can be activated by everybody that is logged in. */
+  { path: 'institutions', component: InstitutionListComponent, canActivate: [canActivateAdministrator] },
 
   /* Now come all the routes that require authentication as an ADMINISTRATOR */
   { path: 'admin/dashboard', component: AdminDashboardComponent, canActivate: [canActivateAdministrator] },

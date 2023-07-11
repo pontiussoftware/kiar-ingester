@@ -29,7 +29,7 @@ export class AdminDashboardComponent implements AfterViewInit {
   public readonly participant: Observable<Array<String>>
 
   /** A {@link Subject} that can be used to trigger a data reload. */
-  private reload = new Subject<void>()
+  private reload= new Subject<void>()
 
   constructor(private config: ConfigService, private _dialog: MatDialog, private _snackBar: MatSnackBar) {
     this.templates = this.reload.pipe(
