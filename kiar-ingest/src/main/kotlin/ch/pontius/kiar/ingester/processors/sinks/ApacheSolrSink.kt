@@ -1,6 +1,7 @@
 package ch.pontius.kiar.ingester.processors.sinks
 
 import ch.pontius.kiar.api.model.config.solr.ApacheSolrConfig
+import ch.pontius.kiar.api.model.config.solr.CollectionType
 import ch.pontius.kiar.api.model.job.JobLog
 import ch.pontius.kiar.api.model.job.JobLogContext
 import ch.pontius.kiar.api.model.job.JobLogLevel
@@ -19,12 +20,11 @@ import java.io.Closeable
 import java.io.IOException
 import java.lang.IllegalStateException
 
-
 /**
  * A [Sink] that processes [SolrInputDocument]s and ingests them into Apache Solr.
  *
  * @author Ralph Gasser
- * @version 1.1.0
+ * @version 1.2.0
  */
 class ApacheSolrSink(override val input: Source<SolrInputDocument>, private val config: ApacheSolrConfig): Sink<SolrInputDocument>, Closeable {
 
@@ -37,6 +37,9 @@ class ApacheSolrSink(override val input: Source<SolrInputDocument>, private val 
 
     /** [ApacheSolrField] for the different collections. */
     private val validators = HashMap<String,List<ApacheSolrField>>()
+
+    /** */
+    private val collections = this.config.collections.filter { it.type == CollectionType.OBJECT }.associate { it.name to it.selector }
 
     init {
         /* Prepare HTTP client builder. */
@@ -70,7 +73,7 @@ class ApacheSolrSink(override val input: Source<SolrInputDocument>, private val 
             LOGGER.debug("Starting document ingest (name = ${context.name}, uuid = $uuid).")
             for (c in this@ApacheSolrSink.config.collections) {
                 try {
-                    if (c.isMatch(doc)) {
+                    if (this@ApacheSolrSink.isMatch(c.selector, doc)) {
                         if (this@ApacheSolrSink.validate(c.name, uuid, doc, context)) {
                             val response = this@ApacheSolrSink.client.add(c.name, this@ApacheSolrSink.sanitize(c.name, doc))
                             if (response.status == 0) {
@@ -94,6 +97,23 @@ class ApacheSolrSink(override val input: Source<SolrInputDocument>, private val 
         this@ApacheSolrSink.finalizeIngest(context)
 
         emit(Unit)
+    }
+
+
+    /**
+     * Checks if the provided [SolrInputDocument] matches the provided selector string.
+     *
+     * @param selector The selector [String]
+     * @param document The document to match.
+     */
+    private fun isMatch(selector: String?, document: SolrInputDocument): Boolean {
+        if (selector == null) return true
+        val terms = selector.trim().split(',').map { it.trim().split(':') }
+        return terms.all {
+            val fieldValue = document[it[0]]?.value ?: return@all false
+            val expectedValue = it.getOrNull(1) ?: return@all false
+            fieldValue == expectedValue
+        }
     }
 
     /**

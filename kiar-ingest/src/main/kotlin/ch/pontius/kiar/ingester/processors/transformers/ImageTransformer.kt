@@ -6,6 +6,8 @@ import ch.pontius.kiar.api.model.job.JobLogLevel
 import ch.pontius.kiar.config.TransformerConfig
 import ch.pontius.kiar.ingester.processors.ProcessingContext
 import ch.pontius.kiar.ingester.processors.sources.Source
+import ch.pontius.kiar.ingester.solrj.Constants
+import ch.pontius.kiar.ingester.solrj.Constants.FIELD_NAME_IMAGECOUNT
 import ch.pontius.kiar.ingester.solrj.Constants.FIELD_NAME_RAW
 import ch.pontius.kiar.ingester.solrj.Constants.FIELD_NAME_UUID
 import kotlinx.coroutines.Dispatchers
@@ -27,7 +29,7 @@ import javax.imageio.ImageIO
  * The [SolrInputDocument] is updated to contain the path to the new file.
  *
  * @author Ralph Gasser
- * @version 1.0.0
+ * @version 1.1.0
  */
 class ImageTransformer(override val input: Source<SolrInputDocument>, parameters: Map<String,String>): Transformer<SolrInputDocument, SolrInputDocument> {
 
@@ -59,9 +61,9 @@ class ImageTransformer(override val input: Source<SolrInputDocument>, parameters
         /* Prepare temporary directory. */
         val ctxPath = this.deployTo.resolve(context.name)
         val dst = ctxPath.resolve(this.name)
-        val timestamp = System.currentTimeMillis()                         /* Destination directory, i.e., the directory that will contain all the generated images */
-        val old = ctxPath.resolve("${this.name}-old-$timestamp")     /* Temporary location of the previous version of the destination directory (if exists). This is used to maintain atomicity. */
-        val tmp = ctxPath.resolve("${this.name}-$timestamp")         /* Temporary location destination directory. This is used to maintain atomicity. */
+        val timestamp = System.currentTimeMillis()                      /* Destination directory, i.e., the directory that will contain all the generated images */
+        val old = ctxPath.resolve("${this.name}-old-$timestamp")  /* Temporary location of the previous version of the destination directory (if exists). This is used to maintain atomicity. */
+        val tmp = ctxPath.resolve("${this.name}-$timestamp")      /* Temporary location destination directory. This is used to maintain atomicity. */
 
         Files.createDirectories(tmp)
         return this.input.toFlow(context).map {
@@ -85,6 +87,9 @@ class ImageTransformer(override val input: Source<SolrInputDocument>, parameters
                         counter += 1
                     }
                 }
+                it.addField(FIELD_NAME_IMAGECOUNT, counter)
+            } else {
+                it.addField(FIELD_NAME_IMAGECOUNT, 0)
             }
             it
         }.onCompletion {e ->

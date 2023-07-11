@@ -2,7 +2,7 @@ package ch.pontius.kiar.api.model.config.transformers
 
 import ch.pontius.kiar.ingester.processors.sources.Source
 import ch.pontius.kiar.ingester.processors.transformers.ImageTransformer
-import ch.pontius.kiar.ingester.processors.transformers.SystemTransformer
+import ch.pontius.kiar.ingester.processors.transformers.InstitutionTransformer
 import kotlinx.serialization.Serializable
 import org.apache.solr.common.SolrInputDocument
 
@@ -23,6 +23,6 @@ data class TransformerConfig(val type: TransformerType, val parameters: Map<Stri
      */
     fun newInstance(input: Source<SolrInputDocument>) = when (this.type) {
         TransformerType.IMAGE -> ImageTransformer(input, this.parameters)
-        TransformerType.SYSTEM -> SystemTransformer(input, this.parameters)
+        TransformerType.SYSTEM -> InstitutionTransformer(input, this.parameters)
     }
 }

@@ -37,6 +37,9 @@ object Constants {
     /** Name of the 'inventarnummer' field in an Apache Solr document. */
     const val FIELD_NAME_INVENTORY_NUMBER = "inventarnummer"
 
+    /** Name of the 'inventarnummer' field in an Apache Solr document. */
+    const val FIELD_NAME_INSTITUTION = "institution"
+
     /** Name of the 'objekttyp' field in an Apache Solr document. */
     const val FIELD_NAME_OBJECTTYPE = "objekttyp"
 
