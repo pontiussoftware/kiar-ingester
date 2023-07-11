@@ -70,8 +70,9 @@ class DbJob(entity: Entity) : XdEntity(entity) {
         val template = this.template ?: throw IllegalStateException("Failed to generated execution pipeline for job ${this.xdId}: Missing template.")
 
         /* Generate file source. */
+        val sourcePath = config.ingestPath.resolve((template).name).resolve(this.xdId)
         val source: Source<SolrInputDocument> = when (template.type.description) {
-            "XML" -> XmlFileSource(template.sourcePath(config), template.mapping.toApi())
+            "XML" -> XmlFileSource(sourcePath, template.mapping.toApi())
             else -> throw IllegalStateException("Unsupported transformer type '${template.type.description}'. This is a programmer's error!")
         }
         var root = source

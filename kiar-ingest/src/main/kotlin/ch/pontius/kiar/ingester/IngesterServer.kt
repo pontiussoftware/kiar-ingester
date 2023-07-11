@@ -82,7 +82,7 @@ class IngesterServer(val store: TransientEntityStore, val config: Config) {
         this.store.transactional(true) {
             /* Install file watchers for jobs that should be started automatically. */
             for (template in DbJobTemplate.filter { it.startAutomatically eq true }.asSequence()) {
-                this.scheduleWatcher(template.xdId, template.sourcePath(this.config))
+                this.scheduleWatcher(template.xdId, this.config.ingestPath.resolve(template.participant.name).resolve("${template.name}.${template.type.suffix}"))
             }
         }
     }
