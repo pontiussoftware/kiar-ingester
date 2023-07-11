@@ -1,3 +1,11 @@
+<h1 i18n="@@HeadingDataIngestJobs">
+  <button mat-mini-fab color="primary" i18n-matTooltip="@@TooltipAddNewJob" matTooltip="Return to list of jobs"  [routerLink]="['/admin/dashboard']">
+    <mat-icon>back</mat-icon>
+  </button>
+
+  Job Logs (ID: {{(jobId | async)}}
+</h1>
+
 <table mat-table [dataSource]="dataSource" class="mat-elevation-z8">
   <!-- Position Column -->
   <ng-container matColumnDef="documentId" i18n="@@LabelDocumentId">
