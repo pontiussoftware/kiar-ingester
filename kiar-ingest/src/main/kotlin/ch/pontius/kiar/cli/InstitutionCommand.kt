@@ -62,6 +62,7 @@ class InstitutionCommand(store: TransientEntityStore) : NoOpCliktCommand(name = 
                         this.canton = i.canton
                         this.email = i.email
                         this.homepage = i.website
+                        this.publish = true
                     }
                 }
             }
