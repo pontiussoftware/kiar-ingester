@@ -73,7 +73,7 @@ class ApacheSolrSink(override val input: Source<SolrInputDocument>, private val 
                         if (this@ApacheSolrSink.validate(c.name, uuid, doc, context)) {
                             val response = this@ApacheSolrSink.client.add(c.name, this@ApacheSolrSink.sanitize(c.name, doc))
                             if (response.status == 0) {
-                                LOGGER.debug("Ingested document (jobId = {}, collection = {}, docId = {}).", context.name, c, uuid)
+                                LOGGER.info("Ingested document (jobId = {}, collection = {}, docId = {}).", context.name, c, uuid)
                                 context.processed += 1
                             } else {
                                 context.error += 1
@@ -105,12 +105,12 @@ class ApacheSolrSink(override val input: Source<SolrInputDocument>, private val 
      * @param document The document to match.
      */
     private fun isMatch(selector: String?, document: SolrInputDocument): Boolean {
-        if (selector == null) return true
+        if (selector.isNullOrBlank()) return true
         val terms = selector.trim().split(',').map { it.trim().split(':') }
         return terms.all {
-            val fieldValue = document[it[0]]?.value ?: return@all false
-            val expectedValue = it.getOrNull(1) ?: return@all false
-            fieldValue == expectedValue
+            val match = document[it.getOrNull(0)]?.value == it.getOrNull(1)
+            LOGGER.debug("Checking document {}:{} ({}:{}): Match is {}", it[0], it[1], document[it.getOrNull(0)]?.value, it.getOrNull(1), match)
+            match
         }
     }
 
