@@ -39,7 +39,7 @@ import org.apache.solr.common.SolrInputDocument
 )
 fun postSyncInstitutions(ctx: Context, store: TransientEntityStore) {
     val configName = ctx.pathParam("solr")
-    val collectionName = ctx.pathParam("solr")
+    val collectionName = ctx.pathParam("collection")
     val data = store.transactional(true) {
         val collection = DbSolr.filter {
             it.name eq configName
