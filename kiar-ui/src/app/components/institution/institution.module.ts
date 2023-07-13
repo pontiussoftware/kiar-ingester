@@ -10,9 +10,19 @@ import {MatButtonModule} from "@angular/material/button";
 import {MatIconModule} from "@angular/material/icon";
 import {MatTooltipModule} from "@angular/material/tooltip";
 import {MatSortModule} from "@angular/material/sort";
+import {AddInstitutionDialogComponent} from "./add-institution-dialog.component";
+import {MatDialogModule} from "@angular/material/dialog";
+import {MatCheckboxModule} from "@angular/material/checkbox";
+import {MatFormFieldModule} from "@angular/material/form-field";
+import {MatInputModule} from "@angular/material/input";
+import {MatOptionModule} from "@angular/material/core";
+import {MatSelectModule} from "@angular/material/select";
+import {MatMenuModule} from "@angular/material/menu";
+
 @NgModule({
   declarations: [
-    InstitutionListComponent
+    InstitutionListComponent,
+    AddInstitutionDialogComponent
   ],
   imports: [
     CommonModule,
@@ -25,7 +35,14 @@ import {MatSortModule} from "@angular/material/sort";
     MatButtonModule,
     MatIconModule,
     MatTooltipModule,
-    MatSortModule
+    MatSortModule,
+    MatDialogModule,
+    MatCheckboxModule,
+    MatFormFieldModule,
+    MatInputModule,
+    MatOptionModule,
+    MatSelectModule,
+    MatMenuModule
   ],
   exports: [
     InstitutionListComponent

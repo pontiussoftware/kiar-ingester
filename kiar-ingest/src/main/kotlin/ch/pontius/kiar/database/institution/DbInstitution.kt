@@ -62,9 +62,10 @@ class DbInstitution(entity: Entity) : XdEntity(entity) {
      * @return [Institution]
      */
     fun toApi(): Institution = Institution(
+        id = this.xdId,
         name = this.name,
         displayName = this.displayName,
-        participant = this.participant.name,
+        participantName = this.participant.name,
         description = this.description,
         isil = this.isil,
         street = this.street,

@@ -2,12 +2,15 @@ package ch.pontius.kiar.api.routes
 
 import ch.pontius.kiar.api.model.session.Role
 import ch.pontius.kiar.api.routes.config.*
+import ch.pontius.kiar.api.routes.institution.postSyncInstitutions
 import ch.pontius.kiar.api.routes.job.*
 import ch.pontius.kiar.api.routes.session.*
 import ch.pontius.kiar.config.Config
 import ch.pontius.kiar.ingester.IngesterServer
 import createEntityMapping
+import postCreateInstitution
 import deleteEntityMapping
+import deleteInstitution
 import getEntityMapping
 import getListInstitutions
 import io.javalin.apibuilder.ApiBuilder.*
@@ -47,8 +50,10 @@ fun configureApiRoutes(store: TransientEntityStore, server: IngesterServer, conf
         }
         /* Endpoints related to institutions. */
         get("institutions", { ctx -> getListInstitutions(ctx, store) }, Role.ADMINISTRATOR )
+        post("institutions", { ctx -> postCreateInstitution(ctx, store) }, Role.ADMINISTRATOR )
         path("institutions") {
-
+            post("synchronize", { ctx -> postSyncInstitutions(ctx, store) }, Role.ADMINISTRATOR )
+            delete("{id}",  { ctx -> deleteInstitution(ctx, store) }, Role.ADMINISTRATOR )
         }
 
         /* Endpoints related to participants. */

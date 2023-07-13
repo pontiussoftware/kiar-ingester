@@ -10,9 +10,10 @@ import kotlinx.serialization.Serializable
  */
 @Serializable
 data class Institution(
+    val id: String? = null,
     val name: String,
     val displayName: String,
-    val participant: String,
+    val participantName: String,
     val description: String? = null,
     val isil: String? = null,
     val street: String? = null,

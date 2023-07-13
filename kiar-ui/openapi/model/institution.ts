@@ -12,9 +12,10 @@
 
 
 export interface Institution { 
+    id?: string;
     name: string;
     displayName: string;
-    participant: string;
+    participantName: string;
     description?: string;
     isil?: string;
     street?: string;

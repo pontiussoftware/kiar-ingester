@@ -98,6 +98,240 @@
         },
         "deprecated" : false,
         "security" : [ ]
+      },
+      "post" : {
+        "tags" : [ "Institution" ],
+        "summary" : "Creates a new institution.",
+        "operationId" : "postCreateInstitution",
+        "parameters" : [ ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/Institution"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Institution"
+                }
+              }
+            }
+          },
+          "400" : {
+            "description" : "Bad Request",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorStatus"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorStatus"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Forbidden",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorStatus"
+                }
+              }
+            }
+          },
+          "404" : {
+            "description" : "Not Found",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorStatus"
+                }
+              }
+            }
+          },
+          "500" : {
+            "description" : "Server Error",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorStatus"
+                }
+              }
+            }
+          }
+        },
+        "deprecated" : false,
+        "security" : [ ]
+      }
+    },
+    "/api/institutions/synchronize" : {
+      "post" : {
+        "tags" : [ "Institution" ],
+        "summary" : "Synchronizes institutions with an Apache Solr backend.",
+        "operationId" : "postSynchronizeInstitutions",
+        "parameters" : [ {
+          "name" : "solr",
+          "in" : "query",
+          "description" : "Name of the Apache Solr configuration to use.",
+          "required" : false,
+          "deprecated" : false,
+          "allowEmptyValue" : false,
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "name" : "collection",
+          "in" : "query",
+          "description" : "The name of the collection to synchronize with.",
+          "required" : false,
+          "deprecated" : false,
+          "allowEmptyValue" : false,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/SuccessStatus"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorStatus"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Forbidden",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorStatus"
+                }
+              }
+            }
+          },
+          "404" : {
+            "description" : "Not Found",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorStatus"
+                }
+              }
+            }
+          },
+          "500" : {
+            "description" : "Server Error",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorStatus"
+                }
+              }
+            }
+          }
+        },
+        "deprecated" : false,
+        "security" : [ ]
+      }
+    },
+    "/api/institutions/{id}" : {
+      "delete" : {
+        "tags" : [ "Institution" ],
+        "summary" : "Deletes an existing institution.",
+        "operationId" : "deleteInstitution",
+        "parameters" : [ {
+          "name" : "id",
+          "in" : "path",
+          "description" : "The ID of the institution that should be deleted.",
+          "required" : true,
+          "deprecated" : false,
+          "allowEmptyValue" : false,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/SuccessStatus"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorStatus"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Forbidden",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorStatus"
+                }
+              }
+            }
+          },
+          "404" : {
+            "description" : "Not Found",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorStatus"
+                }
+              }
+            }
+          },
+          "500" : {
+            "description" : "Server Error",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorStatus"
+                }
+              }
+            }
+          }
+        },
+        "deprecated" : false,
+        "security" : [ ]
       }
     },
     "/api/jobs" : {
@@ -2378,13 +2612,16 @@
         "type" : "object",
         "additionalProperties" : false,
         "properties" : {
+          "id" : {
+            "type" : "string"
+          },
           "name" : {
             "type" : "string"
           },
           "displayName" : {
             "type" : "string"
           },
-          "participant" : {
+          "participantName" : {
             "type" : "string"
           },
           "description" : {
@@ -2416,7 +2653,7 @@
             "type" : "boolean"
           }
         },
-        "required" : [ "name", "displayName", "participant", "zip", "city", "canton", "email", "publish" ]
+        "required" : [ "name", "displayName", "participantName", "zip", "city", "canton", "email", "publish" ]
       },
       "PaginatedInstitutionResult" : {
         "type" : "object",
