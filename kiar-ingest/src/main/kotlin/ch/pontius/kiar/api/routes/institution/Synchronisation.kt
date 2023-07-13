@@ -26,8 +26,8 @@ import org.apache.solr.common.SolrInputDocument
     operationId = "postSynchronizeInstitutions",
     tags = ["Institution"],
     queryParams = [
-        OpenApiParam(name = "solr", type = String::class, description = "Name of the Apache Solr configuration to use.", required = false),
-        OpenApiParam(name = "collection", type = String::class, description = "The name of the collection to synchronize with.", required = false)
+        OpenApiParam(name = "solr", type = String::class, description = "Name of the Apache Solr configuration to use.", required = true),
+        OpenApiParam(name = "collection", type = String::class, description = "The name of the collection to synchronize with.", required = true)
     ],
     responses = [
         OpenApiResponse("200", [OpenApiContent(SuccessStatus::class)]),
@@ -38,8 +38,8 @@ import org.apache.solr.common.SolrInputDocument
     ]
 )
 fun postSyncInstitutions(ctx: Context, store: TransientEntityStore) {
-    val configName = ctx.queryParam("solr")
-    val collectionName = ctx.queryParam("collection")
+    val configName = ctx.queryParam("solr") ?: throw ErrorStatusException(400, "Query parameter 'solr' is required.")
+    val collectionName = ctx.queryParam("collection") ?: throw ErrorStatusException(400, "Query parameter 'collectionName' is required.")
     val data = store.transactional(true) {
         val collection = DbSolr.filter {
             it.name eq configName
