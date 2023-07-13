@@ -61,6 +61,7 @@ fun getActiveJobs(ctx: Context, store: TransientEntityStore, server: IngesterSer
                 job.skipped = context.skipped
                 job.error = context.error
             }
+            job
         })
     }
 }
