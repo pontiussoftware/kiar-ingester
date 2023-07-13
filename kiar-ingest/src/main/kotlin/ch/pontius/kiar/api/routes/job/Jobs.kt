@@ -2,8 +2,8 @@ package ch.pontius.kiar.api.routes.job
 
 import ch.pontius.kiar.api.model.job.CreateJobRequest
 import ch.pontius.kiar.api.model.job.Job
-import ch.pontius.kiar.api.model.job.JobLog
-import ch.pontius.kiar.api.model.job.JobLogResult
+import ch.pontius.kiar.api.model.PaginatedResult
+import ch.pontius.kiar.api.model.job.PaginatedJobLogResult
 import ch.pontius.kiar.api.model.status.ErrorStatus
 import ch.pontius.kiar.api.model.status.ErrorStatusException
 import ch.pontius.kiar.api.routes.session.currentUser
@@ -104,7 +104,7 @@ fun getInactiveJobs(ctx: Context, store: TransientEntityStore) {
         OpenApiParam(name = "pageSize", type = Int::class, description = "The page size  for pagination.", required = false)
     ],
     responses = [
-        OpenApiResponse("200", [OpenApiContent(JobLogResult::class)]),
+        OpenApiResponse("200", [OpenApiContent(PaginatedJobLogResult::class)]),
         OpenApiResponse("401", [OpenApiContent(ErrorStatus::class)]),
         OpenApiResponse("403", [OpenApiContent(ErrorStatus::class)]),
         OpenApiResponse("500", [OpenApiContent(ErrorStatus::class)])
@@ -120,7 +120,7 @@ fun getJobLogs(ctx: Context, store: TransientEntityStore) {
         val total = DbJobLog.filter { it.job eq job }.size()
         total to logs
     }
-    ctx.json(JobLogResult(result.first, page, pageSize, result.second))
+    ctx.json(PaginatedJobLogResult(result.first, page, pageSize, result.second))
 }
 
 

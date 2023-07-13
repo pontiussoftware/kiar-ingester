@@ -9,19 +9,58 @@
     "/api/institutions" : {
       "get" : {
         "tags" : [ "Institution" ],
-        "summary" : "Retrieves all jobs that are currently active. Non-administrator users can only see Jobs that belong to them.",
+        "summary" : "Retrieves all institutions registered in the database.",
         "operationId" : "getInstitutions",
-        "parameters" : [ ],
+        "parameters" : [ {
+          "name" : "page",
+          "in" : "query",
+          "description" : "The page index (zero-based) for pagination.",
+          "required" : false,
+          "deprecated" : false,
+          "allowEmptyValue" : false,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int32"
+          }
+        }, {
+          "name" : "pageSize",
+          "in" : "query",
+          "description" : "The page size for pagination.",
+          "required" : false,
+          "deprecated" : false,
+          "allowEmptyValue" : false,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int32"
+          }
+        }, {
+          "name" : "order",
+          "in" : "query",
+          "description" : "The attribute to order by. Possible values are 'name', 'city', 'zip', 'canton' and 'publish'.",
+          "required" : false,
+          "deprecated" : false,
+          "allowEmptyValue" : false,
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "name" : "orderDir",
+          "in" : "query",
+          "description" : "The sort order. Possible values are 'asc' and 'desc'.",
+          "required" : false,
+          "deprecated" : false,
+          "allowEmptyValue" : false,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
         "responses" : {
           "200" : {
             "description" : "OK",
             "content" : {
               "application/json" : {
                 "schema" : {
-                  "type" : "array",
-                  "items" : {
-                    "$ref" : "#/components/schemas/Institution"
-                  }
+                  "$ref" : "#/components/schemas/PaginatedInstitutionResult"
                 }
               }
             }
@@ -379,7 +418,7 @@
             "content" : {
               "application/json" : {
                 "schema" : {
-                  "$ref" : "#/components/schemas/JobLogResult"
+                  "$ref" : "#/components/schemas/PaginatedJobLogResult"
                 }
               }
             }
@@ -2379,6 +2418,31 @@
         },
         "required" : [ "name", "displayName", "participant", "zip", "city", "canton", "email", "publish" ]
       },
+      "PaginatedInstitutionResult" : {
+        "type" : "object",
+        "additionalProperties" : false,
+        "properties" : {
+          "total" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "page" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "pageSize" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "results" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/Institution"
+            }
+          }
+        },
+        "required" : [ "total", "page", "pageSize", "results" ]
+      },
       "CreateJobRequest" : {
         "type" : "object",
         "additionalProperties" : false,
@@ -2463,7 +2527,15 @@
         "type" : "string",
         "enum" : [ "WARNING", "ERROR", "SEVERE" ]
       },
-      "JobLogResult" : {
+      "JobSource" : {
+        "type" : "string",
+        "enum" : [ "WATCHER", "WEB" ]
+      },
+      "JobStatus" : {
+        "type" : "string",
+        "enum" : [ "CREATED", "ABORTED", "HARVESTED", "RUNNING", "INGESTED", "FAILED" ]
+      },
+      "PaginatedJobLogResult" : {
         "type" : "object",
         "additionalProperties" : false,
         "properties" : {
@@ -2479,22 +2551,14 @@
             "type" : "integer",
             "format" : "int32"
           },
-          "logs" : {
+          "results" : {
             "type" : "array",
             "items" : {
               "$ref" : "#/components/schemas/JobLog"
             }
           }
         },
-        "required" : [ "total", "page", "pageSize", "logs" ]
-      },
-      "JobSource" : {
-        "type" : "string",
-        "enum" : [ "WATCHER", "WEB" ]
-      },
-      "JobStatus" : {
-        "type" : "string",
-        "enum" : [ "CREATED", "ABORTED", "HARVESTED", "RUNNING", "INGESTED", "FAILED" ]
+        "required" : [ "total", "page", "pageSize", "results" ]
       },
       "LoginRequest" : {
         "type" : "object",

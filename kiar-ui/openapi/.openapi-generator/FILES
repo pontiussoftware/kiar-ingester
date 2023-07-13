@@ -27,7 +27,6 @@ model/job.ts
 model/jobLog.ts
 model/jobLogContext.ts
 model/jobLogLevel.ts
-model/jobLogResult.ts
 model/jobSource.ts
 model/jobStatus.ts
 model/jobTemplate.ts
@@ -35,6 +34,8 @@ model/jobType.ts
 model/loginRequest.ts
 model/mappingType.ts
 model/models.ts
+model/paginatedInstitutionResult.ts
+model/paginatedJobLogResult.ts
 model/role.ts
 model/sessionStatus.ts
 model/successStatus.ts

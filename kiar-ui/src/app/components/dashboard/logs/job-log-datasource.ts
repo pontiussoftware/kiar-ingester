@@ -2,6 +2,11 @@ import {CollectionViewer, DataSource} from "@angular/cdk/collections";
 import {JobLog, JobService} from "../../../../../openapi";
 import {BehaviorSubject, Observable} from "rxjs";
 
+/**
+ * A {@link DataSource} for {@link JobLog} object loaded through the backend API.
+ *
+ * Can be used as a data source for table.
+ */
 export class JobLogDatasource implements DataSource<JobLog> {
 
   /** The {@link BehaviorSubject} that acts as a data source. */
@@ -26,7 +31,7 @@ export class JobLogDatasource implements DataSource<JobLog> {
    */
   get totalSize(): number {
     return this.total.value
-}
+  }
 
   /**
    * Reloads the data using the provided page index and page size.
@@ -37,7 +42,7 @@ export class JobLogDatasource implements DataSource<JobLog> {
     this.service.getJobLog(this.jobId, page, pageSize).subscribe(
         (next) => {
           this.total.next(next.total)
-          this.data.next(next.logs)
+          this.data.next(next.results)
         }
     )
   }

@@ -25,9 +25,9 @@ import { ErrorStatus } from '../model/errorStatus';
 // @ts-ignore
 import { Job } from '../model/job';
 // @ts-ignore
-import { JobLogResult } from '../model/jobLogResult';
-// @ts-ignore
 import { JobTemplate } from '../model/jobTemplate';
+// @ts-ignore
+import { PaginatedJobLogResult } from '../model/paginatedJobLogResult';
 // @ts-ignore
 import { SuccessStatus } from '../model/successStatus';
 
@@ -288,9 +288,9 @@ export class JobService {
      * @param observe set whether or not to return the data Observable as the body, response or events. defaults to returning the body.
      * @param reportProgress flag to report request and response progress.
      */
-    public getJobLog(id: string, page?: number, pageSize?: number, observe?: 'body', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext}): Observable<JobLogResult>;
-    public getJobLog(id: string, page?: number, pageSize?: number, observe?: 'response', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext}): Observable<HttpResponse<JobLogResult>>;
-    public getJobLog(id: string, page?: number, pageSize?: number, observe?: 'events', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext}): Observable<HttpEvent<JobLogResult>>;
+    public getJobLog(id: string, page?: number, pageSize?: number, observe?: 'body', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext}): Observable<PaginatedJobLogResult>;
+    public getJobLog(id: string, page?: number, pageSize?: number, observe?: 'response', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext}): Observable<HttpResponse<PaginatedJobLogResult>>;
+    public getJobLog(id: string, page?: number, pageSize?: number, observe?: 'events', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext}): Observable<HttpEvent<PaginatedJobLogResult>>;
     public getJobLog(id: string, page?: number, pageSize?: number, observe: any = 'body', reportProgress: boolean = false, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext}): Observable<any> {
         if (id === null || id === undefined) {
             throw new Error('Required parameter id was null or undefined when calling getJobLog.');
@@ -338,7 +338,7 @@ export class JobService {
         }
 
         let localVarPath = `/api/jobs/${this.configuration.encodeParam({name: "id", value: id, in: "path", style: "simple", explode: false, dataType: "string", dataFormat: undefined})}/logs`;
-        return this.httpClient.request<JobLogResult>('get', `${this.configuration.basePath}${localVarPath}`,
+        return this.httpClient.request<PaginatedJobLogResult>('get', `${this.configuration.basePath}${localVarPath}`,
             {
                 context: localVarHttpContext,
                 params: localVarQueryParameters,

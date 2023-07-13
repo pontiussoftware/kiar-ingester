@@ -21,7 +21,7 @@ import { Observable }                                        from 'rxjs';
 // @ts-ignore
 import { ErrorStatus } from '../model/errorStatus';
 // @ts-ignore
-import { Institution } from '../model/institution';
+import { PaginatedInstitutionResult } from '../model/paginatedInstitutionResult';
 
 // @ts-ignore
 import { BASE_PATH, COLLECTION_FORMATS }                     from '../variables';
@@ -94,14 +94,36 @@ export class InstitutionService {
     }
 
     /**
-     * Retrieves all jobs that are currently active. Non-administrator users can only see Jobs that belong to them.
+     * Retrieves all institutions registered in the database.
+     * @param page The page index (zero-based) for pagination.
+     * @param pageSize The page size for pagination.
+     * @param order The attribute to order by. Possible values are \&#39;name\&#39;, \&#39;city\&#39;, \&#39;zip\&#39;, \&#39;canton\&#39; and \&#39;publish\&#39;.
+     * @param orderDir The sort order. Possible values are \&#39;asc\&#39; and \&#39;desc\&#39;.
      * @param observe set whether or not to return the data Observable as the body, response or events. defaults to returning the body.
      * @param reportProgress flag to report request and response progress.
      */
-    public getInstitutions(observe?: 'body', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext}): Observable<Array<Institution>>;
-    public getInstitutions(observe?: 'response', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext}): Observable<HttpResponse<Array<Institution>>>;
-    public getInstitutions(observe?: 'events', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext}): Observable<HttpEvent<Array<Institution>>>;
-    public getInstitutions(observe: any = 'body', reportProgress: boolean = false, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext}): Observable<any> {
+    public getInstitutions(page?: number, pageSize?: number, order?: string, orderDir?: string, observe?: 'body', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext}): Observable<PaginatedInstitutionResult>;
+    public getInstitutions(page?: number, pageSize?: number, order?: string, orderDir?: string, observe?: 'response', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext}): Observable<HttpResponse<PaginatedInstitutionResult>>;
+    public getInstitutions(page?: number, pageSize?: number, order?: string, orderDir?: string, observe?: 'events', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext}): Observable<HttpEvent<PaginatedInstitutionResult>>;
+    public getInstitutions(page?: number, pageSize?: number, order?: string, orderDir?: string, observe: any = 'body', reportProgress: boolean = false, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext}): Observable<any> {
+
+        let localVarQueryParameters = new HttpParams({encoder: this.encoder});
+        if (page !== undefined && page !== null) {
+          localVarQueryParameters = this.addToHttpParams(localVarQueryParameters,
+            <any>page, 'page');
+        }
+        if (pageSize !== undefined && pageSize !== null) {
+          localVarQueryParameters = this.addToHttpParams(localVarQueryParameters,
+            <any>pageSize, 'pageSize');
+        }
+        if (order !== undefined && order !== null) {
+          localVarQueryParameters = this.addToHttpParams(localVarQueryParameters,
+            <any>order, 'order');
+        }
+        if (orderDir !== undefined && orderDir !== null) {
+          localVarQueryParameters = this.addToHttpParams(localVarQueryParameters,
+            <any>orderDir, 'orderDir');
+        }
 
         let localVarHeaders = this.defaultHeaders;
 
@@ -135,9 +157,10 @@ export class InstitutionService {
         }
 
         let localVarPath = `/api/institutions`;
-        return this.httpClient.request<Array<Institution>>('get', `${this.configuration.basePath}${localVarPath}`,
+        return this.httpClient.request<PaginatedInstitutionResult>('get', `${this.configuration.basePath}${localVarPath}`,
             {
                 context: localVarHttpContext,
+                params: localVarQueryParameters,
                 responseType: <any>responseType_,
                 withCredentials: this.configuration.withCredentials,
                 headers: localVarHeaders,

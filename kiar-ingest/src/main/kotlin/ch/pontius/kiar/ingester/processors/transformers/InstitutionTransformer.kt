@@ -33,8 +33,14 @@ class InstitutionTransformer(override val input: Source<SolrInputDocument>, para
 
     override fun toFlow(context: ProcessingContext): Flow<SolrInputDocument> = this.input.toFlow(context).filter {
         /* Fetch institution field from document. */
-        val institution = it[FIELD_NAME_INSTITUTION]?.value as? String ?: throw IllegalArgumentException("Field 'uuid' is either missing or has wrong type.")
-        val uuid = it[FIELD_NAME_UUID]?.value as String
+        val uuid = it[FIELD_NAME_UUID]?.value as? String
+        if (uuid == null) {
+            LOGGER.warn("Failed to verify document: Field 'uuid' is missing (jobId = {}, docId = {}).", context.name, uuid)
+            context.log.add(JobLog(null, "<unknown>", JobLogContext.METADATA, JobLogLevel.WARNING, "Document skipped: Field 'uuid' is missing."))
+            return@filter false
+        }
+
+        val institution = it[FIELD_NAME_INSTITUTION]?.value as? String
         if (institution == null) {
             LOGGER.warn("Failed to verify document: Field 'institution' is missing (jobId = {}, docId = {}).", context.name, uuid)
             context.log.add(JobLog(null, uuid, JobLogContext.METADATA, JobLogLevel.WARNING, "Document skipped: Field 'institution' is missing."))
