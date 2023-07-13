@@ -3,10 +3,10 @@ import ch.pontius.kiar.api.model.institution.PaginatedInstitutionResult
 import ch.pontius.kiar.api.model.status.ErrorStatus
 import ch.pontius.kiar.api.model.status.ErrorStatusException
 import ch.pontius.kiar.api.model.status.SuccessStatus
-import ch.pontius.kiar.database.config.solr.DbCollectionType
-import ch.pontius.kiar.database.config.solr.DbSolr
+import ch.pontius.kiar.api.routes.session.currentUser
 import ch.pontius.kiar.database.institution.DbInstitution
 import ch.pontius.kiar.database.institution.DbParticipant
+import ch.pontius.kiar.database.institution.DbRole
 import ch.pontius.kiar.utilities.mapToArray
 import io.javalin.http.BadRequestResponse
 import io.javalin.http.Context
@@ -14,7 +14,6 @@ import io.javalin.openapi.*
 import jetbrains.exodus.database.TransientEntityStore
 import kotlinx.dnq.query.*
 import kotlinx.dnq.util.findById
-import org.apache.solr.client.solrj.impl.Http2SolrClient
 
 @OpenApi(
     path = "/api/institutions",
@@ -65,7 +64,7 @@ fun getListInstitutions(ctx: Context, store: TransientEntityStore) {
     requestBody = OpenApiRequestBody([OpenApiContent(Institution::class)], required = true),
     pathParams = [],
     responses = [
-        OpenApiResponse("200", [OpenApiContent(Institution::class)]),
+        OpenApiResponse("200", [OpenApiContent(SuccessStatus::class)]),
         OpenApiResponse("400", [OpenApiContent(ErrorStatus::class)]),
         OpenApiResponse("401", [OpenApiContent(ErrorStatus::class)]),
         OpenApiResponse("403", [OpenApiContent(ErrorStatus::class)]),
@@ -101,7 +100,68 @@ fun postCreateInstitution(ctx: Context, store: TransientEntityStore) {
     }
 
     /* Return job object. */
-    ctx.json(institution)
+    ctx.json(SuccessStatus("Institution '${institution.name}' (id: ${institution.id}) created successfully."))
+}
+
+@OpenApi(
+    path = "/api/institutions/{id}",
+    methods = [HttpMethod.PUT],
+    summary = "Updates an existing institution.",
+    operationId = "putUpdateInstitution",
+    tags = ["Institution"],
+    requestBody = OpenApiRequestBody([OpenApiContent(Institution::class)], required = true),
+    pathParams = [
+        OpenApiParam(name = "id", description = "The ID of the institution that should be updated.", required = true)
+    ],
+    responses = [
+        OpenApiResponse("200", [OpenApiContent(SuccessStatus::class)]),
+        OpenApiResponse("400", [OpenApiContent(ErrorStatus::class)]),
+        OpenApiResponse("401", [OpenApiContent(ErrorStatus::class)]),
+        OpenApiResponse("403", [OpenApiContent(ErrorStatus::class)]),
+        OpenApiResponse("404", [OpenApiContent(ErrorStatus::class)]),
+        OpenApiResponse("500", [OpenApiContent(ErrorStatus::class)])
+    ]
+)
+fun putUpdateInstitution(ctx: Context, store: TransientEntityStore) {
+    val institutionId = ctx.pathParam("id")
+    val request = try {
+        ctx.bodyAsClass(Institution::class.java)
+    } catch (e: BadRequestResponse) {
+        throw ErrorStatusException(400, "Malformed request.")
+    }
+
+    /* Create new job. */
+    val institutionName = store.transactional {
+        val institution = try {
+            DbInstitution.findById(institutionId)
+        } catch (e: Throwable) {
+            throw ErrorStatusException(404, "Institution with ID $institutionId could not be found.")
+        }
+
+        /* Make sure, that the current user can actually edit this institution. */
+        val currentUser = ctx.currentUser()
+        if (currentUser.role != DbRole.ADMINISTRATOR && currentUser.institution != institution) {
+            throw ErrorStatusException(403, "Institution with ID $institutionId cannot be editet by current user.")
+        }
+
+        /* Update institution. */
+        institution.name = request.name
+        institution.displayName = request.displayName
+        institution.description = request.description
+        institution.isil = request.isil
+        institution.street = request.street
+        institution.city = request.city
+        institution.zip = request.zip
+        institution.canton = request.canton
+        institution.publish = request.publish
+        institution.email = request.email
+        institution.homepage = request.homepage
+        institution.participant = DbParticipant.filter { it.name eq request.participantName }.firstOrNull() ?: throw ErrorStatusException(404, "Participant ${request.participantName} could not be found.")
+        institution.name
+    }
+
+    /* Return job object. */
+    ctx.json(SuccessStatus("Institution '$institutionName' (id: $institutionId) updated successfully."))
 }
 
 @OpenApi(

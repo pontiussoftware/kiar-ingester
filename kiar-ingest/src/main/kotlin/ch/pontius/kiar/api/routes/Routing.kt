@@ -17,6 +17,7 @@ import io.javalin.apibuilder.ApiBuilder.*
 import jetbrains.exodus.database.TransientEntityStore
 import listEntityMappings
 import listParsers
+import putUpdateInstitution
 import updateEntityMapping
 
 /**
@@ -54,6 +55,7 @@ fun configureApiRoutes(store: TransientEntityStore, server: IngesterServer, conf
         path("institutions") {
             post("synchronize", { ctx -> postSyncInstitutions(ctx, store) }, Role.ADMINISTRATOR )
             delete("{id}",  { ctx -> deleteInstitution(ctx, store) }, Role.ADMINISTRATOR )
+            put("{id}",  { ctx -> putUpdateInstitution(ctx, store) }, Role.ADMINISTRATOR, Role.MANAGER  )
         }
 
         /* Endpoints related to participants. */
@@ -78,8 +80,8 @@ fun configureApiRoutes(store: TransientEntityStore, server: IngesterServer, conf
         post("solr", { ctx -> createSolrConfig(ctx, store) }, Role.ADMINISTRATOR )
         path("solr") {
             get("{id}", { ctx -> getSolrConfig(ctx, store) }, Role.ADMINISTRATOR, Role.MANAGER )
-            put("{id}",  { ctx -> updateSolrConfig(ctx, store) }, Role.ADMINISTRATOR )
-            delete("{id}",  { ctx -> deleteSolrConfig(ctx, store) }, Role.ADMINISTRATOR )
+            put("{id}", { ctx -> updateSolrConfig(ctx, store) }, Role.ADMINISTRATOR )
+            delete("{id}", { ctx -> deleteSolrConfig(ctx, store) }, Role.ADMINISTRATOR )
         }
 
         /* Endpoints related to transformers. */

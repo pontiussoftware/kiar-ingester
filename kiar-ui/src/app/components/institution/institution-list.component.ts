@@ -1,19 +1,19 @@
 import {AfterViewInit, Component, OnInit, ViewChild} from "@angular/core";
-import {ConfigService, InstitutionService} from "../../../../openapi";
+import {ConfigService, Institution, InstitutionService} from "../../../../openapi";
 import {map, Observable, shareReplay, tap} from "rxjs";
 import {MatPaginator} from "@angular/material/paginator";
 import {InstitutionDatasource} from "./institution-datasource";
 import {MatSort} from "@angular/material/sort";
 import {MatSnackBar, MatSnackBarConfig} from "@angular/material/snack-bar";
 import {MatDialog} from "@angular/material/dialog";
-import {AddInstitutionDialogComponent} from "./add-institution-dialog.component";
+import {InstitutionDialogComponent} from "./institution-dialog.component";
 
 @Component({
   selector: 'kiar-institution-list',
   templateUrl: './institution-list.component.html',
   styleUrls: ['./institution-list.component.scss']
 })
-export class InstitutionListComponent implements AfterViewInit, OnInit  {
+export class InstitutionListComponent implements AfterViewInit  {
 
   /** {@link Observable} of all available participants. */
   public readonly dataSource: InstitutionDatasource
@@ -22,7 +22,7 @@ export class InstitutionListComponent implements AfterViewInit, OnInit  {
   public readonly collections: Observable<Array<string[]>>
 
   /** The columns that should be displayed in the data table. */
-  public readonly displayedColumns: string[] = ['name', 'displayName', 'participant', 'city', 'canton', 'email'];
+  public readonly displayedColumns: string[] = ['name', 'displayName', 'participant', 'street', 'city', 'zip', 'canton', 'email', 'action'];
 
   /** Reference to the {@link MatPaginator}*/
   @ViewChild(MatPaginator) paginator: MatPaginator;
@@ -41,16 +41,11 @@ export class InstitutionListComponent implements AfterViewInit, OnInit  {
   }
 
   /**
-   * Initializes the data source and load the data.
-   */
-  public ngOnInit() {
-    this.dataSource.load(0, 15, 'name', 'asc');
-  }
-
-  /**
    * Registers an observable for page change.
    */
   public ngAfterViewInit() {
+    this.sort.direction = 'asc'
+    this.dataSource.load(0, 15, this.sort.active, this.sort.direction);
     this.paginator.page.pipe(tap(() => this.dataSource.load(this.paginator.pageIndex, this.paginator.pageSize, this.sort.active, this.sort.direction))).subscribe();
     this.sort.sortChange.pipe(tap(() => this.dataSource.load(this.paginator.pageIndex, this.paginator.pageSize, this.sort.active, this.sort.direction))).subscribe();
   }
@@ -59,17 +54,49 @@ export class InstitutionListComponent implements AfterViewInit, OnInit  {
    * Opens a dialog to add a new {@link Institution} to the collection and persists it through the API upon saving.
    */
   public add() {
-    this.dialog.open(AddInstitutionDialogComponent).afterClosed().subscribe(institution => {
+    this.dialog.open(InstitutionDialogComponent).afterClosed().subscribe(institution => {
       if (institution != null) {
         this.institution.postCreateInstitution(institution).subscribe({
           next: (value) => {
-            this.snackBar.open(`Successfully created institution '${value.name}'.`, "Dismiss", { duration: 2000 } as MatSnackBarConfig);
+            this.snackBar.open(value.description, "Dismiss", { duration: 2000 } as MatSnackBarConfig);
             this.dataSource.load(this.paginator.pageIndex, this.paginator.pageSize, this.sort.active, this.sort.direction);
           },
-          error: (err) => this.snackBar.open(`Error occurred while trying to create job template: ${err?.error?.description}.`, "Dismiss", { duration: 2000 } as MatSnackBarConfig),
+          error: (err) => this.snackBar.open(`Error occurred while trying to create institution: ${err?.error?.description}.`, "Dismiss", { duration: 2000 } as MatSnackBarConfig),
         })
       }
     })
+  }
+
+  /**
+   * Opens a dialog to edit an existing {@link Institution} to the collection and persists it through the API upon saving.
+   */
+  public edit(institution: Institution) {
+    this.dialog.open(InstitutionDialogComponent, {data: institution}).afterClosed().subscribe(ret => {
+      if (ret != null) {
+        this.institution.putUpdateInstitution(ret.id!!, ret).subscribe({
+          next: (value) => {
+            this.snackBar.open(value.description, "Dismiss", { duration: 2000 } as MatSnackBarConfig);
+            this.dataSource.load(this.paginator.pageIndex, this.paginator.pageSize, this.sort.active, this.sort.direction);
+          },
+          error: (err) => this.snackBar.open(`Error occurred while trying to create institution: ${err?.error?.description}.`, "Dismiss", { duration: 2000 } as MatSnackBarConfig),
+        })
+      }
+    })
+  }
+
+  /**
+   * Opens a dialog to add a new {@link Institution} to the collection and persists it through the API upon saving.
+   */
+  public delete(institution: Institution) {
+    if (confirm(`Are you sure that you want to delete institution '${institution.id}'?\nAfter deletion, it can no longer be retrieved.`)) {
+      this.institution.deleteInstitution(institution.id!!).subscribe({
+        next: (value) => {
+          this.snackBar.open(value.description, "Dismiss", { duration: 2000 } as MatSnackBarConfig);
+          this.dataSource.load(this.paginator.pageIndex, this.paginator.pageSize, this.sort.active, this.sort.direction);
+        },
+        error: (err) => this.snackBar.open(`Error occurred while trying to delete institution '${institution.name}': ${err?.error?.description}.`, "Dismiss", { duration: 2000 } as MatSnackBarConfig),
+      })
+    }
   }
 
   /**
