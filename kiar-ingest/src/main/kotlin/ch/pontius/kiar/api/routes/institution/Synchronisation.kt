@@ -87,6 +87,7 @@ private fun synchronise(config: ApacheSolrConfig, collection: String, institutio
                 doc.setField(Constants.FIELD_NAME_DISPLAY, it.displayName)
                 if (it.isil != null) doc.setField("isil", it.isil)
                 doc.setField("name", it.name)
+                doc.setField("name_s", it.name)
                 doc.setField("description", it.description)
                 doc.setField("street", it.street)
                 doc.setField("city", it.city)
