@@ -6,7 +6,7 @@
     <mat-icon>sync</mat-icon>
   </button>
   <mat-menu #menu="matMenu" class=".collection-menu">
-    <button *ngFor="let collection of (collections|async)" mat-menu-item (click)="synchronize(collection[1], collection[0])">{{collection[1]}} ({{collection[0]}})</button>
+    <button *ngFor="let collection of (collections|async)" mat-menu-item (click)="synchronize(collection[0], collection[1])">{{collection[1]}} ({{collection[0]}})</button>
   </mat-menu>
 </h1>
 
