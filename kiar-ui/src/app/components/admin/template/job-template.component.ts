@@ -1,7 +1,7 @@
 import {AfterViewInit, Component} from "@angular/core";
 import {map, mergeMap, Observable, shareReplay} from "rxjs";
 import {FormArray, FormControl, FormGroup, Validators} from "@angular/forms";
-import {ApacheSolrConfig, ConfigService, EntityMapping, JobTemplate, JobType} from "../../../../../openapi";
+import {ApacheSolrConfig, ConfigService, EntityMapping, JobTemplate, JobType, TransformerType} from "../../../../../openapi";
 import {ActivatedRoute, Router} from "@angular/router";
 import {MatSnackBar, MatSnackBarConfig} from "@angular/material/snack-bar";
 
@@ -16,7 +16,7 @@ export class JobTemplateComponent implements AfterViewInit {
   public readonly templateId: Observable<string>
 
   /** List of transformers {@link FormGroup}s. */
-  public readonly transformers: Array<FormGroup> = []
+  public readonly transformers: FormArray = new FormArray<any>([])
 
   /** An {@link Observable} of available {@link EntityMapping}. */
   public readonly mappings: Observable<Array<EntityMapping>>
@@ -25,7 +25,10 @@ export class JobTemplateComponent implements AfterViewInit {
   public readonly solr: Observable<Array<ApacheSolrConfig>>
 
   /** An {@link Observable} of available {@link JobType}. */
-  public readonly types: Observable<Array<JobType>>
+  public readonly jobTypes: Observable<Array<JobType>>
+
+  /** An {@link Observable} of available {@link JobType}. */
+  public readonly transformerTypes: Observable<Array<TransformerType>>
 
   /** An {@link Observable} of available participants. */
   public readonly participants: Observable<Array<String>>
@@ -39,7 +42,7 @@ export class JobTemplateComponent implements AfterViewInit {
     solrConfigName: new FormControl(''),
     entityMappingName: new FormControl(''),
     startAutomatically: new FormControl(false),
-    transformers: new FormArray(this.transformers)
+    transformers: this.transformers
   })
 
   constructor(
@@ -51,7 +54,8 @@ export class JobTemplateComponent implements AfterViewInit {
     this.templateId = this.route.paramMap.pipe(map(params => params.get('id')!!));
     this.mappings = this.service.getListEntityMappings().pipe(shareReplay(1, 30000))
     this.solr = this.service.getListSolrConfiguration().pipe(shareReplay(1, 30000))
-    this.types = this.service.getListJobTemplateTypes().pipe(shareReplay(1, 30000))
+    this.jobTypes = this.service.getListJobTemplateTypes().pipe(shareReplay(1, 30000))
+    this.transformerTypes = this.service.getListTransformerTypes().pipe(shareReplay(1, 30000))
     this.participants = this.service.getListParticipants().pipe(shareReplay(1, 30000))
   }
 
@@ -109,6 +113,15 @@ export class JobTemplateComponent implements AfterViewInit {
   }
 
   /**
+   * Removes a parameter {@link FormGroup} at the provided index.
+   *
+   * @param index
+   */
+  public removeTransformer(index: number) {
+    this.transformers.removeAt(index)
+  }
+
+  /**
    * Updates the {@link FormControl} backing this view with a new {@link JobTemplate}.
    *
    * @param template The {@link JobTemplate} to apply.
@@ -122,10 +135,10 @@ export class JobTemplateComponent implements AfterViewInit {
     this.formControl.controls['entityMappingName'].setValue(template?.entityMappingName || '');
     this.formControl.controls['startAutomatically'].setValue(template?.startAutomatically || false);
 
-    this.transformers.length = 0
+    this.transformers.clear()
     for (let transformer of (template?.transformers || [])) {
       this.transformers.push(new FormGroup({
-        name: new FormControl(transformer.type || '', [Validators.required]),
+        name: new FormControl(transformer.type , [Validators.required]),
         parameters: new FormArray(Object.entries(transformer.parameters).map(p => new FormGroup({
           key: new FormControl(p[0] || ''),
           value: new FormControl(p[1] || '')
