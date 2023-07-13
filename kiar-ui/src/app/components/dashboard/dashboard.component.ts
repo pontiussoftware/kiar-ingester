@@ -21,7 +21,7 @@ interface ActiveJob extends Job {
 export class DashboardComponent implements AfterViewInit {
 
   /** Name of the columns being displayed by the data table. */
-  public readonly displayedColumns: string[] = ['name', 'status', 'source', 'template', 'createdAt', 'createdBy', 'action'];
+  public readonly displayedColumns: string[] = ['name', 'status', 'source', 'template', 'statistics', 'createdAt', 'createdBy',  'action'];
 
   /** {@link Observable} of all available participants. */
   public readonly activeJobs: Observable<Array<ActiveJob>>

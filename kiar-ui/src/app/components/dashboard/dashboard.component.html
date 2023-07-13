@@ -7,32 +7,36 @@
 <mat-tab-group>
   <mat-tab label="Running" i18n-label="@@TabLabelRunning">
     <table mat-table [dataSource]="(activeJobs | async)" class="mat-elevation-z8">
-
-      <!--- Note that these columns can be defined in any order.
-            The actual rendered columns are set as a property on the row definition" -->
-
       <!-- Name Column -->
       <ng-container matColumnDef="name">
         <th mat-header-cell *matHeaderCellDef i18n="@@ColHeaderName"> Name </th>
         <td mat-cell *matCellDef="let element"> {{element.name}} </td>
       </ng-container>
 
-      <!-- Name Column -->
+      <!-- Status Column -->
       <ng-container matColumnDef="status">
         <th mat-header-cell *matHeaderCellDef i18n="@@ColHeaderStatus"> Status </th>
         <td mat-cell *matCellDef="let element"> {{element.status}} </td>
       </ng-container>
 
-      <!-- Weight Column -->
+      <!-- Source Column -->
       <ng-container matColumnDef="source">
         <th mat-header-cell *matHeaderCellDef i18n="@@ColHeaderSource"> Source </th>
         <td mat-cell *matCellDef="let element"> {{element.source}} </td>
       </ng-container>
 
-      <!-- Symbol Column -->
+      <!-- Template Column -->
       <ng-container matColumnDef="template">
         <th mat-header-cell *matHeaderCellDef i18n="@@ColHeaderTemplate"> Template </th>
         <td mat-cell *matCellDef="let element"> {{element.templateName}} </td>
+      </ng-container>
+
+      <!-- Statistics Column -->
+      <ng-container matColumnDef="statistics">
+        <th mat-header-cell *matHeaderCellDef i18n="@@ColHeaderStatistics"> Statistics </th>
+        <td mat-cell *matCellDef="let element">
+          (<span class="color-traffic-light-green">{{element.processed}}</span> | <span class="color-traffic-light-green">{{element.skipped}}</span> | <span class="color-traffic-light-red">{{element.error}}</span>)
+        </td>
       </ng-container>
 
       <!-- Created At Column -->
@@ -64,8 +68,6 @@
               <mat-icon>cancel</mat-icon>
             </button>
           </div>
-
-
 
           <div *ngIf="element.harvesting">
             <mat-spinner diameter="25"></mat-spinner>
@@ -111,6 +113,14 @@
       <ng-container matColumnDef="template">
         <th mat-header-cell *matHeaderCellDef i18n="@@ColHeaderTemplate"> Template </th>
         <td mat-cell *matCellDef="let element"> {{element.templateName}} </td>
+      </ng-container>
+
+      <!-- Statistics Column -->
+      <ng-container matColumnDef="statistics">
+        <th mat-header-cell *matHeaderCellDef i18n="@@ColHeaderStatistics"> Statistics </th>
+        <td mat-cell *matCellDef="let element">
+          (<span class="color-traffic-light-green">{{element.processed}}</span> | <span class="color-traffic-light-orange">{{element.skipped}}</span> | <span class="color-traffic-light-red">{{element.error}}</span>)
+        </td>
       </ng-container>
 
       <!-- Created At Column -->

@@ -13,6 +13,7 @@ import ch.pontius.kiar.database.job.DbJob
 import ch.pontius.kiar.database.job.DbJobLog
 import ch.pontius.kiar.database.job.DbJobSource
 import ch.pontius.kiar.database.job.DbJobStatus
+import ch.pontius.kiar.ingester.IngesterServer
 import ch.pontius.kiar.utilities.mapToArray
 import io.javalin.http.BadRequestResponse
 import io.javalin.http.Context
@@ -36,7 +37,7 @@ import org.joda.time.DateTime
         OpenApiResponse("500", [OpenApiContent(ErrorStatus::class)])
     ]
 )
-fun getActiveJobs(ctx: Context, store: TransientEntityStore) {
+fun getActiveJobs(ctx: Context, store: TransientEntityStore, server: IngesterServer) {
     store.transactional(true) {
         val currentUser = ctx.currentUser()
         val jobs = when (currentUser.role) {
@@ -52,7 +53,15 @@ fun getActiveJobs(ctx: Context, store: TransientEntityStore) {
             }
             else -> DbJob.emptyQuery()
         }
-        ctx.json(jobs.mapToArray { it.toApi() })
+        ctx.json(jobs.mapToArray {
+            val job = it.toApi()
+            val context = server.getContext(job.id!!)
+            if (context != null) {
+                job.processed = context.processed
+                job.skipped = context.skipped
+                job.error = context.error
+            }
+        })
     }
 }
 

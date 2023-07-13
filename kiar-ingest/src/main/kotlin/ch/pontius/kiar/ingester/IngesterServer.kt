@@ -19,9 +19,7 @@ import kotlinx.dnq.util.findById
 import kotlinx.dnq.util.reattach
 import org.apache.logging.log4j.LogManager
 import org.apache.logging.log4j.Logger
-import java.nio.file.Files
 import java.nio.file.Path
-import java.nio.file.StandardCopyOption
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
@@ -48,7 +46,7 @@ class IngesterServer(val store: TransientEntityStore, val config: Config) {
     private val activeWatchers = ConcurrentHashMap<String,FileWatcher>()
 
     /** A [Map] of [FileWatcher]s that are currently running. */
-    private val activeJobs = ConcurrentHashMap<String,Pair<DbJob,Job>>()
+    private val activeJobs = ConcurrentHashMap<String,Triple<DbJob,ProcessingContext, Job>>()
 
     /**
      * The [ExecutorService] used to execute continuous jobs, e.g., driven by file watchers.
@@ -182,9 +180,9 @@ class IngesterServer(val store: TransientEntityStore, val config: Config) {
 
         /* Schedule job for execution. */
         runBlocking {
-            this@IngesterServer.activeJobs[jobId] = job to launch(this@IngesterServer.jobDispatcher) {
+            this@IngesterServer.activeJobs[jobId] = Triple(job, context, launch(this@IngesterServer.jobDispatcher) {
                 flow.collect()
-            }
+            })
         }
     }
 
@@ -198,7 +196,7 @@ class IngesterServer(val store: TransientEntityStore, val config: Config) {
     fun terminateJob(jobId: String): Boolean {
         val job = this.activeJobs[jobId]
         if (job != null) {
-            job.second.cancel("The job $jobId has been cancelled by a user.")
+            job.third.cancel("The job $jobId has been cancelled by a user.")
             this.store.transactional {
                 job.first.reattach()
                 if (job.first.status.active) {
@@ -209,6 +207,14 @@ class IngesterServer(val store: TransientEntityStore, val config: Config) {
         }
         return false
     }
+
+    /**
+     * Tries to access the [ProcessingContext] of the job identified by the job ID.
+     *
+     * @param jobId The ID of the job to terminate.
+     * @return [ProcessingContext] or null
+     */
+    fun getContext(jobId: String): ProcessingContext? = this.activeJobs[jobId]?.second
 
     /**
      * Stops this [IngesterServer] and all periodic task registered with it.

@@ -26,13 +26,13 @@ data class Job(
     val template: JobTemplate? = null,
 
     /** The entries processed by this [Job]. */
-    val processed: Long,
+    var processed: Long,
 
     /** The entries skipped by this [Job]. */
-    val skipped: Long,
+    var skipped: Long,
 
     /** The number of processing errors encountered by this [Job]. */
-    val error: Long,
+    var error: Long,
 
     /** Timestamp of this [Job]'s creation. */
     val createdAt: Long,
