@@ -31,6 +31,8 @@ import { JobType } from '../model/jobType';
 // @ts-ignore
 import { SuccessStatus } from '../model/successStatus';
 // @ts-ignore
+import { TransformerType } from '../model/transformerType';
+// @ts-ignore
 import { ValueParser } from '../model/valueParser';
 
 // @ts-ignore
@@ -780,9 +782,9 @@ export class ConfigService {
      * @param observe set whether or not to return the data Observable as the body, response or events. defaults to returning the body.
      * @param reportProgress flag to report request and response progress.
      */
-    public getListTransformerTypes(observe?: 'body', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext}): Observable<Array<EntityMapping>>;
-    public getListTransformerTypes(observe?: 'response', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext}): Observable<HttpResponse<Array<EntityMapping>>>;
-    public getListTransformerTypes(observe?: 'events', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext}): Observable<HttpEvent<Array<EntityMapping>>>;
+    public getListTransformerTypes(observe?: 'body', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext}): Observable<Array<TransformerType>>;
+    public getListTransformerTypes(observe?: 'response', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext}): Observable<HttpResponse<Array<TransformerType>>>;
+    public getListTransformerTypes(observe?: 'events', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext}): Observable<HttpEvent<Array<TransformerType>>>;
     public getListTransformerTypes(observe: any = 'body', reportProgress: boolean = false, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext}): Observable<any> {
 
         let localVarHeaders = this.defaultHeaders;
@@ -817,7 +819,7 @@ export class ConfigService {
         }
 
         let localVarPath = `/api/transformers/types`;
-        return this.httpClient.request<Array<EntityMapping>>('get', `${this.configuration.basePath}${localVarPath}`,
+        return this.httpClient.request<Array<TransformerType>>('get', `${this.configuration.basePath}${localVarPath}`,
             {
                 context: localVarHttpContext,
                 responseType: <any>responseType_,

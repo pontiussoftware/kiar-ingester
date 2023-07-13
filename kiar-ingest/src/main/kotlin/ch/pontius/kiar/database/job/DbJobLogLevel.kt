@@ -18,6 +18,7 @@ class DbJobLogLevel(entity: Entity) : XdEnumEntity(entity) {
     companion object : XdEnumEntityType<DbJobLogLevel>() {
         val WARNING by enumField { description = "WARNING"; }
         val ERROR by enumField { description = "ERROR"; }
+        val VALIDATION by enumField { description = "VALIDATION"; }
         val SEVERE by enumField { description = "SEVERE"; }
     }
 

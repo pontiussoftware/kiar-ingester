@@ -307,10 +307,16 @@ export class InstitutionService {
      * @param observe set whether or not to return the data Observable as the body, response or events. defaults to returning the body.
      * @param reportProgress flag to report request and response progress.
      */
-    public postSynchronizeInstitutions(solr?: string, collection?: string, observe?: 'body', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext}): Observable<SuccessStatus>;
-    public postSynchronizeInstitutions(solr?: string, collection?: string, observe?: 'response', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext}): Observable<HttpResponse<SuccessStatus>>;
-    public postSynchronizeInstitutions(solr?: string, collection?: string, observe?: 'events', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext}): Observable<HttpEvent<SuccessStatus>>;
-    public postSynchronizeInstitutions(solr?: string, collection?: string, observe: any = 'body', reportProgress: boolean = false, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext}): Observable<any> {
+    public postSynchronizeInstitutions(solr: string, collection: string, observe?: 'body', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext}): Observable<SuccessStatus>;
+    public postSynchronizeInstitutions(solr: string, collection: string, observe?: 'response', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext}): Observable<HttpResponse<SuccessStatus>>;
+    public postSynchronizeInstitutions(solr: string, collection: string, observe?: 'events', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext}): Observable<HttpEvent<SuccessStatus>>;
+    public postSynchronizeInstitutions(solr: string, collection: string, observe: any = 'body', reportProgress: boolean = false, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext}): Observable<any> {
+        if (solr === null || solr === undefined) {
+            throw new Error('Required parameter solr was null or undefined when calling postSynchronizeInstitutions.');
+        }
+        if (collection === null || collection === undefined) {
+            throw new Error('Required parameter collection was null or undefined when calling postSynchronizeInstitutions.');
+        }
 
         let localVarQueryParameters = new HttpParams({encoder: this.encoder});
         if (solr !== undefined && solr !== null) {

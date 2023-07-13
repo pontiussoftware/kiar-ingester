@@ -1,6 +1,5 @@
 package ch.pontius.kiar.database.job
 
-import ch.pontius.kiar.api.model.job.Job
 import ch.pontius.kiar.api.model.job.JobLog
 import jetbrains.exodus.entitystore.Entity
 import kotlinx.dnq.*
@@ -20,6 +19,9 @@ class DbJobLog(entity: Entity) : XdEntity(entity) {
     /** The document ID this [DbJobLog] concerns. */
     var documentId by xdRequiredStringProp(trimmed = true)
 
+    /** The collection ID this [DbJobLogLevel] concerns. */
+    var collectionId by xdStringProp()
+
     /** The [DbJobLogContext]  ofthis [DbJobLog]. */
     var context by xdLink1(DbJobLogContext)
 
@@ -36,5 +38,5 @@ class DbJobLog(entity: Entity) : XdEntity(entity) {
      *
      * @return [JobLog]
      */
-    fun toApi(): JobLog = JobLog(this.job.xdId, this.documentId, this.context.toApi(), this.level.toApi(), this.description)
+    fun toApi(): JobLog = JobLog(this.job.xdId, this.documentId, this.collectionId, this.context.toApi(), this.level.toApi(), this.description)
 }

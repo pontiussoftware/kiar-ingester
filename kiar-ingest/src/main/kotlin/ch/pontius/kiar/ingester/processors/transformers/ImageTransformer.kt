@@ -82,7 +82,7 @@ class ImageTransformer(override val input: Source<SolrInputDocument>, parameters
                                 it.addField(this.name, "${this.host}${this.deployTo.relativize(actualPath)}")
                             }
                         } else {
-                            context.log.add(JobLog(null, uuid, JobLogContext.RESOURCE, JobLogLevel.WARNING, "Failed to create preview image for document."))
+                            context.log.add(JobLog(null, uuid, null, JobLogContext.RESOURCE, JobLogLevel.WARNING, "Failed to create preview image for document."))
                         }
                         counter += 1
                     }

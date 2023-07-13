@@ -16,7 +16,6 @@ import org.apache.solr.client.solrj.SolrServerException
 import org.apache.solr.client.solrj.impl.Http2SolrClient
 import org.apache.solr.client.solrj.request.schema.SchemaRequest
 import org.apache.solr.common.SolrInputDocument
-import java.io.Closeable
 import java.io.IOException
 import java.lang.IllegalStateException
 
@@ -26,75 +25,82 @@ import java.lang.IllegalStateException
  * @author Ralph Gasser
  * @version 1.2.0
  */
-class ApacheSolrSink(override val input: Source<SolrInputDocument>, private val config: ApacheSolrConfig): Sink<SolrInputDocument>, Closeable {
+class ApacheSolrSink(override val input: Source<SolrInputDocument>, private val config: ApacheSolrConfig): Sink<SolrInputDocument> {
 
     companion object {
         private val LOGGER = LogManager.getLogger()
     }
 
-    /** The [Http2SolrClient] used to interact with Apache Solr.*/
-    private val client: Http2SolrClient
-
     /** [ApacheSolrField] for the different collections. */
     private val validators = HashMap<String,List<ApacheSolrField>>()
 
-    /** */
+    /** List of collections this [ApacheSolrSink] processes. */
     private val collections = this.config.collections.filter { it.type == CollectionType.OBJECT }.associate { it.name to it.selector }
-
-    init {
-        /* Prepare HTTP client builder. */
-        var httpBuilder = Http2SolrClient.Builder(this.config.server)
-        if (this.config.username != null && this.config.password != null) {
-            httpBuilder = httpBuilder.withBasicAuthCredentials(this.config.username, this.config.password)
-        }
-        this.client = httpBuilder.build()
-
-        /* Initializes the document validators. */
-        this.initializeValidators()
-    }
 
     /**
      * Creates and returns a [Flow] for this [ApacheSolrSink].
      *
      * @return [Flow]
      */
-    override fun toFlow(context: ProcessingContext): Flow<Unit> = flow {
-        /* Prepare ingest. */
-        this@ApacheSolrSink.prepareIngest(context)
+    override fun toFlow(context: ProcessingContext): Flow<Unit> {
+        /* Prepare HTTP client builder. */
+        var httpBuilder = Http2SolrClient.Builder(this.config.server)
+        if (this.config.username != null && this.config.password != null) {
+            httpBuilder = httpBuilder.withBasicAuthCredentials(this.config.username, this.config.password)
+        }
+        /* Prepare Apache Solr client. */
+        val client = httpBuilder.build()
 
-        /* Start collection of incoming flow. */
-        this@ApacheSolrSink.input.toFlow(context).collect() { doc ->
-            val uuid = doc[Constants.FIELD_NAME_UUID]?.value as? String ?: throw IllegalArgumentException("Field 'uuid' is either missing or has wrong type.")
+        /* Initializes the document validators. */
+        this.initializeValidators(client)
 
-            /* Add necessary system fields. */
-            for (c in this@ApacheSolrSink.config.collections) {
-                try {
-                    if (this@ApacheSolrSink.isMatch(c.selector, doc)) {
-                        if (this@ApacheSolrSink.validate(c.name, uuid, doc, context)) {
-                            val response = this@ApacheSolrSink.client.add(c.name, this@ApacheSolrSink.sanitize(c.name, doc))
-                            if (response.status == 0) {
-                                LOGGER.info("Ingested document (jobId = {}, collection = {}, docId = {}).", context.name, c, uuid)
-                                context.processed += 1
-                            } else {
-                                context.error += 1
-                                LOGGER.error("Failed to ingest document (jobId = ${context.name}, docId = $uuid).")
-                                context.log.add(JobLog(null, uuid, JobLogContext.SYSTEM, JobLogLevel.SEVERE, "Failed to add document due to Apache Solr error."))
+        /* Return flow. */
+        return flow {
+            /* Prepare ingest. */
+            this@ApacheSolrSink.prepareIngest(client, context)
+
+            /* Start collection of incoming flow. */
+            this@ApacheSolrSink.input.toFlow(context).collect() { doc ->
+                val uuid = doc[Constants.FIELD_NAME_UUID]?.value as? String
+                if (uuid != null) {
+                    for (collection in this@ApacheSolrSink.collections) {
+                        try {
+                            if (this@ApacheSolrSink.isMatch(collection.value, doc)) {
+                                if (this@ApacheSolrSink.validate(collection.key, uuid, doc, context)) {
+                                    val response = client.add(collection.key, this@ApacheSolrSink.sanitize(collection.key, doc))
+                                    if (response.status == 0) {
+                                        LOGGER.info("Ingested document (jobId = {}, collection = {}, docId = {}).", context.name, collection, uuid)
+                                        context.processed += 1
+                                    } else {
+                                        context.error += 1
+                                        LOGGER.error("Failed to ingest document (jobId = ${context.name}, docId = $uuid).")
+                                        context.log.add(JobLog(null, uuid, collection.key, JobLogContext.SYSTEM, JobLogLevel.ERROR, "Failed to add document due to Apache Solr error."))
+                                    }
+                                } else {
+                                    context.skipped += 1
+                                }
                             }
-                        } else {
-                            context.skipped += 1
+                        } catch (e: SolrServerException) {
+                            context.error += 1
+                            context.log.add(JobLog(null, uuid, collection.key, JobLogContext.SYSTEM, JobLogLevel.ERROR, "Failed to ingest document due to Apache Solr error: ${e.message}."))
+                        } catch (e: Throwable) {
+                            context.error += 1
+                            context.log.add(JobLog(null, uuid, collection.key, JobLogContext.SYSTEM, JobLogLevel.SEVERE, "Failed to ingest document due to error: ${e.message}."))
                         }
                     }
-                } catch (e: SolrServerException) {
-                    context.error += 1
-                    context.log.add(JobLog(null, uuid, JobLogContext.SYSTEM, JobLogLevel.ERROR, "Failed to ingest document due to Apache Solr error: ${e.message}."))
+                } else {
+                    context.log.add(JobLog(null, "<undefined>", null, JobLogContext.SYSTEM, JobLogLevel.SEVERE, "Failed to ingest document, because UUID is missing."))
+                    context.skipped += 1
                 }
             }
+
+            /* Finalize ingest for all collections. */
+            this@ApacheSolrSink.finalizeIngest(client, context)
+
+            emit(Unit)
+        }.onCompletion {
+            client.close()
         }
-
-        /* Finalize ingest for all collections. */
-        this@ApacheSolrSink.finalizeIngest(context)
-
-        emit(Unit)
     }
 
 
@@ -115,12 +121,12 @@ class ApacheSolrSink(override val input: Source<SolrInputDocument>, private val 
     /**
      * Initializes the [ApacheSolrField]s for the different collections.
      */
-    private fun initializeValidators() {
-        for (c in this.config.collections) {
+    private fun initializeValidators(client: Http2SolrClient) {
+        for (c in this.collections) {
             /* Prepare HTTP client builder. */
-            val fields = SchemaRequest.Fields().process(this.client, c.name).fields
-            val copyFields = SchemaRequest.CopyFields().process(client, c.name).copyFields.map { it["dest"] }.toSet()
-            val types = SchemaRequest.FieldTypes().process(client, c.name).fieldTypes /* TODO: Type-based validation. */
+            val fields = SchemaRequest.Fields().process(client, c.key).fields
+            val copyFields = SchemaRequest.CopyFields().process(client, c.key).copyFields.map { it["dest"] }.toSet()
+            val types = SchemaRequest.FieldTypes().process(client, c.key).fieldTypes /* TODO: Type-based validation. */
 
             val validators = fields.mapNotNull { schemaField ->
                 if (schemaField["name"] !in copyFields && schemaField["name"] !in SYSTEM_FIELDS) {
@@ -129,7 +135,7 @@ class ApacheSolrSink(override val input: Source<SolrInputDocument>, private val 
                     null
                 }
             }
-            this.validators[c.name] = validators
+            this.validators[c.key] = validators
         }
     }
 
@@ -146,7 +152,7 @@ class ApacheSolrSink(override val input: Source<SolrInputDocument>, private val 
         for (v in validators) {
             if (!v.isValid(doc)) {
                 LOGGER.info("Failed to validate document: {} (jobId = {}, collection = {}, docId = {}).", v.isInvalidReason(doc), context.name, collection, uuid)
-                context.log.add(JobLog(null, uuid, JobLogContext.METADATA, JobLogLevel.ERROR, "Failed to validate document: ${v.isInvalidReason(doc)}."))
+                context.log.add(JobLog(null, uuid, collection, JobLogContext.METADATA, JobLogLevel.VALIDATION, "Failed to validate document: ${v.isInvalidReason(doc)}"))
                 return false
             }
         }
@@ -171,44 +177,48 @@ class ApacheSolrSink(override val input: Source<SolrInputDocument>, private val 
         return sanitized
     }
 
-    /** Purge all collections that were configured. */
-    private fun prepareIngest(context: ProcessingContext) {
+    /**
+     * Purge all collections that were configured.
+     *
+     * @param client The [Http2SolrClient] to perform the operation with.
+     * @param context The current [ProcessingContext]
+     */
+    private fun prepareIngest(client: Http2SolrClient, context: ProcessingContext) {
         /* Purge all collections that were configured. */
-        for (c in this.config.collections) {
-            if (c.deleteBeforeImport) {
-                LOGGER.info("Purging collection (name = ${context.name} collection = ${c.name}).")
-                val response = this.client.deleteByQuery(c.name, "$FIELD_NAME_PARTICIPANT:\"${context.name}\"")
-                if (response.status != 0) {
-                    LOGGER.error("Purge of collection failed (name = ${context.name} collection = ${c.name}). Aborting...")
-                    throw IllegalArgumentException("Data ingest (name = ${context.name}, collection = ${c.name}) failed because delete before import could not be executed.")
-                }
-                LOGGER.info("Purge of collection successful (name = ${context.name} collection = ${c.name}).")
+        for (c in this.collections) {
+            LOGGER.info("Purging collection (name = ${context.name} collection = ${c.key}).")
+            val response = client.deleteByQuery(c.key, "$FIELD_NAME_PARTICIPANT:\"${context.name}\"")
+            if (response.status != 0) {
+                LOGGER.error("Purge of collection failed (name = ${context.name} collection = ${c.key}). Aborting...")
+                throw IllegalArgumentException("Data ingest (name = ${context.name}, collection = ${c.key}) failed because delete before import could not be executed.")
             }
+            LOGGER.info("Purge of collection successful (name = ${context.name} collection = ${c.key}).")
         }
     }
 
-    /* Purge all collections that were configured. */
-    private fun finalizeIngest(context: ProcessingContext) {
+    /**
+     * Finalizes the data ingest operation.
+     *
+     * @param client The [Http2SolrClient] to perform the operation with.
+     * @param context The current [ProcessingContext]
+     */
+    private fun finalizeIngest(client: Http2SolrClient, context: ProcessingContext) {
         /* Purge all collections that were configured. */
-        for (c in this.config.collections) {
-            LOGGER.info("Data ingest (name = ${context.name}, collection = ${c.name}) completed; committing...")
+        for (c in this.collections) {
+            LOGGER.info("Data ingest (name = ${context.name}, collection = ${c.key}) completed; committing...")
             try {
-                val response = this.client.commit(c.name)
+                val response = client.commit(c.key)
                 if (response.status == 0) {
-                    LOGGER.info("Data ingest (name = ${this@ApacheSolrSink.config.name}, collection = ${c.name}) committed successfully.")
+                    LOGGER.info("Data ingest (name = ${this@ApacheSolrSink.config.name}, collection = ${c.key}) committed successfully.")
                 } else {
-                    LOGGER.warn("Failed to commit data ingest (name = ${this@ApacheSolrSink.config.name}, collection = ${c.name}).")
+                    LOGGER.warn("Failed to commit data ingest (name = ${this@ApacheSolrSink.config.name}, collection = ${c.key}).")
                 }
             } catch (e: SolrServerException) {
-                this.client.rollback(c.name)
-                LOGGER.error("Failed to commit data ingest due to server error (name = ${this@ApacheSolrSink.config.name}, collection = ${c.name}). Rolling back...")
+                client.rollback(c.key)
+                LOGGER.error("Failed to commit data ingest due to server error (name = ${this@ApacheSolrSink.config.name}, collection = ${c.key}). Rolling back...")
             } catch (e: IOException) {
-                LOGGER.error("Failed to commit data ingest due to IO error (name = ${this@ApacheSolrSink.config.name}, collection = ${c.name}).")
+                LOGGER.error("Failed to commit data ingest due to IO error (name = ${this@ApacheSolrSink.config.name}, collection = ${c.key}).")
             }
         }
-    }
-
-    override fun close() {
-        TODO("Not yet implemented")
     }
 }

@@ -12,6 +12,7 @@ import ch.pontius.kiar.database.job.DbJobLogLevel
 enum class JobLogLevel {
     WARNING,
     ERROR,
+    VALIDATION,
     SEVERE;
 
     /**
@@ -22,6 +23,7 @@ enum class JobLogLevel {
     fun toDb(): DbJobLogLevel = when(this) {
         WARNING -> DbJobLogLevel.WARNING
         ERROR -> DbJobLogLevel.ERROR
+        VALIDATION -> DbJobLogLevel.VALIDATION
         SEVERE -> DbJobLogLevel.SEVERE
     }
 }

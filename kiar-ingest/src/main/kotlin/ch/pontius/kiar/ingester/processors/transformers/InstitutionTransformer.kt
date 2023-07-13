@@ -36,14 +36,14 @@ class InstitutionTransformer(override val input: Source<SolrInputDocument>, para
         val uuid = it[FIELD_NAME_UUID]?.value as? String
         if (uuid == null) {
             LOGGER.warn("Failed to verify document: Field 'uuid' is missing (jobId = {}, docId = {}).", context.name, uuid)
-            context.log.add(JobLog(null, "<unknown>", JobLogContext.METADATA, JobLogLevel.WARNING, "Document skipped: Field 'uuid' is missing."))
+            context.log.add(JobLog(null, "<undefined>", null, JobLogContext.METADATA, JobLogLevel.WARNING, "Document skipped: Field 'uuid' is missing."))
             return@filter false
         }
 
         val institution = it[FIELD_NAME_INSTITUTION]?.value as? String
         if (institution == null) {
             LOGGER.warn("Failed to verify document: Field 'institution' is missing (jobId = {}, docId = {}).", context.name, uuid)
-            context.log.add(JobLog(null, uuid, JobLogContext.METADATA, JobLogLevel.WARNING, "Document skipped: Field 'institution' is missing."))
+            context.log.add(JobLog(null, uuid, null, JobLogContext.METADATA, JobLogLevel.WARNING, "Document skipped: Field 'institution' is missing."))
             return@filter false
         }
 
@@ -52,7 +52,7 @@ class InstitutionTransformer(override val input: Source<SolrInputDocument>, para
         val entry = this@InstitutionTransformer.institutions[institution]
         if (entry == null) {
             LOGGER.warn("Failed to verify document: Institution '$institution' is unknown (jobId = {}, docId = {}).", context.name, uuid)
-            context.log.add(JobLog(null, uuid, JobLogContext.METADATA, JobLogLevel.WARNING, "Document skipped: Could not find database entry for institution '${institution}'."))
+            context.log.add(JobLog(null, uuid, null, JobLogContext.METADATA, JobLogLevel.WARNING, "Document skipped: Could not find database entry for institution '${institution}'."))
             return@filter false
         }
 

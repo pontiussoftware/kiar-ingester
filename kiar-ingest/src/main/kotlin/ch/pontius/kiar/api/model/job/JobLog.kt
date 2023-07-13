@@ -9,4 +9,11 @@ import kotlinx.serialization.Serializable
  * @version 1.0.0
  */
 @Serializable
-data class JobLog(val jobId: String? = null, val documentId: String, val context: JobLogContext, val level: JobLogLevel, val description: String)
+data class JobLog(
+    val jobId: String? = null,
+    val documentId: String,
+    val collectionId: String? = null,
+    val context: JobLogContext,
+    val level: JobLogLevel,
+    val description: String
+)

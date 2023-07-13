@@ -11,11 +11,12 @@
  */
 
 
-export type JobLogLevel = 'WARNING' | 'ERROR' | 'SEVERE';
+export type JobLogLevel = 'WARNING' | 'ERROR' | 'VALIDATION' | 'SEVERE';
 
 export const JobLogLevel = {
     WARNING: 'WARNING' as JobLogLevel,
     ERROR: 'ERROR' as JobLogLevel,
+    VALIDATION: 'VALIDATION' as JobLogLevel,
     SEVERE: 'SEVERE' as JobLogLevel
 };
 
