@@ -3,7 +3,7 @@
     <mat-card-header>
       <mat-card-title>Job Templates ({{(templates | async)?.length}})</mat-card-title>
       <div class="space-flexible"></div>
-      <button mat-mini-fab color="primary" aria-label="Adds a new job template." (click)="addJobTemplate()">
+      <button mat-mini-fab color="primary" aria-label="Adds a new job template." (click)="addJobTemplate()" i18n-matTooltip="@@TooltipAddJobTemplate" matTooltip="Add new job template.">
         <mat-icon>add</mat-icon>
       </button>
     </mat-card-header>
@@ -24,7 +24,7 @@
     <mat-card-header>
       <mat-card-title>Entity Mappings ({{(mappings | async)?.length}})</mat-card-title>
       <div class="space-flexible"></div>
-      <button mat-mini-fab color="primary" aria-label="Adds a new entity mapping." (click)="addEntityMapping()">
+      <button mat-mini-fab color="primary" aria-label="Adds a new entity mapping." (click)="addEntityMapping()" i18n-matTooltip="@@TooltipAddEntityMapping" matTooltip="Add new entity mapping.">
         <mat-icon>add</mat-icon>
       </button>
     </mat-card-header>
@@ -43,7 +43,7 @@
     <mat-card-header>
       <mat-card-title>Apache Solr Configurations ({{(solr | async)?.length}})</mat-card-title>
       <div class="space-flexible"></div>
-      <button mat-mini-fab color="primary" aria-label="Adds a new Apache Solr configuration." (click)="addSolrConfig()">
+      <button mat-mini-fab color="primary" aria-label="Adds a new Apache Solr configuration." (click)="addSolrConfig()" i18n-matTooltip="@@TooltipAddSolrConfig" matTooltip="Add new Apache Solr configuration.">
         <mat-icon>add</mat-icon>
       </button>
     </mat-card-header>
@@ -63,7 +63,7 @@
     <mat-card-header>
       <mat-card-title>Participants ({{(participant | async)?.length}})</mat-card-title>
       <div class="space-flexible"></div>
-      <button mat-mini-fab color="primary" aria-label="Adds a new participant identifier." (click)="addParticipant()">
+      <button mat-mini-fab color="primary" aria-label="Adds a new participant identifier." (click)="addParticipant()" i18n-matTooltip="@@TooltipAddParticipant" matTooltip="Add new participant.">
         <mat-icon>add</mat-icon>
       </button>
     </mat-card-header>
