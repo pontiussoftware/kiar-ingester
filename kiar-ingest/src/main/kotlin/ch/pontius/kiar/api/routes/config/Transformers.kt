@@ -1,6 +1,6 @@
 package ch.pontius.kiar.api.routes.config
 
-import ch.pontius.kiar.api.model.config.mappings.EntityMapping
+import ch.pontius.kiar.api.model.config.transformers.TransformerType
 import ch.pontius.kiar.api.model.status.ErrorStatus
 import ch.pontius.kiar.database.config.transformers.DbTransformerType
 import ch.pontius.kiar.utilities.mapToArray
@@ -19,7 +19,7 @@ import jetbrains.exodus.database.TransientEntityStore
     tags = ["Config", "Transformer"],
     pathParams = [],
     responses = [
-        OpenApiResponse("200", [OpenApiContent(Array<EntityMapping>::class)]),
+        OpenApiResponse("200", [OpenApiContent(Array<TransformerType>::class)]),
         OpenApiResponse("401", [OpenApiContent(ErrorStatus::class)]),
         OpenApiResponse("403", [OpenApiContent(ErrorStatus::class)]),
         OpenApiResponse("500", [OpenApiContent(ErrorStatus::class)]),
