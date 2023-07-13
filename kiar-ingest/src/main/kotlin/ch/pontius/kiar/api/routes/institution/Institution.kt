@@ -145,18 +145,24 @@ fun putUpdateInstitution(ctx: Context, store: TransientEntityStore) {
         }
 
         /* Update institution. */
-        institution.name = request.name
         institution.displayName = request.displayName
         institution.description = request.description
         institution.isil = request.isil
         institution.street = request.street
         institution.city = request.city
         institution.zip = request.zip
-        institution.canton = request.canton
-        institution.publish = request.publish
         institution.email = request.email
         institution.homepage = request.homepage
-        institution.participant = DbParticipant.filter { it.name eq request.participantName }.firstOrNull() ?: throw ErrorStatusException(404, "Participant ${request.participantName} could not be found.")
+
+        /* Some data can only be edited by an administrator. */
+        if (currentUser.role == DbRole.ADMINISTRATOR) {
+            institution.name = request.name
+            institution.participant = DbParticipant.filter { it.name eq request.participantName }.firstOrNull() ?: throw ErrorStatusException(404, "Participant ${request.participantName} could not be found.")
+            institution.canton = request.canton
+            institution.publish = request.publish
+        }
+
+
         institution.name
     }
 
