@@ -28,18 +28,38 @@
       Multi-valued
     </mat-checkbox>
 
-    <ng-container *ngFor="let parameterForm of parameterForms?.controls; let i = index" [formGroup]="parameterForm">
-      <div [formGroup]="parameterForm">
-        <mat-form-field appearance="fill" [style.width]="'25%'">
-          <mat-label>Key</mat-label>
-          <input matInput type="text" formControlName="key">
-        </mat-form-field>
-        <mat-form-field appearance="fill" [style.width]="'75%'">
-          <mat-label>Value</mat-label>
-          <input matInput type="text" formControlName="value">
-        </mat-form-field>
-      </div>
-    </ng-container>
+    <h2>Parameters
+      <button mat-mini-fab color="primary" (click)="addParameter()" i18n-matTooltip="@@TooltipAddParameter" matTooltip="Add a new parameter.">
+        <mat-icon>add</mat-icon>
+      </button>
+    </h2>
+
+    <table [style.width]="'100%'">
+      <thead>
+        <th i18n="@@LabelKey">Key</th>
+        <th i18n="@@LabelKey">Value</th>
+        <th>&nbsp;</th>
+      </thead>
+      <tbody>
+        <tr *ngFor="let parameterForm of parameterForms?.controls; let i = index" [formGroup]="parameterForm">
+          <td [style.width]="'15%'">
+            <mat-form-field appearance="fill" [style.width]="'100%'">
+              <mat-label>Key</mat-label>
+              <input matInput type="text" formControlName="key">
+            </mat-form-field>
+          </td>
+          <td [style.width]="'75%'">
+            <mat-form-field appearance="fill" [style.width]="'100%'">
+              <mat-label>Value</mat-label>
+              <input matInput type="text" formControlName="value">
+            </mat-form-field>
+          </td>
+          <td [style.padding-bottom]="'25px'">
+            <button mat-icon-button (click)="removeParameter(i)" color="warn" i18n-matTooltip="@@TooltipRemoveParameter" matTooltip="Remove parameter."><mat-icon>delete</mat-icon></button>
+          </td>
+        </tr>
+      </tbody>
+    </table>
   </form>
 </div>
 <div mat-dialog-actions>

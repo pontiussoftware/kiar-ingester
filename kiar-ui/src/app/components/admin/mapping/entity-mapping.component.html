@@ -80,15 +80,15 @@
 
       </td>
 
-      <td>
+      <td [style.padding-bottom]="'25px'" [style.text-align]="'center'">
         <mat-checkbox formControlName="required"></mat-checkbox>
       </td>
 
-      <td>
+      <td [style.padding-bottom]="'25px'" [style.text-align]="'center'">
         <mat-checkbox formControlName="multiValued"></mat-checkbox>
       </td>
 
-      <td>
+      <td [style.padding-bottom]="'25px'">
         <button mat-icon-button (click)="editAttributeMapping(i)" color="primary"><mat-icon>edit</mat-icon></button>
         <button mat-icon-button (click)="removeAttribute(i)" color="warn"><mat-icon>delete</mat-icon></button>
       </td>
