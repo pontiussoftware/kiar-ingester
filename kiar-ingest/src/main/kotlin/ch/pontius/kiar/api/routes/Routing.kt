@@ -40,7 +40,7 @@ fun configureApiRoutes(store: TransientEntityStore, server: IngesterServer, conf
         /* Endpoints related to jobs. */
         post("jobs", { ctx -> createJob(ctx, store) }, Role.ADMINISTRATOR, Role.MANAGER)
         path("jobs") {
-            get("active", { ctx -> getActiveJobs(ctx, store) }, Role.ADMINISTRATOR, Role.MANAGER, Role.VIEWER )
+            get("active", { ctx -> getActiveJobs(ctx, store, server) }, Role.ADMINISTRATOR, Role.MANAGER, Role.VIEWER )
             get("inactive",  { ctx -> getInactiveJobs(ctx, store) }, Role.ADMINISTRATOR, Role.MANAGER, Role.VIEWER )
             delete("{id}",  { ctx -> abortJob(ctx, store, server) }, Role.ADMINISTRATOR, Role.MANAGER )
             path("{id}") {
