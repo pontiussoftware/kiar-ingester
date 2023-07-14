@@ -75,6 +75,13 @@ class ImageTransformer(override val input: Source<SolrInputDocument>, parameters
                     if (original is BufferedImage) {
                         val actualPath = dst.resolve("${uuid}_%03d.jpg".format(counter))
                         val tmpPath = tmp.resolve("${uuid}_%03d.jpg".format(counter))
+
+                        /* Check size of image. If it's too small, issue a warning. */
+                        if (original.width < this.maxSize || original.height < this.maxSize) {
+                            context.log.add(JobLog(null, uuid, null, JobLogContext.RESOURCE, JobLogLevel.WARNING, "Image is smaller than specified maximum size (max = ${this.maxSize}, w = ${original.width}, h = ${original.height})."))
+                        }
+
+                        /* Perform conversion. */
                         if (this.store(this.resize(original), tmpPath)) {
                             if (this.host == null) {
                                 it.addField(this.name, this.deployTo.relativize(actualPath).toString())
