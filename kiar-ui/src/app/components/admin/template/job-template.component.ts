@@ -1,7 +1,7 @@
 import {AfterViewInit, Component} from "@angular/core";
 import {map, mergeMap, Observable, shareReplay} from "rxjs";
 import {FormArray, FormControl, FormGroup, Validators} from "@angular/forms";
-import {ApacheSolrConfig, ConfigService, EntityMapping, JobTemplate, JobType, TransformerType} from "../../../../../openapi";
+import {ApacheSolrConfig, ConfigService, EntityMapping, JobTemplate, JobType, TransformerConfig, TransformerType} from "../../../../../openapi";
 import {ActivatedRoute, Router} from "@angular/router";
 import {MatSnackBar, MatSnackBarConfig} from "@angular/material/snack-bar";
 
@@ -82,7 +82,12 @@ export class JobTemplateComponent implements AfterViewInit {
    * Tries to save the current state of the {@link ApacheSolrConfig} represented by the local {@link FormControl}
    */
   public save() {
-
+    this.templateId.pipe(
+        mergeMap((id) =>  this.service.updateJobTemplate(id, this.formToJobTemplate(id)))
+    ).subscribe({
+      next: () => this.snackBar.open(`Successfully updated job template.`, "Dismiss", { duration: 2000 } as MatSnackBarConfig),
+      error: (err) => this.snackBar.open(`Error occurred while trying to update job template: ${err?.error?.description}.`, "Dismiss", { duration: 2000 } as MatSnackBarConfig)
+    })
   }
 
   /**
@@ -119,6 +124,37 @@ export class JobTemplateComponent implements AfterViewInit {
    */
   public removeTransformer(index: number) {
     this.transformers.removeAt(index)
+  }
+
+  /**
+   * Converts this {@link FormGroup} to an {@link JobTemplate}.
+   *
+   * @param id The ID of the {@link JobTemplate}
+   * @return {@link JobTemplate}
+   */
+  private formToJobTemplate(id: string): JobTemplate {
+    return {
+      id: id,
+      name: this.formControl.get('name')?.value,
+      description: this.formControl.get('description')?.value,
+      type: this.formControl.get('type')?.value as JobType,
+      startAutomatically: this.formControl.get('startAutomatically')?.value,
+      participantName: this.formControl.get('participantName')?.value,
+      solrConfigName: this.formControl.get('solrConfigName')?.value,
+      entityMappingName:this.formControl.get('entityMappingName')?.value,
+      transformers: this.transformers.controls.map(transformer => {
+        let map = new Map<string,string>;
+        (transformer.get('parameters') as FormArray).controls.forEach(param => {
+          const key = param.get('key')?.value as string
+          const value = param.get('value')?.value as string
+          map.set(key, value)
+        })
+        return {
+          type: transformer.get('type')?.value,
+          parameters: Object.fromEntries(map)
+        } as TransformerConfig
+      }),
+    } as JobTemplate
   }
 
   /**
