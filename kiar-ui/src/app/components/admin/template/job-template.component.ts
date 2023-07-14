@@ -83,7 +83,7 @@ export class JobTemplateComponent implements AfterViewInit {
    */
   public save() {
     this.templateId.pipe(
-        mergeMap((id) =>  this.service.updateJobTemplate(id, this.formToJobTemplate(id)))
+        mergeMap((id) => this.service.updateJobTemplate(id, this.formToJobTemplate(id)))
     ).subscribe({
       next: () => this.snackBar.open(`Successfully updated job template.`, "Dismiss", { duration: 2000 } as MatSnackBarConfig),
       error: (err) => this.snackBar.open(`Error occurred while trying to update job template: ${err?.error?.description}.`, "Dismiss", { duration: 2000 } as MatSnackBarConfig)
@@ -112,7 +112,7 @@ export class JobTemplateComponent implements AfterViewInit {
    */
   public addTransformer() {
     this.transformers.push(new FormGroup({
-      name: new FormControl('', [Validators.required]),
+      type: new FormControl('', [Validators.required]),
       attributes: new FormArray([])
     }))
   }
@@ -144,9 +144,9 @@ export class JobTemplateComponent implements AfterViewInit {
       entityMappingName:this.formControl.get('entityMappingName')?.value,
       transformers: this.transformers.controls.map(transformer => {
         let map = new Map<string,string>;
-        (transformer.get('parameters') as FormArray).controls.forEach(param => {
-          const key = param.get('key')?.value as string
-          const value = param.get('value')?.value as string
+        (transformer.get('parameters') as FormArray)?.controls?.forEach(param => {
+          const key = param.get('key')?.value
+          const value = param.get('value')?.value
           map.set(key, value)
         })
         return {
@@ -174,7 +174,7 @@ export class JobTemplateComponent implements AfterViewInit {
     this.transformers.clear()
     for (let transformer of (template?.transformers || [])) {
       this.transformers.push(new FormGroup({
-        name: new FormControl(transformer.type , [Validators.required]),
+        type: new FormControl(transformer.type , [Validators.required]),
         parameters: new FormArray(Object.entries(transformer.parameters).map(p => new FormGroup({
           key: new FormControl(p[0] || ''),
           value: new FormControl(p[1] || '')

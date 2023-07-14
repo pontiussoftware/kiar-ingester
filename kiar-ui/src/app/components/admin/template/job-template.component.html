@@ -91,7 +91,7 @@
 
       <td [style.min-width]="'300px'">
         <mat-form-field appearance="fill" [style.width]="'100%'">
-          <mat-select formControlName="name">
+          <mat-select formControlName="type">
             <mat-option *ngFor="let type of (transformerTypes | async)" [value]="type">
               {{type}}
             </mat-option>
