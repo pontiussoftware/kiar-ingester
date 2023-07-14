@@ -35,7 +35,7 @@
       <ng-container matColumnDef="statistics">
         <th mat-header-cell *matHeaderCellDef i18n="@@ColHeaderStatistics"> Statistics </th>
         <td mat-cell *matCellDef="let element">
-          (<span class="color-traffic-light-green">{{element.processed}}</span> | <span class="color-traffic-light-green">{{element.skipped}}</span> | <span class="color-traffic-light-red">{{element.error}}</span>)
+          (<span class="color-traffic-light-green">{{element.processed}}</span> | <span class="color-traffic-light-orange">{{element.skipped}}</span> | <span class="color-traffic-light-red">{{element.error}}</span>)
         </td>
       </ng-container>
 

@@ -43,16 +43,16 @@ export class DashboardComponent implements AfterViewInit {
           this.snackBar.open(`Error while loading active jobs: ${err?.error?.description}.`, "Dismiss", { duration: 2000 } as MatSnackBarConfig)
           return of([])
         }),
-        shareReplay(1)
+        shareReplay(1, 10000)
     );
 
     this.jobHistory = this.reload.pipe(
         mergeMap(m => this.service.getInactiveJobs()),
         catchError(err => {
-          this.snackBar.open(`Error while loading active jobs: ${err?.error?.description}.`, "Dismiss", { duration: 2000 } as MatSnackBarConfig)
+          this.snackBar.open(`Error while loading job history: ${err?.error?.description}.`, "Dismiss", { duration: 2000 } as MatSnackBarConfig)
           return of([])
         }),
-        shareReplay(1)
+        shareReplay(1, 60000)
     );
   }
 
@@ -129,12 +129,5 @@ export class DashboardComponent implements AfterViewInit {
         },
         error: (err) => this.snackBar.open(`Error occurred while aborting job ${job.id}: ${err?.error?.description}.`, "Dismiss", { duration: 2000 } as MatSnackBarConfig)
     })
-  }
-
-  /**
-   *
-   */
-  public viewLog() {
-
   }
 }

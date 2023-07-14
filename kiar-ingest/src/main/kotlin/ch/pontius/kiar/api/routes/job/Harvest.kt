@@ -191,5 +191,4 @@ fun abortJob(ctx: Context, store: TransientEntityStore, server: IngesterServer) 
     } else {
         ctx.json(SuccessStatus("Successfully terminated job $jobId."))
     }
-
 }

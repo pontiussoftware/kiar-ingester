@@ -3,7 +3,6 @@ package ch.pontius.kiar.kiar
 import java.io.Closeable
 import java.nio.file.Path
 import java.util.LinkedList
-import java.util.zip.ZipEntry
 import java.util.zip.ZipFile
 
 /**
