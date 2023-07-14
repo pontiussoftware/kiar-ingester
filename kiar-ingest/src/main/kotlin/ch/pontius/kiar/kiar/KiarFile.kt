@@ -25,19 +25,18 @@ class KiarFile(private val path: Path): Closeable, Iterable<KiarEntry> {
     private val zip = ZipFile(this.path.toFile())
 
     /** A [List] of [KiarEntry] found in this [KiarFile]. */
-    private val entries: List<KiarEntry> by lazy {
-        this.zip.stream().filter { it.name != "${METADATA_FOLDER_NAME}/" && it.name.startsWith("${METADATA_FOLDER_NAME}/") }.map {
-            try {
-                KiarEntry(it, this.zip)
-            } catch (e: InvalidKiarEntryException) {
-                throw e
-            }
-        }.toList()
-    }
+    private val entries: List<KiarEntry> = LinkedList<KiarEntry>()
 
     init {
         require(this.zip.getEntry(METADATA_FOLDER_NAME)?.isDirectory == true) { "File '${this.path}' is not a valid KIAR file." }
         require(this.zip.getEntry(RESOURCES_FOLDER_NAME)?.isDirectory == true) { "File '${this.path}' is not a valid KIAR file." }
+        this.zip.stream().filter { it.name != "${METADATA_FOLDER_NAME}/" && it.name.startsWith("${METADATA_FOLDER_NAME}/") }.filter {
+            try {
+                (this.entries as MutableList).add(KiarEntry(it, this.zip))
+            } catch (e: InvalidKiarEntryException) {
+                throw e
+            }
+        }
     }
 
     /**
