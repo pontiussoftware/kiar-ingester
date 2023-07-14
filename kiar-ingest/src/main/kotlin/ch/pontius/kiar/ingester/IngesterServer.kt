@@ -129,7 +129,6 @@ class IngesterServer(val store: TransientEntityStore, val config: Config) {
 
             /* Return pipeline and job*/
             val pipeline = job.toPipeline(this.config)
-            job.status = DbJobStatus.RUNNING
             pipeline to job
         }
 
