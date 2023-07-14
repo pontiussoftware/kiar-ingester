@@ -7,7 +7,6 @@ import ch.pontius.kiar.api.model.config.transformers.TransformerConfig
 import ch.pontius.kiar.api.model.status.ErrorStatusException
 import ch.pontius.kiar.api.model.status.SuccessStatus
 import ch.pontius.kiar.api.routes.session.currentUser
-import ch.pontius.kiar.config.Config
 import ch.pontius.kiar.database.config.jobs.DbJobTemplate
 import ch.pontius.kiar.database.config.jobs.DbJobType
 import ch.pontius.kiar.database.config.mapping.DbEntityMapping
