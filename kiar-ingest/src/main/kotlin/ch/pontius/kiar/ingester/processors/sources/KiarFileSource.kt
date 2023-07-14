@@ -11,8 +11,10 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.channelFlow
 import kotlinx.coroutines.flow.flowOn
+import kotlinx.coroutines.flow.onCompletion
 import org.apache.logging.log4j.LogManager
 import org.apache.solr.common.SolrInputDocument
+import java.nio.file.Files
 import java.nio.file.Path
 import javax.imageio.ImageIO
 
@@ -22,7 +24,7 @@ import javax.imageio.ImageIO
  * @author Ralph Gasser
  * @version 1.0.0
  */
-class KiarFileSource(private val file: Path, private val config: EntityMapping, private val skipResources: Boolean = false): Source<SolrInputDocument> {
+class KiarFileSource(private val file: Path, private val config: EntityMapping, private val skipResources: Boolean = false, private val deleteFileWhenDone: Boolean = true): Source<SolrInputDocument> {
     companion object {
         private val LOGGER = LogManager.getLogger()
     }
@@ -55,9 +57,19 @@ class KiarFileSource(private val file: Path, private val config: EntityMapping, 
                 }
 
                 /* Send document down the channel. */
-                this.send(doc)
+                if (this@KiarFileSource.validate(doc)) {
+                    this.send(doc)
+                }
             }
         }
+    }.onCompletion {
+       try {
+           if (this@KiarFileSource.deleteFileWhenDone) {
+               Files.deleteIfExists(this@KiarFileSource.file) /* Tries to delete file. */
+           }
+       } catch (e: Throwable) {
+           LOGGER.warn("Failed to delete source KIAR file: ${this@KiarFileSource.file}")
+       }
     }.flowOn(Dispatchers.IO)
 
     /**
