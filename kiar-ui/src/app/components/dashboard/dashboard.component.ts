@@ -107,7 +107,13 @@ export class DashboardComponent implements AfterViewInit {
    * @param job {@link ActiveJob} to start data ingest for.
    */
   public startIngest(job: ActiveJob) {
-
+    this.service.putScheduleJob(job.id!!).subscribe({
+      next: (next) => {
+        this.snackBar.open(`Successfully scheduled job ${job.id}.`, "Dismiss", { duration: 2000 } as MatSnackBarConfig)
+        this.reload.next()
+      },
+      error: (err) => this.snackBar.open(`Error occurred while scheduling job ${job.id}: ${err?.error?.description}.`, "Dismiss", { duration: 2000 } as MatSnackBarConfig)
+    })
   }
 
   /**
