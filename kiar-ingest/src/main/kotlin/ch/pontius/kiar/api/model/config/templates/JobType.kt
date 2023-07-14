@@ -21,6 +21,6 @@ enum class JobType {
     fun toDb(): DbJobType = when(this) {
         XML -> DbJobType.XML
         JSON ->  DbJobType.JSON
-        KIAR ->  DbJobType.JSON
+        KIAR ->  DbJobType.KIAR
     }
 }
