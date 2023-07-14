@@ -1,6 +1,8 @@
 package ch.pontius.kiar.kiar
 
 import java.io.InputStream
+import java.util.*
+import java.util.stream.Collectors
 import java.util.zip.ZipEntry
 import java.util.zip.ZipFile
 
@@ -26,7 +28,13 @@ class KiarEntry(private val entry: ZipEntry, private val zip: ZipFile) {
     /** A [List] of [ZipEntry] that represent resource that belong to this [KiarEntry]. */
     private val resources: List<ZipEntry> by lazy {
         val regex =  Regex("^${KiarFile.RESOURCES_FOLDER_NAME}/${this.uuid}(_([0-9]+))*\\.(jpg|jpeg|jfif|png|tif|tiff)\$")
-        this.zip.stream().filter { it.name.matches(regex) }.toList()
+        val list = LinkedList<ZipEntry>()
+        for (e in this.zip.entries()) {
+            if (e.name.matches(regex)) {
+                list.add(e)
+            }
+        }
+        list
     }
 
     /**

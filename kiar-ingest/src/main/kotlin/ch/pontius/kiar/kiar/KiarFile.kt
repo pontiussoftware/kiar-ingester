@@ -3,6 +3,7 @@ package ch.pontius.kiar.kiar
 import java.io.Closeable
 import java.nio.file.Path
 import java.util.LinkedList
+import java.util.zip.ZipEntry
 import java.util.zip.ZipFile
 
 /**
@@ -25,18 +26,23 @@ class KiarFile(private val path: Path): Closeable, Iterable<KiarEntry> {
     private val zip = ZipFile(this.path.toFile())
 
     /** A [List] of [KiarEntry] found in this [KiarFile]. */
-    private val entries: List<KiarEntry> = LinkedList<KiarEntry>()
+    private val entries: List<KiarEntry> by lazy {
+        val list = LinkedList<KiarEntry>()
+        for (e in this.zip.entries()) {
+            if (e.name != "${METADATA_FOLDER_NAME}/" && e.name.startsWith("${METADATA_FOLDER_NAME}/")) {
+                try {
+                    list.add(KiarEntry(e, this.zip))
+                } catch (e: InvalidKiarEntryException) {
+                    throw e
+                }
+            }
+        }
+        list
+    }
 
     init {
         require(this.zip.getEntry(METADATA_FOLDER_NAME)?.isDirectory == true) { "File '${this.path}' is not a valid KIAR file." }
         require(this.zip.getEntry(RESOURCES_FOLDER_NAME)?.isDirectory == true) { "File '${this.path}' is not a valid KIAR file." }
-        this.zip.stream().filter { it.name != "${METADATA_FOLDER_NAME}/" && it.name.startsWith("${METADATA_FOLDER_NAME}/") }.filter {
-            try {
-                (this.entries as MutableList).add(KiarEntry(it, this.zip))
-            } catch (e: InvalidKiarEntryException) {
-                throw e
-            }
-        }
     }
 
     /**
