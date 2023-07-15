@@ -18,6 +18,7 @@ export * from './loginRequest';
 export * from './mappingType';
 export * from './paginatedInstitutionResult';
 export * from './paginatedJobLogResult';
+export * from './paginatedJobResult';
 export * from './role';
 export * from './sessionStatus';
 export * from './successStatus';

@@ -1,9 +1,12 @@
-import {AfterViewInit, Component} from "@angular/core";
+import {AfterViewInit, Component, ViewChild} from "@angular/core";
 import {MatDialog} from "@angular/material/dialog";
 import {Job, JobService, SuccessStatus} from "../../../../openapi";
-import {catchError, map, mergeMap, Observable, Observer, of, shareReplay, Subject} from "rxjs";
+import {catchError, map, mergeMap, Observable, Observer, of, shareReplay, Subject, tap} from "rxjs";
 import {CreateJobDialogComponent} from "./job/create-job-dialog.component";
 import {MatSnackBar, MatSnackBarConfig} from "@angular/material/snack-bar";
+import {MatPaginator} from "@angular/material/paginator";
+import {JobLogDatasource} from "./logs/job-log-datasource";
+import {JobHistoryDatasource} from "./job-history-datasource";
 
 
 /**
@@ -26,11 +29,14 @@ export class DashboardComponent implements AfterViewInit {
   /** {@link Observable} of all available participants. */
   public readonly activeJobs: Observable<Array<ActiveJob>>
 
-  /** {@link Observable} of all available participants. */
-  public readonly jobHistory: Observable<Array<Job>>
+  /** The {@link JobHistoryDatasource} backing this {@link DashboardComponent}. */
+  public readonly jobHistory: JobHistoryDatasource
 
   /** A {@link Subject} that can be used to trigger a data reload. */
   private reload = new Subject<void>()
+
+  /** Reference to the {@link MatPaginator}*/
+  @ViewChild(MatPaginator) paginator: MatPaginator;
 
   constructor(private dialog: MatDialog, private snackBar: MatSnackBar, private service: JobService) {
     this.activeJobs = this.reload.pipe(
@@ -45,18 +51,14 @@ export class DashboardComponent implements AfterViewInit {
         }),
         shareReplay(1, 10000)
     );
-
-    this.jobHistory = this.reload.pipe(
-        mergeMap(m => this.service.getInactiveJobs()),
-        catchError(err => {
-          this.snackBar.open(`Error while loading job history: ${err?.error?.description}.`, "Dismiss", { duration: 2000 } as MatSnackBarConfig)
-          return of([])
-        }),
-        shareReplay(1, 60000)
-    );
+    this.jobHistory = new JobHistoryDatasource(this.service)
   }
-
-  ngAfterViewInit(): void {
+  /**
+   * Registers an observable for page change and load data initially.
+   */
+  public ngAfterViewInit(): void {
+    this.jobHistory.load(this.paginator.pageIndex, this.paginator.pageSize);
+    this.paginator.page.pipe(tap(() => this.jobHistory.load(this.paginator.pageIndex, this.paginator.pageSize))).subscribe();
     this.reload.next()
   }
 

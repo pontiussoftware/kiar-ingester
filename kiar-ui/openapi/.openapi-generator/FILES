@@ -1,5 +1,4 @@
 .gitignore
-.openapi-generator-ignore
 README.md
 api.module.ts
 api/apacheSolr.service.ts
@@ -37,6 +36,7 @@ model/mappingType.ts
 model/models.ts
 model/paginatedInstitutionResult.ts
 model/paginatedJobLogResult.ts
+model/paginatedJobResult.ts
 model/role.ts
 model/sessionStatus.ts
 model/successStatus.ts

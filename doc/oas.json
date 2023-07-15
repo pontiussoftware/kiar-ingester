@@ -595,10 +595,7 @@
             "content" : {
               "application/json" : {
                 "schema" : {
-                  "type" : "array",
-                  "items" : {
-                    "$ref" : "#/components/schemas/Job"
-                  }
+                  "$ref" : "#/components/schemas/PaginatedJobResult"
                 }
               }
             }
@@ -2946,6 +2943,31 @@
             "type" : "array",
             "items" : {
               "$ref" : "#/components/schemas/JobLog"
+            }
+          }
+        },
+        "required" : [ "total", "page", "pageSize", "results" ]
+      },
+      "PaginatedJobResult" : {
+        "type" : "object",
+        "additionalProperties" : false,
+        "properties" : {
+          "total" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "page" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "pageSize" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "results" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/Job"
             }
           }
         },

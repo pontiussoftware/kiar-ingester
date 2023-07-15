@@ -32,13 +32,13 @@ export class JobLogComponent implements AfterViewInit, OnInit {
    */
   public ngOnInit() {
     this.dataSource = new JobLogDatasource(this.service, this.route.snapshot.paramMap.get("id")!!)
-    this.dataSource.load(0, 50);
   }
 
   /**
    * Registers an observable for page change.
    */
   public ngAfterViewInit() {
+    this.dataSource.load(this.paginator.pageIndex, this.paginator.pageSize);
     this.paginator.page.pipe(tap(() => this.dataSource.load(this.paginator.pageIndex, this.paginator.pageSize))).subscribe();
   }
 

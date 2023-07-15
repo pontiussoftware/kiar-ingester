@@ -3,6 +3,7 @@ package ch.pontius.kiar.api.routes.job
 import ch.pontius.kiar.api.model.job.CreateJobRequest
 import ch.pontius.kiar.api.model.job.Job
 import ch.pontius.kiar.api.model.job.PaginatedJobLogResult
+import ch.pontius.kiar.api.model.job.PaginatedJobResult
 import ch.pontius.kiar.api.model.status.ErrorStatus
 import ch.pontius.kiar.api.model.status.ErrorStatusException
 import ch.pontius.kiar.api.routes.session.currentUser
@@ -77,7 +78,7 @@ fun getActiveJobs(ctx: Context, store: TransientEntityStore, server: IngesterSer
     tags = ["Job"],
     pathParams = [],
     responses = [
-        OpenApiResponse("200", [OpenApiContent(Array<Job>::class)]),
+        OpenApiResponse("200", [OpenApiContent(PaginatedJobResult::class)]),
         OpenApiResponse("401", [OpenApiContent(ErrorStatus::class)]),
         OpenApiResponse("403", [OpenApiContent(ErrorStatus::class)]),
         OpenApiResponse("500", [OpenApiContent(ErrorStatus::class)])
@@ -86,9 +87,9 @@ fun getActiveJobs(ctx: Context, store: TransientEntityStore, server: IngesterSer
 fun getInactiveJobs(ctx: Context, store: TransientEntityStore) {
     val page = ctx.queryParam("page")?.toIntOrNull() ?: 0
     val pageSize = ctx.queryParam("pageSize")?.toIntOrNull() ?: 50
-    store.transactional(true) {
+    val results = store.transactional(true) {
         val currentUser = ctx.currentUser()
-        val jobs = when (currentUser.role) {
+        val baseQuery = when (currentUser.role) {
             DbRole.ADMINISTRATOR -> DbJob.filter { it.status.active eq false }
             DbRole.MANAGER,
             DbRole.VIEWER -> {
@@ -100,9 +101,12 @@ fun getInactiveJobs(ctx: Context, store: TransientEntityStore) {
                 }
             }
             else -> DbJob.emptyQuery()
-        }.sortedBy(DbJob::changedAt, false).drop(page * pageSize).take(pageSize)
-        ctx.json(jobs.mapToArray { it.toApi() })
+        }.sortedBy(DbJob::changedAt, false)
+
+        baseQuery.size() to baseQuery.drop(page * pageSize).take(pageSize).mapToArray { it.toApi() }
     }
+    ctx.json(PaginatedJobResult(results.first, page, pageSize, results.second))
+
 }
 
 @OpenApi(
