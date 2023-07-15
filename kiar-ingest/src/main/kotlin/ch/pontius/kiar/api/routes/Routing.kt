@@ -44,7 +44,7 @@ fun configureApiRoutes(store: TransientEntityStore, server: IngesterServer, conf
             get("inactive",  { ctx -> getInactiveJobs(ctx, store) }, Role.ADMINISTRATOR, Role.MANAGER, Role.VIEWER )
             delete("{id}",  { ctx -> abortJob(ctx, store, server) }, Role.ADMINISTRATOR, Role.MANAGER )
             path("{id}") {
-                get("logs",  { ctx -> getJobLogs(ctx, store) }, Role.ADMINISTRATOR, Role.MANAGER )
+                get("logs",  { ctx -> getJobLogs(ctx, store, server) }, Role.ADMINISTRATOR, Role.MANAGER )
                 put("upload",  { ctx -> uploadKiar(ctx, store, config) }, Role.ADMINISTRATOR, Role.MANAGER )
                 put("schedule",  { ctx -> scheduleJob(ctx, store, server) }, Role.ADMINISTRATOR, Role.MANAGER )
             }
