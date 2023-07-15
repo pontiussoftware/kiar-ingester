@@ -36,7 +36,7 @@ export class InstitutionListComponent implements AfterViewInit  {
         map((configs) => {
           return configs.map(config => config.collections.filter(c => c.type === "MUSEUM").flatMap(collection => [config.name, collection.name]))
         }),
-        shareReplay(1, 30000)
+        shareReplay(1)
     )
   }
 

@@ -39,7 +39,7 @@ export class EntityMappingComponent implements AfterViewInit {
       public dialog: MatDialog
   ) {
     this.mappingId = this.route.paramMap.pipe(map(params => params.get('id')!!));
-    this.parsers = this.service.getListParsers().pipe(shareReplay(1, 30000))
+    this.parsers = this.service.getListParsers().pipe(shareReplay(1))
   }
 
   /**

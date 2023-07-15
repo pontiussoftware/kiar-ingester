@@ -34,10 +34,10 @@ export class AddJobTemplateDialogComponent {
   public readonly participants: Observable<Array<String>>
 
   constructor(private config: ConfigService, private dialogRef: MatDialogRef<AddJobTemplateDialogComponent>) {
-    this.mappings = this.config.getListEntityMappings().pipe(shareReplay(1, 30000))
-    this.solr = this.config.getListSolrConfiguration().pipe(shareReplay(1, 30000))
-    this.types = this.config.getListJobTemplateTypes().pipe(shareReplay(1, 30000))
-    this.participants = this.config.getListParticipants().pipe(shareReplay(1, 30000))
+      this.mappings = this.config.getListEntityMappings().pipe(shareReplay(1))
+    this.solr = this.config.getListSolrConfiguration().pipe(shareReplay(1))
+    this.types = this.config.getListJobTemplateTypes().pipe(shareReplay(1))
+    this.participants = this.config.getListParticipants().pipe(shareReplay(1))
   }
 
   /**

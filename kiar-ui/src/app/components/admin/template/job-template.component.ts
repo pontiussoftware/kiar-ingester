@@ -55,11 +55,11 @@ export class JobTemplateComponent implements AfterViewInit {
       private dialog: MatDialog
   ) {
     this.templateId = this.route.paramMap.pipe(map(params => params.get('id')!!));
-    this.mappings = this.service.getListEntityMappings().pipe(shareReplay(1, 30000))
-    this.solr = this.service.getListSolrConfiguration().pipe(shareReplay(1, 30000))
-    this.jobTypes = this.service.getListJobTemplateTypes().pipe(shareReplay(1, 30000))
-    this.transformerTypes = this.service.getListTransformerTypes().pipe(shareReplay(1, 30000))
-    this.participants = this.service.getListParticipants().pipe(shareReplay(1, 30000))
+    this.mappings = this.service.getListEntityMappings().pipe(shareReplay(1))
+    this.solr = this.service.getListSolrConfiguration().pipe(shareReplay(1))
+    this.jobTypes = this.service.getListJobTemplateTypes().pipe(shareReplay(1))
+    this.transformerTypes = this.service.getListTransformerTypes().pipe(shareReplay(1))
+    this.participants = this.service.getListParticipants().pipe(shareReplay(1))
   }
 
   /**

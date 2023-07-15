@@ -18,7 +18,7 @@ export class TransformerDialogComponent {
       private dialogRef: MatDialogRef<AttributeMappingDialogComponent>,
       private service: ConfigService,
       @Inject(MAT_DIALOG_DATA) public formGroup: FormGroup) {
-    this.transformerTypes = this.service.getListTransformerTypes().pipe(shareReplay(1, 30000))
+    this.transformerTypes = this.service.getListTransformerTypes().pipe(shareReplay(1))
   }
 
   /**
