@@ -1,5 +1,6 @@
 package ch.pontius.kiar.api.model.institution
 
+import ch.pontius.kiar.api.model.config.solr.ApacheSolrConfig
 import kotlinx.serialization.Serializable
 
 /**
@@ -22,5 +23,7 @@ data class Institution(
     val canton: String,
     val email: String,
     val homepage: String? = null,
-    val publish: Boolean
+    val publish: Boolean,
+    val createdAt: Long? = null,
+    val changedAt: Long? = null,
 )

@@ -2,7 +2,6 @@ package ch.pontius.kiar.api.routes.job
 
 import ch.pontius.kiar.api.model.job.CreateJobRequest
 import ch.pontius.kiar.api.model.job.Job
-import ch.pontius.kiar.api.model.PaginatedResult
 import ch.pontius.kiar.api.model.job.PaginatedJobLogResult
 import ch.pontius.kiar.api.model.status.ErrorStatus
 import ch.pontius.kiar.api.model.status.ErrorStatusException
@@ -101,7 +100,7 @@ fun getInactiveJobs(ctx: Context, store: TransientEntityStore) {
                 }
             }
             else -> DbJob.emptyQuery()
-        }.sortedBy(DbJob::createdAt, false).drop(page * pageSize).take(pageSize)
+        }.sortedBy(DbJob::changedAt, false).drop(page * pageSize).take(pageSize)
         ctx.json(jobs.mapToArray { it.toApi() })
     }
 }
@@ -185,6 +184,7 @@ fun createJob(ctx: Context, store: TransientEntityStore) {
             this.source = DbJobSource.WEB
             this.status = DbJobStatus.CREATED
             this.createdAt = DateTime.now()
+            this.changedAt = DateTime.now()
             this.createdBy = currentUser
             this.createdByName = currentUser.name
         }.toApi()

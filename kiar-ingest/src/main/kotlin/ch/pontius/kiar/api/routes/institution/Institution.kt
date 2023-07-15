@@ -14,6 +14,7 @@ import io.javalin.openapi.*
 import jetbrains.exodus.database.TransientEntityStore
 import kotlinx.dnq.query.*
 import kotlinx.dnq.util.findById
+import org.joda.time.DateTime
 
 @OpenApi(
     path = "/api/institutions",
@@ -96,6 +97,8 @@ fun postCreateInstitution(ctx: Context, store: TransientEntityStore) {
             this.homepage = request.homepage
             this.participant = DbParticipant.filter { it.name eq request.participantName }.firstOrNull()
                 ?: throw ErrorStatusException(404, "Participant ${request.participantName} could not be found.")
+            this.createdAt = DateTime.now()
+            this.changedAt = DateTime.now()
         }.toApi()
     }
 
@@ -153,6 +156,7 @@ fun putUpdateInstitution(ctx: Context, store: TransientEntityStore) {
         institution.zip = request.zip
         institution.email = request.email
         institution.homepage = request.homepage
+        institution.changedAt = DateTime.now()
 
         /* Some data can only be edited by an administrator. */
         if (currentUser.role == DbRole.ADMINISTRATOR) {

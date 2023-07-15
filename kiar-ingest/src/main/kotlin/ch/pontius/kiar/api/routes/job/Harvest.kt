@@ -13,6 +13,7 @@ import io.javalin.http.Context
 import io.javalin.openapi.*
 import jetbrains.exodus.database.TransientEntityStore
 import kotlinx.dnq.util.findById
+import org.joda.time.DateTime
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
 import java.nio.file.Files
@@ -91,6 +92,7 @@ fun uploadKiar(ctx: Context, store: TransientEntityStore, config: Config) {
             throw ErrorStatusException(404, "Job with ID $jobId could not be found.")
         }
         job.status = DbJobStatus.HARVESTED
+        job.changedAt = DateTime.now()
     }
 
     /* Return success. */
@@ -183,6 +185,7 @@ fun abortJob(ctx: Context, store: TransientEntityStore, server: IngesterServer) 
             throw ErrorStatusException(400, "Job with ID $jobId could not be aborted because it is already inactive.")
         }
         job.status = DbJobStatus.ABORTED
+        job.changedAt = DateTime.now()
     }
 
     /* Inform ingest server that job should be terminated.*/

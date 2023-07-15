@@ -15,6 +15,7 @@ import io.javalin.openapi.*
 import jetbrains.exodus.database.TransientEntityStore
 import kotlinx.dnq.query.asSequence
 import kotlinx.dnq.util.findById
+import org.joda.time.DateTime
 
 @OpenApi(
     path = "/api/mappings",
@@ -87,6 +88,8 @@ fun createEntityMapping(ctx: Context, store: TransientEntityStore) {
             name = request.name
             description = request.description
             type = request.type.toDb()
+            createdAt = DateTime.now()
+            changedAt = DateTime.now()
         }
 
         /* Now merge attribute mappings. */
@@ -196,6 +199,7 @@ fun updateEntityMapping(ctx: Context, store: TransientEntityStore) {
         mapping.name = request.name
         mapping.description = request.description
         mapping.type = request.type.toDb()
+        mapping.changedAt = DateTime.now()
 
         /* Now merge attribute mappings. */
         mapping.merge(request.attributes)

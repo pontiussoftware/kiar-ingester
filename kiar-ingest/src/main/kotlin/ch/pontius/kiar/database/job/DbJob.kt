@@ -51,6 +51,9 @@ class DbJob(entity: Entity) : XdEntity(entity) {
     /** The date and time this [DbJob] was created. */
     var createdAt by xdRequiredDateTimeProp()
 
+    /** The date and time this [DbJob] was last changed. */
+    var changedAt by xdDateTimeProp()
+
     /** The [DbUser] that started this [DbJob]. */
     var createdByName by xdRequiredStringProp {  }
 
@@ -106,6 +109,7 @@ class DbJob(entity: Entity) : XdEntity(entity) {
         this.skipped,
         this.error,
         this.createdAt.millis,
+        this.changedAt?.millis,
         this.createdByName
     )
 }

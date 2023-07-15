@@ -19,6 +19,7 @@ import kotlinx.dnq.util.findById
 import kotlinx.dnq.util.reattach
 import org.apache.logging.log4j.LogManager
 import org.apache.logging.log4j.Logger
+import org.joda.time.DateTime
 import java.nio.file.Path
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.ExecutorService
@@ -126,6 +127,7 @@ class IngesterServer(val store: TransientEntityStore, val config: Config) {
             /* Perform sanity check. */
             require(job.status == DbJobStatus.CREATED || job.status == DbJobStatus.HARVESTED) { "Job $jobId cannot be executed because it is in wrong state." }
             job.status = DbJobStatus.SCHEDULED
+            job.changedAt = DateTime.now()
 
             /* Return pipeline and job*/
             val pipeline = job.toPipeline(this.config)
@@ -164,6 +166,7 @@ class IngesterServer(val store: TransientEntityStore, val config: Config) {
                 job.processed = context.processed
                 job.error = context.error
                 job.skipped = context.skipped
+                job.changedAt = DateTime.now()
 
                 /* Store logs. */
                 for (log in context.log) {
@@ -200,6 +203,7 @@ class IngesterServer(val store: TransientEntityStore, val config: Config) {
                 job.first.reattach()
                 if (job.first.status.active) {
                     job.first.status = DbJobStatus.ABORTED
+                    job.first.changedAt = DateTime.now()
                 }
             }
             return true

@@ -17,8 +17,11 @@ export interface ApacheSolrConfig {
     name: string;
     description?: string;
     server: string;
+    publicServer?: string;
     username?: string;
     password?: string;
+    createdAt?: number;
+    changedAt?: number;
     collections: Array<ApacheSolrCollection>;
 }
 

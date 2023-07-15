@@ -24,6 +24,7 @@ export interface Job {
     skipped: number;
     error: number;
     createdAt: number;
+    changedAt?: number;
     createdBy: string;
 }
 export namespace Job {

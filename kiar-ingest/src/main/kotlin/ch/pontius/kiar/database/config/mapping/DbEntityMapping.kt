@@ -2,6 +2,7 @@ package ch.pontius.kiar.database.config.mapping
 
 import ch.pontius.kiar.api.model.config.mappings.EntityMapping
 import ch.pontius.kiar.config.MappingConfig
+import ch.pontius.kiar.database.config.jobs.DbJobTemplate
 import jetbrains.exodus.entitystore.Entity
 import kotlinx.dnq.*
 import kotlinx.dnq.query.asSequence
@@ -25,6 +26,12 @@ class DbEntityMapping(entity: Entity) : XdEntity(entity) {
     /** The [DbFormat] of this [DbEntityMapping]. */
     var type by xdLink1(DbFormat)
 
+    /** The date and time this [DbEntityMapping] was created. */
+    var createdAt by xdDateTimeProp()
+
+    /** The date and time this [DbEntityMapping] was last changed. */
+    var changedAt by xdDateTimeProp()
+
     /** The [DbAttributeMapping]s that belong to this [DbEntityMapping]. */
     val attributes by xdChildren0_N(DbAttributeMapping::mapping)
 
@@ -38,6 +45,8 @@ class DbEntityMapping(entity: Entity) : XdEntity(entity) {
         this.name,
         this.description,
         this.type.toApi(),
+        this.createdAt?.millis,
+        this.changedAt?.millis,
         this.attributes.asSequence().map { it.toApi() }.toList()
     )
 
@@ -51,6 +60,8 @@ class DbEntityMapping(entity: Entity) : XdEntity(entity) {
         this.name,
         this.description,
         this.type.toApi(),
+        this.createdAt?.millis,
+        this.changedAt?.millis,
         emptyList()
     )
 }

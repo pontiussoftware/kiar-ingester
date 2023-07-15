@@ -7,6 +7,7 @@ import ch.pontius.kiar.database.config.mapping.DbEntityMapping
 import ch.pontius.kiar.database.config.solr.DbCollection
 import ch.pontius.kiar.database.config.solr.DbSolr
 import ch.pontius.kiar.database.config.transformers.DbTransformer
+import ch.pontius.kiar.database.institution.DbInstitution
 import ch.pontius.kiar.database.institution.DbParticipant
 import ch.pontius.kiar.database.job.DbJob
 import ch.pontius.kiar.ingester.processors.sinks.ApacheSolrSink
@@ -50,6 +51,12 @@ class DbJobTemplate(entity: Entity) : XdEntity(entity) {
     /** The [DbEntityMapping] this [DbJobTemplate] employs. */
     var mapping: DbEntityMapping by xdLink1(DbEntityMapping)
 
+    /** The date and time this [DbJobTemplate] was created. */
+    var createdAt by xdDateTimeProp()
+
+    /** The date and time this [DbJobTemplate] was last changed. */
+    var changedAt by xdDateTimeProp()
+
     /** The [DbEntityMapping] this [DbJobTemplate] employs. */
     val transformers by xdChildren0_N(DbTransformer::template)
 
@@ -79,6 +86,8 @@ class DbJobTemplate(entity: Entity) : XdEntity(entity) {
         this.participant.name,
         this.solr.name,
         this.mapping.name,
+        this.changedAt?.millis,
+        this.changedAt?.millis,
         if (full) {
             this.transformers.asSequence().map { it.toApi() }.toList()
         } else {

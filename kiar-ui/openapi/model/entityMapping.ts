@@ -18,6 +18,8 @@ export interface EntityMapping {
     name: string;
     description?: string;
     type: MappingType;
+    createdAt?: number;
+    changedAt?: number;
     attributes: Array<AttributeMapping>;
 }
 export namespace EntityMapping {

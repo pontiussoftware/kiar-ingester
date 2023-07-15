@@ -23,6 +23,7 @@ import io.javalin.openapi.*
 import jetbrains.exodus.database.TransientEntityStore
 import kotlinx.dnq.query.*
 import kotlinx.dnq.util.findById
+import org.joda.time.DateTime
 
 @OpenApi(
     path = "/api/templates",
@@ -108,6 +109,8 @@ fun createJobTemplate(ctx: Context, store: TransientEntityStore, server: Ingeste
                 ?: throw ErrorStatusException(404, "Could not find Apache Solr configuration with name ${request.solrConfigName}.")
             mapping = DbEntityMapping.filter { it.name eq request.entityMappingName }.firstOrNull()
                 ?: throw ErrorStatusException(404, "Could not find entity mapping configuration with name ${request.entityMappingName}.")
+            createdAt = DateTime.now()
+            changedAt = DateTime.now()
 
             /* Adds all transformer configuration to template. */
             this.merge(request.transformers)
@@ -245,6 +248,7 @@ fun updateJobTemplate(ctx: Context, store: TransientEntityStore) {
             ?: throw ErrorStatusException(404, "Could not find Apache Solr configuration with name ${request.solrConfigName}.")
         template.mapping = DbEntityMapping.filter { it.name eq request.entityMappingName }.firstOrNull()
             ?: throw ErrorStatusException(404, "Could not find entity mapping configuration with name ${request.entityMappingName}.")
+        template.changedAt = DateTime.now()
 
         /* Now merge transformers. */
         template.merge(request.transformers)

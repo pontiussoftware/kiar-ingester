@@ -23,11 +23,20 @@ class DbSolr(entity: Entity) : XdEntity(entity) {
     /** The URL held by this [DbSolr]. Must be unique!*/
     var server by xdRequiredStringProp(unique = true, trimmed = true)
 
+    /** The public URL held by this [DbSolr]. Can be null, in which case the regular server URL can be used.*/
+    var publicServer by xdStringProp(trimmed = true)
+
     /** The username required to authenticate with the Apache Solr instance. */
     var username by xdStringProp(trimmed = true)
 
     /** The password required to authenticate with the Apache Solr instance. */
     var password by xdStringProp(trimmed = true)
+
+    /** The date and time this [DbSolr] was created. */
+    var createdAt by xdDateTimeProp()
+
+    /** The date and time this [DbSolr] was last changed. */
+    var changedAt by xdDateTimeProp()
 
     /** List of [DbCollection]s this [DbSolr] holds- */
     val collections by xdChildren0_N(DbCollection::solr)
@@ -37,5 +46,5 @@ class DbSolr(entity: Entity) : XdEntity(entity) {
      *
      * @return [ApacheSolrConfig]
      */
-    fun toApi() = ApacheSolrConfig(this.xdId, this.name, this.description, this.server, this.username, this.password, this.collections.asSequence().map { it.toApi() }.toList())
+    fun toApi() = ApacheSolrConfig(this.xdId, this.name, this.description, this.server, this.publicServer, this.username, this.password, this.createdAt?.millis, this.changedAt?.millis,  this.collections.asSequence().map { it.toApi() }.toList())
 }

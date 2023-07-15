@@ -37,6 +37,9 @@ data class Job(
     /** Timestamp of this [Job]'s creation. */
     val createdAt: Long,
 
+    /** Timestamp of this [Job]'s last change. */
+    val changedAt: Long? = null,
+
     /** Name of the user who created this [Job]. */
     val createdBy: String
 )

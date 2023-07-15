@@ -72,10 +72,10 @@ subprojects {
 
 val fullOAS = "http://localhost:7070/swagger-docs"
 val oasFile = "${project.projectDir}/doc/oas.json"
+val outputDir = "${project.projectDir}/kiar-ui/openapi"
 
 tasks.register("generateOpenApi") {
     doLast {
-        val outputDir = project.file("kiar-ui/openapi")
         val configOptions = mapOf(
             "npmName" to "@kiar-openapi/api",
             "ngVersion" to "16.0.2",
@@ -92,7 +92,7 @@ tasks.register("generateOpenApi") {
                 "-i",
                 oasFile,
                 "-o",
-                outputDir.toString(),
+                outputDir,
                 "--skip-validate-spec",
                 "--additional-properties",
                 configOptions.entries.joinToString(",") { "${it.key}=${it.value}" }

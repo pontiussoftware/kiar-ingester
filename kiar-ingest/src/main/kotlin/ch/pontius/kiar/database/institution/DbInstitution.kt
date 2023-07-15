@@ -1,6 +1,7 @@
 package ch.pontius.kiar.database.institution
 
 import ch.pontius.kiar.api.model.institution.Institution
+import ch.pontius.kiar.database.job.DbJob
 import jetbrains.exodus.entitystore.Entity
 import kotlinx.dnq.*
 import kotlinx.dnq.link.OnDeletePolicy
@@ -51,6 +52,12 @@ class DbInstitution(entity: Entity) : XdEntity(entity) {
     /** Flag indicating whether this [DbInstitution]'s metadata should be published. */
     var publish by xdBooleanProp()
 
+    /** The date and time this [DbInstitution] was created. */
+    var createdAt by xdDateTimeProp()
+
+    /** The date and time this [DbJob] was last changed. */
+    var changedAt by xdDateTimeProp()
+
     /** List of [DbUser]s that belong to this [DbInstitution]. */
     val users by xdLink0_N(DbUser::institution, onDelete = OnDeletePolicy.CASCADE, onTargetDelete = OnDeletePolicy.CLEAR)
 
@@ -74,6 +81,8 @@ class DbInstitution(entity: Entity) : XdEntity(entity) {
         canton = this.canton,
         email = this.email,
         homepage = this.homepage,
-        publish = this.publish
+        publish = this.publish,
+        createdAt = this.createdAt?.millis,
+        changedAt = this.createdAt?.millis
     )
 }

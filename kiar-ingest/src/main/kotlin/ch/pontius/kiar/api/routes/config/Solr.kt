@@ -14,6 +14,7 @@ import io.javalin.http.Context
 import io.javalin.openapi.*
 import jetbrains.exodus.database.TransientEntityStore
 import kotlinx.dnq.util.findById
+import org.joda.time.DateTime
 
 @OpenApi(
     path = "/api/solr",
@@ -62,8 +63,11 @@ fun createSolrConfig(ctx: Context, store: TransientEntityStore) {
         val solr = DbSolr.new {
             name = request.name
             server = request.server
+            publicServer = request.publicServer
             username = request.username
             password = request.password
+            createdAt = DateTime.now()
+            changedAt = DateTime.now()
         }
 
         /* Now merge collection data. */
@@ -174,6 +178,7 @@ fun updateSolrConfig(ctx: Context, store: TransientEntityStore) {
         solr.server = request.server
         solr.username = request.username
         solr.password = request.password
+        solr.changedAt = DateTime.now()
 
         /* Now merge attribute mappings. */
         solr.merge(request.collections)

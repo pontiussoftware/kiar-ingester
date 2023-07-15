@@ -22,6 +22,8 @@ export interface JobTemplate {
     participantName: string;
     solrConfigName: string;
     entityMappingName: string;
+    createdAt?: number;
+    changedAt?: number;
     transformers: Array<TransformerConfig>;
 }
 export namespace JobTemplate {

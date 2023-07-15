@@ -566,7 +566,29 @@
         "tags" : [ "Job" ],
         "summary" : "Retrieves all jobs that are currently inactive (job history). Non-administrator users can only see Jobs that belong to them.",
         "operationId" : "getInactiveJobs",
-        "parameters" : [ ],
+        "parameters" : [ {
+          "name" : "page",
+          "in" : "query",
+          "description" : "The page index (zero-based) for pagination.",
+          "required" : false,
+          "deprecated" : false,
+          "allowEmptyValue" : false,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int32"
+          }
+        }, {
+          "name" : "pageSize",
+          "in" : "query",
+          "description" : "The page size for pagination.",
+          "required" : false,
+          "deprecated" : false,
+          "allowEmptyValue" : false,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int32"
+          }
+        } ],
         "responses" : {
           "200" : {
             "description" : "OK",
@@ -2563,6 +2585,14 @@
           "type" : {
             "$ref" : "#/components/schemas/MappingType"
           },
+          "createdAt" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "changedAt" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
           "attributes" : {
             "type" : "array",
             "items" : {
@@ -2618,11 +2648,22 @@
           "server" : {
             "type" : "string"
           },
+          "publicServer" : {
+            "type" : "string"
+          },
           "username" : {
             "type" : "string"
           },
           "password" : {
             "type" : "string"
+          },
+          "createdAt" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "changedAt" : {
+            "type" : "integer",
+            "format" : "int64"
           },
           "collections" : {
             "type" : "array",
@@ -2664,6 +2705,14 @@
           },
           "entityMappingName" : {
             "type" : "string"
+          },
+          "createdAt" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "changedAt" : {
+            "type" : "integer",
+            "format" : "int64"
           },
           "transformers" : {
             "type" : "array",
@@ -2741,6 +2790,14 @@
           },
           "publish" : {
             "type" : "boolean"
+          },
+          "createdAt" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "changedAt" : {
+            "type" : "integer",
+            "format" : "int64"
           }
         },
         "required" : [ "name", "displayName", "participantName", "zip", "city", "canton", "email", "publish" ]
@@ -2815,6 +2872,10 @@
             "format" : "int64"
           },
           "createdAt" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "changedAt" : {
             "type" : "integer",
             "format" : "int64"
           },

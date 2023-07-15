@@ -9,4 +9,12 @@ import kotlinx.serialization.Serializable
  * @version 1.0.0
  */
 @Serializable
-data class EntityMapping(val id: String? = null, val name: String, val description: String?, val type: MappingType, val attributes: List<AttributeMapping>)
+data class EntityMapping(
+    val id: String? = null,
+    val name: String,
+    val description: String?,
+    val type: MappingType,
+    val createdAt: Long? = null,
+    val changedAt: Long? = null,
+    val attributes: List<AttributeMapping>
+)

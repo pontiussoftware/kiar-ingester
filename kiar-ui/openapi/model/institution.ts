@@ -25,5 +25,7 @@ export interface Institution {
     email: string;
     homepage?: string;
     publish: boolean;
+    createdAt?: number;
+    changedAt?: number;
 }
 
