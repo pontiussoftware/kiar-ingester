@@ -80,10 +80,16 @@ class IngesterServer(val store: TransientEntityStore, val config: Config) {
         private set
 
     init {
-        this.store.transactional(true) {
+        this.store.transactional {
             /* Install file watchers for jobs that should be started automatically. */
             for (template in DbJobTemplate.filter { it.startAutomatically eq true }.asSequence()) {
                 this.scheduleWatcher(template.xdId, this.config.ingestPath.resolve(template.participant.name).resolve("${template.name}.${template.type.suffix}"))
+            }
+
+            /* Mark jobs that are still running as interrupted. */
+            for (job in DbJob.filter { it.status eq DbJobStatus.RUNNING }.asSequence()) {
+                job.status = DbJobStatus.INTERRUPTED
+                job.changedAt = DateTime.now()
             }
         }
     }
