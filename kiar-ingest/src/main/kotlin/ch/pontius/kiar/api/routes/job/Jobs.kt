@@ -125,15 +125,20 @@ fun getInactiveJobs(ctx: Context, store: TransientEntityStore) {
         OpenApiResponse("500", [OpenApiContent(ErrorStatus::class)])
     ]
 )
-fun getJobLogs(ctx: Context, store: TransientEntityStore) {
+fun getJobLogs(ctx: Context, store: TransientEntityStore, server: IngesterServer) {
     val jobId = ctx.pathParam("id")
     val page = ctx.queryParam("page")?.toIntOrNull() ?: 0
     val pageSize = ctx.queryParam("pageSize")?.toIntOrNull() ?: 50
-    val result = store.transactional(true) {
-        val job = DbJob.findById(jobId)
-        val logs = DbJobLog.filter { it.job eq job }.drop(page * pageSize).take(pageSize).mapToArray { it.toApi() }
-        val total = DbJobLog.filter { it.job eq job }.size()
-        total to logs
+    val activeContext = server.getContext(jobId)
+    val result = if (activeContext != null) { /* Case 1: Job is ongoing; get log entries from context. */
+        activeContext.log.size to activeContext.log.drop(page * pageSize).take(pageSize).toTypedArray()
+    } else { /* Case 2: Job is finished; get log entries from database. */
+        store.transactional(true) {
+            val job = DbJob.findById(jobId)
+            val logs = DbJobLog.filter { it.job eq job }.drop(page * pageSize).take(pageSize).mapToArray { it.toApi() }
+            val total = DbJobLog.filter { it.job eq job }.size()
+            total to logs
+        }
     }
     ctx.json(PaginatedJobLogResult(result.first, page, pageSize, result.second))
 }
