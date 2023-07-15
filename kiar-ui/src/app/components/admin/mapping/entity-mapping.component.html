@@ -43,17 +43,25 @@
   <table formArrayName="attributes" [style.width]="'100%'">
     <thead>
     <tr>
-      <th i18n="@@LabelSource" [style.width]="'50%'">Source</th>
-      <th i18n="@@LabelDestination" [style.width]="'20%'">Destination</th>
+      <th  [style.width]="'10%'">&nbsp;</th>
+      <th i18n="@@LabelSource" [style.width]="'55%'">Source</th>
+      <th i18n="@@LabelDestination" [style.width]="'15%'">Destination</th>
       <th i18n="@@LabelParser" [style.width]="'10%'">Parser</th>
       <th i18n="@@LabelRequired"  [style.width]="'5%'">Required</th>
       <th i18n="@@LabelMultiValued" [style.width]="'5%'">Multi-Valued</th>
-      <th  [style.width]="'10%'">&nbsp;</th>
+
     </tr>
     </thead>
 
     <!-- Source Column -->
-    <tr *ngFor="let e of attributes; let i = index" [formGroupName]="i">
+    <tr *ngFor="let e of attributes.controls; let i = index" [formGroup]="e">
+      <td [style.padding-bottom]="'25px'">
+        <button mat-icon-button matTooltip="Move attribute mapping upwards." (click)="moveAttributeMapping(i, i - 1)"><mat-icon>arrow_upward</mat-icon></button>
+        <button mat-icon-button matTooltip="Move attribute mapping downwards."  (click)="moveAttributeMapping(i, i + 1)"><mat-icon>arrow_downward</mat-icon></button>
+        <button mat-icon-button matTooltip="Edit attribute mapping." (click)="editAttributeMapping(i)" color="primary"><mat-icon>edit</mat-icon></button>
+        <button mat-icon-button matTooltip="Remove attribute mapping." (click)="removeAttributeMapping(i)" color="warn"><mat-icon>delete</mat-icon></button>
+      </td>
+
       <td>
         <mat-form-field appearance="fill" [style.width]="'100%'">
           <mat-label i18n="@@LabelSource">Source</mat-label>
@@ -86,11 +94,6 @@
 
       <td [style.padding-bottom]="'25px'" [style.text-align]="'center'">
         <mat-checkbox formControlName="multiValued"></mat-checkbox>
-      </td>
-
-      <td [style.padding-bottom]="'25px'">
-        <button mat-icon-button (click)="editAttributeMapping(i)" color="primary"><mat-icon>edit</mat-icon></button>
-        <button mat-icon-button (click)="removeAttribute(i)" color="warn"><mat-icon>delete</mat-icon></button>
       </td>
     </tr>
   </table>

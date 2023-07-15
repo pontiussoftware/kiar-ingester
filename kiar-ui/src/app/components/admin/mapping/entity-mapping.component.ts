@@ -21,14 +21,14 @@ export class EntityMappingComponent implements AfterViewInit {
   public readonly parsers: Observable<Array<ValueParser>>
 
   /** List of attribute {@link FormGroup}s. */
-  public readonly attributes: Array<FormGroup> = []
+  public readonly attributes: FormArray<any> = new FormArray<any>([])
 
   /** The {@link FormControl} that backs this {@link EntityMappingComponent}. */
   public readonly formControl = new FormGroup({
     name: new FormControl('', [Validators.required]),
     description: new FormControl(''),
     type: new FormControl('', [Validators.required]),
-    attributes: new FormArray(this.attributes)
+    attributes: this.attributes
   })
 
   constructor(
@@ -53,13 +53,30 @@ export class EntityMappingComponent implements AfterViewInit {
    * Opens a {@link AttributeMappingDialogComponent} to add an existing  {@link AttributeMapping}.
    */
   public addAttributeMapping() {
-    let mapping = {form: this.newAttributeMappingFormGroup(null), new: true} as AttributeMappingData
-    this.dialog.open(AttributeMappingDialogComponent, {data: mapping, width: '750px'}).afterClosed().subscribe(data => {
-      if (data != null && data.new) {
-        (this.formControl.get('attributes') as FormArray<FormGroup>).push(data.form)
-      }
-    })
+    this.attributes.insert(0, this.newAttributeMappingFormGroup(null))
   }
+
+  /**
+   * Removes an existing {@link AttributeMapping}.
+   *
+   * @param index The index of the {@link AttributeMapping} to remove.
+   */
+  public removeAttributeMapping(index: number) {
+    this.attributes.removeAt(index)
+  }
+
+  /**
+   * Moves a {@link AttributeMapping} in the list.
+   *
+   * @param index The index of the transformer to move.
+   * @param newIndex The new index to move.
+   */
+  public moveAttributeMapping(index: number, newIndex: number): void {
+    const entry = this.attributes.at(index)
+    this.attributes.removeAt(index)
+    this.attributes.insert(newIndex, entry)
+  }
+
 
   /**
    * Opens a {@link AttributeMappingDialogComponent} to edit an existing {@link AttributeMapping}.
@@ -68,19 +85,12 @@ export class EntityMappingComponent implements AfterViewInit {
    */
   public editAttributeMapping(index: number) {
     this.dialog.open(AttributeMappingDialogComponent, {
-      data: {form: this.attributes[index], new: false} as AttributeMappingData,
+      data: this.attributes.at(index),
       width: '750px'
     })
   }
 
-  /**
-   * Removes an existing {@link AttributeMapping}.
-   *
-   * @param index The index of the {@link AttributeMapping} to remove.
-   */
-  public removeAttribute(index: number) {
-    (this.formControl.get('attributes') as FormArray<FormGroup>).removeAt(index)
-  }
+
 
   /**
    * Tries to save the current state of the {@link EntityMapping} represented by the local {@link FormControl}
@@ -138,7 +148,7 @@ export class EntityMappingComponent implements AfterViewInit {
     this.formControl.controls['type'].setValue(mapping?.type || '');
 
     /* Applies attribute mappings*/
-    this.attributes.length = 0
+    this.attributes.clear()
     for (let a of (mapping?.attributes || [])) {
       this.attributes.push(this.newAttributeMappingFormGroup(a))
     }

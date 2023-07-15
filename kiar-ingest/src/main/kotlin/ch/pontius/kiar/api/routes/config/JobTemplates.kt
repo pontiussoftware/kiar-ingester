@@ -260,7 +260,7 @@ fun updateJobTemplate(ctx: Context, store: TransientEntityStore) {
  * @param transformers [List] of [TransformerConfig]s to merge [DbJobTemplate] with.
  */
 private fun DbJobTemplate.merge(transformers: List<TransformerConfig>) {
-    this.transformers.clear()
+    this.transformers.asSequence().forEach { it.delete() }
     for (t in transformers) {
         this.transformers.add(DbTransformer.new {
             type = t.type.toDb()

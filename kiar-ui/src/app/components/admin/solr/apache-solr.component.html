@@ -50,13 +50,17 @@
   <table formArrayName="collections" [style.width]="'100%'">
     <thead>
       <tr>
+        <th>&nbsp;</th>
         <th>Name</th>
         <th>Type</th>
         <th>Selector</th>
-        <th>&nbsp;</th>
       </tr>
     </thead>
     <tr *ngFor="let e of collections; let i = index" [formGroupName]="i">
+      <td [style.padding-bottom]="'25px'">
+        <button mat-icon-button color="warn" (click)="removeCollection(i)"><mat-icon>delete</mat-icon></button>
+      </td>
+
       <td>
         <mat-form-field appearance="fill" [style.width]="'100%'">
           <mat-label i18n="@@LabelName">Name</mat-label>
@@ -80,10 +84,6 @@
           <mat-label i18n="@@LabelSelector">Selector</mat-label>
           <input matInput type="text" formControlName="selector"/>
         </mat-form-field>
-      </td>
-
-      <td>
-        <button mat-icon-button color="warn" (click)="removeCollection(i)"><mat-icon>delete</mat-icon></button>
       </td>
     </tr>
   </table>

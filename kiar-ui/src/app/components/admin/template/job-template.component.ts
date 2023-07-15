@@ -4,6 +4,8 @@ import {FormArray, FormControl, FormGroup, Validators} from "@angular/forms";
 import {ApacheSolrConfig, ConfigService, EntityMapping, JobTemplate, JobType, TransformerConfig, TransformerType} from "../../../../../openapi";
 import {ActivatedRoute, Router} from "@angular/router";
 import {MatSnackBar, MatSnackBarConfig} from "@angular/material/snack-bar";
+import {TransformerDialogComponent} from "./transformer-dialog.component";
+import {MatDialog} from "@angular/material/dialog";
 
 @Component({
   selector: 'kiar-job-template-admin',
@@ -27,7 +29,7 @@ export class JobTemplateComponent implements AfterViewInit {
   /** An {@link Observable} of available {@link JobType}. */
   public readonly jobTypes: Observable<Array<JobType>>
 
-  /** An {@link Observable} of available {@link JobType}. */
+  /** An {@link Observable} of available {@link TransformerType}. */
   public readonly transformerTypes: Observable<Array<TransformerType>>
 
   /** An {@link Observable} of available participants. */
@@ -49,7 +51,8 @@ export class JobTemplateComponent implements AfterViewInit {
       private service: ConfigService,
       private router: Router,
       private route: ActivatedRoute,
-      private snackBar: MatSnackBar
+      private snackBar: MatSnackBar,
+      private dialog: MatDialog
   ) {
     this.templateId = this.route.paramMap.pipe(map(params => params.get('id')!!));
     this.mappings = this.service.getListEntityMappings().pipe(shareReplay(1, 30000))
@@ -124,6 +127,49 @@ export class JobTemplateComponent implements AfterViewInit {
    */
   public removeTransformer(index: number) {
     this.transformers.removeAt(index)
+  }
+
+  /**
+   * Opens a {@link AttributeMappingDialogComponent} to edit an existing {@link AttributeMapping}.
+   *
+   * @param index The index of the {@link AttributeMapping} to edit.
+   */
+  public editTransformer(index: number) {
+    this.dialog.open(TransformerDialogComponent, {
+      data: this.transformers.at(index),
+      width: '750px'
+    })
+  }
+
+  /**
+   * Moves a transformer in the list.
+   *
+   * @param index The index of the transformer to move.
+   * @param newIndex The new index to move.
+   */
+  public moveTransformer(index: number, newIndex: number): void {
+    const entry = this.transformers.at(index)
+    this.transformers.removeAt(index)
+    this.transformers.insert(newIndex, entry)
+  }
+
+  /**
+   * Generates a string representations of the attributes stored with a transformer.
+   *
+   * @param transformer {@link FormGroup} to generate the representation for.
+   * @return The string representation.
+   */
+  public stringForAttributes(transformer: FormGroup): string {
+    const controls = (transformer.get('parameters') as FormArray)?.controls
+    if (controls && controls!!.length > 0) {
+      return controls.map(param => {
+        const key = param.get('key')?.value
+        const value = param.get('value')?.value
+        return `${key}: ${value}`
+      }).reduce((p, c) => `${p}, ${c}`)
+    } else {
+      return ""
+    }
   }
 
   /**

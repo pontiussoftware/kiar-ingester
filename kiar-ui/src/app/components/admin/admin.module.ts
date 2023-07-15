@@ -24,6 +24,7 @@ import {AddJobTemplateDialogComponent} from "./dashboard/add-job-template-dialog
 import {AddParticipantDialogComponent} from "./dashboard/add-participant-dialog.component";
 import {ApacheSolrComponent} from "./solr/apache-solr.component";
 import {JobTemplateComponent} from "./template/job-template.component";
+import {TransformerDialogComponent} from "./template/transformer-dialog.component";
 
 @NgModule({
   declarations: [
@@ -34,6 +35,7 @@ import {JobTemplateComponent} from "./template/job-template.component";
     AdminDashboardComponent,
     ApacheSolrComponent,
     AttributeMappingDialogComponent,
+    TransformerDialogComponent,
     EntityMappingComponent,
     JobTemplateComponent
   ],

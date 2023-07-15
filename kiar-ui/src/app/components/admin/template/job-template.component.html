@@ -80,14 +80,18 @@
   <table formArrayName="transformers">
     <thead>
     <tr>
-      <th i18n="@@Position">Position</th>
+      <th>&nbsp;</th>
       <th i18n="@@LabelTransformerName">Transformer Name</th>
       <th i18n="@@LabelParameters">Parameters</th>
-      <th>&nbsp;</th>
     </tr>
     </thead>
-    <tr *ngFor="let t of transformers.controls; let i = index" [formGroupName]="i">
-      <td [style.text-align]="'center'" [style.padding-bottom]="'25px'" [style.width]="'50px'">{{i}}</td>
+    <tr *ngFor="let t of transformers.controls; let i = index" [formGroup]="t">
+      <td [style.padding-bottom]="'25px'" [style.width]="'250px'">
+        <button mat-icon-button matTooltip="Move transformer upwards." (click)="moveTransformer(i, i - 1)"><mat-icon>arrow_upward</mat-icon></button>
+        <button mat-icon-button matTooltip="Move transformer downwards."  (click)="moveTransformer(i, i + 1)"><mat-icon>arrow_downward</mat-icon></button>
+        <button mat-icon-button matTooltip="Edit transformer parameters." color="primary" (click)="editTransformer(i)"><mat-icon>edit</mat-icon></button>
+        <button mat-icon-button matTooltip="Remove transformer." color="warn" (click)="removeTransformer(i)"><mat-icon>delete</mat-icon></button>
+      </td>
 
       <td [style.min-width]="'300px'">
         <mat-form-field appearance="fill" [style.width]="'100%'">
@@ -98,12 +102,8 @@
           </mat-select>
         </mat-form-field>
       </td>
-      <td>
-
-      </td>
-      <td [style.padding-bottom]="'25px'" [style.width]="'100px'">
-        <button mat-icon-button color="primary"><mat-icon>edit</mat-icon></button>
-        <button mat-icon-button color="warn" (click)="removeTransformer(i)"><mat-icon>delete</mat-icon></button>
+      <td [style.color]="'#888888'">
+        {{stringForAttributes(t)}}
       </td>
     </tr>
   </table>
