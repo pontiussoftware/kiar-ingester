@@ -56,7 +56,7 @@
         <th mat-header-cell *matHeaderCellDef i18n="@@ColHeaderAction"> Action </th>
         <td mat-cell *matCellDef="let element">
           <div *ngIf="!element.harvesting">
-            <button mat-icon-button aria-label="View log" matTooltip="View log." [routerLink]="['/manager/logs', element.id]">
+            <button mat-icon-button aria-label="View logs." matTooltip="View logs." [routerLink]="['/manager/logs', element.id]">
               <mat-icon>list_alt</mat-icon>
             </button>
 
@@ -64,7 +64,7 @@
               <mat-icon>upload_file</mat-icon>
             </button>
 
-            <button *ngIf="element.status === 'HARVESTED'" (click)="startIngest(element)" mat-icon-button matTooltip="Start data ingest." i18n-matTooltip="@@TooltipStartIngest">
+            <button *ngIf="element.status === 'HARVESTED' || element.status === 'INTERRUPTED'" (click)="startIngest(element)" mat-icon-button matTooltip="Schedule for data ingest." i18n-matTooltip="@@TooltipStartIngest">
               <mat-icon>cloud</mat-icon>
             </button>
 
