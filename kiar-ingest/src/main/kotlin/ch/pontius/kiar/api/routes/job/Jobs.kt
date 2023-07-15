@@ -71,6 +71,10 @@ fun getActiveJobs(ctx: Context, store: TransientEntityStore, server: IngesterSer
     methods = [HttpMethod.GET],
     summary = "Retrieves all jobs that are currently inactive (job history). Non-administrator users can only see Jobs that belong to them.",
     operationId = "getInactiveJobs",
+    queryParams = [
+        OpenApiParam(name = "page", type = Int::class, description = "The page index (zero-based) for pagination.", required = false),
+        OpenApiParam(name = "pageSize", type = Int::class, description = "The page size for pagination.", required = false)
+    ],
     tags = ["Job"],
     pathParams = [],
     responses = [
@@ -81,6 +85,8 @@ fun getActiveJobs(ctx: Context, store: TransientEntityStore, server: IngesterSer
     ]
 )
 fun getInactiveJobs(ctx: Context, store: TransientEntityStore) {
+    val page = ctx.queryParam("page")?.toIntOrNull() ?: 0
+    val pageSize = ctx.queryParam("pageSize")?.toIntOrNull() ?: 50
     store.transactional(true) {
         val currentUser = ctx.currentUser()
         val jobs = when (currentUser.role) {
@@ -95,7 +101,7 @@ fun getInactiveJobs(ctx: Context, store: TransientEntityStore) {
                 }
             }
             else -> DbJob.emptyQuery()
-        }
+        }.sortedBy(DbJob::createdAt, false).drop(page * pageSize).take(pageSize)
         ctx.json(jobs.mapToArray { it.toApi() })
     }
 }
