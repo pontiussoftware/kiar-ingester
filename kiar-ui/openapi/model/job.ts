@@ -23,6 +23,7 @@ export interface Job {
     processed: number;
     skipped: number;
     error: number;
+    logEntries: number;
     createdAt: number;
     changedAt?: number;
     createdBy: string;

@@ -30,17 +30,23 @@ import org.joda.time.DateTime
     operationId = "getActiveJobs",
     tags = ["Job"],
     pathParams = [],
+    queryParams = [
+        OpenApiParam(name = "page", type = Int::class, description = "The page index (zero-based) for pagination.", required = false),
+        OpenApiParam(name = "pageSize", type = Int::class, description = "The page size for pagination.", required = false)
+    ],
     responses = [
-        OpenApiResponse("200", [OpenApiContent(Array<Job>::class)]),
+        OpenApiResponse("200", [OpenApiContent(PaginatedJobResult::class)]),
         OpenApiResponse("401", [OpenApiContent(ErrorStatus::class)]),
         OpenApiResponse("403", [OpenApiContent(ErrorStatus::class)]),
         OpenApiResponse("500", [OpenApiContent(ErrorStatus::class)])
     ]
 )
 fun getActiveJobs(ctx: Context, store: TransientEntityStore, server: IngesterServer) {
-    store.transactional(true) {
+    val page = ctx.queryParam("page")?.toIntOrNull() ?: 0
+    val pageSize = ctx.queryParam("pageSize")?.toIntOrNull() ?: 50
+    val results = store.transactional(true) {
         val currentUser = ctx.currentUser()
-        val jobs = when (currentUser.role) {
+        val baseQuery = when (currentUser.role) {
             DbRole.ADMINISTRATOR -> DbJob.filter { it.status.active eq true }
             DbRole.MANAGER,
             DbRole.VIEWER -> {
@@ -52,18 +58,23 @@ fun getActiveJobs(ctx: Context, store: TransientEntityStore, server: IngesterSer
                 }
             }
             else -> DbJob.emptyQuery()
-        }
-        ctx.json(jobs.mapToArray {
+        }.sortedBy(DbJob::changedAt, false)
+
+        baseQuery.size() to baseQuery.drop(page * pageSize).take(pageSize).mapToArray {
             val job = it.toApi()
             val context = server.getContext(job.id!!)
             if (context != null) {
                 job.processed = context.processed
                 job.skipped = context.skipped
                 job.error = context.error
+                job.logEntries = context.log.size
             }
             job
-        })
+        }
     }
+
+    ctx.json(PaginatedJobResult(results.first, page, pageSize, results.second))
+
 }
 
 @OpenApi(

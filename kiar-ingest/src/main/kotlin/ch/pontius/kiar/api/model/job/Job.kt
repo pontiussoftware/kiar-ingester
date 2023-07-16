@@ -34,6 +34,9 @@ data class Job(
     /** The number of processing errors encountered by this [Job]. */
     var error: Long,
 
+    /** The number of [JobLog] entries for this [Job]. */
+    var logEntries: Int = 0,
+
     /** Timestamp of this [Job]'s creation. */
     val createdAt: Long,
 
@@ -41,5 +44,5 @@ data class Job(
     val changedAt: Long? = null,
 
     /** Name of the user who created this [Job]. */
-    val createdBy: String
+    val createdBy: String,
 )

@@ -511,17 +511,36 @@
         "tags" : [ "Job" ],
         "summary" : "Retrieves all jobs that are currently active. Non-administrator users can only see Jobs that belong to them.",
         "operationId" : "getActiveJobs",
-        "parameters" : [ ],
+        "parameters" : [ {
+          "name" : "page",
+          "in" : "query",
+          "description" : "The page index (zero-based) for pagination.",
+          "required" : false,
+          "deprecated" : false,
+          "allowEmptyValue" : false,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int32"
+          }
+        }, {
+          "name" : "pageSize",
+          "in" : "query",
+          "description" : "The page size for pagination.",
+          "required" : false,
+          "deprecated" : false,
+          "allowEmptyValue" : false,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int32"
+          }
+        } ],
         "responses" : {
           "200" : {
             "description" : "OK",
             "content" : {
               "application/json" : {
                 "schema" : {
-                  "type" : "array",
-                  "items" : {
-                    "$ref" : "#/components/schemas/Job"
-                  }
+                  "$ref" : "#/components/schemas/PaginatedJobResult"
                 }
               }
             }
@@ -2868,6 +2887,10 @@
             "type" : "integer",
             "format" : "int64"
           },
+          "logEntries" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
           "createdAt" : {
             "type" : "integer",
             "format" : "int64"
@@ -2880,7 +2903,7 @@
             "type" : "string"
           }
         },
-        "required" : [ "name", "status", "source", "processed", "skipped", "error", "createdAt", "createdBy" ]
+        "required" : [ "name", "status", "source", "processed", "skipped", "error", "logEntries", "createdAt", "createdBy" ]
       },
       "JobLog" : {
         "type" : "object",
@@ -2921,7 +2944,7 @@
       },
       "JobStatus" : {
         "type" : "string",
-        "enum" : [ "CREATED", "ABORTED", "HARVESTED", "RUNNING", "INGESTED", "FAILED" ]
+        "enum" : [ "CREATED", "ABORTED", "HARVESTED", "RUNNING", "INTERRUPTED", "INGESTED", "FAILED" ]
       },
       "PaginatedJobLogResult" : {
         "type" : "object",

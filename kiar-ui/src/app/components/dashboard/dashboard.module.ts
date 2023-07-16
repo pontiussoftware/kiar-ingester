@@ -17,6 +17,7 @@ import {MatProgressSpinnerModule} from "@angular/material/progress-spinner";
 import {JobLogComponent} from "./logs/job-log.component";
 import {RouterLink} from "@angular/router";
 import {MatPaginatorModule} from "@angular/material/paginator";
+import {MatBadgeModule} from "@angular/material/badge";
 
 @NgModule({
   declarations: [
@@ -41,6 +42,7 @@ import {MatPaginatorModule} from "@angular/material/paginator";
     MatProgressSpinnerModule,
     RouterLink,
     MatPaginatorModule,
+    MatBadgeModule,
   ],
   exports: [
     DashboardComponent,

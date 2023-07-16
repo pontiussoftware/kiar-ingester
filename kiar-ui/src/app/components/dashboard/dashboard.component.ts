@@ -1,12 +1,12 @@
-import {AfterViewInit, Component, ViewChild} from "@angular/core";
+import {AfterViewInit, Component, OnDestroy, ViewChild} from "@angular/core";
 import {MatDialog} from "@angular/material/dialog";
 import {Job, JobService, SuccessStatus} from "../../../../openapi";
-import {catchError, map, mergeMap, Observable, Observer, of, shareReplay, Subject, tap} from "rxjs";
+import {Observer, Subscription, tap, timer} from "rxjs";
 import {CreateJobDialogComponent} from "./job/create-job-dialog.component";
 import {MatSnackBar, MatSnackBarConfig} from "@angular/material/snack-bar";
 import {MatPaginator} from "@angular/material/paginator";
-import {JobLogDatasource} from "./logs/job-log-datasource";
 import {JobHistoryDatasource} from "./job-history-datasource";
+import {JobCurrentDatasource} from "./job-current-datasource";
 
 
 /**
@@ -21,45 +21,45 @@ interface ActiveJob extends Job {
   templateUrl: './dashboard.component.html',
   styleUrls: ['./dashboard.component.scss']
 })
-export class DashboardComponent implements AfterViewInit {
+export class DashboardComponent implements AfterViewInit, OnDestroy {
 
   /** Name of the columns being displayed by the data table. */
-  public readonly displayedColumns: string[] = ['name', 'status', 'source', 'template', 'statistics', 'createdAt', 'createdBy',  'action'];
+  public readonly displayedColumns: string[] = ['name', 'status', 'source', 'template', 'statistics', 'changedAt', 'createdAt', 'createdBy',  'action'];
 
-  /** {@link Observable} of all available participants. */
-  public readonly activeJobs: Observable<Array<ActiveJob>>
+  /** The {@link JobHistoryDatasource} backing this {@link DashboardComponent}. */
+  public readonly activeJobs: JobCurrentDatasource
 
   /** The {@link JobHistoryDatasource} backing this {@link DashboardComponent}. */
   public readonly jobHistory: JobHistoryDatasource
 
-  /** A {@link Subject} that can be used to trigger a data reload. */
-  private reload = new Subject<void>()
+  /**  A {@link Subscription} to a timer that updates list of active jobs at a regular invterval. */
+  private timerSubscription: (Subscription | null) = null
 
   /** Reference to the {@link MatPaginator}*/
-  @ViewChild(MatPaginator) paginator: MatPaginator;
+  @ViewChild('activeJobPaginator') activeJobPaginator: MatPaginator;
+
+  /** Reference to the {@link MatPaginator}*/
+  @ViewChild('jobHistoryPaginator') jobHistoryPaginator: MatPaginator;
 
   constructor(private dialog: MatDialog, private snackBar: MatSnackBar, private service: JobService) {
-    this.activeJobs = this.reload.pipe(
-        mergeMap(m => this.service.getActiveJobs()),
-        map(jobs => jobs.map(j => {
-          (j as any)['harvesting'] = false
-          return ((j as any) as ActiveJob)
-        })),
-        catchError(err => {
-          this.snackBar.open(`Error while loading active jobs: ${err?.error?.description}.`, "Dismiss", { duration: 2000 } as MatSnackBarConfig)
-          return of([])
-        }),
-        shareReplay(1, 10000)
-    );
+    this.activeJobs = new JobCurrentDatasource(this.service)
     this.jobHistory = new JobHistoryDatasource(this.service)
   }
   /**
    * Registers an observable for page change and load data initially.
    */
   public ngAfterViewInit(): void {
-    this.jobHistory.load(this.paginator.pageIndex, this.paginator.pageSize);
-    this.paginator.page.pipe(tap(() => this.jobHistory.load(this.paginator.pageIndex, this.paginator.pageSize))).subscribe();
-    this.reload.next()
+    this.timerSubscription = timer(0, 5000).subscribe(t =>     this.activeJobPaginator.page.pipe(tap(() => this.jobHistory.load(this.activeJobPaginator.pageIndex, this.activeJobPaginator.pageSize))).subscribe())
+    this.activeJobPaginator.page.pipe(tap(() => this.jobHistory.load(this.activeJobPaginator.pageIndex, this.activeJobPaginator.pageSize))).subscribe();
+    this.jobHistoryPaginator.page.pipe(tap(() => this.jobHistory.load(this.jobHistoryPaginator.pageIndex, this.jobHistoryPaginator.pageSize))).subscribe();
+  }
+
+  /**
+   * Unsubscribes from timer.
+   */
+  public ngOnDestroy() {
+    this.timerSubscription?.unsubscribe()
+    this.timerSubscription = null
   }
 
   /**
@@ -67,8 +67,16 @@ export class DashboardComponent implements AfterViewInit {
    */
   public createJob() {
     this.dialog.open(CreateJobDialogComponent).afterClosed().subscribe(c => {
-      this.reload.next()
+      this.reload()
     })
+  }
+
+  /**
+   * Reloads both the list of active jobs and the job history.
+   */
+  public reload() {
+    this.activeJobs.load(this.activeJobPaginator.pageIndex, this.activeJobPaginator.pageSize);
+    this.jobHistory.load(this.jobHistoryPaginator.pageIndex, this.jobHistoryPaginator.pageSize);
   }
 
   /**
@@ -90,12 +98,12 @@ export class DashboardComponent implements AfterViewInit {
             next: (v) => {
               this.snackBar.open(`Successfully uploaded KIAR file to job ${job.id}.`, "Dismiss", { duration: 2000 } as MatSnackBarConfig)
               job.harvesting = false
-              this.reload.next()
+              this.reload()
             },
             error: (err) => {
               this.snackBar.open(`Error while uploading KIAR file for job ${job.id}: ${err?.error?.description}.`, "Dismiss", { duration: 2000 } as MatSnackBarConfig)
               job.harvesting = false
-              this.reload.next()
+              this.reload()
             }
           } as Observer<SuccessStatus>)
         }
@@ -112,7 +120,7 @@ export class DashboardComponent implements AfterViewInit {
     this.service.putScheduleJob(job.id!!).subscribe({
       next: (next) => {
         this.snackBar.open(`Successfully scheduled job ${job.id}.`, "Dismiss", { duration: 2000 } as MatSnackBarConfig)
-        this.reload.next()
+        this.reload()
       },
       error: (err) => this.snackBar.open(`Error occurred while scheduling job ${job.id}: ${err?.error?.description}.`, "Dismiss", { duration: 2000 } as MatSnackBarConfig)
     })
@@ -127,7 +135,7 @@ export class DashboardComponent implements AfterViewInit {
     this.service.deleteAbortJob(job.id!!).subscribe({
         next: (next) => {
           this.snackBar.open(`Successfully aborted job ${job.id}.`, "Dismiss", { duration: 2000 } as MatSnackBarConfig)
-          this.reload.next()
+          this.reload()
         },
         error: (err) => this.snackBar.open(`Error occurred while aborting job ${job.id}: ${err?.error?.description}.`, "Dismiss", { duration: 2000 } as MatSnackBarConfig)
     })

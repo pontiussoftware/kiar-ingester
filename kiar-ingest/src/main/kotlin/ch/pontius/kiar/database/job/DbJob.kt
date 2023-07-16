@@ -6,7 +6,6 @@ import ch.pontius.kiar.database.config.jobs.DbJobTemplate
 import ch.pontius.kiar.database.config.transformers.DbTransformer
 import ch.pontius.kiar.database.institution.DbUser
 import ch.pontius.kiar.ingester.processors.sinks.ApacheSolrSink
-import ch.pontius.kiar.ingester.processors.sinks.DummySink
 import ch.pontius.kiar.ingester.processors.sinks.Sink
 import ch.pontius.kiar.ingester.processors.sources.KiarFileSource
 import ch.pontius.kiar.ingester.processors.sources.Source
@@ -16,6 +15,7 @@ import jetbrains.exodus.entitystore.Entity
 import kotlinx.dnq.*
 import kotlinx.dnq.link.OnDeletePolicy
 import kotlinx.dnq.query.asSequence
+import kotlinx.dnq.query.size
 import org.apache.solr.common.SolrInputDocument
 
 /**
@@ -108,8 +108,9 @@ class DbJob(entity: Entity) : XdEntity(entity) {
         this.processed,
         this.skipped,
         this.error,
+        this.log.size(),
         this.createdAt.millis,
         this.changedAt?.millis,
-        this.createdByName
+        this.createdByName,
     )
 }

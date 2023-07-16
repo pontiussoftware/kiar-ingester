@@ -6,7 +6,7 @@
 
 <mat-tab-group>
   <mat-tab label="Running" i18n-label="@@TabLabelRunning">
-    <table mat-table [dataSource]="(activeJobs | async)" class="mat-elevation-z8">
+    <table mat-table [dataSource]="activeJobs" class="mat-elevation-z8">
       <!-- Name Column -->
       <ng-container matColumnDef="name">
         <th mat-header-cell *matHeaderCellDef i18n="@@ColHeaderName"> Name </th>
@@ -28,7 +28,7 @@
       <!-- Template Column -->
       <ng-container matColumnDef="template">
         <th mat-header-cell *matHeaderCellDef i18n="@@ColHeaderTemplate"> Template </th>
-        <td mat-cell *matCellDef="let element"> {{element.templateName}} </td>
+        <td mat-cell *matCellDef="let element"> {{element.template?.name}} </td>
       </ng-container>
 
       <!-- Statistics Column -->
@@ -37,6 +37,12 @@
         <td mat-cell *matCellDef="let element">
           (<span class="color-traffic-light-green">{{element.processed}}</span> | <span class="color-traffic-light-orange">{{element.skipped}}</span> | <span class="color-traffic-light-red">{{element.error}}</span>)
         </td>
+      </ng-container>
+
+      <!-- Changed At Column -->
+      <ng-container matColumnDef="changedAt">
+        <th mat-header-cell *matHeaderCellDef i18n="@@ColHeaderChangedAt"> Changed At </th>
+        <td mat-cell *matCellDef="let element"> {{element.changedAt | date:'medium'}}  </td>
       </ng-container>
 
       <!-- Created At Column -->
@@ -56,7 +62,7 @@
         <th mat-header-cell *matHeaderCellDef i18n="@@ColHeaderAction"> Action </th>
         <td mat-cell *matCellDef="let element">
           <div *ngIf="!element.harvesting">
-            <button mat-icon-button aria-label="View logs." matTooltip="View logs." [routerLink]="['/manager/logs', element.id]">
+            <button mat-icon-button *ngIf="element.logEntries > 0" aria-label="View logs." matTooltip="View logs." [routerLink]="['/manager/logs', element.id]">
               <mat-icon>list_alt</mat-icon>
             </button>
 
@@ -87,6 +93,9 @@
         <td class="mat-cell" colspan="6">No data</td>
       </tr>
     </table>
+
+    <mat-paginator #activeJobPaginator [length]="activeJobs.totalSize" [pageSize]="10" [pageSizeOptions]="[10, 25, 50]"></mat-paginator>
+
   </mat-tab>
 
   <mat-tab label="History" i18n-label="@@TabLabelHistory">
@@ -116,7 +125,7 @@
       <!-- Symbol Column -->
       <ng-container matColumnDef="template">
         <th mat-header-cell *matHeaderCellDef i18n="@@ColHeaderTemplate"> Template </th>
-        <td mat-cell *matCellDef="let element"> {{element.templateName}} </td>
+        <td mat-cell *matCellDef="let element"> {{element.template?.name}} </td>
       </ng-container>
 
       <!-- Statistics Column -->
@@ -125,6 +134,12 @@
         <td mat-cell *matCellDef="let element">
           (<span class="color-traffic-light-green">{{element.processed}}</span> | <span class="color-traffic-light-orange">{{element.skipped}}</span> | <span class="color-traffic-light-red">{{element.error}}</span>)
         </td>
+      </ng-container>
+
+      <!-- Changed At Column -->
+      <ng-container matColumnDef="changedAt">
+        <th mat-header-cell *matHeaderCellDef i18n="@@ColHeaderCreatedAt">  Changed At </th>
+        <td mat-cell *matCellDef="let element"> {{element.changedAt | date:'medium'}}  </td>
       </ng-container>
 
       <!-- Created At Column -->
@@ -143,7 +158,7 @@
       <ng-container matColumnDef="action">
         <th mat-header-cell *matHeaderCellDef i18n="@@ColHeaderAction"> Action </th>
         <td mat-cell *matCellDef="let element">
-          <button mat-icon-button aria-label="View log" matTooltip="View log." [routerLink]="['/manager/logs', element.id]">
+          <button *ngIf="element.logEntries > 0" mat-icon-button aria-label="View log" matTooltip="View log." [routerLink]="['/manager/logs', element.id]">
             <mat-icon>list_alt</mat-icon>
           </button>
         </td>
@@ -158,7 +173,7 @@
       </tr>
     </table>
 
-    <mat-paginator [length]="jobHistory.totalSize" [pageSize]="10" [pageSizeOptions]="[10, 25, 50]"></mat-paginator>
+    <mat-paginator #jobHistoryPaginator [length]="jobHistory.totalSize" [pageSize]="10" [pageSizeOptions]="[10, 25, 50]"></mat-paginator>
 
   </mat-tab>
 </mat-tab-group>
