@@ -49,7 +49,8 @@ export class DashboardComponent implements AfterViewInit, OnDestroy {
    * Registers an observable for page change and load data initially.
    */
   public ngAfterViewInit(): void {
-    this.timerSubscription = timer(0, 5000).subscribe(t =>     this.activeJobPaginator.page.pipe(tap(() => this.jobHistory.load(this.activeJobPaginator.pageIndex, this.activeJobPaginator.pageSize))).subscribe())
+    this.reload()
+    this.timerSubscription = timer(5000, 5000).subscribe(t => this.activeJobPaginator.page.pipe(tap(() => this.jobHistory.load(this.activeJobPaginator.pageIndex, this.activeJobPaginator.pageSize))).subscribe())
     this.activeJobPaginator.page.pipe(tap(() => this.jobHistory.load(this.activeJobPaginator.pageIndex, this.activeJobPaginator.pageSize))).subscribe();
     this.jobHistoryPaginator.page.pipe(tap(() => this.jobHistory.load(this.jobHistoryPaginator.pageIndex, this.jobHistoryPaginator.pageSize))).subscribe();
   }
