@@ -176,6 +176,7 @@ fun updateSolrConfig(ctx: Context, store: TransientEntityStore) {
         solr.name = request.name
         solr.description = request.description
         solr.server = request.server
+        solr.publicServer = request.publicServer
         solr.username = request.username
         solr.password = request.password
         solr.changedAt = DateTime.now()

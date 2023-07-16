@@ -22,6 +22,7 @@ export class ApacheSolrComponent implements AfterViewInit{
     name: new FormControl('', [Validators.required]),
     description: new FormControl(''),
     server: new FormControl('', [Validators.required, Validators.pattern('(https?://)?([\\da-z.-]+)\\.([a-z.]{2,6})[/\\w .-]*/?')]),
+    publicServer: new FormControl('', [Validators.pattern('(https?://)?([\\da-z.-]+)\\.([a-z.]{2,6})[/\\w .-]*/?')]),
     username: new FormControl(''),
     password: new FormControl(''),
     collections: new FormArray(this.collections)
@@ -108,6 +109,19 @@ export class ApacheSolrComponent implements AfterViewInit{
   }
 
   /**
+   * Views a collection {@link ApacheSolrCollection}.
+   *
+   * @param index The index of the {@link ApacheSolrCollection} to view.
+   */
+  public viewCollection(index: number) {
+    let server = this.formControl.controls['publicServer'].value || this.formControl.controls['server'].value
+    let collection = this.collections[index]?.get('name')?.value
+    if (server != null && collection != null) {
+      window.open(`${server}/${collection}/select?q=*:*`, "_blank");
+    }
+  }
+
+  /**
    * Updates the {@link FormControl} backing this view with a new {@link ApacheSolrConfig}.
    *
    * @param solr The {@link ApacheSolrConfig} to apply.
@@ -116,6 +130,7 @@ export class ApacheSolrComponent implements AfterViewInit{
     this.formControl.controls['name'].setValue(solr?.name || '');
     this.formControl.controls['description'].setValue(solr?.description || '');
     this.formControl.controls['server'].setValue(solr?.server || '');
+    this.formControl.controls['publicServer'].setValue(solr?.publicServer || '');
     this.formControl.controls['username'].setValue(solr?.username || '');
     this.formControl.controls['password'].setValue(solr?.password || '');
 
@@ -141,6 +156,7 @@ export class ApacheSolrComponent implements AfterViewInit{
       name: this.formControl.get('name')?.value,
       description: this.formControl.get('description')?.value,
       server: this.formControl.get('server')?.value,
+      publicServer: this.formControl.get('publicServer')?.value,
       username: this.formControl.get('username')?.value,
       password: this.formControl.get('password')?.value,
       collections: this.collections.map((collection) => {
