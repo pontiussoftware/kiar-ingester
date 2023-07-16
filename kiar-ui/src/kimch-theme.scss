@@ -1,0 +1,121 @@
+@use '@angular/material' as mat;
+
+@include mat.core();
+
+$green-palette: (
+    50 : #f9fdea,
+    100 : #f1facb,
+    200 : #e8f6a9,
+    300 : #dff286,
+    400 : #d8f06c,
+    500 : #d1ed52,
+    600 : #cceb4b,
+    700 : #c6e841,
+    800 : #c0e538,
+    900 : #b5e028,
+    A100 : #ffffff,
+    A200 : #faffeb,
+    A400 : #edffb8,
+    A700 : #e7ff9e,
+    contrast: (
+        50 : #000000,
+        100 : #000000,
+        200 : #000000,
+        300 : #000000,
+        400 : #000000,
+        500 : #000000,
+        600 : #000000,
+        700 : #000000,
+        800 : #000000,
+        900 : #000000,
+        A100 : #000000,
+        A200 : #000000,
+        A400 : #000000,
+        A700 : #000000,
+    )
+);
+
+
+
+$anthrazite-palette: (
+    50 : #eaeaea,
+    100 : #cbcbcb,
+    200 : #a9a9a9,
+    300 : #868686,
+    400 : #6c6c6c,
+    500 : #525252,
+    600 : #4b4b4b,
+    700 : #414141,
+    800 : #383838,
+    900 : #282828,
+    A100 : #f28686,
+    A200 : #ec5858,
+    A400 : #ff1313,
+    A700 : #f80000,
+    contrast: (
+        50 : #000000,
+        100 : #000000,
+        200 : #000000,
+        300 : #000000,
+        400 : #ffffff,
+        500 : #ffffff,
+        600 : #ffffff,
+        700 : #ffffff,
+        800 : #ffffff,
+        900 : #ffffff,
+        A100 : #000000,
+        A200 : #000000,
+        A400 : #ffffff,
+        A700 : #ffffff,
+    )
+);
+
+
+$orange-palette: (
+    50 : #fbe9e0,
+    100 : #f4c8b3,
+    200 : #eda480,
+    300 : #e67f4d,
+    400 : #e06326,
+    500 : #db4800,
+    600 : #d74100,
+    700 : #d23800,
+    800 : #cd3000,
+    900 : #c42100,
+    A100 : #ffeeec,
+    A200 : #ffc1b9,
+    A400 : #ff9386,
+    A700 : #ff7c6d,
+    contrast: (
+        50 : #000000,
+        100 : #000000,
+        200 : #000000,
+        300 : #000000,
+        400 : #000000,
+        500 : #ffffff,
+        600 : #ffffff,
+        700 : #ffffff,
+        800 : #ffffff,
+        900 : #ffffff,
+        A100 : #000000,
+        A200 : #000000,
+        A400 : #000000,
+        A700 : #000000,
+    )
+);
+
+
+
+$primary: mat.define-palette($green-palette);
+$accent:  mat.define-palette($anthrazite-palette);
+$warn:  mat.define-palette($orange-palette);
+
+$theme: mat.define-light-theme((
+    color: (primary: $primary, accent: $accent, warn: $warn),
+    typography: mat.define-typography-config(),
+    density: 0,
+));
+
+// Include all theme styles for the components.
+@include mat.all-component-themes($theme);
+@include mat.typography-hierarchy($theme);

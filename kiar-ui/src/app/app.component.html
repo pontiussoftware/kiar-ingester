@@ -1,35 +1,34 @@
 <header id="header">
   <mat-toolbar>
-    <span>KIM.ch Ingest Dashboard</span>
+    <img src="./assets/KIMnet_Logo_pos_RGB.png" [style.height]="'50px'" alt="KIM.ch Logo"/>
 
     <span class="space-flexible"></span>
 
-    <button mat-icon-button *ngIf="(isViewer | async)" [routerLink]="['/manager/dashboard']" >
+    <button mat-icon-button *ngIf="(isViewer | async)" [routerLink]="['/manager/dashboard']" i18n-matTooltip="@@TooltipGoToDashboard" matTooltip="Go to ingest job dashboard.">
       <mat-icon>dashboard</mat-icon>
     </button>
 
-    <button mat-icon-button *ngIf="(isAdmin | async)" [routerLink]="['/admin/dashboard']">
+    <button mat-icon-button *ngIf="(isAdmin | async)" [routerLink]="['/admin/dashboard']" i18n-matTooltip="@@TooltipGoToAdmim" matTooltip="Go to administrator dashboard.">
       <mat-icon>admin_panel_settings</mat-icon>
     </button>
 
-    <button mat-icon-button *ngIf="(isAdmin | async)" [routerLink]="['/institutions']">
+    <button mat-icon-button *ngIf="(isAdmin | async)" [routerLink]="['/institutions']" i18n-matTooltip="@@TooltipGoToInstitutionList" matTooltip="Go to institution list.">
       <mat-icon>account_balance</mat-icon>
     </button>
 
     <span class="space-flexible"></span>
-
 
     <button *ngIf="isLoggedIn | async" mat-button [matMenuTriggerFor]="userMenu">{{(username | async)}}</button>
 
     <mat-menu #userMenu="matMenu">
       <button mat-menu-item (click)="userProfile()">
         <mat-icon>person</mat-icon>
-        <span>Manager User Profile</span>
+        <span i18n="@@LabelManageUserProfile">Manager User Profile</span>
       </button>
 
       <button mat-menu-item (click)="logout()">
         <mat-icon>logout</mat-icon>
-        <span>Logout</span>
+        <span i18n="@@LabelLogout">Logout</span>
       </button>
     </mat-menu>
   </mat-toolbar>
@@ -39,4 +38,6 @@
     <router-outlet></router-outlet>
 </article>
 
-<footer id="footer"></footer>
+<footer id="footer">
+    <h3>KIM.ch Data Ingest Dashboard (Beta)</h3>
+</footer>
