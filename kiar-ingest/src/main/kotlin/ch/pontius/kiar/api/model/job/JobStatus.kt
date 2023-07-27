@@ -11,6 +11,7 @@ enum class JobStatus {
     ABORTED,
     HARVESTED,
     RUNNING,
+    SCHEDULED,
     INTERRUPTED,
     INGESTED,
     FAILED;
