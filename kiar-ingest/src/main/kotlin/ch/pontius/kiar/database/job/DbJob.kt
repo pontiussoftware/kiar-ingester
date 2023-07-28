@@ -79,7 +79,7 @@ class DbJob(entity: Entity) : XdEntity(entity) {
         val source: Source<SolrInputDocument> = when (template.type.description) {
             "XML" -> XmlFileSource(sourcePath, template.mapping.toApi())
             "KIAR" -> KiarFileSource(sourcePath, template.mapping.toApi())
-            else -> throw IllegalStateException("Unsupported transformer type '${template.type.description}'. This is a programmer's error!")
+            else -> throw IllegalStateException("Unsupported template type '${template.type.description}'. This is a programmer's error!")
         }
         var root = source
 

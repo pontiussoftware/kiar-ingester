@@ -3,6 +3,7 @@ package ch.pontius.kiar.database.config.transformers
 import ch.pontius.kiar.api.model.config.transformers.TransformerConfig
 import ch.pontius.kiar.database.config.jobs.DbJobTemplate
 import ch.pontius.kiar.ingester.processors.sources.Source
+import ch.pontius.kiar.ingester.processors.transformers.DisplayTransformer
 import ch.pontius.kiar.ingester.processors.transformers.ImageTransformer
 import ch.pontius.kiar.ingester.processors.transformers.InstitutionTransformer
 import ch.pontius.kiar.ingester.processors.transformers.Transformer
@@ -50,6 +51,7 @@ class DbTransformer(entity: Entity) : XdEntity(entity) {
         val parameters = this.parameters.asSequence().associate { it.key to it.value }
         return when (this.type.description) {
             "IMAGE" -> ImageTransformer(input, parameters)
+            "DISPLAY" -> DisplayTransformer(input)
             "SYSTEM" -> InstitutionTransformer(input, parameters)
             else -> throw IllegalStateException("Unsupported transformer type '${this.type.description}'. This is a programmer's error!")
         }
