@@ -14,8 +14,11 @@ import kotlinx.dnq.*
 class DbCollection(entity: Entity) : XdEntity(entity) {
     companion object: XdNaturalEntityType<DbCollection>()
 
-    /** The name held by this [DbCollection]. Must be unique!*/
+    /** The name held by this [DbCollection].*/
     var name by xdRequiredStringProp(unique = false, trimmed = true)
+
+    /** The display name held by this [DbCollection].*/
+    var displayName by xdStringProp(trimmed = true)
 
     /** The [DbCollectionType] of this [DbCollection]*/
     var type by xdLink1(DbCollectionType)
@@ -34,5 +37,5 @@ class DbCollection(entity: Entity) : XdEntity(entity) {
      *
      * @return [CollectionConfig]
      */
-    fun toApi() = ApacheSolrCollection(this.name, this.type.toApi(), this.selector, this.deleteBeforeIngest)
+    fun toApi() = ApacheSolrCollection(this.name, this.displayName, this.type.toApi(), this.selector, this.deleteBeforeIngest)
 }

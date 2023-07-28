@@ -13,6 +13,9 @@ data class ApacheSolrCollection(
     /** The name of the Apache Solr collection. */
     val name: String,
 
+    /** The display name of the Apache Solr collection. */
+    val displayName: String?,
+
     /** The type of [ApacheSolrCollection]. */
     val type: CollectionType,
 
