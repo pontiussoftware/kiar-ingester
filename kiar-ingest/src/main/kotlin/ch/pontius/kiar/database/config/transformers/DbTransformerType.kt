@@ -15,6 +15,7 @@ import kotlinx.dnq.xdRequiredStringProp
 class DbTransformerType(entity: Entity): XdEnumEntity(entity) {
     companion object : XdEnumEntityType<DbTransformerType>() {
         val IMAGE by DbTransformerType.enumField { description = "IMAGE" }
+        val DISPLAY by DbTransformerType.enumField { description = "DISPLAY" }
         val SYSTEM by DbTransformerType.enumField { description = "SYSTEM" }
     }
 

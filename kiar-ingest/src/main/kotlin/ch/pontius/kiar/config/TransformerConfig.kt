@@ -9,7 +9,4 @@ import ch.pontius.kiar.api.model.config.transformers.TransformerType
  * @version 1.0.0
  */
 @kotlinx.serialization.Serializable
-data class TransformerConfig(val type: TransformerType, val parameters: Map<String,String> = emptyMap()) {
-
-
-}
+data class TransformerConfig(val type: TransformerType, val parameters: Map<String,String> = emptyMap())
