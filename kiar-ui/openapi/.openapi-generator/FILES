@@ -31,6 +31,7 @@ model/jobSource.ts
 model/jobStatus.ts
 model/jobTemplate.ts
 model/jobType.ts
+model/license.ts
 model/loginRequest.ts
 model/mappingType.ts
 model/models.ts

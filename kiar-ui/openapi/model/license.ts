@@ -11,11 +11,9 @@
  */
 
 
-export type TransformerType = 'IMAGE' | 'DISPLAY' | 'SYSTEM';
-
-export const TransformerType = {
-    IMAGE: 'IMAGE' as TransformerType,
-    DISPLAY: 'DISPLAY' as TransformerType,
-    SYSTEM: 'SYSTEM' as TransformerType
-};
+export interface License { 
+    _short: string;
+    _long: string;
+    url: string;
+}
 

@@ -80,7 +80,7 @@
           </div>
 
           <div *ngIf="element.harvesting">
-            <mat-spinner diameter="25"></mat-spinner>
+            <mat-progress-bar diameter="25" [value]="element.uploaded"></mat-progress-bar>
           </div>
         </td>
       </ng-container>

@@ -14,6 +14,7 @@ export * from './jobSource';
 export * from './jobStatus';
 export * from './jobTemplate';
 export * from './jobType';
+export * from './license';
 export * from './loginRequest';
 export * from './mappingType';
 export * from './paginatedInstitutionResult';

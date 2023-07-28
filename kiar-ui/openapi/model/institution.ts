@@ -9,6 +9,8 @@
  * https://openapi-generator.tech
  * Do not edit the class manually.
  */
+import { License } from './license';
+import { ApacheSolrCollection } from './apacheSolrCollection';
 
 
 export interface Institution { 
@@ -25,6 +27,10 @@ export interface Institution {
     email: string;
     homepage?: string;
     publish: boolean;
+    availableCollections: Array<ApacheSolrCollection>;
+    selectedCollections: Array<ApacheSolrCollection>;
+    defaultLicense?: License;
+    defaultCopyright?: string;
     createdAt?: number;
     changedAt?: number;
 }

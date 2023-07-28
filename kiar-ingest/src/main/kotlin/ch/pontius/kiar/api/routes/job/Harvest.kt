@@ -30,6 +30,10 @@ import java.nio.file.StandardOpenOption
     pathParams = [
         OpenApiParam(name = "id", description = "The ID of the Job for which a KIAR should be uploaded.", required = true)
     ],
+    queryParams = [
+        OpenApiParam(name = "first", description = "Set to 'true' if the submitted chunk is the first one.", required = false, type = Boolean::class),
+        OpenApiParam(name = "last", description = "Set to 'true' if the submitted chunk is the last one.", required = false, type = Boolean::class)
+    ],
     requestBody = OpenApiRequestBody(content = [
         OpenApiContent(mimeType = ContentType.FORM_DATA_MULTIPART, properties = [OpenApiContentProperty(name = "kiar", type = "string", format = "binary")])
    ], description = "The uploaded KIAR file.", required = true),
@@ -43,6 +47,8 @@ import java.nio.file.StandardOpenOption
 fun uploadKiar(ctx: Context, store: TransientEntityStore, config: Config) {
     /* Obtain and check Job. */
     val jobId = ctx.pathParam("id")
+    val first = ctx.queryParam("first")?.toBoolean() ?: false
+    val last = ctx.queryParam("last")?.toBoolean() ?: false
     val participant = store.transactional(false) {
         val job = try {
             DbJob.findById(jobId)
@@ -68,15 +74,22 @@ fun uploadKiar(ctx: Context, store: TransientEntityStore, config: Config) {
     val upload = JakartaServletFileUpload().getItemIterator(ctx.req())
     if (!upload.hasNext()) throw ErrorStatusException(401, "Uploaded file is missing.")
 
+    /* Create or re-use output file. TODO: In case of an error, we need a way to recover here. */
+    val outputStream = if (first) {
+        Files.newOutputStream(ingestPath.resolve(jobId), StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING, StandardOpenOption.WRITE)
+    } else {
+        Files.newOutputStream(ingestPath.resolve(jobId), StandardOpenOption.APPEND, StandardOpenOption.WRITE)
+    }
+
     /* Upload the first file. */
-    upload.next().inputStream.use { input ->
-        Files.newOutputStream(ingestPath.resolve(jobId), StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING, StandardOpenOption.WRITE).use { output ->
-            val buffer = ByteArray(25_000_000) /* 25 MB buffer. */
+    outputStream.use { output ->
+        upload.next().inputStream.use { input ->
+            val buffer = ByteArray(5_000_000) /* 5 MB buffer. */
             var read = input.read(buffer)
             if (read == -1) {
                 throw ErrorStatusException(400, "Cannot upload empty file.")
             }
-            if (ByteBuffer.wrap(buffer).order(ByteOrder.LITTLE_ENDIAN).int != 0x04034b50) { /* Look for ZIP header. */
+            if (first && ByteBuffer.wrap(buffer).order(ByteOrder.LITTLE_ENDIAN).int != 0x04034b50) { /* Look for ZIP header. */
                 throw ErrorStatusException(400, "Uploaded file could not be verified to be a valid KIAR file.")
             }
 
@@ -97,8 +110,10 @@ fun uploadKiar(ctx: Context, store: TransientEntityStore, config: Config) {
         } catch (e: Throwable) {
             throw ErrorStatusException(404, "Job with ID $jobId could not be found.")
         }
-        job.status = DbJobStatus.HARVESTED
         job.changedAt = DateTime.now()
+        if (last) {
+            job.status = DbJobStatus.HARVESTED
+        }
     }
 
     /* Return success. */

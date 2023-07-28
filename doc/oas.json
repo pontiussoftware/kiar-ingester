@@ -897,6 +897,26 @@
           "schema" : {
             "type" : "string"
           }
+        }, {
+          "name" : "first",
+          "in" : "query",
+          "description" : "Set to 'true' if the submitted chunk is the first one.",
+          "required" : false,
+          "deprecated" : false,
+          "allowEmptyValue" : false,
+          "schema" : {
+            "type" : "boolean"
+          }
+        }, {
+          "name" : "last",
+          "in" : "query",
+          "description" : "Set to 'true' if the submitted chunk is the last one.",
+          "required" : false,
+          "deprecated" : false,
+          "allowEmptyValue" : false,
+          "schema" : {
+            "type" : "boolean"
+          }
         } ],
         "requestBody" : {
           "description" : "The uploaded KIAR file.",
@@ -2633,6 +2653,9 @@
           "name" : {
             "type" : "string"
           },
+          "displayName" : {
+            "type" : "string"
+          },
           "type" : {
             "$ref" : "#/components/schemas/CollectionType"
           },
@@ -2761,7 +2784,7 @@
       },
       "TransformerType" : {
         "type" : "string",
-        "enum" : [ "IMAGE", "SYSTEM" ]
+        "enum" : [ "IMAGE", "DISPLAY", "SYSTEM" ]
       },
       "Institution" : {
         "type" : "object",
@@ -2807,6 +2830,24 @@
           "publish" : {
             "type" : "boolean"
           },
+          "availableCollections" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/ApacheSolrCollection"
+            }
+          },
+          "selectedCollections" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/ApacheSolrCollection"
+            }
+          },
+          "defaultLicense" : {
+            "$ref" : "#/components/schemas/License"
+          },
+          "defaultCopyright" : {
+            "type" : "string"
+          },
           "createdAt" : {
             "type" : "integer",
             "format" : "int64"
@@ -2816,7 +2857,7 @@
             "format" : "int64"
           }
         },
-        "required" : [ "name", "displayName", "participantName", "zip", "city", "canton", "email", "publish" ]
+        "required" : [ "name", "displayName", "participantName", "zip", "city", "canton", "email", "publish", "availableCollections", "selectedCollections" ]
       },
       "PaginatedInstitutionResult" : {
         "type" : "object",
@@ -2944,7 +2985,7 @@
       },
       "JobStatus" : {
         "type" : "string",
-        "enum" : [ "CREATED", "ABORTED", "HARVESTED", "RUNNING", "INTERRUPTED", "INGESTED", "FAILED" ]
+        "enum" : [ "CREATED", "ABORTED", "HARVESTED", "RUNNING", "SCHEDULED", "INTERRUPTED", "INGESTED", "FAILED" ]
       },
       "PaginatedJobLogResult" : {
         "type" : "object",
@@ -2995,6 +3036,22 @@
           }
         },
         "required" : [ "total", "page", "pageSize", "results" ]
+      },
+      "License" : {
+        "type" : "object",
+        "additionalProperties" : false,
+        "properties" : {
+          "short" : {
+            "type" : "string"
+          },
+          "long" : {
+            "type" : "string"
+          },
+          "url" : {
+            "type" : "string"
+          }
+        },
+        "required" : [ "short", "long", "url" ]
       },
       "LoginRequest" : {
         "type" : "object",

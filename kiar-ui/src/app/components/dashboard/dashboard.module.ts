@@ -18,6 +18,7 @@ import {JobLogComponent} from "./logs/job-log.component";
 import {RouterLink} from "@angular/router";
 import {MatPaginatorModule} from "@angular/material/paginator";
 import {MatBadgeModule} from "@angular/material/badge";
+import {MatProgressBarModule} from "@angular/material/progress-bar";
 
 @NgModule({
   declarations: [
@@ -43,6 +44,7 @@ import {MatBadgeModule} from "@angular/material/badge";
     RouterLink,
     MatPaginatorModule,
     MatBadgeModule,
+    MatProgressBarModule,
   ],
   exports: [
     DashboardComponent,

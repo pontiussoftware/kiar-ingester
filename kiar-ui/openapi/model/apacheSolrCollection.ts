@@ -14,6 +14,7 @@ import { CollectionType } from './collectionType';
 
 export interface ApacheSolrCollection { 
     name: string;
+    displayName?: string;
     type: CollectionType;
     selector?: string;
     deleteBeforeImport: boolean;

@@ -1,7 +1,7 @@
 import {AfterViewInit, Component, OnDestroy, ViewChild} from "@angular/core";
 import {MatDialog} from "@angular/material/dialog";
 import {Job, JobService, SuccessStatus} from "../../../../openapi";
-import {interval, Observer, Subscription, tap, timer} from "rxjs";
+import {firstValueFrom, interval, Observer, Subscription, tap, timer} from "rxjs";
 import {CreateJobDialogComponent} from "./job/create-job-dialog.component";
 import {MatSnackBar, MatSnackBarConfig} from "@angular/material/snack-bar";
 import {MatPaginator} from "@angular/material/paginator";
@@ -88,25 +88,32 @@ export class DashboardComponent implements AfterViewInit, OnDestroy {
   public uploadKiar(job: ActiveJob) {
       const fileInput: HTMLInputElement = document.createElement('input');
       fileInput.type = 'file';
-      fileInput.addEventListener('change', (event: Event) => {
+      fileInput.addEventListener('change', async (event: Event) => {
         const target = event.target as HTMLInputElement;
         const file: File | null = target.files?.[0] || null;
         if (file) {
           const formData: FormData = new FormData();
           formData.append('kiar', file);
-          job.harvesting = true
-          this.service.putUploadKiar(job.id!!, file, 'body').subscribe({
-            next: (v) => {
-              this.snackBar.open(`Successfully uploaded KIAR file to job ${job.id}.`, "Dismiss", { duration: 2000 } as MatSnackBarConfig)
-              job.harvesting = false
-              this.reload()
-            },
-            error: (err) => {
-              this.snackBar.open(`Error while uploading KIAR file for job ${job.id}: ${err?.error?.description}.`, "Dismiss", { duration: 2000 } as MatSnackBarConfig)
-              job.harvesting = false
-              this.reload()
+          job.harvesting = true;
+          (job as any)['uploaded'] = 0
+
+          /* Slice file and upload it. */
+          const sliceSize = 1e8
+          const slices = Math.floor(file.size / sliceSize) + 1
+          for (let i = 0; i < slices; i++) {
+            const slice = file.slice(i * sliceSize, Math.min((i + 1) * sliceSize, file.size), file.type)
+            try {
+              await firstValueFrom(this.service.putUploadKiar(job.id!!, i == 0, i == (slices - 1), slice, 'body'));
+              (job as any)['uploaded'] = (i / slices) * 100
+            } catch (err) {
+              this.snackBar.open(`Error while uploading KIAR file for job ${job.id}.`, "Dismiss", { duration: 2000 } as MatSnackBarConfig)
+              break
             }
-          } as Observer<SuccessStatus>)
+          }
+
+          this.snackBar.open(`KIAR uploaded successfully. Ready for harvesting!`, "Dismiss", { duration: 2000 } as MatSnackBarConfig)
+          job.harvesting = false
+          this.reload()
         }
       });
       fileInput.click();

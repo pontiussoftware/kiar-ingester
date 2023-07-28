@@ -15,6 +15,7 @@ import {MatMenuModule} from "@angular/material/menu";
 import {DashboardModule} from "./components/dashboard/dashboard.module";
 import {AdminModule} from "./components/admin/admin.module";
 import {InstitutionModule} from "./components/institution/institution.module";
+import {MatLegacyTooltipModule} from "@angular/material/legacy-tooltip";
 
 
 /**
@@ -23,7 +24,7 @@ import {InstitutionModule} from "./components/institution/institution.module";
  * @param appConfig Reference (provided by DI).
  */
 export function initializeApiConfig() {
-  return new Configuration({ basePath: window.location.origin, withCredentials: true }); /* TODO: Change. */
+  return new Configuration({ basePath: 'http://localhost:7070', withCredentials: true }); /* TODO: Change. */
 }
 
 @NgModule({
@@ -47,7 +48,8 @@ export function initializeApiConfig() {
     InstitutionModule,
     DashboardModule,
     SessionModule,
-    ServiceModule
+    ServiceModule,
+    MatLegacyTooltipModule
   ],
   declarations: [
     AppComponent
