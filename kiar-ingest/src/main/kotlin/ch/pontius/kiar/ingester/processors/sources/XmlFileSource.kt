@@ -5,6 +5,8 @@ import ch.pontius.kiar.api.model.config.mappings.EntityMapping
 import ch.pontius.kiar.ingester.parsing.xml.XmlParsingContext
 import ch.pontius.kiar.ingester.processors.ProcessingContext
 import ch.pontius.kiar.ingester.solrj.Constants.FIELD_NAME_UUID
+import ch.pontius.kiar.ingester.solrj.Field
+import ch.pontius.kiar.ingester.solrj.setField
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.channelFlow
@@ -44,6 +46,7 @@ class XmlFileSource(private val file: Path, private val config: EntityMapping): 
         Files.newInputStream(this@XmlFileSource.file).use { input ->
             val parser = XmlParsingContext(this@XmlFileSource.config) { doc ->
                 runBlocking {
+                    doc.setField(Field.PARTICIPANT, context.participant)
                     if (this@XmlFileSource.validate(doc)) {
                         channel.send(doc)
                     } else {

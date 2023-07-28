@@ -6,6 +6,8 @@ import ch.pontius.kiar.ingester.parsing.xml.XmlDocumentParser
 import ch.pontius.kiar.ingester.processors.ProcessingContext
 import ch.pontius.kiar.ingester.solrj.Constants
 import ch.pontius.kiar.ingester.solrj.Constants.FIELD_NAME_RAW
+import ch.pontius.kiar.ingester.solrj.Field
+import ch.pontius.kiar.ingester.solrj.setField
 import ch.pontius.kiar.kiar.KiarFile
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
@@ -58,6 +60,7 @@ class KiarFileSource(private val file: Path, private val config: EntityMapping, 
 
                 /* Send document down the channel. */
                 if (this@KiarFileSource.validate(doc)) {
+                    doc.setField(Field.PARTICIPANT, context.participant)
                     this.send(doc)
                 }
             }
