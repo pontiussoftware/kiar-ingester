@@ -1,8 +1,6 @@
 package ch.pontius.kiar.database.masterdata
 
-import ch.pontius.kiar.api.model.institution.Institution
 import ch.pontius.kiar.api.model.masterdata.License
-import ch.pontius.kiar.database.institution.DbInstitution
 import jetbrains.exodus.entitystore.Entity
 import kotlinx.dnq.XdEnumEntity
 import kotlinx.dnq.XdEnumEntityType

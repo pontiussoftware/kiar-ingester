@@ -1,6 +1,5 @@
 package ch.pontius.kiar.ingester.processors.transformers
 
-import ch.pontius.kiar.api.model.institution.Institution
 import ch.pontius.kiar.api.model.job.JobLog
 import ch.pontius.kiar.api.model.job.JobLogContext
 import ch.pontius.kiar.api.model.job.JobLogLevel
@@ -8,7 +7,6 @@ import ch.pontius.kiar.database.institution.DbInstitution
 import ch.pontius.kiar.ingester.processors.ProcessingContext
 import ch.pontius.kiar.ingester.processors.sources.Source
 import ch.pontius.kiar.ingester.solrj.*
-import ch.pontius.kiar.ingester.solrj.Constants.FIELD_NAME_UUID
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.filter
 import kotlinx.dnq.query.asSequence
@@ -83,7 +81,9 @@ class InstitutionTransformer(override val input: Source<SolrInputDocument>): Tra
                 doc.setField(Field.RIGHTS_STATEMENT, entry.defaultLicense.long)
                 doc.setField(Field.RIGHTS_STATEMENT_URL, entry.defaultLicense.url)
             }
-
+            if (!doc.has(Field.OWNER)) {
+                doc.setField(Field.OWNER, entry.displayName)
+            }
             /* Return true. */
             return@filter true
         }

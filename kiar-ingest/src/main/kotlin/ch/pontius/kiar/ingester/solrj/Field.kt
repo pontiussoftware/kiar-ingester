@@ -32,6 +32,8 @@ enum class Field(val solr: String, val required: Boolean) {
     /** Field containing title information. */
     TITEL("titel", false),
 
+    /* Copyright information. */
+
     /** The rights statement entry used for an object. */
     RIGHTS_STATEMENT("_rights_", true),
 
@@ -43,6 +45,9 @@ enum class Field(val solr: String, val required: Boolean) {
 
     /** Optional creditline, in case object one has been assigned to the object. */
     CREDITLINE("creditline", false),
+
+    /** Name of an object's owner. */
+    OWNER("eigentuemer", false),
 
     /* Personen */
 
