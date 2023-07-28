@@ -35,6 +35,9 @@ dependencies {
     /** Frontend. */
     implementation(project(":kiar-ui", "frontendFiles"))
 
+    /** Apache Commons */
+    implementation("org.apache.commons:commons-fileupload2-jakarta:2.0.0-M1")
+
     /** SolrJ. */
     implementation("org.apache.solr:solr-solrj:$solrjVersion")
 

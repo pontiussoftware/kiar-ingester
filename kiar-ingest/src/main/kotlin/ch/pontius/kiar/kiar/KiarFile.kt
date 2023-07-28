@@ -117,11 +117,20 @@ class KiarFile(private val path: Path): Closeable, Iterable<KiarFile.KiarEntry> 
         fun resources(): Int = this.resources.size
 
         /**
-         * Opens the resource at the given position.
+         * Opens the resource at the given position as [InputStream]
          *
          * @param index The position of the resource to open.
          * @return [InputStream] associated with the resource.
          */
         fun openResource(index: Int): InputStream = this@KiarFile.zip.getInputStream(this.resources[index])
+
+        /**
+         * Tries to open the resource at the given [index] as [BufferedImage]
+         *
+         * @param index The position of the resource to open.
+         * @return [InputStream] associated with the resource.
+         */
+        fun tryOpenImage(index: Int): InputStream = this@KiarFile.zip.getInputStream(this.resources[index])
+
     }
 }

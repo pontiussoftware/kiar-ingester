@@ -13,11 +13,13 @@ import io.javalin.http.Context
 import io.javalin.openapi.*
 import jetbrains.exodus.database.TransientEntityStore
 import kotlinx.dnq.util.findById
+import org.apache.commons.fileupload2.jakarta.JakartaServletFileUpload
 import org.joda.time.DateTime
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
 import java.nio.file.Files
 import java.nio.file.StandardOpenOption
+
 
 @OpenApi(
     path = "/api/jobs/{id}/upload",
@@ -61,11 +63,15 @@ fun uploadKiar(ctx: Context, store: TransientEntityStore, config: Config) {
         Files.createDirectories(ingestPath)
     }
 
-    /* Upload file. */
-    val file = ctx.uploadedFile("kiar") ?: throw ErrorStatusException(400, "KIAR file is missing from upload.")
-    file.content().use { input ->
+    /* Important: Streaming upload! */
+    /* Make sure that one file has been uploaded. */
+    val upload = JakartaServletFileUpload().getItemIterator(ctx.req())
+    if (!upload.hasNext()) throw ErrorStatusException(401, "Uploaded file is missing.")
+
+    /* Upload the first file. */
+    upload.next().inputStream.use { input ->
         Files.newOutputStream(ingestPath.resolve(jobId), StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING, StandardOpenOption.WRITE).use { output ->
-            val buffer = ByteArray(10_000_000) /* 10 MB buffer. */
+            val buffer = ByteArray(25_000_000) /* 25 MB buffer. */
             var read = input.read(buffer)
             if (read == -1) {
                 throw ErrorStatusException(400, "Cannot upload empty file.")
@@ -96,7 +102,7 @@ fun uploadKiar(ctx: Context, store: TransientEntityStore, config: Config) {
     }
 
     /* Return success. */
-    ctx.json(SuccessStatus("KIAR file ${file.filename()} uploaded successfully."))
+    ctx.json(SuccessStatus("KIAR file uploaded successfully."))
 }
 
 @OpenApi(
