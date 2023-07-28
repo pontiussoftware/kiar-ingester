@@ -19,19 +19,6 @@ enum class TransformerType {
     SYSTEM;
 
     /**
-     * Generates and returns a new [TransformerConfig] instance from this [TransformerType] enumeration.
-     *
-     * @param input The input [Source]
-     * @param parameters The map of named parameters.
-     * @return [TransformerConfig]
-     */
-    fun newInstance(input: Source<SolrInputDocument>, parameters: Map<String,String>) = when (this) {
-        IMAGE -> ImageTransformer(input, parameters)
-        DISPLAY -> DisplayTransformer(input)
-        SYSTEM -> InstitutionTransformer(input, parameters)
-    }
-
-    /**
      * Converts this [TransformerType] into a [DbTransformerType]. Requires an ongoing transaction.
      *
      * @return [DbTransformerType].

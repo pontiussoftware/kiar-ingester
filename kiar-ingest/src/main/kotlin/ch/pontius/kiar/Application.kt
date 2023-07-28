@@ -22,6 +22,7 @@ import ch.pontius.kiar.database.institution.DbParticipant
 import ch.pontius.kiar.database.institution.DbRole
 import ch.pontius.kiar.database.institution.DbUser
 import ch.pontius.kiar.database.job.*
+import ch.pontius.kiar.database.masterdata.DbLicense
 import ch.pontius.kiar.utilities.KotlinxJsonMapper
 import ch.pontius.kiar.utilities.generatePassword
 import io.javalin.Javalin
@@ -120,6 +121,7 @@ private fun initializeDatabase(config: Config): TransientEntityStore {
         DbEntityMapping,
         DbAttributeMapping,
         DbAttributeMappingParameters,
+        DbLicense,
         DbFormat,
         DbParser,
         DbTransformer,

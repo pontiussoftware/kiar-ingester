@@ -52,7 +52,7 @@ class DbTransformer(entity: Entity) : XdEntity(entity) {
         return when (this.type.description) {
             "IMAGE" -> ImageTransformer(input, parameters)
             "DISPLAY" -> DisplayTransformer(input)
-            "SYSTEM" -> InstitutionTransformer(input, parameters)
+            "SYSTEM" -> InstitutionTransformer(input)
             else -> throw IllegalStateException("Unsupported transformer type '${this.type.description}'. This is a programmer's error!")
         }
     }

@@ -1,10 +1,13 @@
 package ch.pontius.kiar.database.institution
 
 import ch.pontius.kiar.api.model.institution.Institution
+import ch.pontius.kiar.database.config.solr.DbCollection
 import ch.pontius.kiar.database.job.DbJob
+import ch.pontius.kiar.database.masterdata.DbLicense
 import jetbrains.exodus.entitystore.Entity
 import kotlinx.dnq.*
 import kotlinx.dnq.link.OnDeletePolicy
+import kotlinx.dnq.query.asSequence
 
 /**
  * A [DbInstitution] as managed by the KIAR Uploader Tool.
@@ -52,6 +55,12 @@ class DbInstitution(entity: Entity) : XdEntity(entity) {
     /** Flag indicating whether this [DbInstitution]'s metadata should be published. */
     var publish by xdBooleanProp()
 
+    /** The default value to use in the [Field.RIGHTS_STATEMENT] in case nothing was entered. */
+    var defaultLicense by xdLink0_1(DbLicense, onTargetDelete = OnDeletePolicy.CLEAR)
+
+    /** The default value to use in the [Field.COPYRIGHT] in case nothing was entered. */
+    var defaultCopyright by xdStringProp(trimmed = true)
+
     /** The date and time this [DbInstitution] was created. */
     var createdAt by xdDateTimeProp()
 
@@ -60,6 +69,12 @@ class DbInstitution(entity: Entity) : XdEntity(entity) {
 
     /** List of [DbUser]s that belong to this [DbInstitution]. */
     val users by xdLink0_N(DbUser::institution, onDelete = OnDeletePolicy.CASCADE, onTargetDelete = OnDeletePolicy.CLEAR)
+
+    /** List of [DbCollection]s that are available to this [DbInstitution] for publishing. */
+    val availableCollections by xdLink0_N(DbCollection, onTargetDelete = OnDeletePolicy.CLEAR)
+
+    /** List of [DbCollection]s that are have been selected by this [DbInstitution] for publishing. */
+    val selectedCollections by xdLink0_N(DbCollection, onTargetDelete = OnDeletePolicy.CLEAR)
 
     /**
      * Convenience method to convert this [DbInstitution] to a [Institution].
@@ -82,6 +97,10 @@ class DbInstitution(entity: Entity) : XdEntity(entity) {
         email = this.email,
         homepage = this.homepage,
         publish = this.publish,
+        availableCollections = this.availableCollections.asSequence().map { it.toApi() }.toList(),
+        selectedCollections = this.selectedCollections.asSequence().map { it.toApi() }.toList(),
+        defaultLicense = this.defaultLicense?.toApi(),
+        defaultCopyright = this.defaultCopyright,
         createdAt = this.createdAt?.millis,
         changedAt = this.createdAt?.millis
     )
