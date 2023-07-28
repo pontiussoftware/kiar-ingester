@@ -69,11 +69,11 @@ class ApacheSolrSink(override val input: Source<SolrInputDocument>, private val 
                                 if (this@ApacheSolrSink.validate(collection.key, uuid, doc, context)) {
                                     val response = client.add(collection.key, this@ApacheSolrSink.sanitize(collection.key, doc))
                                     if (response.status == 0) {
-                                        LOGGER.info("Ingested document (jobId = {}, collection = {}, docId = {}).", context.name, collection, uuid)
+                                        LOGGER.info("Ingested document (jobId = {}, collection = {}, docId = {}).", context.jobId, collection, uuid)
                                         context.processed += 1
                                     } else {
                                         context.error += 1
-                                        LOGGER.error("Failed to ingest document (jobId = ${context.name}, docId = $uuid).")
+                                        LOGGER.error("Failed to ingest document (jobId = ${context.jobId}, docId = $uuid).")
                                         context.log.add(JobLog(null, uuid, collection.key, JobLogContext.SYSTEM, JobLogLevel.ERROR, "Failed to add document due to Apache Solr error."))
                                     }
                                 } else {
@@ -151,7 +151,7 @@ class ApacheSolrSink(override val input: Source<SolrInputDocument>, private val 
         val validators = this.validators[collection] ?: throw IllegalStateException("No validators for collection ${collection}. This is a programmer's error!")
         for (v in validators) {
             if (!v.isValid(doc)) {
-                LOGGER.info("Failed to validate document: {} (jobId = {}, collection = {}, docId = {}).", v.isInvalidReason(doc), context.name, collection, uuid)
+                LOGGER.info("Failed to validate document: {} (jobId = {}, collection = {}, docId = {}).", v.isInvalidReason(doc), context.jobId, collection, uuid)
                 context.log.add(JobLog(null, uuid, collection, JobLogContext.METADATA, JobLogLevel.VALIDATION, "Failed to validate document: ${v.isInvalidReason(doc)}"))
                 return false
             }
@@ -186,13 +186,13 @@ class ApacheSolrSink(override val input: Source<SolrInputDocument>, private val 
     private fun prepareIngest(client: Http2SolrClient, context: ProcessingContext) {
         /* Purge all collections that were configured. */
         for (c in this.collections) {
-            LOGGER.info("Purging collection (name = ${context.name} collection = ${c.key}).")
-            val response = client.deleteByQuery(c.key, "$FIELD_NAME_PARTICIPANT:\"${context.name}\"")
+            LOGGER.info("Purging collection (name = ${context.jobId} collection = ${c.key}).")
+            val response = client.deleteByQuery(c.key, "$FIELD_NAME_PARTICIPANT:\"${context.jobId}\"")
             if (response.status != 0) {
-                LOGGER.error("Purge of collection failed (name = ${context.name} collection = ${c.key}). Aborting...")
-                throw IllegalArgumentException("Data ingest (name = ${context.name}, collection = ${c.key}) failed because delete before import could not be executed.")
+                LOGGER.error("Purge of collection failed (name = ${context.jobId} collection = ${c.key}). Aborting...")
+                throw IllegalArgumentException("Data ingest (name = ${context.jobId}, collection = ${c.key}) failed because delete before import could not be executed.")
             }
-            LOGGER.info("Purge of collection successful (name = ${context.name} collection = ${c.key}).")
+            LOGGER.info("Purge of collection successful (name = ${context.jobId} collection = ${c.key}).")
         }
     }
 
@@ -205,7 +205,7 @@ class ApacheSolrSink(override val input: Source<SolrInputDocument>, private val 
     private fun finalizeIngest(client: Http2SolrClient, context: ProcessingContext) {
         /* Purge all collections that were configured. */
         for (c in this.collections) {
-            LOGGER.info("Data ingest (name = ${context.name}, collection = ${c.key}) completed; committing...")
+            LOGGER.info("Data ingest (name = ${context.jobId}, collection = ${c.key}) completed; committing...")
             try {
                 val response = client.commit(c.key)
                 if (response.status == 0) {

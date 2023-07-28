@@ -59,7 +59,7 @@ class ImageTransformer(override val input: Source<SolrInputDocument>, parameters
         }
 
         /* Prepare temporary directory. */
-        val ctxPath = this.deployTo.resolve(context.name)
+        val ctxPath = this.deployTo.resolve(context.participant)
         val dst = ctxPath.resolve(this.name)
         val timestamp = System.currentTimeMillis()                      /* Destination directory, i.e., the directory that will contain all the generated images */
         val old = ctxPath.resolve("${this.name}-old-$timestamp")  /* Temporary location of the previous version of the destination directory (if exists). This is used to maintain atomicity. */
