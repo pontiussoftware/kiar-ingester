@@ -9,10 +9,7 @@ import ch.pontius.kiar.ingester.processors.ProcessingContext
 import ch.pontius.kiar.ingester.watcher.FileWatcher
 import jetbrains.exodus.database.TransientEntityStore
 import kotlinx.coroutines.*
-import kotlinx.coroutines.flow.cancellable
-import kotlinx.coroutines.flow.collect
-import kotlinx.coroutines.flow.onCompletion
-import kotlinx.coroutines.flow.onStart
+import kotlinx.coroutines.flow.*
 import kotlinx.dnq.query.asSequence
 import kotlinx.dnq.query.filter
 import kotlinx.dnq.util.findById
@@ -188,9 +185,8 @@ class IngesterServer(val store: TransientEntityStore, val config: Config) {
 
         /* Schedule job for execution. */
         runBlocking {
-            this@IngesterServer.activeJobs[jobId] = Triple(job, context, launch(this@IngesterServer.jobDispatcher) {
-                flow.collect()
-            })
+            val j = launch(this@IngesterServer.jobDispatcher) { flow.launchIn(this) }
+            this@IngesterServer.activeJobs[jobId] = Triple(job, context, j)
         }
     }
 
