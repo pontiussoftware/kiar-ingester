@@ -128,7 +128,7 @@ class IngesterServer(val store: TransientEntityStore, val config: Config) {
             val job = DbJob.findById(jobId)
 
             /* Perform sanity check. */
-            require(job.status == DbJobStatus.FAILED || job.status == DbJobStatus.HARVESTED) {
+            require(job.status == DbJobStatus.FAILED || job.status == DbJobStatus.HARVESTED || job.status == DbJobStatus.INTERRUPTED) {
                 "Job $jobId cannot be executed because it is in wrong state."
             }
             job.status = DbJobStatus.SCHEDULED
