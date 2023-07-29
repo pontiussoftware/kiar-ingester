@@ -66,7 +66,7 @@
               <mat-icon>list_alt</mat-icon>
             </button>
 
-            <button *ngIf="element.template.type === 'KIAR' && (element.status === 'CREATED' || element.status === 'FAILED') )" (click)="uploadKiar(element)" mat-icon-button matTooltip="Upload KIAR file." i18n-matTooltip="@@TooltipUploadKiar">
+            <button *ngIf="element.template.type === 'KIAR' && (element.status === 'CREATED' || element.status === 'FAILED')" (click)="uploadKiar(element)" mat-icon-button matTooltip="Upload KIAR file." i18n-matTooltip="@@TooltipUploadKiar">
               <mat-icon>upload_file</mat-icon>
             </button>
 
