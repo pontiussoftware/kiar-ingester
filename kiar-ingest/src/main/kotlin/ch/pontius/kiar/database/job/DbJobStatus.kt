@@ -20,9 +20,9 @@ class DbJobStatus(entity: Entity) : XdEnumEntity(entity)  {
         val RUNNING by enumField { description = "RUNNING"; active = true }
         val INTERRUPTED by enumField { description = "INTERRUPTED"; active = true }
         val SCHEDULED by enumField { description = "SCHEDULED"; active = true }
+        val FAILED by enumField { description = "FAILED"; active = true }
         val ABORTED by enumField { description = "ABORTED"; active = false }
         val INGESTED by enumField { description = "INGESTED"; active = false }
-        val FAILED by enumField { description = "FAILED"; active = false }
     }
 
     /** The name / description of this [DbJobStatus]. */

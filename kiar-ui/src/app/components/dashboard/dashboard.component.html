@@ -66,15 +66,15 @@
               <mat-icon>list_alt</mat-icon>
             </button>
 
-            <button *ngIf="element.status === 'CREATED' && element.template.type === 'KIAR'" (click)="uploadKiar(element)" mat-icon-button matTooltip="Upload KIAR file." i18n-matTooltip="@@TooltipUploadKiar">
+            <button *ngIf="element.template.type === 'KIAR' && (element.status === 'CREATED' || element.status === 'FAILED') )" (click)="uploadKiar(element)" mat-icon-button matTooltip="Upload KIAR file." i18n-matTooltip="@@TooltipUploadKiar">
               <mat-icon>upload_file</mat-icon>
             </button>
 
-            <button *ngIf="element.status === 'HARVESTED' || element.status === 'INTERRUPTED'" (click)="startIngest(element)" mat-icon-button matTooltip="Schedule for data ingest." i18n-matTooltip="@@TooltipStartIngest">
+            <button *ngIf="element.status === 'HARVESTED' || element.status === 'INTERRUPTED' || element.status === 'FAILED'" (click)="startIngest(element)" mat-icon-button matTooltip="Schedule for data ingest." i18n-matTooltip="@@TooltipStartIngest">
               <mat-icon>cloud</mat-icon>
             </button>
 
-            <button *ngIf="element.status !== 'ABORTED' && element.status !== 'FAILED' && element.status !== 'INGESTED'" (click)="abortJob(element)" mat-icon-button matTooltip="Abort job." i18n-matTooltip="@@TooltipAbortJob">
+            <button *ngIf="element.status !== 'ABORTED' && element.status !== 'INGESTED'" (click)="abortJob(element)" mat-icon-button matTooltip="Abort job." i18n-matTooltip="@@TooltipAbortJob">
               <mat-icon>cancel</mat-icon>
             </button>
           </div>

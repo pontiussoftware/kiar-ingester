@@ -149,7 +149,7 @@ fun scheduleJob(ctx: Context, store: TransientEntityStore, server: IngesterServe
         }
 
         /* Check status of the job. */
-        if (job.status != DbJobStatus.HARVESTED) {
+        if (job.status == DbJobStatus.HARVESTED || job.status == DbJobStatus.FAILED) {
             throw ErrorStatusException(400, "Job with ID $jobId is in wrong state.")
         }
 
