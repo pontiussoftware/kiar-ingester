@@ -73,7 +73,7 @@ class InstitutionTransformer(override val input: Source<SolrInputDocument>): Tra
                 doc.setField(Field.PARTICIPANT, entry.participantName)
             }
             if (!doc.has(Field.CANTON)) {
-                doc.setField(Field.PARTICIPANT, entry.canton)
+                doc.setField(Field.CANTON, entry.canton)
             }
             if (!doc.has(Field.COPYRIGHT) && entry.defaultCopyright != null) {
                 doc.setField(Field.COPYRIGHT, entry.defaultCopyright)
