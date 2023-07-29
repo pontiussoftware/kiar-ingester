@@ -27,6 +27,8 @@ class InstitutionTransformer(override val input: Source<SolrInputDocument>): Tra
         private val LOGGER = LogManager.getLogger(InstitutionTransformer::class.java)
     }
 
+    private val institutions = DbInstitution.filter { (it.publish eq true) }.asSequence().associate { it.name to it.toApi() }
+
 
     /**
      * Converts this [InstitutionTransformer] to a [Flow]
@@ -35,7 +37,6 @@ class InstitutionTransformer(override val input: Source<SolrInputDocument>): Tra
      * @return [Flow]
      */
     override fun toFlow(context: ProcessingContext): Flow<SolrInputDocument> {
-        val institutions = DbInstitution.filter { (it.publish eq true) and (it.participant.name eq context.participant ) }.asSequence().associate { it.name to it.toApi() }
         return this.input.toFlow(context).filter { doc ->
             /* Fetch institution field from document. */
             val uuid = doc.asString(Field.UUID)
