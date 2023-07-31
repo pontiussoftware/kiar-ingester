@@ -51,7 +51,7 @@ class FileWatcher(private val server: IngesterServer, private val templateId: St
                         this.name = template.name + "-${System.currentTimeMillis()}"
                         this.template = template
                         this.source = DbJobSource.WATCHER
-                        this.status = DbJobStatus.CREATED
+                        this.status = DbJobStatus.HARVESTED
                         this.createdAt = DateTime.now()
                         this.createdByName = "SYSTEM"
                     }.xdId
