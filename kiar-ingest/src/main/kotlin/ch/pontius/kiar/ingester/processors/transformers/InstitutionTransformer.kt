@@ -79,8 +79,7 @@ class InstitutionTransformer(override val input: Source<SolrInputDocument>): Tra
                 doc.setField(Field.COPYRIGHT, entry.defaultCopyright)
             }
             if (!doc.has(Field.RIGHTS_STATEMENT) && entry.defaultLicense != null) {
-                doc.setField(Field.RIGHTS_STATEMENT, entry.defaultLicense.long)
-                doc.setField(Field.RIGHTS_STATEMENT_URL, entry.defaultLicense.url)
+                doc.setField(Field.RIGHTS_STATEMENT, entry.defaultLicense.short)
             }
             //if (!doc.has(Field.OWNER)) {
             //    doc.setField(Field.OWNER, entry.displayName)

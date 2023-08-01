@@ -33,12 +33,14 @@ enum class Field(val solr: String, val required: Boolean) {
     TITEL("titel", false),
 
     /* Copyright information. */
-
     /** The rights statement entry used for an object. */
-    RIGHTS_STATEMENT("lizenzbedingung", true),
+    RIGHTS_STATEMENT("_rights_", true),
 
-    /** The rights statement entry used for an object. */
-    RIGHTS_STATEMENT_URL("lizenzbedingung_url", true),
+    /** The rights statement entry used for an object (long description). */
+    RIGHTS_STATEMENT_LONG("_rights_long_", true),
+
+    /** The rights statement entry used for an object (URL). */
+    RIGHTS_STATEMENT_URL("_rights_url_", true),
 
     /** Additional copyright information, in case object is copyrighted. */
     COPYRIGHT("copyright", false),

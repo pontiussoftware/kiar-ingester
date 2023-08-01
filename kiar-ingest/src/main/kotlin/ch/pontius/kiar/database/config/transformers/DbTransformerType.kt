@@ -17,6 +17,7 @@ class DbTransformerType(entity: Entity): XdEnumEntity(entity) {
         val IMAGE by DbTransformerType.enumField { description = "IMAGE" }
         val DISPLAY by DbTransformerType.enumField { description = "DISPLAY" }
         val SYSTEM by DbTransformerType.enumField { description = "SYSTEM" }
+        val RIGHTS by DbTransformerType.enumField { description = "RIGHTS" }
     }
 
     /** The name of this [DbTransformerType]. */
