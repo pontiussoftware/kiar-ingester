@@ -11,7 +11,8 @@ import ch.pontius.kiar.database.config.transformers.DbTransformerType
 enum class TransformerType {
     IMAGE,
     DISPLAY,
-    SYSTEM;
+    SYSTEM,
+    RIGHTS;
 
     /**
      * Converts this [TransformerType] into a [DbTransformerType]. Requires an ongoing transaction.
@@ -22,5 +23,6 @@ enum class TransformerType {
         IMAGE -> DbTransformerType.IMAGE
         DISPLAY -> DbTransformerType.DISPLAY
         SYSTEM -> DbTransformerType.SYSTEM
+        RIGHTS -> DbTransformerType.RIGHTS
     }
 }
