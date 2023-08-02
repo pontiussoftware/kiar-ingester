@@ -3,7 +3,6 @@ package ch.pontius.kiar.kiar
 import java.io.Closeable
 import java.io.InputStream
 import java.nio.file.Path
-import java.nio.file.Paths
 import java.util.LinkedList
 import java.util.zip.ZipEntry
 import java.util.zip.ZipFile
@@ -123,14 +122,5 @@ class KiarFile(private val path: Path): Closeable, Iterable<KiarFile.KiarEntry> 
          * @return [InputStream] associated with the resource.
          */
         fun openResource(index: Int): InputStream = this@KiarFile.zip.getInputStream(this.resources[index])
-
-        /**
-         * Tries to open the resource at the given [index] as [BufferedImage]
-         *
-         * @param index The position of the resource to open.
-         * @return [InputStream] associated with the resource.
-         */
-        fun tryOpenImage(index: Int): InputStream = this@KiarFile.zip.getInputStream(this.resources[index])
-
     }
 }
