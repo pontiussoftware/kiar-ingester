@@ -98,8 +98,8 @@ class KiarFile(private val path: Path): Closeable, Iterable<KiarFile.KiarEntry> 
         /** A [List] of [ZipEntry] that represent resource that belong to this [KiarEntry]. */
         private val resources: List<ZipEntry> = this@KiarFile.zip.stream().filter { e ->
            e.name.startsWith("${RESOURCES_FOLDER_NAME}${this@KiarFile.separator}${this.uuid}") &&
-           (e.name.startsWith("jpg", ignoreCase = true)  || e.name.startsWith("jfif", ignoreCase = true) || e.name.startsWith("jpeg", ignoreCase = true) || e.name.startsWith("png", ignoreCase = true)
-                   || e.name.startsWith("tif", ignoreCase = true) || e.name.startsWith("tiff", ignoreCase = true))
+           (e.name.endsWith("jpg", ignoreCase = true)  || e.name.endsWith("jfif", ignoreCase = true) || e.name.endsWith("jpeg", ignoreCase = true)
+           || e.name.endsWith("png", ignoreCase = true) || e.name.endsWith("tif", ignoreCase = true) || e.name.endsWith("tiff", ignoreCase = true))
         }.toList()
 
         /**
