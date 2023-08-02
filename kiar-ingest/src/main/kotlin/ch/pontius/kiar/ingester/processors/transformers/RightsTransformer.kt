@@ -28,8 +28,13 @@ class RightsTransformer(override val input: Source<SolrInputDocument>): Transfor
         private val LOGGER = LogManager.getLogger(InstitutionTransformer::class.java)
     }
 
-    /** Map of [DbLicense] entries. */
-    private val rights = DbLicense.all().asSequence().associate { it.short to Pair(it.long, it.url) }
+    /** [MutableMap] of [DbLicense] entries. */
+    private val rights = DbLicense.all().asSequence().associate { it.short to Pair(it.long, it.url) }.toMutableMap()
+
+    init {
+        /* Special case for KIM.bl / AMBL objects. */
+        this.rights["Freier Zugriff, keine Nachnutzung"] = Pair("In Copyright - Re-use Not Permitted", "https://rightsstatements.org/vocab/InC/1.0/")
+    }
 
     /**
      * Converts this [InstitutionTransformer] to a [Flow]
@@ -56,7 +61,7 @@ class RightsTransformer(override val input: Source<SolrInputDocument>): Transfor
             val entry = this@RightsTransformer.rights[value]
             if (entry == null) {
                 LOGGER.warn("Failed to verify document: Rights statement '$value' is unknown (jobId = {}, participantId = {}, docId = {}).", context.jobId, context.participant, uuid)
-                context.log.add(JobLog(null, uuid, null, JobLogContext.METADATA, JobLogLevel.WARNING, "Document skipped: Rights statement '$value' is unknown."))
+                context.log.add(JobLog(null, uuid, null, JobLogContext.METADATA, JobLogLevel.ERROR, "Document skipped: Rights statement '$value' is unknown."))
                 context.skipped += 1
                 return@filter false
             }
