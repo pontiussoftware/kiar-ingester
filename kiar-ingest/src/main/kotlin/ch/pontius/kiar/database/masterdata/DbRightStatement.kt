@@ -49,6 +49,11 @@ class DbRightStatement(entity: Entity) : XdEnumEntity(entity) {
             long = "Creative Commons - Attribution, ShareAlike"
             url = "https://creativecommons.org/licenses/by-sa/4.0/"
         }
+        val CC_BY_NC by enumField {
+            short = "CC BY-NC 4.0"
+            long = "Creative Commons - Attribution, Non-Commercial"
+            url = "https://creativecommons.org/licenses/by-nc/4.0/"
+        }
         val CC_BY_ND by enumField {
             short = "CC BY-ND 4.0"
             long = "Creative Commons - Attribution, No Derivatives"

@@ -29,11 +29,17 @@ class RightsTransformer(override val input: Source<SolrInputDocument>): Transfor
     }
 
     /** [MutableMap] of [DbRightStatement] entries. */
-    private val rights = DbRightStatement.all().asSequence().associate { it.short to Triple(it.short, it.long, it.url) }.toMutableMap()
+    private val rights = DbRightStatement.all().asSequence().associate { it.short to it.toApi() }.toMutableMap()
 
     init {
-        /* Special case for KIM.bl / AMBL objects. */
-        this.rights["Freier Zugriff, keine Nachnutzung"] = Triple("InC", "In Copyright - Re-use Not Permitted", "https://rightsstatements.org/vocab/InC/1.0/")
+        /* Special case for KIM.bl and AMBL objects. */
+
+        this.rights["Public Domain Mark"] = DbRightStatement.PDM.toApi()
+        this.rights["Urheberrechtsschutz nicht bewertet"] = DbRightStatement.CNE.toApi()
+        this.rights["Urheberrechtsschutz"] = DbRightStatement.InC.toApi()
+        this.rights["Urheberrechtsschutz - Nutzung zu Bildungszwecken erlaubt"] = DbRightStatement.InC_EDU.toApi()
+        this.rights["Freier Zugriff, keine Nachnutzung"] = DbRightStatement.InC.toApi()
+        this.rights["Alle Rechte vorbehalten"] = DbRightStatement.InC.toApi()
     }
 
     /**
@@ -65,9 +71,8 @@ class RightsTransformer(override val input: Source<SolrInputDocument>): Transfor
                 context.skipped += 1
                 return@filter false
             }
-            doc.setField(Field.RIGHTS_STATEMENT_LONG, entry.first)
-            doc.setField(Field.RIGHTS_STATEMENT_LONG, entry.second)
-            doc.setField(Field.RIGHTS_STATEMENT_URL,  entry.third)
+            doc.setField(Field.RIGHTS_STATEMENT_LONG, entry.longName)
+            doc.setField(Field.RIGHTS_STATEMENT_URL,  entry.url)
         }
         true
     }
