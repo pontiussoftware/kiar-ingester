@@ -66,13 +66,13 @@ class KiarFileSource(private val file: Path, private val config: EntityMapping, 
             }
         }
     }.onCompletion {
-       try {
-           if (this@KiarFileSource.deleteFileWhenDone) {
-               Files.deleteIfExists(this@KiarFileSource.file) /* Tries to delete file. */
-           }
-       } catch (e: Throwable) {
-           LOGGER.warn("Failed to delete source KIAR file: ${this@KiarFileSource.file}")
-       }
+        if (it == null && this@KiarFileSource.deleteFileWhenDone) {
+            try {
+                Files.deleteIfExists(this@KiarFileSource.file) /* Tries to delete file. */
+            } catch (e: Throwable) {
+                LOGGER.warn("Failed to delete source KIAR file: ${this@KiarFileSource.file}")
+            }
+        }
     }.flowOn(Dispatchers.IO)
 
     /**
