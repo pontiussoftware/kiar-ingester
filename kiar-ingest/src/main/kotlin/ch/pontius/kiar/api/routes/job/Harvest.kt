@@ -56,7 +56,7 @@ fun uploadKiar(ctx: Context, store: TransientEntityStore, config: Config) {
             throw ErrorStatusException(404, "Job with ID $jobId could not be found.")
         }
 
-        if (job.status != DbJobStatus.CREATED) {
+        if (job.status != DbJobStatus.CREATED && job.status != DbJobStatus.FAILED) {
             throw ErrorStatusException(400, "Job with ID $jobId is in wrong state.")
         }
 
