@@ -1,19 +1,19 @@
 package ch.pontius.kiar.database.masterdata
 
-import ch.pontius.kiar.api.model.masterdata.License
+import ch.pontius.kiar.api.model.masterdata.RightStatement
 import jetbrains.exodus.entitystore.Entity
 import kotlinx.dnq.XdEnumEntity
 import kotlinx.dnq.XdEnumEntityType
 import kotlinx.dnq.xdRequiredStringProp
 
 /**
- * Enumeration of all [DbLicenses] available to KIM.ch Data Ingest Platform.
+ * Enumeration of all [DbRightStatement]s available to KIM.ch Data Ingest Platform.
  * 
  * @author Ralph Gasser
  * @version 1.0.0
  */
-class DbLicense(entity: Entity) : XdEnumEntity(entity) {
-    companion object : XdEnumEntityType<DbLicense>() {
+class DbRightStatement(entity: Entity) : XdEnumEntity(entity) {
+    companion object : XdEnumEntityType<DbRightStatement>() {
         val InC by enumField {
             short = "InC"
             long = "In Copyright - Re-use Not Permitted"
@@ -66,21 +66,21 @@ class DbLicense(entity: Entity) : XdEnumEntity(entity) {
         }
     }
 
-    /** The name / description of this [DbLicenses]. */
+    /** The name / description of this [DbRightStatement]. */
     var short by xdRequiredStringProp(unique = true)
 
-    /** The name / description of this [DbLicenses]. */
+    /** The name / description of this [DbRightStatement]. */
     var long by xdRequiredStringProp(unique = true)
 
-    /** The name / description of this [DbLicenses]. */
+    /** The name / description of this [DbRightStatement]. */
     var url by xdRequiredStringProp(unique = true)
 
     /**
-     * Convenience method to convert this [DbLicense] to a [License].
+     * Convenience method to convert this [DbRightStatement] to a [RightStatement].
      *
      * Requires an ongoing transaction.
      *
-     * @return [License]
+     * @return [RightStatement]
      */
-    fun toApi() = License(this.short, this.long, this.url)
+    fun toApi() = RightStatement(this.short, this.long, this.url)
 }

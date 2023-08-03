@@ -3,7 +3,7 @@ package ch.pontius.kiar.ingester.processors.transformers
 import ch.pontius.kiar.api.model.job.JobLog
 import ch.pontius.kiar.api.model.job.JobLogContext
 import ch.pontius.kiar.api.model.job.JobLogLevel
-import ch.pontius.kiar.database.masterdata.DbLicense
+import ch.pontius.kiar.database.masterdata.DbRightStatement
 import ch.pontius.kiar.ingester.processors.ProcessingContext
 import ch.pontius.kiar.ingester.processors.sources.Source
 import ch.pontius.kiar.ingester.solrj.Field
@@ -28,8 +28,8 @@ class RightsTransformer(override val input: Source<SolrInputDocument>): Transfor
         private val LOGGER = LogManager.getLogger(InstitutionTransformer::class.java)
     }
 
-    /** [MutableMap] of [DbLicense] entries. */
-    private val rights = DbLicense.all().asSequence().associate { it.short to Pair(it.long, it.url) }.toMutableMap()
+    /** [MutableMap] of [DbRightStatement] entries. */
+    private val rights = DbRightStatement.all().asSequence().associate { it.short to Pair(it.long, it.url) }.toMutableMap()
 
     init {
         /* Special case for KIM.bl / AMBL objects. */

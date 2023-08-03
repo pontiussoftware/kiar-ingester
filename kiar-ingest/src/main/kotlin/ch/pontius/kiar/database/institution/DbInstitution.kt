@@ -3,7 +3,8 @@ package ch.pontius.kiar.database.institution
 import ch.pontius.kiar.api.model.institution.Institution
 import ch.pontius.kiar.database.config.solr.DbCollection
 import ch.pontius.kiar.database.job.DbJob
-import ch.pontius.kiar.database.masterdata.DbLicense
+import ch.pontius.kiar.database.masterdata.DbRightStatement
+import ch.pontius.kiar.ingester.solrj.Field
 import jetbrains.exodus.entitystore.Entity
 import kotlinx.dnq.*
 import kotlinx.dnq.link.OnDeletePolicy
@@ -56,7 +57,7 @@ class DbInstitution(entity: Entity) : XdEntity(entity) {
     var publish by xdBooleanProp()
 
     /** The default value to use in the [Field.RIGHTS_STATEMENT] in case nothing was entered. */
-    var defaultLicense by xdLink0_1(DbLicense, onTargetDelete = OnDeletePolicy.CLEAR)
+    var defaultLicense by xdLink0_1(DbRightStatement, onTargetDelete = OnDeletePolicy.CLEAR)
 
     /** The default value to use in the [Field.COPYRIGHT] in case nothing was entered. */
     var defaultCopyright by xdStringProp(trimmed = true)

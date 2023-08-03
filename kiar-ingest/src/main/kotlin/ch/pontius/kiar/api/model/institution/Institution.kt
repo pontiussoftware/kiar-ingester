@@ -1,7 +1,7 @@
 package ch.pontius.kiar.api.model.institution
 
 import ch.pontius.kiar.api.model.config.solr.ApacheSolrCollection
-import ch.pontius.kiar.api.model.masterdata.License
+import ch.pontius.kiar.api.model.masterdata.RightStatement
 import kotlinx.serialization.Serializable
 
 /**
@@ -27,7 +27,7 @@ data class Institution(
     val publish: Boolean,
     val availableCollections: List<ApacheSolrCollection> = emptyList(),
     val selectedCollections: List<ApacheSolrCollection> = emptyList(),
-    val defaultLicense: License? = null,
+    val defaultLicense: RightStatement? = null,
     val defaultCopyright: String? = null,
     val createdAt: Long? = null,
     val changedAt: Long? = null,
