@@ -57,7 +57,7 @@ class DbInstitution(entity: Entity) : XdEntity(entity) {
     var publish by xdBooleanProp()
 
     /** The default value to use in the [Field.RIGHTS_STATEMENT] in case nothing was entered. */
-    var defaultLicense by xdLink0_1(DbRightStatement, onTargetDelete = OnDeletePolicy.CLEAR)
+    var defaultRightStatement by xdLink0_1(DbRightStatement, onTargetDelete = OnDeletePolicy.CLEAR)
 
     /** The default value to use in the [Field.COPYRIGHT] in case nothing was entered. */
     var defaultCopyright by xdStringProp(trimmed = true)
@@ -98,9 +98,9 @@ class DbInstitution(entity: Entity) : XdEntity(entity) {
         email = this.email,
         homepage = this.homepage,
         publish = this.publish,
-        availableCollections = this.availableCollections.asSequence().map { it.toApi() }.toList(),
-        selectedCollections = this.selectedCollections.asSequence().map { it.toApi() }.toList(),
-        defaultLicense = this.defaultLicense?.toApi(),
+        availableCollections = this.availableCollections.asSequence().map { it.name }.toList(),
+        selectedCollections = this.selectedCollections.asSequence().map { it.name  }.toList(),
+        defaultRightStatement = this.defaultRightStatement?.short,
         defaultCopyright = this.defaultCopyright,
         createdAt = this.createdAt?.millis,
         changedAt = this.createdAt?.millis

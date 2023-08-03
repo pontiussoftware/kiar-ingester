@@ -8,6 +8,7 @@ api/entityMapping.service.ts
 api/institution.service.ts
 api/job.service.ts
 api/jobTemplate.service.ts
+api/masterdata.service.ts
 api/participant.service.ts
 api/session.service.ts
 api/transformer.service.ts
@@ -18,6 +19,7 @@ index.ts
 model/apacheSolrCollection.ts
 model/apacheSolrConfig.ts
 model/attributeMapping.ts
+model/canton.ts
 model/collectionType.ts
 model/createJobRequest.ts
 model/entityMapping.ts
@@ -31,13 +33,13 @@ model/jobSource.ts
 model/jobStatus.ts
 model/jobTemplate.ts
 model/jobType.ts
-model/license.ts
 model/loginRequest.ts
 model/mappingType.ts
 model/models.ts
 model/paginatedInstitutionResult.ts
 model/paginatedJobLogResult.ts
 model/paginatedJobResult.ts
+model/rightStatement.ts
 model/role.ts
 model/sessionStatus.ts
 model/successStatus.ts

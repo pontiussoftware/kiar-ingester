@@ -11,12 +11,8 @@
  */
 
 
-export type TransformerType = 'IMAGE' | 'DISPLAY' | 'SYSTEM' | 'RIGHTS';
-
-export const TransformerType = {
-    IMAGE: 'IMAGE' as TransformerType,
-    DISPLAY: 'DISPLAY' as TransformerType,
-    SYSTEM: 'SYSTEM' as TransformerType,
-    RIGHTS: 'RIGHTS' as TransformerType
-};
+export interface Canton { 
+    shortName: string;
+    longName: string;
+}
 

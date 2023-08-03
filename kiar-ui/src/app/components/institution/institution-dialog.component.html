@@ -8,7 +8,7 @@
     </mat-form-field>
 
     <mat-form-field appearance="fill" [style.width]="'20%'">
-      <mat-label i18n="@@LabelParticipant">Type</mat-label>
+      <mat-label i18n="@@LabelParticipant">Participant</mat-label>
       <mat-select formControlName="participantName">
         <mat-option *ngFor="let participant of (participants | async)" [value]="participant">
           {{participant}}
@@ -19,8 +19,8 @@
     <mat-form-field appearance="fill" [style.width]="'20%'">
       <mat-label i18n="@@LabelCanton">Canton</mat-label>
       <mat-select formControlName="canton">
-        <mat-option *ngFor="let canton of cantons" [value]="canton">
-          {{canton}}
+        <mat-option *ngFor="let canton of (cantons | async)" [value]="canton.longName">
+          {{canton.longName}}
         </mat-option>
       </mat-select>
     </mat-form-field>
@@ -40,31 +40,50 @@
       <textarea matInput formControlName="description"></textarea>
     </mat-form-field>
 
-    <mat-form-field appearance="fill" [style.width]="'50%'">
-      <mat-label i18n="@@LabelStreet">Street</mat-label>
-      <input matInput formControlName="street">
-    </mat-form-field>
+    <mat-tab-group>
+      <mat-tab label="Contact" i18n-label="@@LabelContact">
+        <mat-form-field appearance="fill" [style.width]="'50%'">
+          <mat-label i18n="@@LabelStreet">Street</mat-label>
+          <input matInput formControlName="street">
+        </mat-form-field>
 
-    <mat-form-field appearance="fill" [style.width]="'15%'">
-      <mat-label i18n="@@LabelZip">Zip</mat-label>
-      <input matInput type="number" formControlName="zip">
-    </mat-form-field>
+        <mat-form-field appearance="fill" [style.width]="'15%'">
+          <mat-label i18n="@@LabelZip">Zip</mat-label>
+          <input matInput type="number" formControlName="zip">
+        </mat-form-field>
 
-    <mat-form-field appearance="fill" [style.width]="'35%'">
-      <mat-label i18n="@@LabelCity">City</mat-label>
-      <input matInput formControlName="city">
-    </mat-form-field>
+        <mat-form-field appearance="fill" [style.width]="'35%'">
+          <mat-label i18n="@@LabelCity">City</mat-label>
+          <input matInput formControlName="city">
+        </mat-form-field>
 
-    <mat-form-field appearance="fill" [style.width]="'50%'">
-      <mat-label i18n="@@LabelEmail">E-Mail</mat-label>
-      <input matInput type="email" formControlName="email">
-      <mat-error *ngIf="formControl.get('email')?.hasError('email')">Must be a valid e-mail address.</mat-error>
-    </mat-form-field>
+        <mat-form-field appearance="fill" [style.width]="'50%'">
+          <mat-label i18n="@@LabelEmail">E-Mail</mat-label>
+          <input matInput type="email" formControlName="email">
+          <mat-error *ngIf="formControl.get('email')?.hasError('email')">Must be a valid e-mail address.</mat-error>
+        </mat-form-field>
 
-    <mat-form-field appearance="fill" [style.width]="'50%'">
-      <mat-label i18n="@@LabelHomepage">Homepage</mat-label>
-      <input matInput type="url" formControlName="homepage">
-    </mat-form-field>
+        <mat-form-field appearance="fill" [style.width]="'50%'">
+          <mat-label i18n="@@LabelHomepage">Homepage</mat-label>
+          <input matInput type="url" formControlName="homepage">
+        </mat-form-field>
+      </mat-tab>
+      <mat-tab label="Publication Defaults" i18n-label="@@LabelPublicationDefaults">
+        <mat-form-field appearance="fill" [style.width]="'30%'">
+          <mat-label i18n="@@LabelDefaultRightStatement">Default Right Statement</mat-label>
+          <mat-select formControlName="defaultRightStatement">
+            <mat-option *ngFor="let rightStatement of (rightStatements | async)" [value]="rightStatement.shortName">
+              {{rightStatement.longName}}
+            </mat-option>
+          </mat-select>
+        </mat-form-field>
+
+        <mat-form-field appearance="fill" [style.width]="'70%'">
+          <mat-label i18n="@@LabelDefaultCopyright">Default Copyright</mat-label>
+          <input matInput type="text" formControlName="defaultCopyright">
+        </mat-form-field>
+      </mat-tab>
+    </mat-tab-group>
   </form>
 </div>
 <div mat-dialog-actions>

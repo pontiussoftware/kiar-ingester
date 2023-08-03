@@ -7,6 +7,7 @@ import ch.pontius.kiar.api.routes.session.currentUser
 import ch.pontius.kiar.database.institution.DbInstitution
 import ch.pontius.kiar.database.institution.DbParticipant
 import ch.pontius.kiar.database.institution.DbRole
+import ch.pontius.kiar.database.masterdata.DbRightStatement
 import ch.pontius.kiar.utilities.mapToArray
 import io.javalin.http.BadRequestResponse
 import io.javalin.http.Context
@@ -156,6 +157,8 @@ fun putUpdateInstitution(ctx: Context, store: TransientEntityStore) {
         institution.zip = request.zip
         institution.email = request.email
         institution.homepage = request.homepage
+        institution.defaultCopyright = request.defaultCopyright
+        institution.defaultRightStatement = DbRightStatement.filter { it.short eq request.defaultRightStatement }.singleOrNull()
         institution.changedAt = DateTime.now()
 
         /* Some data can only be edited by an administrator. */

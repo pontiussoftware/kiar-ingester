@@ -1393,6 +1393,116 @@
         "security" : [ ]
       }
     },
+    "/api/masterdata/cantons" : {
+      "get" : {
+        "tags" : [ "Masterdata" ],
+        "summary" : "Lists all available cantons.",
+        "operationId" : "getListCantons",
+        "parameters" : [ ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "array",
+                  "items" : {
+                    "$ref" : "#/components/schemas/Canton"
+                  }
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorStatus"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Forbidden",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorStatus"
+                }
+              }
+            }
+          },
+          "500" : {
+            "description" : "Server Error",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorStatus"
+                }
+              }
+            }
+          }
+        },
+        "deprecated" : false,
+        "security" : [ ]
+      }
+    },
+    "/api/masterdata/rightstatements" : {
+      "get" : {
+        "tags" : [ "Masterdata" ],
+        "summary" : "Lists all available right statements.",
+        "operationId" : "getListRightStatements",
+        "parameters" : [ ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "array",
+                  "items" : {
+                    "$ref" : "#/components/schemas/RightStatement"
+                  }
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorStatus"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Forbidden",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorStatus"
+                }
+              }
+            }
+          },
+          "500" : {
+            "description" : "Server Error",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorStatus"
+                }
+              }
+            }
+          }
+        },
+        "deprecated" : false,
+        "security" : [ ]
+      }
+    },
     "/api/participants" : {
       "get" : {
         "tags" : [ "Config", "Participant" ],
@@ -2784,7 +2894,7 @@
       },
       "TransformerType" : {
         "type" : "string",
-        "enum" : [ "IMAGE", "DISPLAY", "SYSTEM" ]
+        "enum" : [ "IMAGE", "DISPLAY", "SYSTEM", "RIGHTS" ]
       },
       "Institution" : {
         "type" : "object",
@@ -2833,17 +2943,17 @@
           "availableCollections" : {
             "type" : "array",
             "items" : {
-              "$ref" : "#/components/schemas/ApacheSolrCollection"
+              "type" : "string"
             }
           },
           "selectedCollections" : {
             "type" : "array",
             "items" : {
-              "$ref" : "#/components/schemas/ApacheSolrCollection"
+              "type" : "string"
             }
           },
-          "defaultLicense" : {
-            "$ref" : "#/components/schemas/License"
+          "defaultRightStatement" : {
+            "type" : "string"
           },
           "defaultCopyright" : {
             "type" : "string"
@@ -3037,21 +3147,34 @@
         },
         "required" : [ "total", "page", "pageSize", "results" ]
       },
-      "License" : {
+      "Canton" : {
         "type" : "object",
         "additionalProperties" : false,
         "properties" : {
-          "short" : {
+          "shortName" : {
             "type" : "string"
           },
-          "long" : {
+          "longName" : {
+            "type" : "string"
+          }
+        },
+        "required" : [ "shortName", "longName" ]
+      },
+      "RightStatement" : {
+        "type" : "object",
+        "additionalProperties" : false,
+        "properties" : {
+          "shortName" : {
+            "type" : "string"
+          },
+          "longName" : {
             "type" : "string"
           },
           "url" : {
             "type" : "string"
           }
         },
-        "required" : [ "short", "long", "url" ]
+        "required" : [ "shortName", "longName", "url" ]
       },
       "LoginRequest" : {
         "type" : "object",

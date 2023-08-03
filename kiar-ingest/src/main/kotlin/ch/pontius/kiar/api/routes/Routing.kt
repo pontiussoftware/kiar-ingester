@@ -4,6 +4,7 @@ import ch.pontius.kiar.api.model.session.Role
 import ch.pontius.kiar.api.routes.config.*
 import ch.pontius.kiar.api.routes.institution.postSyncInstitutions
 import ch.pontius.kiar.api.routes.job.*
+import ch.pontius.kiar.api.routes.masterdata.listCantons
 import ch.pontius.kiar.api.routes.masterdata.listRightStatements
 import ch.pontius.kiar.api.routes.session.*
 import ch.pontius.kiar.config.Config
@@ -41,6 +42,7 @@ fun configureApiRoutes(store: TransientEntityStore, server: IngesterServer, conf
         /* Endpoints related to master data. */
         path("masterdata") {
             get("rightstatements", { ctx -> listRightStatements(ctx, store) }, Role.ADMINISTRATOR, Role.MANAGER, Role.VIEWER )
+            get("cantons", { ctx -> listCantons(ctx, store) }, Role.ADMINISTRATOR, Role.MANAGER, Role.VIEWER )
         }
 
         /* Endpoints related to jobs. */
