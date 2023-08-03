@@ -161,7 +161,7 @@ class IngesterServer(val store: TransientEntityStore, val config: Config) {
                         job.status = DbJobStatus.ABORTED
                     }
                     else -> {
-                        LOGGER.error("Data ingest for job (name = ${job.name}) failed: ${e.message}")
+                        LOGGER.error("Data ingest for job (name = ${job.name}) failed: ${e.printStackTrace()}")
                         job.status = DbJobStatus.FAILED
                     }
                 }
