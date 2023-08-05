@@ -2,9 +2,17 @@ package ch.pontius.kiar.ingester.solrj
 
 import org.apache.solr.common.SolrInputDocument
 
+/**
+ * Checks if the [SolrInputDocument] has the specified [Field].
+ *
+ * @return True if [Field] is contained in [SolrInputDocument], false otherwise.
+ */
+fun SolrInputDocument.uuid(): String = this.get<String>(Field.UUID) ?:  throw IllegalArgumentException("Field 'uuid' is missing. This is a programmer's error, since such entries should be filtered at the source.")
 
 /**
+ * Checks if the [SolrInputDocument] has the specified [Field].
  *
+ * @return True if [Field] is contained in [SolrInputDocument], false otherwise.
  */
 fun SolrInputDocument.has(field: Field): Boolean = this.containsKey(field.solr)
 
@@ -14,7 +22,7 @@ fun SolrInputDocument.has(field: Field): Boolean = this.containsKey(field.solr)
  * @param field The [Field] to return.
  * @return The [Field]'s value [T] or null
  */
-inline fun <reified T> SolrInputDocument.get(field: Field): T? = this.getFieldValue(field.name) as? T
+inline fun <reified T> SolrInputDocument.get(field: Field): T? = this.getFieldValue(field.solr) as? T
 
 /**
  * Returns the provided [Field] from this [SolrInputDocument].
@@ -22,10 +30,7 @@ inline fun <reified T> SolrInputDocument.get(field: Field): T? = this.getFieldVa
  * @param field The [Field] to return.
  * @return The [Field]'s value [T] or null
  */
-inline fun <reified T> SolrInputDocument.getAll(field: Field): Collection<T> {
-    require(field.multiValued) { "The field '${field.name}' is not a multi-valued field. This is a programmer's error." }
-    return this.getFieldValues(field.name).filterIsInstance<T>()
-}
+inline fun <reified T> SolrInputDocument.getAll(field: Field): Collection<T> = this.getFieldValues(field.solr).filterIsInstance<T>()
 
 /**
  * Returns a [Field]'s value in this [SolrInputDocument] as [String].
@@ -54,7 +59,7 @@ fun SolrInputDocument.setField(field: Field, value: Any) = this.setField(field.s
  * @param value The value.
  */
 fun SolrInputDocument.addField(field: Field, value: Any) {
-    require(field.multiValued) { "The field '${field.name}' is not a multi-valued field. This is a programmer's error." }
+    require(field.multiValued) { "The field '${field.solr}' is not a multi-valued field. This is a programmer's error." }
     this.addField(field.solr, value)
 }
 
@@ -63,4 +68,4 @@ fun SolrInputDocument.addField(field: Field, value: Any) {
  *
  * @param field The [Field] to remove.
  */
-fun SolrInputDocument.removeField(field: Field): Boolean = this.removeField(field.name) != null
+fun SolrInputDocument.removeField(field: Field): Boolean = this.removeField(field.solr) != null

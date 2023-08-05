@@ -6,6 +6,7 @@ import ch.pontius.kiar.database.config.jobs.DbJobTemplate
 import ch.pontius.kiar.database.config.transformers.DbTransformer
 import ch.pontius.kiar.database.institution.DbUser
 import ch.pontius.kiar.ingester.processors.sinks.ApacheSolrSink
+import ch.pontius.kiar.ingester.processors.sinks.DummySink
 import ch.pontius.kiar.ingester.processors.sinks.Sink
 import ch.pontius.kiar.ingester.processors.sources.KiarFileSource
 import ch.pontius.kiar.ingester.processors.sources.Source
@@ -89,7 +90,7 @@ class DbJob(entity: Entity) : XdEntity(entity) {
         }
 
         /* Return ApacheSolrSink. */
-        return ApacheSolrSink(root, template.solr.toApi())
+        return DummySink(root)
     }
 
     /**

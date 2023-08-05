@@ -64,17 +64,16 @@ class ImageTransformer(override val input: Source<SolrInputDocument>, parameters
 
         Files.createDirectories(tmp)
         return this.input.toFlow(context).map {
-            if (it.has(Field.RAW) && it.has(Field.UUID)) {
-                val uuid = it.get<String>(Field.UUID) ?: throw IllegalArgumentException("Field 'uuid' is missing.")
+            if (it.has(Field.RAW)) {
                 val images = it.getAll<BufferedImage>(Field.RAW)
                 var counter = 1
                 for (original in images) {
-                    val actualPath = dst.resolve("${uuid}_%03d.jpg".format(counter))
-                    val tmpPath = tmp.resolve("${uuid}_%03d.jpg".format(counter))
+                    val actualPath = dst.resolve("${it.uuid()}_%03d.jpg".format(counter))
+                    val tmpPath = tmp.resolve("${it.uuid()}_%03d.jpg".format(counter))
 
                     /* Check size of image. If it's too small, issue a warning. */
                     if (original.width < this.maxSize && original.height < this.maxSize) {
-                        context.log.add(JobLog(null, uuid, null, JobLogContext.RESOURCE, JobLogLevel.WARNING, "Image is smaller than specified maximum size (max = ${this.maxSize}, w = ${original.width}, h = ${original.height})."))
+                        context.log.add(JobLog(null, it.uuid(), null, JobLogContext.RESOURCE, JobLogLevel.WARNING, "Image is smaller than specified maximum size (max = ${this.maxSize}, w = ${original.width}, h = ${original.height})."))
                     }
 
                     /* Perform conversion. */
@@ -85,7 +84,7 @@ class ImageTransformer(override val input: Source<SolrInputDocument>, parameters
                             it.addField(this.name, "${this.host}${this.deployTo.relativize(actualPath)}")
                         }
                     } else {
-                        context.log.add(JobLog(null, uuid, null, JobLogContext.RESOURCE, JobLogLevel.WARNING, "Failed to create preview image for document."))
+                        context.log.add(JobLog(null, it.uuid(), null, JobLogContext.RESOURCE, JobLogLevel.WARNING, "Failed to create preview image for document."))
                     }
                     counter += 1
                 }
