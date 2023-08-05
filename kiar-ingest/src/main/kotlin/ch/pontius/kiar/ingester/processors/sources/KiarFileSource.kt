@@ -53,6 +53,10 @@ class KiarFileSource(private val file: Path, private val config: EntityMapping, 
                     parser.parse(it)
                 }
 
+                /* Set documents participant and UUID value. */
+                doc.setField(Field.UUID, entry.uuid)
+                doc.setField(Field.PARTICIPANT, context.participant)
+
                 /* Read all resources. */
                 if (!this@KiarFileSource.skipResources) {
                     for (i in 0 until entry.resources()) {
@@ -74,7 +78,6 @@ class KiarFileSource(private val file: Path, private val config: EntityMapping, 
 
                 /* Send document down the channel. */
                 if (this@KiarFileSource.validate(doc)) {
-                    doc.setField(Field.PARTICIPANT, context.participant)
                     this.send(doc)
                 }
             }
