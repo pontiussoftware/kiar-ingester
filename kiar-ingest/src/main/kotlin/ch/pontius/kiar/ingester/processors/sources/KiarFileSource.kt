@@ -2,6 +2,9 @@ package ch.pontius.kiar.ingester.processors.sources
 
 import ch.pontius.kiar.api.model.config.mappings.AttributeMapping
 import ch.pontius.kiar.api.model.config.mappings.EntityMapping
+import ch.pontius.kiar.api.model.job.JobLog
+import ch.pontius.kiar.api.model.job.JobLogContext
+import ch.pontius.kiar.api.model.job.JobLogLevel
 import ch.pontius.kiar.ingester.parsing.xml.XmlDocumentParser
 import ch.pontius.kiar.ingester.processors.ProcessingContext
 import ch.pontius.kiar.ingester.solrj.Constants
@@ -16,6 +19,7 @@ import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.onCompletion
 import org.apache.logging.log4j.LogManager
 import org.apache.solr.common.SolrInputDocument
+import java.io.IOException
 import java.nio.file.Files
 import java.nio.file.Path
 import javax.imageio.ImageIO
@@ -44,16 +48,26 @@ class KiarFileSource(private val file: Path, private val config: EntityMapping, 
 
         /* Iterate over Kiar entries. */
         KiarFile(this@KiarFileSource.file).use { kiar ->
-            for (e in kiar.iterator()) {
-                val doc = e.open().use {
+            for (entry in kiar.iterator()) {
+                val doc = entry.open().use {
                     parser.parse(it)
                 }
 
                 /* Read all resources. */
                 if (!this@KiarFileSource.skipResources) {
-                    for (i in 0 until e.resources()) {
-                        e.openResource(i).use {
-                            doc.addField(FIELD_NAME_RAW, ImageIO.read(it))
+                    for (i in 0 until entry.resources()) {
+                        entry.openResource(i).use {
+                            try {
+                                val image = ImageIO.read(it)
+                                if (image != null) {
+                                    doc.addField(FIELD_NAME_RAW, image)
+                                } else {
+                                    context.log.add(JobLog(null, entry.uuid, null, JobLogContext.RESOURCE, JobLogLevel.ERROR, "Failed to decode image $i from resource."))
+                                }
+                            } catch (e: IOException) {
+                                context.log.add(JobLog(null, entry.uuid, null, JobLogContext.RESOURCE, JobLogLevel.SEVERE, "Failed to decode image $i from resource. An exception occurred: ${e.message}"))
+                                null
+                            }
                         }
                     }
                 }
