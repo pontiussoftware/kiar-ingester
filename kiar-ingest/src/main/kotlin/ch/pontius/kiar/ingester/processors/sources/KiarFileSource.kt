@@ -8,8 +8,8 @@ import ch.pontius.kiar.api.model.job.JobLogLevel
 import ch.pontius.kiar.ingester.parsing.xml.XmlDocumentParser
 import ch.pontius.kiar.ingester.processors.ProcessingContext
 import ch.pontius.kiar.ingester.solrj.Constants
-import ch.pontius.kiar.ingester.solrj.Constants.FIELD_NAME_RAW
 import ch.pontius.kiar.ingester.solrj.Field
+import ch.pontius.kiar.ingester.solrj.addField
 import ch.pontius.kiar.ingester.solrj.setField
 import ch.pontius.kiar.kiar.KiarFile
 import kotlinx.coroutines.Dispatchers
@@ -60,7 +60,7 @@ class KiarFileSource(private val file: Path, private val config: EntityMapping, 
                             try {
                                 val image = ImageIO.read(it)
                                 if (image != null) {
-                                    doc.addField(FIELD_NAME_RAW, image)
+                                    doc.addField(Field.RAW, image)
                                 } else {
                                     context.log.add(JobLog(null, entry.uuid, null, JobLogContext.RESOURCE, JobLogLevel.ERROR, "Failed to decode image $i from resource."))
                                 }

@@ -1,7 +1,6 @@
 package ch.pontius.kiar.config
 
-import ch.pontius.kiar.ingester.solrj.Constants
-import org.apache.solr.common.SolrInputDocument
+import ch.pontius.kiar.api.model.config.solr.ApacheSolrConfig
 
 /**
  *
@@ -13,25 +12,12 @@ data class CollectionConfig (
     /** The name of the Apache Solr collection. */
     val name: String,
 
-    /** A list of keywords that maps incoming objects to a [SolrConfig] based on the content of the _output_ field. */
+    /** A list of keywords that maps incoming objects to a [ApacheSolrConfig] based on the content of the _output_ field. */
     val filter: List<String> = emptyList(),
 
     /** Flag indicating, that  collection should be purged before starting an import. */
     val deleteBeforeImport: Boolean = true,
 
-    /** A list of keywords that maps incoming objects to a [SolrConfig] based on the content of the _output_ field. */
+    /** A list of keywords that maps incoming objects to a [ApacheSolrConfig] based on the content of the _output_ field. */
     val acceptEmptyFilter: Boolean = false
-) {
-
-    /**
-     * Checks if the provided [SolrInputDocument] matches this [CollectionConfig] based on the _output_ field.
-     *
-     * @return True if [SolrInputDocument] is a match, false otherwise.
-     */
-    fun isMatch(doc: SolrInputDocument): Boolean {
-        if (this.filter.isEmpty()) return true
-        val field = doc.getFieldValues(Constants.FIELD_NAME_OUTPUT) ?: return this.acceptEmptyFilter
-        if (this.acceptEmptyFilter && field.isEmpty()) return true
-        return this.filter.any { field.contains(it) }
-    }
-}
+)

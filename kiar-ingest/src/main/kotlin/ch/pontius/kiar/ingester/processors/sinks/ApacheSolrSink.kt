@@ -10,6 +10,8 @@ import ch.pontius.kiar.ingester.processors.sources.Source
 import ch.pontius.kiar.ingester.solrj.Constants
 import ch.pontius.kiar.ingester.solrj.Constants.FIELD_NAME_PARTICIPANT
 import ch.pontius.kiar.ingester.solrj.Constants.SYSTEM_FIELDS
+import ch.pontius.kiar.ingester.solrj.Field
+import ch.pontius.kiar.ingester.solrj.removeField
 import kotlinx.coroutines.flow.*
 import org.apache.logging.log4j.LogManager
 import org.apache.solr.client.solrj.SolrServerException
@@ -160,7 +162,7 @@ class ApacheSolrSink(override val input: Source<SolrInputDocument>, private val 
     }
 
     /**
-     * Sanitizes the provided [SolrInputDocument] and removes all fields contained in [Constants.INTERNAL_FIELDS].
+     * Sanitizes the provided [SolrInputDocument] and removes all fields that are marked as [Field.transient].
      *
      * @param doc The [SolrInputDocument] to sanitize.
      * @return Sanitized document (same instance).
@@ -170,9 +172,11 @@ class ApacheSolrSink(override val input: Source<SolrInputDocument>, private val 
 
         /* TODO: Remove fields not needed by this collection. */
 
-        /* Remove fields that have been marked as internal */
-        for (f in Constants.INTERNAL_FIELDS) {
-            sanitized.removeField(f)
+        /* Remove fields that have been marked as transient */
+        for (field in Field.values()) {
+            if (field.transient) {
+                sanitized.removeField(field)
+            }
         }
         return sanitized
     }

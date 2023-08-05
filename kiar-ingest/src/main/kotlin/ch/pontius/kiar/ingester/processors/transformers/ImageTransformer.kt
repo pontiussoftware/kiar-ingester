@@ -6,10 +6,7 @@ import ch.pontius.kiar.api.model.job.JobLogLevel
 import ch.pontius.kiar.config.TransformerConfig
 import ch.pontius.kiar.ingester.processors.ProcessingContext
 import ch.pontius.kiar.ingester.processors.sources.Source
-import ch.pontius.kiar.ingester.solrj.Constants
-import ch.pontius.kiar.ingester.solrj.Constants.FIELD_NAME_IMAGECOUNT
-import ch.pontius.kiar.ingester.solrj.Constants.FIELD_NAME_RAW
-import ch.pontius.kiar.ingester.solrj.Constants.FIELD_NAME_UUID
+import ch.pontius.kiar.ingester.solrj.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flowOn
@@ -29,7 +26,7 @@ import javax.imageio.ImageIO
  * The [SolrInputDocument] is updated to contain the path to the new file.
  *
  * @author Ralph Gasser
- * @version 1.1.0
+ * @version 1.2.0
  */
 class ImageTransformer(override val input: Source<SolrInputDocument>, parameters: Map<String,String>): Transformer<SolrInputDocument, SolrInputDocument> {
 
@@ -67,36 +64,34 @@ class ImageTransformer(override val input: Source<SolrInputDocument>, parameters
 
         Files.createDirectories(tmp)
         return this.input.toFlow(context).map {
-            if (it.containsKey(FIELD_NAME_RAW) && it.containsKey(FIELD_NAME_UUID)) {
-                val uuid = it[FIELD_NAME_UUID]?.value as? String ?: throw IllegalArgumentException("Field 'uuid' is either missing or has wrong type.")
-                val images = it.getFieldValues(FIELD_NAME_RAW)
+            if (it.has(Field.RAW) && it.has(Field.UUID)) {
+                val uuid = it.get<String>(Field.UUID) ?: throw IllegalArgumentException("Field 'uuid' is missing.")
+                val images = it.getAll<BufferedImage>(Field.RAW)
                 var counter = 1
                 for (original in images) {
-                    if (original is BufferedImage) {
-                        val actualPath = dst.resolve("${uuid}_%03d.jpg".format(counter))
-                        val tmpPath = tmp.resolve("${uuid}_%03d.jpg".format(counter))
+                    val actualPath = dst.resolve("${uuid}_%03d.jpg".format(counter))
+                    val tmpPath = tmp.resolve("${uuid}_%03d.jpg".format(counter))
 
-                        /* Check size of image. If it's too small, issue a warning. */
-                        if (original.width < this.maxSize && original.height < this.maxSize) {
-                            context.log.add(JobLog(null, uuid, null, JobLogContext.RESOURCE, JobLogLevel.WARNING, "Image is smaller than specified maximum size (max = ${this.maxSize}, w = ${original.width}, h = ${original.height})."))
-                        }
-
-                        /* Perform conversion. */
-                        if (this.store(this.resize(original), tmpPath)) {
-                            if (this.host == null) {
-                                it.addField(this.name, this.deployTo.relativize(actualPath).toString())
-                            } else {
-                                it.addField(this.name, "${this.host}${this.deployTo.relativize(actualPath)}")
-                            }
-                        } else {
-                            context.log.add(JobLog(null, uuid, null, JobLogContext.RESOURCE, JobLogLevel.WARNING, "Failed to create preview image for document."))
-                        }
-                        counter += 1
+                    /* Check size of image. If it's too small, issue a warning. */
+                    if (original.width < this.maxSize && original.height < this.maxSize) {
+                        context.log.add(JobLog(null, uuid, null, JobLogContext.RESOURCE, JobLogLevel.WARNING, "Image is smaller than specified maximum size (max = ${this.maxSize}, w = ${original.width}, h = ${original.height})."))
                     }
+
+                    /* Perform conversion. */
+                    if (this.store(this.resize(original), tmpPath)) {
+                        if (this.host == null) {
+                            it.addField(this.name, this.deployTo.relativize(actualPath).toString())
+                        } else {
+                            it.addField(this.name, "${this.host}${this.deployTo.relativize(actualPath)}")
+                        }
+                    } else {
+                        context.log.add(JobLog(null, uuid, null, JobLogContext.RESOURCE, JobLogLevel.WARNING, "Failed to create preview image for document."))
+                    }
+                    counter += 1
                 }
-                it.setField(FIELD_NAME_IMAGECOUNT, counter)
+                it.setField(Field.IMAGECOUNT, counter)
             } else {
-                it.setField(FIELD_NAME_IMAGECOUNT, 0)
+                it.setField(Field.IMAGECOUNT, 0)
             }
             it
         }.onCompletion {e ->
@@ -123,7 +118,7 @@ class ImageTransformer(override val input: Source<SolrInputDocument>, parameters
      * @param path The [Path] to store the image under.
      */
     private fun store(image: BufferedImage, path: Path): Boolean = try {
-        Files.newOutputStream(path, StandardOpenOption.CREATE_NEW, StandardOpenOption.WRITE).use {os ->
+        Files.newOutputStream(path, StandardOpenOption.CREATE_NEW, StandardOpenOption.WRITE).use { os ->
             ImageIO.write(image, "JPEG", os)
             LOGGER.debug("Successfully stored image {}!", path)
             true

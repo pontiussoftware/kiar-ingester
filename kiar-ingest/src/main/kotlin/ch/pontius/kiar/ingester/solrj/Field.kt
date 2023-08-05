@@ -6,7 +6,12 @@ package ch.pontius.kiar.ingester.solrj
  * @author Ralph Gasser
  * @version 1.0.0
  */
-enum class Field(val solr: String, val required: Boolean) {
+enum class Field(val solr: String, val required: Boolean = false, val multiValued: Boolean = false, val transient: Boolean = false) {
+    /** A transient field used to store raw image information. */
+    RAW("_raw_", false, true, true),
+
+    /** Field used to store the number of available images. */
+    IMAGECOUNT("_imagecount_", true, false, false),
 
     /** Name of the participant an object belongs to (often, this is transitively dependent on the institution). */
     PARTICIPANT("_participant_", true),
