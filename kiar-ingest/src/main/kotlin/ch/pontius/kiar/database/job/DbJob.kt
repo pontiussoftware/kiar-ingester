@@ -90,7 +90,7 @@ class DbJob(entity: Entity) : XdEntity(entity) {
         }
 
         /* Return ApacheSolrSink. */
-        return DummySink(root)
+        return ApacheSolrSink(root, template.solr.toApi())
     }
 
     /**
