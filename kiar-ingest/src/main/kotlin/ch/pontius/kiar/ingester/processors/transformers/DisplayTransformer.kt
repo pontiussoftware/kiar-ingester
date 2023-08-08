@@ -19,12 +19,12 @@ class DisplayTransformer(override val input: Source<SolrInputDocument>): Transfo
      * Returns a [Flow] of this [ImageTransformer].
      */
     override fun toFlow(context: ProcessingContext): Flow<SolrInputDocument> = this.input.toFlow(context).map {
-        val type = it.asString(Field.OBJEKTTYP)
+        val type = it.get<String>(Field.OBJEKTTYP)
         val display = when (ObjectType.parse(type ?: "")) {
-            ObjectType.BIBLIOGRAPHISCHES_OBJEKT -> listOf(it.asString(Field.OBJEKTBEZEICHNUNG), it.asString(Field.TITEL), it.asString(Field.AUTOR))
-            ObjectType.FOTOGRAFIE -> listOf(it.asString(Field.OBJEKTBEZEICHNUNG), it.asString(Field.TITEL), it.asString(Field.FOTOGRAF))
-            ObjectType.KUNST -> listOf(it.asString(Field.OBJEKTBEZEICHNUNG), it.asString(Field.TITEL), it.asString(Field.KUENSTLER))
-            else -> listOf(it.asString(Field.OBJEKTBEZEICHNUNG))
+            ObjectType.BIBLIOGRAPHISCHES_OBJEKT -> listOf(it.get<String>(Field.OBJEKTBEZEICHNUNG), it.get<String>(Field.TITEL), it.get<String>(Field.AUTOR))
+            ObjectType.FOTOGRAFIE -> listOf(it.asString(Field.OBJEKTBEZEICHNUNG), it.get<String>(Field.TITEL), it.get<String>(Field.FOTOGRAF))
+            ObjectType.KUNST -> listOf(it.get<String>(Field.OBJEKTBEZEICHNUNG), it.get<String>(Field.TITEL), it.get<String>(Field.KUENSTLER))
+            else -> listOf(it.get<String>(Field.OBJEKTBEZEICHNUNG))
         }.filterNotNull().joinToString(", ")
         it.setField(Field.DISPLAY, display)
         it

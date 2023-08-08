@@ -29,7 +29,7 @@ enum class Field(val solr: String, val required: Boolean = false, val multiValue
     OBJEKTBEZEICHNUNG("objektbezeichnung", true),
 
     /** Field containing an object's type. */
-    OBJEKTTYP("objecttyp", true),
+    OBJEKTTYP("objekttyp", true),
 
     /** Field containing the name of the institution the object belongs to. */
     INSTITUTION("institution", true),
