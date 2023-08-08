@@ -54,7 +54,7 @@ class KiarFileSource(private val file: Path, private val config: EntityMapping, 
                 }
 
                 /* Set documents participant and UUID value. */
-                doc.setField(Field.UUID, entry.uuid)
+                doc.setField(Field.UUID, entry.uuid.toString())
                 doc.setField(Field.PARTICIPANT, context.participant)
 
                 /* Read all resources. */
@@ -66,10 +66,10 @@ class KiarFileSource(private val file: Path, private val config: EntityMapping, 
                                 if (image != null) {
                                     doc.addField(Field.RAW, image)
                                 } else {
-                                    context.log.add(JobLog(null, entry.uuid, null, JobLogContext.RESOURCE, JobLogLevel.ERROR, "Failed to decode image $i from resource."))
+                                    context.log.add(JobLog(null, entry.uuid.toString(), null, JobLogContext.RESOURCE, JobLogLevel.ERROR, "Failed to decode image $i from resource."))
                                 }
                             } catch (e: IOException) {
-                                context.log.add(JobLog(null, entry.uuid, null, JobLogContext.RESOURCE, JobLogLevel.SEVERE, "Failed to decode image $i from resource. An exception occurred: ${e.message}"))
+                                context.log.add(JobLog(null, entry.uuid.toString(), null, JobLogContext.RESOURCE, JobLogLevel.SEVERE, "Failed to decode image $i from resource. An exception occurred: ${e.message}"))
                                 null
                             }
                         }

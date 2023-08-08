@@ -4,15 +4,15 @@ import java.io.Closeable
 import java.io.InputStream
 import java.nio.file.Path
 import java.util.LinkedList
+import java.util.UUID
 import java.util.zip.ZipEntry
 import java.util.zip.ZipFile
-import kotlin.streams.toList
 
 /**
  * A class to read KIAR files as handled by th
  *
  * @author Ralph Gasser
- * @version 1.0.0
+ * @version 1.1.0
  */
 class KiarFile(private val path: Path): Closeable, Iterable<KiarFile.KiarEntry> {
 
@@ -27,8 +27,11 @@ class KiarFile(private val path: Path): Closeable, Iterable<KiarFile.KiarEntry> 
     /** The [ZipFile] wrapped by this [KiarFile]. */
     val zip = ZipFile(this.path.toFile())
 
-    /** A [List] of [KiarFile.KiarEntry] found in this [KiarFile]. */
-    private val entries = LinkedList<KiarFile.KiarEntry>()
+    /** A [List] of metadata [ZipEntry] found in this [KiarFile]. */
+    private val metadata = LinkedList<KiarEntry>()
+
+    /** A [List] of resource [ZipEntry] found in this [KiarFile]. */
+    private val resources = LinkedList<ZipEntry>()
 
     /** The path separator used by this [KiarFile]. */
     var separator: String = "/"
@@ -38,25 +41,25 @@ class KiarFile(private val path: Path): Closeable, Iterable<KiarFile.KiarEntry> 
         var separatorChange = 0
         for (item in this.zip.stream()) {
             if (!item.isDirectory) {
-                if (item.name.startsWith("${METADATA_FOLDER_NAME}/")) {
-                    if (this.separator != "/") {
-                        this.separator = "/"
-                        separatorChange += 1
-                    }
-                    this.entries.add(KiarEntry(item))
-                } else if (item.name.startsWith("${METADATA_FOLDER_NAME}\\")) {
-                    if (this.separator != "\\") {
-                        this.separator = "\\"
-                        separatorChange += 1
-                    }
-                    this.entries.add(KiarEntry(item))
+                /* Update directory separator. */
+                if (item.name.contains("\\") && this.separator != "\\") {
+                    this.separator = "\\"
+                    separatorChange += 1
+                    require(separatorChange <= 1) { "File '${this.path}' is not a valid KIAR file: inconsistent directory separators." }
+                } else if (item.name.contains("/") && this.separator != "/") {
+                    this.separator = "/"
+                    separatorChange += 1
+                    require(separatorChange <= 1) { "File '${this.path}' is not a valid KIAR file: inconsistent directory separators." }
                 }
-                if (separatorChange > 1) {
-                    throw IllegalArgumentException("File '${this.path}' is not a valid KIAR file: inconsistent directory separators.")
+
+                /* Process actual item. */
+                when {
+                    item.name.startsWith("${METADATA_FOLDER_NAME}${this.separator}", true) -> this.metadata.add(KiarEntry(item))
+                    item.name.startsWith("${RESOURCES_FOLDER_NAME}${this.separator}", true) -> this.resources.add(item)
                 }
             }
         }
-        require(this.entries.size > 0) { "File '${this.path}' is not a valid KIAR file or is empty." }
+        require(this.metadata.size > 0) { "File '${this.path}' is not a valid KIAR file or is empty." }
     }
 
     /**
@@ -64,12 +67,12 @@ class KiarFile(private val path: Path): Closeable, Iterable<KiarFile.KiarEntry> 
      *
      * @return Size of this [KiarFile]
      */
-    fun size(): Int = this.entries.size
+    fun size(): Int = this.metadata.size
 
     /**
      * Returns an [Iterator] over the [KiarFile.KiarEntry] contained in this [KiarFile].
      */
-    override fun iterator(): Iterator<KiarFile.KiarEntry> = this.entries.iterator()
+    override fun iterator(): Iterator<KiarFile.KiarEntry> = this.metadata.iterator()
 
     /**
      * Closes the [ZipFile] backing this [KiarFile]
@@ -78,28 +81,27 @@ class KiarFile(private val path: Path): Closeable, Iterable<KiarFile.KiarEntry> 
 
     /**
      * An entry in a [KiarFile].
-     *
-     * @author Ralph Gasser
-     * @version 1.0.0
      */
     inner class KiarEntry(private val entry: ZipEntry) {
 
         /** The [KiarEntryType] of this [KiarEntry]. */
         val type: KiarEntryType = when {
-            this.entry.name.endsWith(KiarEntryType.JSON.suffix) -> KiarEntryType.JSON
-            this.entry.name.endsWith(KiarEntryType.XML.suffix) -> KiarEntryType.XML
+            this.entry.name.endsWith(KiarEntryType.JSON.suffix, true) -> KiarEntryType.JSON
+            this.entry.name.endsWith(KiarEntryType.XML.suffix, true) -> KiarEntryType.XML
             else -> throw InvalidKiarEntryException(this.entry.name)
         }
 
         /** The UUID that identifies this [KiarEntry]. */
-        val uuid: String = this.entry.name.replace(this.type.suffix, "").replace("${METADATA_FOLDER_NAME}${this@KiarFile.separator}", "")
+        val uuid: UUID = UUID.fromString(this.entry.name.replace(this.type.suffix, "").replace("${METADATA_FOLDER_NAME}${this@KiarFile.separator}", "").lowercase())
 
         /** A [List] of [ZipEntry] that represent resource that belong to this [KiarEntry]. */
-        private val resources: List<ZipEntry> = this@KiarFile.zip.stream().filter { e ->
-           e.name.startsWith("${RESOURCES_FOLDER_NAME}${this@KiarFile.separator}${this.uuid}") &&
-           (e.name.endsWith("jpg", ignoreCase = true)  || e.name.endsWith("jfif", ignoreCase = true) || e.name.endsWith("jpeg", ignoreCase = true)
-           || e.name.endsWith("png", ignoreCase = true) || e.name.endsWith("tif", ignoreCase = true) || e.name.endsWith("tiff", ignoreCase = true))
-        }.toList()
+        private val resources: List<ZipEntry> by lazy {
+            this@KiarFile.resources.filter { e ->
+                e.name.startsWith("${RESOURCES_FOLDER_NAME}${this@KiarFile.separator}${this.uuid}", true) &&
+                (e.name.endsWith("jpg", ignoreCase = true)  || e.name.endsWith("jfif", ignoreCase = true) || e.name.endsWith("jpeg", ignoreCase = true)
+                || e.name.endsWith("png", ignoreCase = true) || e.name.endsWith("tif", ignoreCase = true) || e.name.endsWith("tiff", ignoreCase = true))
+            }
+        }
 
         /**
          * Opens and returns a [InputStream] for this [KiarEntry].
