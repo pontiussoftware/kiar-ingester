@@ -84,8 +84,8 @@ class ImageTransformer(override val input: Source<SolrInputDocument>, parameters
                         } else {
                             it.addField(this.name, "${this.host}${this.deployTo.relativize(actualPath)}")
                         }
-                        it.addField("${this.name}height", resized.height)
-                        it.addField("${this.name}width", resized.width)
+                        it.addField("${this.name}height_", resized.height)
+                        it.addField("${this.name}width_", resized.width)
                     } else {
                         context.log.add(JobLog(null, it.uuid(), null, JobLogContext.RESOURCE, JobLogLevel.WARNING, "Failed to create preview image for document."))
                     }
