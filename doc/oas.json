@@ -885,12 +885,12 @@
     "/api/jobs/{id}/upload" : {
       "put" : {
         "tags" : [ "Job" ],
-        "summary" : "Uploads a KIAR for the given job.",
-        "operationId" : "putUploadKiar",
+        "summary" : "Uploads a file for the given job.",
+        "operationId" : "putUpload",
         "parameters" : [ {
           "name" : "id",
           "in" : "path",
-          "description" : "The ID of the Job for which a KIAR should be uploaded.",
+          "description" : "The ID of the Job for which a file should be uploaded.",
           "required" : true,
           "deprecated" : false,
           "allowEmptyValue" : false,
@@ -925,7 +925,7 @@
               "schema" : {
                 "type" : "object",
                 "properties" : {
-                  "kiar" : {
+                  "file" : {
                     "type" : "string",
                     "format" : "binary"
                   }

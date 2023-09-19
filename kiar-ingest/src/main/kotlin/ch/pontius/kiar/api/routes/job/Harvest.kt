@@ -15,8 +15,6 @@ import jetbrains.exodus.database.TransientEntityStore
 import kotlinx.dnq.util.findById
 import org.apache.commons.fileupload2.jakarta.JakartaServletFileUpload
 import org.joda.time.DateTime
-import java.nio.ByteBuffer
-import java.nio.ByteOrder
 import java.nio.file.Files
 import java.nio.file.StandardOpenOption
 
@@ -24,18 +22,18 @@ import java.nio.file.StandardOpenOption
 @OpenApi(
     path = "/api/jobs/{id}/upload",
     methods = [HttpMethod.PUT],
-    summary = "Uploads a KIAR for the given job.",
-    operationId = "putUploadKiar",
+    summary = "Uploads a file for the given job.",
+    operationId = "putUpload",
     tags = ["Job"],
     pathParams = [
-        OpenApiParam(name = "id", description = "The ID of the Job for which a KIAR should be uploaded.", required = true)
+        OpenApiParam(name = "id", description = "The ID of the Job for which a file should be uploaded.", required = true)
     ],
     queryParams = [
         OpenApiParam(name = "first", description = "Set to 'true' if the submitted chunk is the first one.", required = false, type = Boolean::class),
         OpenApiParam(name = "last", description = "Set to 'true' if the submitted chunk is the last one.", required = false, type = Boolean::class)
     ],
     requestBody = OpenApiRequestBody(content = [
-        OpenApiContent(mimeType = ContentType.FORM_DATA_MULTIPART, properties = [OpenApiContentProperty(name = "kiar", type = "string", format = "binary")])
+        OpenApiContent(mimeType = ContentType.FORM_DATA_MULTIPART, properties = [OpenApiContentProperty(name = "file", type = "string", format = "binary")])
    ], description = "The uploaded KIAR file.", required = true),
     responses = [
         OpenApiResponse("200", [OpenApiContent(SuccessStatus::class)]),
@@ -44,7 +42,7 @@ import java.nio.file.StandardOpenOption
         OpenApiResponse("500", [OpenApiContent(ErrorStatus::class)])
     ]
 )
-fun uploadKiar(ctx: Context, store: TransientEntityStore, config: Config) {
+fun upload(ctx: Context, store: TransientEntityStore, config: Config) {
     /* Obtain and check Job. */
     val jobId = ctx.pathParam("id")
     val first = ctx.queryParam("first")?.toBoolean() ?: false
@@ -60,7 +58,7 @@ fun uploadKiar(ctx: Context, store: TransientEntityStore, config: Config) {
             throw ErrorStatusException(400, "Job with ID $jobId is in wrong state.")
         }
 
-        job.template?.participant?.name ?: throw ErrorStatusException(400, "Jov with ID $jobId is not associated with a proper participant.")
+        job.template?.participant?.name ?: throw ErrorStatusException(400, "Job with ID $jobId is not associated with a proper participant.")
     }
 
     /* Check for availability of directory and create it if necessary. */
@@ -88,9 +86,6 @@ fun uploadKiar(ctx: Context, store: TransientEntityStore, config: Config) {
             var read = input.read(buffer)
             if (read == -1) {
                 throw ErrorStatusException(400, "Cannot upload empty file.")
-            }
-            if (first && ByteBuffer.wrap(buffer).order(ByteOrder.LITTLE_ENDIAN).int != 0x04034b50) { /* Look for ZIP header. */
-                throw ErrorStatusException(400, "Uploaded file could not be verified to be a valid KIAR file.")
             }
 
             /* Start writing file to disk. */

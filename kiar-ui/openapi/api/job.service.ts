@@ -560,20 +560,20 @@ export class JobService {
     }
 
     /**
-     * Uploads a KIAR for the given job.
-     * @param id The ID of the Job for which a KIAR should be uploaded.
+     * Uploads a file for the given job.
+     * @param id The ID of the Job for which a file should be uploaded.
      * @param first Set to \&#39;true\&#39; if the submitted chunk is the first one.
      * @param last Set to \&#39;true\&#39; if the submitted chunk is the last one.
-     * @param kiar 
+     * @param file 
      * @param observe set whether or not to return the data Observable as the body, response or events. defaults to returning the body.
      * @param reportProgress flag to report request and response progress.
      */
-    public putUploadKiar(id: string, first?: boolean, last?: boolean, kiar?: Blob, observe?: 'body', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext}): Observable<SuccessStatus>;
-    public putUploadKiar(id: string, first?: boolean, last?: boolean, kiar?: Blob, observe?: 'response', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext}): Observable<HttpResponse<SuccessStatus>>;
-    public putUploadKiar(id: string, first?: boolean, last?: boolean, kiar?: Blob, observe?: 'events', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext}): Observable<HttpEvent<SuccessStatus>>;
-    public putUploadKiar(id: string, first?: boolean, last?: boolean, kiar?: Blob, observe: any = 'body', reportProgress: boolean = false, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext}): Observable<any> {
+    public putUpload(id: string, first?: boolean, last?: boolean, file?: Blob, observe?: 'body', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext}): Observable<SuccessStatus>;
+    public putUpload(id: string, first?: boolean, last?: boolean, file?: Blob, observe?: 'response', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext}): Observable<HttpResponse<SuccessStatus>>;
+    public putUpload(id: string, first?: boolean, last?: boolean, file?: Blob, observe?: 'events', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext}): Observable<HttpEvent<SuccessStatus>>;
+    public putUpload(id: string, first?: boolean, last?: boolean, file?: Blob, observe: any = 'body', reportProgress: boolean = false, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext}): Observable<any> {
         if (id === null || id === undefined) {
-            throw new Error('Required parameter id was null or undefined when calling putUploadKiar.');
+            throw new Error('Required parameter id was null or undefined when calling putUpload.');
         }
 
         let localVarQueryParameters = new HttpParams({encoder: this.encoder});
@@ -624,8 +624,8 @@ export class JobService {
             localVarFormParams = new HttpParams({encoder: this.encoder});
         }
 
-        if (kiar !== undefined) {
-            localVarFormParams = localVarFormParams.append('kiar', <any>kiar) as any || localVarFormParams;
+        if (file !== undefined) {
+            localVarFormParams = localVarFormParams.append('file', <any>file) as any || localVarFormParams;
         }
 
         let responseType_: 'text' | 'json' | 'blob' = 'json';

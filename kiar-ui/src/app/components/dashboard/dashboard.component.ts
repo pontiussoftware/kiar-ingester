@@ -1,7 +1,7 @@
 import {AfterViewInit, Component, OnDestroy, ViewChild} from "@angular/core";
 import {MatDialog} from "@angular/material/dialog";
-import {Job, JobService, SuccessStatus} from "../../../../openapi";
-import {firstValueFrom, interval, Observer, Subscription, tap, timer} from "rxjs";
+import {Job, JobService} from "../../../../openapi";
+import {firstValueFrom, interval, Subscription, tap} from "rxjs";
 import {CreateJobDialogComponent} from "./job/create-job-dialog.component";
 import {MatSnackBar, MatSnackBarConfig} from "@angular/material/snack-bar";
 import {MatPaginator} from "@angular/material/paginator";
@@ -85,7 +85,7 @@ export class DashboardComponent implements AfterViewInit, OnDestroy {
    *
    * @param job {@link ActiveJob} to initiate KIAR file upload for.
    */
-  public uploadKiar(job: ActiveJob) {
+  public upload(job: ActiveJob) {
       const fileInput: HTMLInputElement = document.createElement('input');
       fileInput.type = 'file';
       fileInput.addEventListener('change', async (event: Event) => {
@@ -93,7 +93,7 @@ export class DashboardComponent implements AfterViewInit, OnDestroy {
         const file: File | null = target.files?.[0] || null;
         if (file) {
           const formData: FormData = new FormData();
-          formData.append('kiar', file);
+          formData.append('file', file);
           job.harvesting = true;
           (job as any)['uploaded'] = 0
 
@@ -103,15 +103,15 @@ export class DashboardComponent implements AfterViewInit, OnDestroy {
           for (let i = 0; i < slices; i++) {
             const slice = file.slice(i * sliceSize, Math.min((i + 1) * sliceSize, file.size), file.type)
             try {
-              await firstValueFrom(this.service.putUploadKiar(job.id!!, i == 0, i == (slices - 1), slice, 'body'));
+              await firstValueFrom(this.service.putUpload(job.id!!, i == 0, i == (slices - 1), slice, 'body'));
               (job as any)['uploaded'] = (i / slices) * 100
             } catch (err) {
-              this.snackBar.open(`Error while uploading KIAR file for job ${job.id}.`, "Dismiss", { duration: 2000 } as MatSnackBarConfig)
+              this.snackBar.open(`Error while uploading ${job.template?.type} file for job ${job.id}.`, "Dismiss", { duration: 2000 } as MatSnackBarConfig)
               break
             }
           }
 
-          this.snackBar.open(`KIAR uploaded successfully. Ready for harvesting!`, "Dismiss", { duration: 2000 } as MatSnackBarConfig)
+          this.snackBar.open(`${job.template?.type} uploaded successfully. Ready for harvesting!`, "Dismiss", { duration: 2000 } as MatSnackBarConfig)
           job.harvesting = false
           this.reload()
         }

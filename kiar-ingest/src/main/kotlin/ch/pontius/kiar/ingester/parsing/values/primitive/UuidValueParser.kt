@@ -21,7 +21,7 @@ class UuidValueParser(override val mapping: AttributeMapping): ValueParser<Strin
      */
     override fun parse(value: String, into: SolrInputDocument) {
         val uuid = try {
-            UUID.fromString(value)
+            UUID.fromString(value).toString()
         } catch (e: IllegalArgumentException) {
             return
         }

@@ -3,16 +3,15 @@ package ch.pontius.kiar.database.job
 import ch.pontius.kiar.api.model.job.Job
 import ch.pontius.kiar.config.Config
 import ch.pontius.kiar.database.config.jobs.DbJobTemplate
-import ch.pontius.kiar.database.config.transformers.DbTransformer
 import ch.pontius.kiar.database.institution.DbUser
 import ch.pontius.kiar.ingester.processors.sinks.ApacheSolrSink
+import ch.pontius.kiar.ingester.processors.sinks.DummySink
 import ch.pontius.kiar.ingester.processors.sinks.Sink
 import ch.pontius.kiar.ingester.processors.sources.ExcelFileSource
 import ch.pontius.kiar.ingester.processors.sources.KiarFileSource
 import ch.pontius.kiar.ingester.processors.sources.Source
 import ch.pontius.kiar.ingester.processors.sources.XmlFileSource
 import ch.pontius.kiar.ingester.processors.transformers.ImageDeployment
-import ch.pontius.kiar.ingester.processors.transformers.Transformer
 import jetbrains.exodus.entitystore.Entity
 import kotlinx.dnq.*
 import kotlinx.dnq.link.OnDeletePolicy
@@ -66,12 +65,12 @@ class DbJob(entity: Entity) : XdEntity(entity) {
     val log by xdChildren0_N(DbJobLog::job)
 
     /**
-     * Generates and returns a new [Transformer] instance from this [DbTransformer] entry.
+     * Generates and returns a new data ingest pipeline from this [DbJob].
      *
      * Requires an ongoing transactional context!
      *
      * @param config The KIAR tools [Config] object.
-     * @return [Transformer]
+     * @return [Sink] representing the pipelin.
      */
     fun toPipeline(config: Config): Sink<SolrInputDocument> {
         val template = this.template ?: throw IllegalStateException("Failed to generated execution pipeline for job ${this.xdId}: Missing template.")
@@ -98,6 +97,38 @@ class DbJob(entity: Entity) : XdEntity(entity) {
 
         /* Return ApacheSolrSink. */
         return ApacheSolrSink(root, template.solr.toApi())
+    }
+
+    /**
+     * Generates and a test pipeline from this [DbJob].
+     *
+     * A test pipeline uses a [DummySink] and does not perform any image deployment. Hence, it can be used to test functionality.
+     *
+     * Requires an ongoing transactional context!
+     *
+     * @param config The KIAR tools [Config] object.
+     * @return [Sink] representing the pipelin.
+     */
+    fun toTestPipeline(config: Config): Sink<SolrInputDocument> {
+        val template = this.template ?: throw IllegalStateException("Failed to generated execution pipeline for job ${this.xdId}: Missing template.")
+
+        /* Generate file source. */
+        val sourcePath = config.ingestPath.resolve(template.participant.name).resolve(this.xdId)
+        val source: Source<SolrInputDocument> = when (template.type.description) {
+            "XML" -> XmlFileSource(sourcePath, template.mapping.toApi())
+            "KIAR" -> KiarFileSource(sourcePath, template.mapping.toApi())
+            "EXCEL" -> ExcelFileSource(sourcePath, template.mapping.toApi())
+            else -> throw IllegalStateException("Unsupported template type '${template.type.description}'. This is a programmer's error!")
+        }
+        var root = source
+
+        /* Generate all transformers. */
+        for (t in template.transformers.asSequence()) {
+            root = t.newInstance(root)
+        }
+
+        /* Return ApacheSolrSink. */
+        return DummySink(root)
     }
 
     /**
