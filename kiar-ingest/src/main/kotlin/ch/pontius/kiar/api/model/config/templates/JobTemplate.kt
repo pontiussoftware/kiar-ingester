@@ -1,6 +1,5 @@
 package ch.pontius.kiar.api.model.config.templates
 
-import ch.pontius.kiar.api.model.config.image.ImageDeployment
 import ch.pontius.kiar.api.model.config.transformers.TransformerConfig
 import kotlinx.serialization.Serializable
 
@@ -22,7 +21,5 @@ data class JobTemplate(
     val entityMappingName: String,
     val createdAt: Long? = null,
     val changedAt: Long? = null,
-    val transformers: List<TransformerConfig> = emptyList(),
-    val deployments: List<ImageDeployment> = emptyList()
-
+    val transformers: List<TransformerConfig> = emptyList()
 )

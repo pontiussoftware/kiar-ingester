@@ -11,7 +11,7 @@
  */
 
 
-export type ValueParser = 'UUID' | 'STRING' | 'MULTISTRING' | 'DATE' | 'INTEGER' | 'DOUBLE' | 'IMAGE';
+export type ValueParser = 'UUID' | 'STRING' | 'MULTISTRING' | 'DATE' | 'INTEGER' | 'DOUBLE' | 'IMAGE_FILE' | 'IMAGE_MPLUS';
 
 export const ValueParser = {
     UUID: 'UUID' as ValueParser,
@@ -20,6 +20,7 @@ export const ValueParser = {
     DATE: 'DATE' as ValueParser,
     INTEGER: 'INTEGER' as ValueParser,
     DOUBLE: 'DOUBLE' as ValueParser,
-    IMAGE: 'IMAGE' as ValueParser
+    IMAGE_FILE: 'IMAGE_FILE' as ValueParser,
+    IMAGE_MPLUS: 'IMAGE_MPLUS' as ValueParser
 };
 

@@ -1985,6 +1985,61 @@
         "security" : [ ]
       }
     },
+    "/api/solr/formats" : {
+      "get" : {
+        "tags" : [ "Config", "Apache Solr" ],
+        "summary" : "Lists all available formats available for image deployment.",
+        "operationId" : "getListImageFormats",
+        "parameters" : [ ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "array",
+                  "items" : {
+                    "$ref" : "#/components/schemas/ImageFormat"
+                  }
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorStatus"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Forbidden",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorStatus"
+                }
+              }
+            }
+          },
+          "500" : {
+            "description" : "Server Error",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorStatus"
+                }
+              }
+            }
+          }
+        },
+        "deprecated" : false,
+        "security" : [ ]
+      }
+    },
     "/api/solr/{id}" : {
       "get" : {
         "tags" : [ "Config", "Apache Solr" ],
@@ -2687,6 +2742,33 @@
   },
   "components" : {
     "schemas" : {
+      "ImageDeployment" : {
+        "type" : "object",
+        "additionalProperties" : false,
+        "properties" : {
+          "name" : {
+            "type" : "string"
+          },
+          "format" : {
+            "$ref" : "#/components/schemas/ImageFormat"
+          },
+          "path" : {
+            "type" : "string"
+          },
+          "server" : {
+            "type" : "string"
+          },
+          "maxSize" : {
+            "type" : "integer",
+            "format" : "int32"
+          }
+        },
+        "required" : [ "name", "format", "path", "server", "maxSize" ]
+      },
+      "ImageFormat" : {
+        "type" : "string",
+        "enum" : [ "JPEG", "PNG" ]
+      },
       "AttributeMapping" : {
         "type" : "object",
         "additionalProperties" : false,
@@ -2754,7 +2836,7 @@
       },
       "ValueParser" : {
         "type" : "string",
-        "enum" : [ "UUID", "STRING", "MULTISTRING", "DATE", "INTEGER", "DOUBLE", "IMAGE" ]
+        "enum" : [ "UUID", "STRING", "MULTISTRING", "DATE", "INTEGER", "DOUBLE", "IMAGE_FILE", "IMAGE_MPLUS" ]
       },
       "ApacheSolrCollection" : {
         "type" : "object",
@@ -2819,9 +2901,15 @@
             "items" : {
               "$ref" : "#/components/schemas/ApacheSolrCollection"
             }
+          },
+          "deployments" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/ImageDeployment"
+            }
           }
         },
-        "required" : [ "name", "server", "collections" ]
+        "required" : [ "name", "server", "collections", "deployments" ]
       },
       "CollectionType" : {
         "type" : "string",

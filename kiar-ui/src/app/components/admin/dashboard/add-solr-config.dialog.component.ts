@@ -31,7 +31,8 @@ export class AddSolrConfigDialogComponent {
         server: this.formControl.get('type')?.value,
         username: this.formControl.get('username')?.value,
         password: this.formControl.get('password')?.value,
-        collections: []
+        collections: [],
+        deployments: []
       } as ApacheSolrConfig)
     }
   }

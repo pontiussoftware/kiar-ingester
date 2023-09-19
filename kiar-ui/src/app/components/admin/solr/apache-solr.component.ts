@@ -1,6 +1,6 @@
 import {AfterViewInit, Component} from "@angular/core";
-import {map, mergeMap, Observable} from "rxjs";
-import {ApacheSolrCollection, ApacheSolrConfig, ApacheSolrService, AttributeMapping} from "../../../../../openapi";
+import {map, mergeMap, Observable, shareReplay} from "rxjs";
+import {ApacheSolrCollection, ApacheSolrConfig, ApacheSolrService, AttributeMapping, ImageDeployment, ImageFormat} from "../../../../../openapi";
 import {ActivatedRoute, Router} from "@angular/router";
 import {FormArray, FormControl, FormGroup, Validators} from "@angular/forms";
 import {MatSnackBar, MatSnackBarConfig} from "@angular/material/snack-bar";
@@ -17,6 +17,12 @@ export class ApacheSolrComponent implements AfterViewInit{
   /** List of attribute {@link FormGroup}s. */
   public readonly collections: Array<FormGroup> = []
 
+  /** List of attribute {@link FormGroup}s. */
+  public readonly deployments: Array<FormGroup> = []
+
+  /** An {@link Observable} of available {@link ImageFormat}. */
+  public readonly imageFormats: Observable<Array<ImageFormat>>
+
   /** The {@link FormControl} that backs this {@link EntityMappingComponent}. */
   public formControl = new FormGroup({
     name: new FormControl('', [Validators.required]),
@@ -25,7 +31,8 @@ export class ApacheSolrComponent implements AfterViewInit{
     publicServer: new FormControl('', [Validators.pattern('(https?://)?([\\da-z.-]+)\\.([a-z.]{2,6})[/\\w .-]*/?')]),
     username: new FormControl(''),
     password: new FormControl(''),
-    collections: new FormArray(this.collections)
+    collections: new FormArray(this.collections),
+    deployments: new FormArray(this.deployments)
   })
 
   constructor(
@@ -35,6 +42,7 @@ export class ApacheSolrComponent implements AfterViewInit{
       private snackBar: MatSnackBar
   ) {
     this.solrId = this.route.paramMap.pipe(map(params => params.get('id')!!));
+    this.imageFormats = this.service.getListImageFormats().pipe(shareReplay(1))
   }
 
   /**
@@ -93,9 +101,23 @@ export class ApacheSolrComponent implements AfterViewInit{
    */
   public addCollection() {
     this.collections.push(new FormGroup({
+      displayName: new FormControl('', [Validators.required]),
       name: new FormControl('', [Validators.required]),
       type: new FormControl('', [Validators.required]),
       selector: new FormControl('')
+    }))
+  }
+
+  /**
+   * Adds a {@link ApacheSolrCollection} to edit an existing {@link AttributeMapping}.
+   */
+  public addDeployment() {
+    this.deployments.push(new FormGroup({
+      name: new FormControl('', [Validators.required]),
+      format: new FormControl('', [Validators.required]),
+      server: new FormControl('', [Validators.required]),
+      path: new FormControl('', [Validators.required]),
+      maxSize: new FormControl(100, [Validators.required, Validators.min(100)])
     }))
   }
 
@@ -106,6 +128,15 @@ export class ApacheSolrComponent implements AfterViewInit{
    */
   public removeCollection(index: number) {
     this.collections.splice(index, 1)
+  }
+
+  /**
+   * Removes an existing {@link ImageDeployment}.
+   *
+   * @param index The index of the {@link ImageDeployment} to remove.
+   */
+  public removeDeployment(index: number) {
+    this.deployments.splice(index, 1)
   }
 
   /**
@@ -136,11 +167,23 @@ export class ApacheSolrComponent implements AfterViewInit{
 
     this.collections.length = 0
     for (let collection of (solr?.collections || [])) {
-        this.collections.push(new FormGroup({
-            name: new FormControl(collection.name || '', [Validators.required]),
-            type: new FormControl(collection.type || '', [Validators.required]),
-            selector: new FormControl(collection.selector || '')
-        }))
+      this.collections.push(new FormGroup({
+        displayName: new FormControl(collection.displayName || '', [Validators.required]),
+        name: new FormControl(collection.name || '', [Validators.required]),
+        type: new FormControl(collection.type || '', [Validators.required]),
+        selector: new FormControl(collection.selector || '')
+      }))
+    }
+
+    this.deployments.length = 0
+    for (let deployment of (solr?.deployments || [])) {
+      this.deployments.push(new FormGroup({
+        name: new FormControl(deployment.name || '', [Validators.required]),
+        format: new FormControl(deployment.format || '', [Validators.required]),
+        server: new FormControl(deployment.server || '', [Validators.required]),
+        path: new FormControl(deployment.path || '', [Validators.required]),
+        maxSize: new FormControl(deployment.maxSize || 100, [Validators.required, Validators.min(100)])
+      }))
     }
   }
 
@@ -161,10 +204,20 @@ export class ApacheSolrComponent implements AfterViewInit{
       password: this.formControl.get('password')?.value,
       collections: this.collections.map((collection) => {
         return {
+          displayName: collection.get('displayName')?.value,
           name: collection.get('name')?.value,
           type: collection.get('type')?.value,
           selector: collection.get('selector')?.value
         } as ApacheSolrCollection
+      }),
+      deployments: this.deployments.map((deployment) => {
+        return {
+          name: deployment.get('name')?.value,
+          format: deployment.get('format')?.value,
+          server: deployment.get('server')?.value,
+          path: deployment.get('path')?.value,
+          maxSize: deployment.get('maxSize')?.value
+        } as ImageDeployment
       }),
     } as ApacheSolrConfig
   }

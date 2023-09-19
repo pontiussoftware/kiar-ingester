@@ -1,6 +1,6 @@
 package ch.pontius.kiar.api.model.config.solr
 
-import ch.pontius.kiar.api.model.job.Job
+import ch.pontius.kiar.api.model.config.image.ImageDeployment
 import ch.pontius.kiar.config.CollectionConfig
 import kotlinx.serialization.Serializable
 
@@ -40,5 +40,8 @@ class ApacheSolrConfig(
     val changedAt: Long? = null,
 
     /** A list of [CollectionConfig] for this [ApacheSolrConfig]. */
-    val collections: List<ApacheSolrCollection> = emptyList()
+    val collections: List<ApacheSolrCollection> = emptyList(),
+
+    /** A list of [ImageDeployment] for this [ApacheSolrConfig]. */
+    val deployments: List<ImageDeployment> = emptyList()
 )

@@ -41,10 +41,13 @@ class DbSolr(entity: Entity) : XdEntity(entity) {
     /** List of [DbCollection]s this [DbSolr] holds- */
     val collections by xdChildren0_N(DbCollection::solr)
 
+    /** List of [DbCollection]s this [DbSolr] holds- */
+    val deployments by xdChildren0_N(DbImageDeployment::solr)
+
     /**
      * A convenience method used to convert this [DbSolr] to a [ApacheSolrConfig]. Requires an ongoing transaction!
      *
      * @return [ApacheSolrConfig]
      */
-    fun toApi() = ApacheSolrConfig(this.xdId, this.name, this.description, this.server, this.publicServer, this.username, this.password, this.createdAt?.millis, this.changedAt?.millis,  this.collections.asSequence().map { it.toApi() }.toList())
+    fun toApi() = ApacheSolrConfig(this.xdId, this.name, this.description, this.server, this.publicServer, this.username, this.password, this.createdAt?.millis, this.changedAt?.millis,  this.collections.asSequence().map { it.toApi() }.toList(), this.deployments.asSequence().map { it.toApi() }.toList())
 }

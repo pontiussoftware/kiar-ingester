@@ -24,6 +24,8 @@ model/collectionType.ts
 model/createJobRequest.ts
 model/entityMapping.ts
 model/errorStatus.ts
+model/imageDeployment.ts
+model/imageFormat.ts
 model/institution.ts
 model/job.ts
 model/jobLog.ts

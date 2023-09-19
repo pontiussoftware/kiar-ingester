@@ -87,6 +87,7 @@ fun configureApiRoutes(store: TransientEntityStore, server: IngesterServer, conf
         get("solr", { ctx -> listSolrConfigurations(ctx, store) }, Role.ADMINISTRATOR, Role.MANAGER )
         post("solr", { ctx -> createSolrConfig(ctx, store) }, Role.ADMINISTRATOR )
         path("solr") {
+            get("formats", { ctx -> listFormats(ctx, store) }, Role.ADMINISTRATOR, Role.MANAGER )
             get("{id}", { ctx -> getSolrConfig(ctx, store) }, Role.ADMINISTRATOR, Role.MANAGER )
             put("{id}", { ctx -> updateSolrConfig(ctx, store) }, Role.ADMINISTRATOR )
             delete("{id}", { ctx -> deleteSolrConfig(ctx, store) }, Role.ADMINISTRATOR )
@@ -105,17 +106,6 @@ fun configureApiRoutes(store: TransientEntityStore, server: IngesterServer, conf
             get("{id}",  { ctx -> getEntityMapping(ctx, store) }, Role.ADMINISTRATOR )
             put("{id}",  { ctx -> updateEntityMapping(ctx, store) }, Role.ADMINISTRATOR )
             delete("{id}",  { ctx -> deleteEntityMapping(ctx, store) }, Role.ADMINISTRATOR )
-        }
-
-        /* Endpoints related to image deployments. */
-        path("deployment") {
-            get("images", { ctx -> listImageDeployments(ctx, store) }, Role.ADMINISTRATOR )
-            post("images", { ctx -> createImageDeployment(ctx, store) }, Role.ADMINISTRATOR )
-            path("images") {
-                get("formats",  { ctx -> listFormats(ctx, store) }, Role.ADMINISTRATOR )
-                put("{id}",  { ctx -> updateImageDeployment(ctx, store) }, Role.ADMINISTRATOR )
-                delete("{id}",  { ctx -> deleteImageDeployment(ctx, store) }, Role.ADMINISTRATOR )
-            }
         }
     }
 }

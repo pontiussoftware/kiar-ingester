@@ -8,8 +8,8 @@ import ch.pontius.kiar.api.routes.session.SALT
 import ch.pontius.kiar.ingester.IngesterServer
 import ch.pontius.kiar.cli.Cli
 import ch.pontius.kiar.config.Config
-import ch.pontius.kiar.database.config.image.DbImageDeployment
-import ch.pontius.kiar.database.config.image.DbImageFormat
+import ch.pontius.kiar.database.config.solr.DbImageDeployment
+import ch.pontius.kiar.database.config.solr.DbImageFormat
 import ch.pontius.kiar.database.config.jobs.DbJobTemplate
 import ch.pontius.kiar.database.config.jobs.DbJobType
 import ch.pontius.kiar.database.config.mapping.*

@@ -1,7 +1,6 @@
-package ch.pontius.kiar.database.config.image
+package ch.pontius.kiar.database.config.solr
 
 import ch.pontius.kiar.api.model.config.image.ImageFormat
-import ch.pontius.kiar.database.config.solr.DbCollection
 import jetbrains.exodus.entitystore.Entity
 import kotlinx.dnq.XdEnumEntity
 import kotlinx.dnq.XdEnumEntityType

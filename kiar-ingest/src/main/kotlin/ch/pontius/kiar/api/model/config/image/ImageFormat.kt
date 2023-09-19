@@ -1,6 +1,6 @@
 package ch.pontius.kiar.api.model.config.image
 
-import ch.pontius.kiar.database.config.image.DbImageFormat
+import ch.pontius.kiar.database.config.solr.DbImageFormat
 import kotlinx.serialization.Serializable
 
 /**

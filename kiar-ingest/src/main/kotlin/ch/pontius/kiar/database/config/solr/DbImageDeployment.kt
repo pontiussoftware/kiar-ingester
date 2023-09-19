@@ -1,4 +1,4 @@
-package ch.pontius.kiar.database.config.image
+package ch.pontius.kiar.database.config.solr
 
 import ch.pontius.kiar.api.model.config.image.ImageDeployment
 import ch.pontius.kiar.api.model.config.templates.JobType
@@ -23,19 +23,16 @@ class DbImageDeployment(entity: Entity) : XdEntity(entity) {
     var format by xdLink1(DbImageFormat)
 
     /** The (local) deployment path. */
-    var deployTo by xdRequiredStringProp(unique = true, trimmed = true)
+    var path by xdRequiredStringProp(trimmed = true)
 
     /** The (public) deployment URL. */
-    var host by xdRequiredStringProp(trimmed = true) { url() }
+    var server by xdRequiredStringProp(trimmed = true) { url() }
 
     /** The maximum size of the resulting image. */
     var maxSize by xdRequiredIntProp()
 
-    /** The date and time this [DbImageDeployment] was created. */
-    var createdAt by xdDateTimeProp()
-
-    /** The date and time this [DbImageDeployment] was last changed. */
-    var changedAt by xdDateTimeProp()
+    /** The [DbSolr] this [DbImageDeployment] belongs to. */
+    var solr: DbSolr by xdParent(DbSolr::deployments)
 
     /**
      * Convenience method to convert this [DbJobType] to a [JobType].
@@ -45,11 +42,10 @@ class DbImageDeployment(entity: Entity) : XdEntity(entity) {
      * @return [JobType]
      */
     fun toApi() = ImageDeployment(
-        this.xdId,
         this.name,
         this.format.toApi(),
-        this.deployTo,
-        this.host,
+        this.path,
+        this.server,
         this.maxSize
     )
 }

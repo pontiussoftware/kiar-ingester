@@ -9,6 +9,7 @@
  * https://openapi-generator.tech
  * Do not edit the class manually.
  */
+import { ImageDeployment } from './imageDeployment';
 import { ApacheSolrCollection } from './apacheSolrCollection';
 
 
@@ -23,5 +24,6 @@ export interface ApacheSolrConfig {
     createdAt?: number;
     changedAt?: number;
     collections: Array<ApacheSolrCollection>;
+    deployments: Array<ImageDeployment>;
 }
 

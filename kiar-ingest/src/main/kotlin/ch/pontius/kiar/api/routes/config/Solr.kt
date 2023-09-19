@@ -1,18 +1,25 @@
 package ch.pontius.kiar.api.routes.config
 
+import ch.pontius.kiar.api.model.config.image.ImageDeployment
+import ch.pontius.kiar.api.model.config.image.ImageFormat
 import ch.pontius.kiar.api.model.config.solr.ApacheSolrCollection
 import ch.pontius.kiar.api.model.config.solr.ApacheSolrConfig
 import ch.pontius.kiar.api.model.status.ErrorStatus
 import ch.pontius.kiar.api.model.status.ErrorStatusException
 import ch.pontius.kiar.api.model.status.SuccessStatus
 import ch.pontius.kiar.config.CollectionConfig
+import ch.pontius.kiar.database.config.jobs.DbJobTemplate
 import ch.pontius.kiar.database.config.solr.DbCollection
+import ch.pontius.kiar.database.config.solr.DbImageDeployment
+import ch.pontius.kiar.database.config.solr.DbImageFormat
 import ch.pontius.kiar.database.config.solr.DbSolr
+import ch.pontius.kiar.database.config.transformers.DbTransformer
 import ch.pontius.kiar.utilities.mapToArray
 import io.javalin.http.BadRequestResponse
 import io.javalin.http.Context
 import io.javalin.openapi.*
 import jetbrains.exodus.database.TransientEntityStore
+import kotlinx.dnq.query.asSequence
 import kotlinx.dnq.util.findById
 import org.joda.time.DateTime
 
@@ -33,6 +40,27 @@ import org.joda.time.DateTime
 fun listSolrConfigurations(ctx: Context, store: TransientEntityStore) {
     store.transactional (true) {
         ctx.json(DbSolr.all().mapToArray { it.toApi() })
+    }
+}
+
+@OpenApi(
+    path = "/api/solr/formats",
+    methods = [HttpMethod.GET],
+    summary = "Lists all available formats available for image deployment.",
+    operationId = "getListImageFormats",
+    tags = ["Config",  "Apache Solr"],
+    pathParams = [],
+    responses = [
+        OpenApiResponse("200", [OpenApiContent(Array<ImageFormat>::class)]),
+        OpenApiResponse("401", [OpenApiContent(ErrorStatus::class)]),
+        OpenApiResponse("403", [OpenApiContent(ErrorStatus::class)]),
+        OpenApiResponse("500", [OpenApiContent(ErrorStatus::class)]),
+    ]
+)
+fun listFormats(ctx: Context, store: TransientEntityStore) {
+    store.transactional (true) {
+        val parsers = DbImageFormat.all()
+        ctx.json(parsers.mapToArray { it.toApi() })
     }
 }
 
@@ -71,7 +99,8 @@ fun createSolrConfig(ctx: Context, store: TransientEntityStore) {
         }
 
         /* Now merge collection data. */
-        solr.mergeTransformers(request.collections)
+        solr.mergeCollections(request.collections)
+        solr.mergeDeployments(request.deployments)
         solr.toApi()
     }
     ctx.json(created)
@@ -160,7 +189,7 @@ fun updateSolrConfig(ctx: Context, store: TransientEntityStore) {
     val solrId = ctx.pathParam("id")
     val request = try {
         ctx.bodyAsClass(ApacheSolrConfig::class.java)
-    } catch (e: BadRequestResponse) {
+    } catch (e: Throwable) {
         throw ErrorStatusException(400, "Malformed request body.")
     }
 
@@ -182,7 +211,8 @@ fun updateSolrConfig(ctx: Context, store: TransientEntityStore) {
         solr.changedAt = DateTime.now()
 
         /* Now merge attribute mappings. */
-        solr.mergeTransformers(request.collections)
+        solr.mergeCollections(request.collections)
+        solr.mergeDeployments(request.deployments)
         solr.toApi()
     }
 
@@ -194,7 +224,7 @@ fun updateSolrConfig(ctx: Context, store: TransientEntityStore) {
  *
  * @param collections [List] of [CollectionConfig]s to merge [DbSolr] with.
  */
-private fun DbSolr.mergeTransformers(collections: List<ApacheSolrCollection>) {
+private fun DbSolr.mergeCollections(collections: List<ApacheSolrCollection>) {
     this.collections.clear()
     for (c in collections) {
         this.collections.add(DbCollection.new {
@@ -202,6 +232,24 @@ private fun DbSolr.mergeTransformers(collections: List<ApacheSolrCollection>) {
             type = c.type.toDb()
             selector = c.selector
             deleteBeforeIngest = c.deleteBeforeImport
+        })
+    }
+}
+
+/**
+ * Overrides a [DbJobTemplate]'s [DbTransformer]s using the provided list.
+ *
+ * @param deployment [List] of [ImageDeployment]s to merge [DbJobTemplate] with.
+ */
+private fun DbSolr.mergeDeployments(deployment: List<ImageDeployment>) {
+    this.deployments.asSequence().forEach { it.delete() }
+    for (d in deployment) {
+        this.deployments.add(DbImageDeployment.new {
+            name = d.name
+            server = d.server
+            path = d.path
+            format = d.format.toDb()
+            maxSize = d.maxSize
         })
     }
 }

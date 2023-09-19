@@ -46,16 +46,79 @@
     <textarea matInput type="textarea" formControlName="description"></textarea>
   </mat-form-field>
 
-  <h2>Collections
-    <button mat-mini-fab color="primary" aria-label="Adds a new attribute mapping to this entity mapping." (click)="addCollection()">
+  <h2>Image Deployments
+    <button mat-mini-fab color="primary" aria-label="Adds a new image deployment." (click)="addDeployment()">
       <mat-icon>add</mat-icon>
     </button>
   </h2>
 
+  <table formArrayName="deployments" [style.width]="'100%'">
+    <thead>
+    <tr>
+      <th>&nbsp;</th>
+      <th>Name</th>
+      <th>Format</th>
+      <th>Server</th>
+      <th>Path</th>
+      <th>Max. Size</th>
+    </tr>
+    </thead>
+    <tr *ngFor="let e of deployments; let i = index" [formGroupName]="i">
+      <td [style.padding-bottom]="'25px'" [style.width]="'125px'">
+        <button mat-icon-button color="warn" (click)="removeDeployment(i)"  matTooltip="Remove deployment."><mat-icon>delete</mat-icon></button>
+      </td>
+
+      <td>
+        <mat-form-field appearance="fill" [style.width]="'100%'">
+          <mat-label i18n="@@LabelName">Name</mat-label>
+          <input matInput type="text" formControlName="name"/>
+        </mat-form-field>
+      </td>
+
+      <td>
+        <mat-form-field appearance="fill" [style.width]="'100%'">
+          <mat-label i18n="@@LabelFormat">Type</mat-label>
+          <mat-select formControlName="format">
+            <mat-option *ngFor="let format of (imageFormats | async)" [value]="format">
+              {{format}}
+            </mat-option>
+          </mat-select>
+        </mat-form-field>
+      </td>
+
+      <td>
+        <mat-form-field appearance="fill" [style.width]="'100%'">
+          <mat-label i18n="@@LabelServer">Server</mat-label>
+          <input matInput type="text" formControlName="server"/>
+        </mat-form-field>
+      </td>
+
+      <td>
+        <mat-form-field appearance="fill" [style.width]="'100%'">
+          <mat-label i18n="@@LabelPath">Path</mat-label>
+          <input matInput type="text" formControlName="path"/>
+        </mat-form-field>
+      </td>
+
+      <td>
+        <mat-form-field appearance="fill" [style.width]="'100%'">
+          <mat-label i18n="@@LabelMaxSize">Max. Size</mat-label>
+          <input matInput type="number" formControlName="maxSize"/>
+        </mat-form-field>
+      </td>
+    </tr>
+  </table>
+
+  <h2>Collections
+    <button mat-mini-fab color="primary" aria-label="Adds a new collection." (click)="addCollection()">
+      <mat-icon>add</mat-icon>
+    </button>
+  </h2>
   <table formArrayName="collections" [style.width]="'100%'">
     <thead>
       <tr>
         <th>&nbsp;</th>
+        <th>Display Name</th>
         <th>Name</th>
         <th>Type</th>
         <th>Selector</th>
@@ -65,6 +128,12 @@
       <td [style.padding-bottom]="'25px'" [style.width]="'125px'">
         <button mat-icon-button (click)="viewCollection(i)" matTooltip="View collection (opens new window)."><mat-icon>visibility</mat-icon></button>
         <button mat-icon-button color="warn" (click)="removeCollection(i)"  matTooltip="Remove collection."><mat-icon>delete</mat-icon></button>
+      </td>
+      <td>
+        <mat-form-field appearance="fill" [style.width]="'100%'">
+          <mat-label i18n="@@LabelName">Display Name</mat-label>
+          <input matInput type="text" formControlName="displayName"/>
+        </mat-form-field>
       </td>
 
       <td>
