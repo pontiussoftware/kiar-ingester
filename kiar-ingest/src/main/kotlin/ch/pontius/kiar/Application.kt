@@ -38,10 +38,7 @@ import io.javalin.openapi.plugin.swagger.SwaggerConfiguration
 import io.javalin.openapi.plugin.swagger.SwaggerPlugin
 import jetbrains.exodus.database.TransientEntityStore
 import kotlinx.dnq.XdModel
-import kotlinx.dnq.query.filter
-import kotlinx.dnq.query.first
-import kotlinx.dnq.query.isEmpty
-import kotlinx.dnq.query.size
+import kotlinx.dnq.query.*
 import kotlinx.dnq.store.container.StaticStoreContainer
 import kotlinx.dnq.util.initMetaData
 import kotlinx.serialization.json.Json
@@ -249,6 +246,12 @@ private fun checkAndSetup(store: TransientEntityStore, config: Config) = store.t
                 }
             }
         }
+
+        /* Delete deprecated transformer entries. */
+        for (t in DbTransformer.filter { it.type.description eq "IMAGE" }.asIterable()) {
+            t.delete()
+        }
+
         println("Setup completed!")
     }
 }
