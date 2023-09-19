@@ -23,7 +23,7 @@ enum class Field(val solr: String, val required: Boolean = false, val multiValue
     DISPLAY("_display_", true),
 
     /** Field containing an object's display designation. */
-    DISPLAY_FIELD("_display_field_", true),
+    DISPLAY_LIST("_display_list_", true),
 
     /** Field containing the object's UUID. */
     UUID("uuid", true),
