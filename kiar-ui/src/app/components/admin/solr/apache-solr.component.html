@@ -58,6 +58,7 @@
       <th>&nbsp;</th>
       <th>Name</th>
       <th>Format</th>
+      <th>Source</th>
       <th>Server</th>
       <th>Path</th>
       <th>Max. Size</th>
@@ -88,6 +89,13 @@
 
       <td>
         <mat-form-field appearance="fill" [style.width]="'100%'">
+          <mat-label i18n="@@LabelSource">Source</mat-label>
+          <input matInput type="text" formControlName="source"/>
+        </mat-form-field>
+      </td>
+
+      <td>
+        <mat-form-field appearance="fill" [style.width]="'100%'">
           <mat-label i18n="@@LabelServer">Server</mat-label>
           <input matInput type="text" formControlName="server"/>
         </mat-form-field>
@@ -108,6 +116,8 @@
       </td>
     </tr>
   </table>
+
+  <hr/>
 
   <h2>Collections
     <button mat-mini-fab color="primary" aria-label="Adds a new collection." (click)="addCollection()">

@@ -22,10 +22,13 @@ class DbImageDeployment(entity: Entity) : XdEntity(entity) {
     /** The [DbImageFormat] produced by this [DbImageDeployment]. */
     var format by xdLink1(DbImageFormat)
 
+    /** The source field used by  this [DbImageDeployment]. */
+    var source by xdRequiredStringProp(trimmed = true)
+
     /** The (local) deployment path. */
     var path by xdRequiredStringProp(trimmed = true)
 
-    /** The (public) deployment URL. */
+    /** The (public) deployment URL. Can be null (for relative paths). */
     var server by xdStringProp(trimmed = true) { url() }
 
     /** The maximum size of the resulting image. */
@@ -44,6 +47,7 @@ class DbImageDeployment(entity: Entity) : XdEntity(entity) {
     fun toApi() = ImageDeployment(
         this.name,
         this.format.toApi(),
+        this.source,
         this.path,
         this.server,
         this.maxSize

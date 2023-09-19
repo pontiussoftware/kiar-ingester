@@ -115,7 +115,8 @@ export class ApacheSolrComponent implements AfterViewInit{
     this.deployments.push(new FormGroup({
       name: new FormControl('', [Validators.required]),
       format: new FormControl('', [Validators.required]),
-      server: new FormControl('', [Validators.required]),
+      source: new FormControl('', [Validators.required]),
+      server: new FormControl(''),
       path: new FormControl('', [Validators.required]),
       maxSize: new FormControl(100, [Validators.required, Validators.min(100)])
     }))
@@ -180,7 +181,8 @@ export class ApacheSolrComponent implements AfterViewInit{
       this.deployments.push(new FormGroup({
         name: new FormControl(deployment.name || '', [Validators.required]),
         format: new FormControl(deployment.format || '', [Validators.required]),
-        server: new FormControl(deployment.server || '', [Validators.required]),
+        source: new FormControl(deployment.source || '', [Validators.required]),
+        server: new FormControl(deployment.server || ''),
         path: new FormControl(deployment.path || '', [Validators.required]),
         maxSize: new FormControl(deployment.maxSize || 100, [Validators.required, Validators.min(100)])
       }))
@@ -214,6 +216,7 @@ export class ApacheSolrComponent implements AfterViewInit{
         return {
           name: deployment.get('name')?.value,
           format: deployment.get('format')?.value,
+          source: deployment.get('source')?.value,
           server: deployment.get('server')?.value,
           path: deployment.get('path')?.value,
           maxSize: deployment.get('maxSize')?.value

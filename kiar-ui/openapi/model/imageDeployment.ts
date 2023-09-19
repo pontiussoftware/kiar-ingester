@@ -15,6 +15,7 @@ import { ImageFormat } from './imageFormat';
 export interface ImageDeployment { 
     name: string;
     format: ImageFormat;
+    source: string;
     path: string;
     server?: string;
     maxSize: number;

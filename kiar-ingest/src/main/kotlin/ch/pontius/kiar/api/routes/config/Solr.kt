@@ -229,6 +229,7 @@ private fun DbSolr.mergeCollections(collections: List<ApacheSolrCollection>) {
     for (c in collections) {
         this.collections.add(DbCollection.new {
             name = c.name
+            displayName = c.displayName
             type = c.type.toDb()
             selector = c.selector
             deleteBeforeIngest = c.deleteBeforeImport
@@ -246,9 +247,10 @@ private fun DbSolr.mergeDeployments(deployment: List<ImageDeployment>) {
     for (d in deployment) {
         this.deployments.add(DbImageDeployment.new {
             name = d.name
+            format = d.format.toDb()
+            source = d.source
             server = d.server
             path = d.path
-            format = d.format.toDb()
             maxSize = d.maxSize
         })
     }

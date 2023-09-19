@@ -2807,6 +2807,9 @@
           "format" : {
             "$ref" : "#/components/schemas/ImageFormat"
           },
+          "source" : {
+            "type" : "string"
+          },
           "path" : {
             "type" : "string"
           },
@@ -2818,7 +2821,7 @@
             "format" : "int32"
           }
         },
-        "required" : [ "name", "format", "path", "maxSize" ]
+        "required" : [ "name", "format", "source", "path", "maxSize" ]
       },
       "ImageFormat" : {
         "type" : "string",
