@@ -19,14 +19,29 @@ class DisplayTransformer(override val input: Source<SolrInputDocument>): Transfo
      * Returns a [Flow] of this [ImageTransformer].
      */
     override fun toFlow(context: ProcessingContext): Flow<SolrInputDocument> = this.input.toFlow(context).map {
-        val type = it.get<String>(Field.OBJEKTTYP)
-        val display = when (ObjectType.parse(type ?: "")) {
-            ObjectType.BIBLIOGRAPHISCHES_OBJEKT -> listOf(it.get<String>(Field.OBJEKTBEZEICHNUNG), it.get<String>(Field.TITEL), it.get<String>(Field.AUTOR))
-            ObjectType.FOTOGRAFIE -> listOf(it.asString(Field.OBJEKTBEZEICHNUNG), it.get<String>(Field.TITEL), it.get<String>(Field.FOTOGRAF))
-            ObjectType.KUNST -> listOf(it.get<String>(Field.OBJEKTBEZEICHNUNG), it.get<String>(Field.TITEL), it.get<String>(Field.KUENSTLER))
-            else -> listOf(it.get<String>(Field.OBJEKTBEZEICHNUNG))
-        }.filterNotNull().joinToString(", ")
-        it.setField(Field.DISPLAY, display)
+        val type = ObjectType.parse(it.get<String>(Field.OBJEKTTYP) ?: "")
+
+        /* Generate _display_ field. */
+        when (type) {
+            ObjectType.BIBLIOGRAPHISCHES_OBJEKT -> it.setField(Field.DISPLAY, listOfNotNull(it.get<String>(Field.OBJEKTBEZEICHNUNG), it.get<String>(Field.TITEL), it.get<String>(Field.AUTOR)).joinToString(", "))
+            ObjectType.FOTOGRAFIE -> it.setField(Field.DISPLAY, listOfNotNull(it.asString(Field.OBJEKTBEZEICHNUNG), it.get<String>(Field.TITEL), it.get<String>(Field.FOTOGRAF)).joinToString(", "))
+            ObjectType.KUNST -> it.setField(Field.DISPLAY, listOfNotNull(it.get<String>(Field.OBJEKTBEZEICHNUNG), it.get<String>(Field.TITEL), it.get<String>(Field.KUENSTLER)).joinToString(", "))
+            else -> it.setField(Field.DISPLAY, it.get<String>(Field.OBJEKTBEZEICHNUNG) ?: "")
+        }
+
+        /* Generate _display_list_ field. */
+        when (type) {
+            ObjectType.ARCHAEOLOGIE -> TODO()
+            ObjectType.BIBLIOGRAPHISCHES_OBJEKT -> TODO()
+            ObjectType.BIOLOGIE -> TODO()
+            ObjectType.ETHNOLOGIE -> TODO()
+            ObjectType.FOTOGRAFIE -> TODO()
+            ObjectType.GEOLOGIE -> TODO()
+            ObjectType.KUNST -> TODO()
+            null -> TODO()
+        }
+
+        /* Return document. */
         it
     }
 }
