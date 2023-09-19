@@ -1,5 +1,6 @@
 package ch.pontius.kiar.api.routes.config
 
+import ch.pontius.kiar.api.model.config.image.ImageDeployment
 import ch.pontius.kiar.api.model.status.ErrorStatus
 import ch.pontius.kiar.api.model.config.templates.JobTemplate
 import ch.pontius.kiar.api.model.config.templates.JobType
@@ -7,6 +8,7 @@ import ch.pontius.kiar.api.model.config.transformers.TransformerConfig
 import ch.pontius.kiar.api.model.status.ErrorStatusException
 import ch.pontius.kiar.api.model.status.SuccessStatus
 import ch.pontius.kiar.api.routes.session.currentUser
+import ch.pontius.kiar.database.config.image.DbImageDeployment
 import ch.pontius.kiar.database.config.jobs.DbJobTemplate
 import ch.pontius.kiar.database.config.jobs.DbJobType
 import ch.pontius.kiar.database.config.mapping.DbEntityMapping
@@ -114,6 +116,7 @@ fun createJobTemplate(ctx: Context, store: TransientEntityStore, server: Ingeste
 
             /* Adds all transformer configuration to template. */
             this.merge(request.transformers)
+            this.merge(request.deployments)
         }
 
         /* Now merge attribute mappings. */
@@ -252,6 +255,7 @@ fun updateJobTemplate(ctx: Context, store: TransientEntityStore) {
 
         /* Now merge transformers. */
         template.merge(request.transformers)
+        template.merge(request.deployments)
         template.toApi()
     }
 
@@ -275,5 +279,18 @@ private fun DbJobTemplate.merge(transformers: List<TransformerConfig>) {
                 })
             }
         })
+    }
+}
+
+
+/**
+ * Overrides a [DbJobTemplate]'s [DbTransformer]s using the provided list.
+ *
+ * @param deployment [List] of [ImageDeployment]s to merge [DbJobTemplate] with.
+ */
+private fun DbJobTemplate.merge(deployment: List<ImageDeployment>) {
+    this.deployment.asSequence().forEach { it.delete() }
+    for (d in deployment) {
+        this.deployment.add(DbImageDeployment.findById(d.id))
     }
 }

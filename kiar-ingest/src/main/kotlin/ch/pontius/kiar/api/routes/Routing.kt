@@ -106,5 +106,16 @@ fun configureApiRoutes(store: TransientEntityStore, server: IngesterServer, conf
             put("{id}",  { ctx -> updateEntityMapping(ctx, store) }, Role.ADMINISTRATOR )
             delete("{id}",  { ctx -> deleteEntityMapping(ctx, store) }, Role.ADMINISTRATOR )
         }
+
+        /* Endpoints related to image deployments. */
+        path("deployment") {
+            get("images", { ctx -> listImageDeployments(ctx, store) }, Role.ADMINISTRATOR )
+            post("images", { ctx -> createImageDeployment(ctx, store) }, Role.ADMINISTRATOR )
+            path("images") {
+                get("formats",  { ctx -> listFormats(ctx, store) }, Role.ADMINISTRATOR )
+                put("{id}",  { ctx -> updateImageDeployment(ctx, store) }, Role.ADMINISTRATOR )
+                delete("{id}",  { ctx -> deleteImageDeployment(ctx, store) }, Role.ADMINISTRATOR )
+            }
+        }
     }
 }

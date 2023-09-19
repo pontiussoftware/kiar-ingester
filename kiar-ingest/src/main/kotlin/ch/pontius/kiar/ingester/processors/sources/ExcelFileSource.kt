@@ -27,7 +27,7 @@ class ExcelFileSource(private val file: Path, private val config: EntityMapping,
 
     override fun toFlow(context: ProcessingContext): Flow<SolrInputDocument> = flow {
         /* for (entry in excel) */
-        val doc = SolrInputDocument();
+        val doc = SolrInputDocument()
 
         emit(doc)
         /* End for. */

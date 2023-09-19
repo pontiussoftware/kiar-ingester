@@ -1,9 +1,7 @@
 package ch.pontius.kiar.api.model.config.templates
 
-import ch.pontius.kiar.api.model.config.solr.ApacheSolrCollection
-import ch.pontius.kiar.api.model.config.solr.ApacheSolrConfig
+import ch.pontius.kiar.api.model.config.image.ImageDeployment
 import ch.pontius.kiar.api.model.config.transformers.TransformerConfig
-import ch.pontius.kiar.config.CollectionConfig
 import kotlinx.serialization.Serializable
 
 /**
@@ -24,5 +22,7 @@ data class JobTemplate(
     val entityMappingName: String,
     val createdAt: Long? = null,
     val changedAt: Long? = null,
-    val transformers: List<TransformerConfig> = emptyList()
+    val transformers: List<TransformerConfig> = emptyList(),
+    val deployments: List<ImageDeployment> = emptyList()
+
 )

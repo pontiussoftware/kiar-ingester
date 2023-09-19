@@ -3,6 +3,7 @@ package ch.pontius.kiar.database.config.jobs
 import ch.pontius.kiar.api.model.config.templates.JobTemplate
 import ch.pontius.kiar.api.model.config.templates.JobType
 import ch.pontius.kiar.config.Config
+import ch.pontius.kiar.database.config.image.DbImageDeployment
 import ch.pontius.kiar.database.config.mapping.DbEntityMapping
 import ch.pontius.kiar.database.config.solr.DbCollection
 import ch.pontius.kiar.database.config.solr.DbSolr
@@ -60,6 +61,9 @@ class DbJobTemplate(entity: Entity) : XdEntity(entity) {
     /** The [DbEntityMapping] this [DbJobTemplate] employs. */
     val transformers by xdChildren0_N(DbTransformer::template)
 
+    /** The [DbImageDeployment] configurations this [DbJobTemplate] employs. */
+    val deployment by xdLink0_N(DbImageDeployment)
+
     /** The {@link DbJobs} that inherit from this {@link DbJobTemplate}. */
     val jobs by xdLink0_N(DbJob::template, onDelete = OnDeletePolicy.CLEAR, onTargetDelete = OnDeletePolicy.CLEAR)
 
@@ -90,6 +94,11 @@ class DbJobTemplate(entity: Entity) : XdEntity(entity) {
         this.changedAt?.millis,
         if (full) {
             this.transformers.asSequence().map { it.toApi() }.toList()
+        } else {
+            emptyList()
+        },
+        if (full) {
+            this.deployment.asSequence().map { it.toApi() }.toList()
         } else {
             emptyList()
         }
