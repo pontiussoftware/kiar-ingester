@@ -1,4 +1,4 @@
-package ch.pontius.kiar.ingester.parsing.values.primitive
+package ch.pontius.kiar.ingester.parsing.values.images
 
 import ch.pontius.kiar.ingester.parsing.values.ValueParser
 import org.apache.logging.log4j.LogManager
@@ -12,15 +12,15 @@ import javax.imageio.ImageIO
  * A [ValueParser] that converts a [String] (path) to a [BufferedImage]. Involves reading the image from the file system.
  *
  * @author Ralph Gasser
- * @version 1.0.0
+ * @version 1.1.0
  */
-class ImageValueParser(params: Map<String,String>): ValueParser<BufferedImage> {
+class FileImageValueParser(params: Map<String,String>): ValueParser<List<BufferedImage>> {
     companion object {
         private val LOGGER = LogManager.getLogger()
     }
 
-    /** The last [BufferedImage] extracted by this [ImageValueParser]. */
-    private var buffer: BufferedImage? = null
+    /** The last [BufferedImage] extracted by this [FileImageValueParser]. */
+    private var buffer: List<BufferedImage> = emptyList()
 
     /** Reads the search pattern from the parameters map.*/
     private val search: Regex? = params["search"]?.let { Regex(it) }
@@ -45,13 +45,13 @@ class ImageValueParser(params: Map<String,String>): ValueParser<BufferedImage> {
             LOGGER.warn("Failed to read image file $path: File does not exist")
         } else {
             this.buffer = try {
-                Files.newInputStream(path, StandardOpenOption.READ).use { ImageIO.read(it) }
+                listOf(Files.newInputStream(path, StandardOpenOption.READ).use { ImageIO.read(it) })
             } catch (e: Throwable) {
                 LOGGER.warn("Failed to read image file $path: ${e.message}")
-                null
+                emptyList()
             }
         }
     }
 
-    override fun get(): BufferedImage? = this.buffer
+    override fun get(): List<BufferedImage> = this.buffer
 }

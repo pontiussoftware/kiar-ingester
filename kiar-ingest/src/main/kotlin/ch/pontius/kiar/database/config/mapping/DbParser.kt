@@ -19,7 +19,10 @@ class DbParser(entity: Entity): XdEnumEntity(entity) {
         val DATE by DbParser.enumField { description = "DATE" }
         val INTEGER by DbParser.enumField { description = "INTEGER" }
         val DOUBLE by DbParser.enumField { description = "DOUBLE" }
-        val IMAGE by DbParser.enumField { description = "IMAGE" }
+
+        /* Image parsers. */
+        val IMAGE_FILE by DbParser.enumField { description = "IMAGE_FILE" }
+        val IMAGE_MPLUS by DbParser.enumField { description = "IMAGE_MPLUS" }
     }
 
     /** The name of this [DbParser]. */

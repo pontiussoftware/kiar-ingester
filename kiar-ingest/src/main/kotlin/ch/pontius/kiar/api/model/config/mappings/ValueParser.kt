@@ -2,6 +2,8 @@ package ch.pontius.kiar.api.model.config.mappings
 
 import ch.pontius.kiar.database.config.mapping.DbParser
 import ch.pontius.kiar.ingester.parsing.values.primitive.*
+import ch.pontius.kiar.ingester.parsing.values.images.FileImageValueParser
+import ch.pontius.kiar.ingester.parsing.values.images.MuseumplusImageParser
 import kotlinx.serialization.Serializable
 
 /**
@@ -18,7 +20,9 @@ enum class ValueParser {
     DATE,
     INTEGER,
     DOUBLE,
-    IMAGE;
+    IMAGE_FILE,
+    IMAGE_MPLUS;
+
 
     /**
      * Converts this [ValueParser] into a [DbParser]. Requires an ongoing transaction.
@@ -32,7 +36,8 @@ enum class ValueParser {
         DATE -> DbParser.DATE
         INTEGER -> DbParser.INTEGER
         DOUBLE -> DbParser.DOUBLE
-        IMAGE -> DbParser.IMAGE
+        IMAGE_FILE -> DbParser.IMAGE_FILE
+        IMAGE_MPLUS -> DbParser.IMAGE_MPLUS
     }
 
     /**
@@ -47,6 +52,7 @@ enum class ValueParser {
         INTEGER -> IntegerValueParser()
         DOUBLE -> DoubleValueParser()
         DATE -> DateValueParser(params)
-        IMAGE -> ImageValueParser(params)
+        IMAGE_FILE -> FileImageValueParser(params)
+        IMAGE_MPLUS -> MuseumplusImageParser(params)
     }
 }
