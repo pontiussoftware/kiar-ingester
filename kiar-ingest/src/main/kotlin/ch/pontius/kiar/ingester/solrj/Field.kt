@@ -67,6 +67,20 @@ enum class Field(val solr: String, val required: Boolean = false, val multiValue
     /** Field containing author information (person). */
     KUENSTLER("person_name_kuenstler", false),
 
+    /** Field containing photographer information (person). */
+    FOTOGRAF("person_name_fotograf", false),
+
+    /** Field containing producer information (person). */
+    HERSTELLER("person_name_hersteller", false),
+
+    /* Orte */
+
     /** Field containing author information (person). */
-    FOTOGRAF("person_name_fotograf", false);
+    HERSTELLUNGSORT("ort_herstellung", false),
+
+    /** Field containing author information (person). */
+    POLITISCHER_FUNDORT("ort_fund", false),
+
+    /** Field containing author information (person). */
+    ERSCHEINUNGSORT("ort_erscheinung", false);
 }
