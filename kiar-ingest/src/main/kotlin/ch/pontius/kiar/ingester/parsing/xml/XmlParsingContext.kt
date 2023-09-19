@@ -77,7 +77,7 @@ class XmlParsingContext(config: EntityMapping, val callback: (SolrInputDocument)
         /* Flush old context into document (if required). */
         val parsers = this.mappings[this.xpath] ?: emptyList()
         for (parser in parsers) {
-            parser.parse(this.buffer.toString(), this.document)
+            parser.parse(this.buffer.toString().trim(), this.document)
         }
 
         /* Pop stack. */
