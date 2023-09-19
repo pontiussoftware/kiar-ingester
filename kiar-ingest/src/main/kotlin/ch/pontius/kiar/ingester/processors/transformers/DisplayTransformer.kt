@@ -31,14 +31,14 @@ class DisplayTransformer(override val input: Source<SolrInputDocument>): Transfo
 
         /* Generate _display_list_ field. */
         when (type) {
-            ObjectType.ARCHAEOLOGIE -> TODO()
-            ObjectType.BIBLIOGRAPHISCHES_OBJEKT -> TODO()
-            ObjectType.BIOLOGIE -> TODO()
-            ObjectType.ETHNOLOGIE -> TODO()
-            ObjectType.FOTOGRAFIE -> TODO()
-            ObjectType.GEOLOGIE -> TODO()
-            ObjectType.KUNST -> TODO()
-            null -> TODO()
+            ObjectType.ARCHAEOLOGIE -> it.setField(Field.DISPLAY_FIELD, listOfNotNull(it.get<String>(Field.POLITISCHER_FUNDORT)))
+            ObjectType.BIBLIOGRAPHISCHES_OBJEKT -> it.setField(Field.DISPLAY_FIELD, listOfNotNull(it.get<String>(Field.TITEL), it.get<String>(Field.AUTOR), it.get<String>(Field.ERSCHEINUNGSORT)))
+            ObjectType.BIOLOGIE -> it.setField(Field.DISPLAY_FIELD, listOfNotNull(it.get<String>(Field.POLITISCHER_FUNDORT)))
+            ObjectType.ETHNOLOGIE -> it.setField(Field.DISPLAY_FIELD, listOfNotNull(it.get<String>(Field.HERSTELLER), it.get<String>(Field.HERSTELLUNGSORT)))
+            ObjectType.FOTOGRAFIE -> it.setField(Field.DISPLAY_FIELD, listOfNotNull(it.get<String>(Field.TITEL), it.get<String>(Field.FOTOGRAF), it.get<String>(Field.HERSTELLUNGSORT)))
+            ObjectType.GEOLOGIE -> it.setField(Field.DISPLAY_FIELD, listOfNotNull(it.get<String>(Field.POLITISCHER_FUNDORT)))
+            ObjectType.KUNST -> it.setField(Field.DISPLAY_FIELD, listOfNotNull(it.get<String>(Field.TITEL), it.get<String>(Field.KUENSTLER), it.get<String>(Field.HERSTELLUNGSORT)))
+            else -> it.setField(Field.DISPLAY, "")
         }
 
         /* Return document. */
