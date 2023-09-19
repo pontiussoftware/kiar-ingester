@@ -1,7 +1,9 @@
 package ch.pontius.kiar.ingester.parsing.values.images
 
+import ch.pontius.kiar.api.model.config.mappings.AttributeMapping
 import ch.pontius.kiar.ingester.parsing.values.ValueParser
 import org.apache.logging.log4j.LogManager
+import org.apache.solr.common.SolrInputDocument
 import java.awt.image.BufferedImage
 import java.nio.file.Files
 import java.nio.file.Paths
@@ -12,26 +14,23 @@ import javax.imageio.ImageIO
  * A [ValueParser] that converts a [String] (path) to a [BufferedImage]. Involves reading the image from the file system.
  *
  * @author Ralph Gasser
- * @version 1.1.0
+ * @version 2.0.0
  */
-class FileImageValueParser(params: Map<String,String>): ValueParser<List<BufferedImage>> {
+class FileImageValueParser(override val mapping: AttributeMapping): ValueParser<List<BufferedImage>> {
     companion object {
         private val LOGGER = LogManager.getLogger()
     }
 
-    /** The last [BufferedImage] extracted by this [FileImageValueParser]. */
-    private var buffer: List<BufferedImage> = emptyList()
-
     /** Reads the search pattern from the parameters map.*/
-    private val search: Regex? = params["search"]?.let { Regex(it) }
+    private val search: Regex? = this.mapping.parameters["search"]?.let { Regex(it) }
 
     /** Reads the replacement pattern from the parameters map.*/
-    private val replace: String? = params["replace"]
+    private val replace: String? = this.mapping.parameters["replace"]
 
     /**
      * Parses the given [BufferedImage].
      */
-    override fun parse(value: String) {
+    override fun parse(value: String, into: SolrInputDocument) {
         /* Read path - apply Regex search/replace if needed. */
         val actualPath = if (this.search != null && this.replace != null) {
             value.replace(this.search, this.replace)
@@ -44,14 +43,19 @@ class FileImageValueParser(params: Map<String,String>): ValueParser<List<Buffere
         if (!Files.exists(path)) {
             LOGGER.warn("Failed to read image file $path: File does not exist")
         } else {
-            this.buffer = try {
-                listOf(Files.newInputStream(path, StandardOpenOption.READ).use { ImageIO.read(it) })
+            try {
+                if (this.mapping.multiValued) {
+                    Files.newInputStream(path, StandardOpenOption.READ).use {
+                        into.addField(mapping.destination, ImageIO.read(it))
+                    }
+                } else {
+                    Files.newInputStream(path, StandardOpenOption.READ).use {
+                        into.setField(mapping.destination, ImageIO.read(it))
+                    }
+                }
             } catch (e: Throwable) {
                 LOGGER.warn("Failed to read image file $path: ${e.message}")
-                emptyList()
             }
         }
     }
-
-    override fun get(): List<BufferedImage> = this.buffer
 }

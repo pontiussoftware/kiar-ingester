@@ -10,6 +10,7 @@ val kotlinCoroutines: String by project
 val kotlinSerializaion: String by project
 val log4jVersion: String by project
 val picnicVersion: String by project
+val poiVersion: String by project
 val solrjVersion: String by project
 val slf4jVersion: String by project
 val twelveMonkeysVersion: String by project
@@ -44,6 +45,10 @@ dependencies {
 
     /** Bcrypt */
     implementation("org.mindrot:jbcrypt:$bcryptVersion")
+
+    /** Apache POI. */
+    implementation("org.apache.poi:poi:$poiVersion")
+    implementation("org.apache.poi:poi-ooxml:$poiVersion")
 
     /** Log4j2 & SLF4j */
     implementation("org.apache.logging.log4j:log4j-api:$log4jVersion")

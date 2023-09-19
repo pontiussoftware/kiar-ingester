@@ -1,13 +1,11 @@
 package ch.pontius.kiar.ingester.processors.sources
 
-import ch.pontius.kiar.api.model.config.mappings.AttributeMapping
 import ch.pontius.kiar.api.model.config.mappings.EntityMapping
 import ch.pontius.kiar.api.model.job.JobLog
 import ch.pontius.kiar.api.model.job.JobLogContext
 import ch.pontius.kiar.api.model.job.JobLogLevel
 import ch.pontius.kiar.ingester.parsing.xml.XmlDocumentParser
 import ch.pontius.kiar.ingester.processors.ProcessingContext
-import ch.pontius.kiar.ingester.solrj.Constants
 import ch.pontius.kiar.ingester.solrj.Field
 import ch.pontius.kiar.ingester.solrj.addField
 import ch.pontius.kiar.ingester.solrj.setField
@@ -28,15 +26,12 @@ import javax.imageio.ImageIO
  * A [Source] for a KIAR file, as delivered by mainly smaller museums.
  *
  * @author Ralph Gasser
- * @version 1.0.0
+ * @version 1.1.0
  */
 class KiarFileSource(private val file: Path, private val config: EntityMapping, private val skipResources: Boolean = false, private val deleteFileWhenDone: Boolean = true): Source<SolrInputDocument> {
     companion object {
         private val LOGGER = LogManager.getLogger()
     }
-
-    /** List of required [AttributeMapping]. */
-    private val required: List<AttributeMapping> = this.config.attributes.filter { it.required }
 
     /**
      * Creates and returns a [Flow] for this [KiarFileSource].
@@ -77,9 +72,7 @@ class KiarFileSource(private val file: Path, private val config: EntityMapping, 
                 }
 
                 /* Send document down the channel. */
-                if (this@KiarFileSource.validate(doc)) {
-                    this.send(doc)
-                }
+                this.send(doc)
             }
         }
     }.onCompletion {
@@ -91,20 +84,4 @@ class KiarFileSource(private val file: Path, private val config: EntityMapping, 
             }
         }
     }.flowOn(Dispatchers.IO)
-
-    /**
-     * Internal method that validates a [SolrInputDocument] before sending it downstream for processing.
-     *
-     * @param doc The [SolrInputDocument] that must be validated.
-     * @return True if validation is passed, false otherwise.
-     */
-    private fun validate(doc: SolrInputDocument): Boolean {
-        for (a in this.required) {
-            if (!doc.containsKey(a.destination)) {
-                LOGGER.warn("Document ${doc[Constants.FIELD_NAME_UUID]} did not pass validation because of missing attribute '${a.destination}'.")
-                return false
-            }
-        }
-        return true
-    }
 }

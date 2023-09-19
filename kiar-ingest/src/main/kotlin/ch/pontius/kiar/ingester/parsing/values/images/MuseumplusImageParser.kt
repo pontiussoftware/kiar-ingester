@@ -1,7 +1,9 @@
 package ch.pontius.kiar.ingester.parsing.values.images
 
+import ch.pontius.kiar.api.model.config.mappings.AttributeMapping
 import ch.pontius.kiar.ingester.parsing.values.ValueParser
 import org.apache.logging.log4j.LogManager
+import org.apache.solr.common.SolrInputDocument
 import java.awt.image.BufferedImage
 import java.net.HttpURLConnection
 import java.net.URL
@@ -14,47 +16,37 @@ import javax.imageio.ImageIO
  * @see http://docs.zetcom.com/framework-public/ws/ws-api-module.html#get-the-thumbnail-of-a-module-item-attachment
  *
  * @author Ralph Gasser
- * @version 1.0.0
+ * @version 2.0.0
  */
-class MuseumplusImageParser(params: Map<String,String>): ValueParser<List<BufferedImage>> {
+class MuseumplusImageParser(override val mapping: AttributeMapping): ValueParser<List<BufferedImage>> {
     companion object {
         private val LOGGER = LogManager.getLogger()
     }
 
-    /** The last [BufferedImage] extracted by this [MuseumplusImageParser]. */
-    private var buffer: List<BufferedImage> = emptyList()
-
     /** Reads the search pattern from the parameters map.*/
-    private val host: URL = params["host"]?.let { URL(it) }  ?: throw IllegalStateException("Host required but missing.")
+    private val host: URL = this.mapping.parameters["host"]?.let { URL(it) }  ?: throw IllegalStateException("Host required but missing.")
 
     /** Reads the replacement pattern from the parameters map.*/
-    private val username: String = params["username"]  ?: throw IllegalStateException("Username required but missing.")
+    private val username: String = this.mapping.parameters["username"]  ?: throw IllegalStateException("Username required but missing.")
 
     /** Reads the replacement pattern from the parameters map.*/
-    private val password: String = params["password"] ?: throw IllegalStateException("Password required but missing.")
+    private val password: String = this.mapping.parameters["password"] ?: throw IllegalStateException("Password required but missing.")
 
     /**
      * Parses the given [BufferedImage].
      */
-    override fun parse(value: String) {
+    override fun parse(value: String, into: SolrInputDocument) {
         /* Read IDs. */
-        val ids = value.split(',').map { it.trim().toInt() }
-        val images = mutableListOf<BufferedImage>()
-        for (id in ids) {
+        for (id in value.split(',').mapNotNull { it.trim().toIntOrNull() }) {
             val url = URL("${this.host.path}/ria-ws/application/module/Multimedia/${id}/thumbnail")
-            val image = this.downloadImage(url, this.username, this.password)
-            if (image != null) {
-                images.add(image)
+            val image = this.downloadImage(url, this.username, this.password) ?: continue
+            if (this.mapping.multiValued) {
+                into.addField(this.mapping.destination, image)
+            } else {
+                into.setField(this.mapping.destination, image)
             }
         }
     }
-
-    /**
-     * The [List] of [BufferedImage]s parsed by the [ValueParser].
-     *
-     * @return [List] of [BufferedImage]s.
-     */
-    override fun get(): List<BufferedImage> = this.buffer
 
     /**
      * Downloads the [BufferedImage] for the provided [URL].

@@ -30,7 +30,7 @@ class XmlDocumentParser(private val config: EntityMapping) {
     private val xPath: XPath = XPathFactory.newInstance().newXPath()
 
     /** A [Map] of all [XPathExpression]s used for document parsing. */
-    private val xpaths = this.config.attributes.associateWith { this.xPath.compile(it.source) }
+    private val mappings = this.config.attributes.map { it.newParser() to this.xPath.compile(it.source) }
 
     /**
      * Parses a [Path] pointing to an XML document into [SolrInputDocument].
@@ -60,36 +60,18 @@ class XmlDocumentParser(private val config: EntityMapping) {
      * @return [SolrInputDocument]
      */
     fun parse(node: Node): SolrInputDocument {
-        val solrDocument = SolrInputDocument()
-        for (mapping in this.config.attributes) {
-            val expr = this.xpaths[mapping]
+        val doc = SolrInputDocument()
+        for ((parser, expr) in this.mappings) {
             val nl = expr?.evaluate(node, XPathConstants.NODESET) as? NodeList
             if (nl != null) {
                 for (i in 0 until nl.length) {
-                    val parser = mapping.parser.newInstance(mapping.parameters)
                     val value = nl.item(i).nodeValue
                     if (!value.isNullOrBlank()) {
-                        parser.parse(nl.item(i).nodeValue)
-                        val parsedValue = parser.get()
-                        if (parsedValue is Collection<*>) {
-                            parsedValue.forEach { v ->
-                                if (mapping.multiValued) {
-                                    solrDocument.addField(mapping.destination, v)
-                                } else {
-                                    solrDocument.setField(mapping.destination, v)
-                                }
-                            }
-                        } else {
-                            if (mapping.multiValued) {
-                                solrDocument.addField(mapping.destination, parsedValue)
-                            } else {
-                                solrDocument.setField(mapping.destination, parsedValue)
-                            }
-                        }
+                        parser.parse(nl.item(i).nodeValue, doc)
                     }
                 }
             }
         }
-        return solrDocument
+        return doc
     }
 }

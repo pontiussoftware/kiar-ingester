@@ -2,7 +2,6 @@ package ch.pontius.kiar.ingester.parsing.xml
 
 import ch.pontius.kiar.api.model.config.mappings.AttributeMapping
 import ch.pontius.kiar.api.model.config.mappings.EntityMapping
-import ch.pontius.kiar.config.MappingConfig
 import ch.pontius.kiar.ingester.parsing.values.ValueParser
 import ch.pontius.kiar.ingester.solrj.Constants
 import org.apache.logging.log4j.LogManager
@@ -18,7 +17,7 @@ import java.util.*
  * Processing of the individual [SolrInputDocument] is provided by a callback method.
  *
  * @author Ralph Gasser
- * @version 1.0.0
+ * @version 1.1.0
  */
 class XmlParsingContext(config: EntityMapping, val callback: (SolrInputDocument) -> Unit): DefaultHandler() {
     companion object {
@@ -26,7 +25,10 @@ class XmlParsingContext(config: EntityMapping, val callback: (SolrInputDocument)
     }
 
     /** The current [SolrInputDocument] that is being processed. */
-    private val document = SolrInputDocument()
+    private var document = SolrInputDocument()
+
+    /** Internal [StringBuffer] used for buffering raw characters during XML parsing. */
+    private var buffer = StringBuffer()
 
     /** The current XPath this [XmlParsingContext] is currently in. */
     private var xpath = "/"
@@ -34,11 +36,8 @@ class XmlParsingContext(config: EntityMapping, val callback: (SolrInputDocument)
     /** The current XPath this [XmlParsingContext] is currently in. */
     private val stack = Stack<String>()
 
-    /** The current XPath this [XmlParsingContext] is currently in. */
-    private val parsers = HashMap<AttributeMapping, ValueParser<*>>()
-
     /** The longest, common prefix found for all [AttributeMapping]. This prefix will be used to distinguish between different objects. */
-    private val mappings = HashMap<String, MutableList<AttributeMapping>>()
+    private val mappings = HashMap<String, MutableList<ValueParser<*>>>()
 
     /** The longest, common prefix found for all [AttributeMapping]. This prefix will be used to distinguish between different objects. */
     private val newDocumentOn: String
@@ -54,7 +53,7 @@ class XmlParsingContext(config: EntityMapping, val callback: (SolrInputDocument)
                 if (list == null) {
                     list = mutableListOf()
                 }
-                list.add(it)
+                list.add(it.newParser())
                 list
             }
             commonPrefix = commonPrefix.commonPrefixWith(it.source)
@@ -69,14 +68,6 @@ class XmlParsingContext(config: EntityMapping, val callback: (SolrInputDocument)
     override fun startElement(uri: String, localName: String, qName: String, attributes: Attributes) {
         this.stack.add(qName)
         this.xpath = "/${this.stack.joinToString("/")}"
-
-        /* Create parsers for mappings. */
-        val mappings = this.mappings[this.xpath]
-        if (mappings != null) {
-            for (m in mappings) {
-                this.parsers[m] = m.parser.newInstance(m.parameters)
-            }
-        }
     }
 
     /**
@@ -84,34 +75,17 @@ class XmlParsingContext(config: EntityMapping, val callback: (SolrInputDocument)
      */
     override fun endElement(uri: String, localName: String, qName: String) {
         /* Flush old context into document (if required). */
-        val previousMappings = this.mappings[this.xpath]
-        if (previousMappings != null) {
-            for (m in previousMappings) {
-                val value = this.parsers[m]?.get()
-                if (value != null) {
-                    if (value is Collection<*>) {
-                        value.forEach { v ->
-                            if (m.multiValued) {
-                                this.document.addField(m.destination, v)
-                            } else {
-                                this.document.setField(m.destination, v)
-                            }
-                        }
-                    } else {
-                        if (m.multiValued) {
-                            this.document.addField(m.destination, value)
-                        } else {
-                            this.document.setField(m.destination, value)
-                        }
-                    }
-                }
-            }
+        val parsers = this.mappings[this.xpath] ?: emptyList()
+        for (parser in parsers) {
+            parser.parse(this.buffer.toString(), this.document)
         }
-        this.parsers.clear()
 
         /* Pop stack. */
         this.stack.pop()
         this.xpath = "/${this.stack.joinToString("/")}"
+
+        /* Reset string buffer. */
+        this.buffer = StringBuffer()
 
         /* Flush old document (if needed). */
         if (this.xpath == this.newDocumentOn) {
@@ -119,9 +93,9 @@ class XmlParsingContext(config: EntityMapping, val callback: (SolrInputDocument)
                 LOGGER.warn("Skipping document due to parse error (uuid = ${this.document[Constants.FIELD_NAME_UUID]}).")
                 this.error = false /* Clear error flag when new document starts. */
             } else {
-                this.callback(this.document.deepCopy())
+                this.callback(this.document)
             }
-            this.document.clear()
+            this.document = SolrInputDocument()
         }
     }
 
@@ -133,12 +107,7 @@ class XmlParsingContext(config: EntityMapping, val callback: (SolrInputDocument)
      * @param length The length of the string to read.
      */
     override fun characters(ch: CharArray, start: Int, length: Int) {
-        val mappings = this.mappings[this.xpath]
-        if (mappings != null) {
-            for (m in mappings) {
-                this.parsers[m]?.parse(String(ch.copyOfRange(start, start + length)))
-            }
-        }
+        this.buffer.append(ch.copyOfRange(start, start + length))
     }
 
     /**

@@ -1,9 +1,6 @@
 package ch.pontius.kiar.api.model.config.mappings
 
 import ch.pontius.kiar.database.config.mapping.DbParser
-import ch.pontius.kiar.ingester.parsing.values.primitive.*
-import ch.pontius.kiar.ingester.parsing.values.images.FileImageValueParser
-import ch.pontius.kiar.ingester.parsing.values.images.MuseumplusImageParser
 import kotlinx.serialization.Serializable
 
 /**
@@ -38,21 +35,5 @@ enum class ValueParser {
         DOUBLE -> DbParser.DOUBLE
         IMAGE_FILE -> DbParser.IMAGE_FILE
         IMAGE_MPLUS -> DbParser.IMAGE_MPLUS
-    }
-
-    /**
-     * Returns a new [ValueParser] instance for this [ValueParser] value.
-     *
-     * @return [ValueParser].
-     */
-    fun newInstance(params: Map<String,String> = emptyMap()) = when (this) {
-        UUID -> UuidValueParser()
-        STRING -> StringValueParser()
-        MULTISTRING -> MultiStringValueParser()
-        INTEGER -> IntegerValueParser()
-        DOUBLE -> DoubleValueParser()
-        DATE -> DateValueParser(params)
-        IMAGE_FILE -> FileImageValueParser(params)
-        IMAGE_MPLUS -> MuseumplusImageParser(params)
     }
 }

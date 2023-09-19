@@ -1,6 +1,8 @@
 package ch.pontius.kiar.ingester.parsing.values.primitive
 
+import ch.pontius.kiar.api.model.config.mappings.AttributeMapping
 import ch.pontius.kiar.ingester.parsing.values.ValueParser
+import org.apache.solr.common.SolrInputDocument
 import java.text.SimpleDateFormat
 import java.util.Date
 
@@ -8,17 +10,23 @@ import java.util.Date
  * [ValueParser] to convert a [String] to a [Date].
  *
  * @author Ralph Gasser
- * @version 1.0.0
+ * @version 2.0.0
  */
-class DateValueParser(params: Map<String,String>): ValueParser<Date> {
-    /** The last [Date] extracted by this [DateValueParser]. */
-    private var buffer: Date? = null
-
+class DateValueParser(override val mapping: AttributeMapping): ValueParser<Date> {
     /** The date/time format used for parsing the date. */
-    private val format = params["format"] ?: "yyyy-MM-dd HH:mm:ss"
+    private val format = mapping.parameters["format"] ?: "yyyy-MM-dd HH:mm:ss"
 
-    override fun parse(value: String) {
-        this.buffer = SimpleDateFormat(this.format).parse(value)
+    /**
+     * Parses the given [String] into the provided [SolrInputDocument].
+     *
+     * @param value The [String] value to parse.
+     * @param into The [SolrInputDocument] to append the value to.
+     */
+    override fun parse(value: String, into: SolrInputDocument) {
+        if (this.mapping.multiValued) {
+            into.addField(this.mapping.destination, SimpleDateFormat(this.format).parse(value))
+        } else {
+            into.setField(this.mapping.destination, SimpleDateFormat(this.format).parse(value))
+        }
     }
-    override fun get() = this.buffer
 }

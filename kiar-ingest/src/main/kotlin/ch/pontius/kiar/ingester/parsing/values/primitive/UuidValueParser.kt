@@ -1,18 +1,34 @@
 package ch.pontius.kiar.ingester.parsing.values.primitive
 
+import ch.pontius.kiar.api.model.config.mappings.AttributeMapping
 import ch.pontius.kiar.ingester.parsing.values.ValueParser
+import org.apache.solr.common.SolrInputDocument
+import java.lang.IllegalArgumentException
 import java.util.UUID
 
 /**
  * [ValueParser] to convert a [String] to a [UUID].
  *
  * @author Ralph Gasser
- * @version 1.0.0
+ * @version 2.0.0
  */
-class UuidValueParser: ValueParser<String> {
-    private var buffer: UUID? = null
-    override fun parse(value: String) {
-        this.buffer = UUID.fromString(value)
+class UuidValueParser(override val mapping: AttributeMapping): ValueParser<String> {
+    /**
+     * Parses the given [String] into the provided [SolrInputDocument].
+     *
+     * @param value The [String] value to parse.
+     * @param into The [SolrInputDocument] to append the value to.
+     */
+    override fun parse(value: String, into: SolrInputDocument) {
+        val uuid = try {
+            UUID.fromString(value)
+        } catch (e: IllegalArgumentException) {
+            return
+        }
+        if (this.mapping.multiValued) {
+            into.addField(this.mapping.destination, uuid)
+        } else {
+            into.setField(this.mapping.destination, uuid)
+        }
     }
-    override fun get(): String? = this.buffer.toString()
 }

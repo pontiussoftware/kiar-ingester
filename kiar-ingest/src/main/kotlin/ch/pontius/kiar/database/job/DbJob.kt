@@ -7,6 +7,7 @@ import ch.pontius.kiar.database.config.transformers.DbTransformer
 import ch.pontius.kiar.database.institution.DbUser
 import ch.pontius.kiar.ingester.processors.sinks.ApacheSolrSink
 import ch.pontius.kiar.ingester.processors.sinks.Sink
+import ch.pontius.kiar.ingester.processors.sources.ExcelFileSource
 import ch.pontius.kiar.ingester.processors.sources.KiarFileSource
 import ch.pontius.kiar.ingester.processors.sources.Source
 import ch.pontius.kiar.ingester.processors.sources.XmlFileSource
@@ -80,6 +81,7 @@ class DbJob(entity: Entity) : XdEntity(entity) {
         val source: Source<SolrInputDocument> = when (template.type.description) {
             "XML" -> XmlFileSource(sourcePath, template.mapping.toApi())
             "KIAR" -> KiarFileSource(sourcePath, template.mapping.toApi())
+            "EXCEL" -> ExcelFileSource(sourcePath, template.mapping.toApi())
             else -> throw IllegalStateException("Unsupported template type '${template.type.description}'. This is a programmer's error!")
         }
         var root = source
