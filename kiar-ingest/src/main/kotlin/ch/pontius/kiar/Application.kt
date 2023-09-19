@@ -249,6 +249,12 @@ private fun checkAndSetup(store: TransientEntityStore, config: Config) = store.t
 
         println("Setup completed!")
     }
+
+
+    /* Delete deprecated transformer entries. */
+    for (t in DbAttributeMapping.filter { it.parser.description eq "IMAGE" }.asIterable()) {
+        t.parser = DbParser.IMAGE_FILE
+    }
 }
 
 
