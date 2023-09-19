@@ -64,7 +64,7 @@ enum class Field(val solr: String, val required: Boolean = false, val multiValue
     /** Field containing author information (person). */
     AUTOR("person_name_autor", false),
 
-    /** Field containing author information (person). */
+    /** Field containing artist information (person). */
     KUENSTLER("person_name_kuenstler", false),
 
     /** Field containing photographer information (person). */
@@ -73,14 +73,18 @@ enum class Field(val solr: String, val required: Boolean = false, val multiValue
     /** Field containing producer information (person). */
     HERSTELLER("person_name_hersteller", false),
 
+
+
     /* Orte */
 
-    /** Field containing author information (person). */
+    /** Field containing location of manufacture information . */
     HERSTELLUNGSORT("ort_herstellung", false),
 
-    /** Field containing author information (person). */
+    /** Field containing location of finding information. */
     POLITISCHER_FUNDORT("ort_fund", false),
 
-    /** Field containing author information (person). */
+    /** Field containing location of publication information. */
     ERSCHEINUNGSORT("ort_erscheinung", false);
+
+
 }
