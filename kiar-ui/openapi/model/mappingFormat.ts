@@ -9,17 +9,13 @@
  * https://openapi-generator.tech
  * Do not edit the class manually.
  */
-import { ImageFormat } from './imageFormat';
 
 
-export interface ImageDeployment { 
-    name: string;
-    format: ImageFormat;
-    path: string;
-    server?: string;
-    maxSize: number;
-}
-export namespace ImageDeployment {
-}
+export type MappingFormat = 'XML' | 'JSON' | 'EXCEL';
 
+export const MappingFormat = {
+    XML: 'XML' as MappingFormat,
+    JSON: 'JSON' as MappingFormat,
+    EXCEL: 'EXCEL' as MappingFormat
+};
 

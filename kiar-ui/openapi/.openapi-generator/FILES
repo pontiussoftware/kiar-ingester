@@ -36,7 +36,7 @@ model/jobStatus.ts
 model/jobTemplate.ts
 model/jobType.ts
 model/loginRequest.ts
-model/mappingType.ts
+model/mappingFormat.ts
 model/models.ts
 model/paginatedInstitutionResult.ts
 model/paginatedJobLogResult.ts

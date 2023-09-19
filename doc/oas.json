@@ -1106,6 +1106,61 @@
         "security" : [ ]
       }
     },
+    "/api/mappings/formats" : {
+      "get" : {
+        "tags" : [ "Config", "Entity Mapping" ],
+        "summary" : "Lists all available entity mapping formats.",
+        "operationId" : "getListMappingFormats",
+        "parameters" : [ ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "array",
+                  "items" : {
+                    "$ref" : "#/components/schemas/MappingFormat"
+                  }
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorStatus"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Forbidden",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorStatus"
+                }
+              }
+            }
+          },
+          "500" : {
+            "description" : "Server Error",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorStatus"
+                }
+              }
+            }
+          }
+        },
+        "deprecated" : false,
+        "security" : [ ]
+      }
+    },
     "/api/mappings/parsers" : {
       "get" : {
         "tags" : [ "Config", "Entity Mapping" ],
@@ -2763,7 +2818,7 @@
             "format" : "int32"
           }
         },
-        "required" : [ "name", "format", "path", "server", "maxSize" ]
+        "required" : [ "name", "format", "path", "maxSize" ]
       },
       "ImageFormat" : {
         "type" : "string",
@@ -2811,7 +2866,7 @@
             "type" : "string"
           },
           "type" : {
-            "$ref" : "#/components/schemas/MappingType"
+            "$ref" : "#/components/schemas/MappingFormat"
           },
           "createdAt" : {
             "type" : "integer",
@@ -2830,9 +2885,9 @@
         },
         "required" : [ "name", "type", "attributes" ]
       },
-      "MappingType" : {
+      "MappingFormat" : {
         "type" : "string",
-        "enum" : [ "XML", "JSON" ]
+        "enum" : [ "XML", "JSON", "EXCEL" ]
       },
       "ValueParser" : {
         "type" : "string",
@@ -2962,7 +3017,7 @@
       },
       "JobType" : {
         "type" : "string",
-        "enum" : [ "XML", "JSON", "KIAR" ]
+        "enum" : [ "XML", "JSON", "EXCEL", "KIAR" ]
       },
       "TransformerConfig" : {
         "type" : "object",
@@ -2982,7 +3037,7 @@
       },
       "TransformerType" : {
         "type" : "string",
-        "enum" : [ "IMAGE", "DISPLAY", "SYSTEM", "RIGHTS" ]
+        "enum" : [ "DISPLAY", "SYSTEM", "RIGHTS" ]
       },
       "Institution" : {
         "type" : "object",

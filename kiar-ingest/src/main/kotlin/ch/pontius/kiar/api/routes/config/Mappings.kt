@@ -1,13 +1,11 @@
 import ch.pontius.kiar.api.model.config.mappings.AttributeMapping
 import ch.pontius.kiar.api.model.config.mappings.EntityMapping
+import ch.pontius.kiar.api.model.config.mappings.MappingFormat
 import ch.pontius.kiar.api.model.config.mappings.ValueParser
 import ch.pontius.kiar.api.model.status.ErrorStatus
 import ch.pontius.kiar.api.model.status.ErrorStatusException
 import ch.pontius.kiar.api.model.status.SuccessStatus
-import ch.pontius.kiar.database.config.mapping.DbAttributeMapping
-import ch.pontius.kiar.database.config.mapping.DbAttributeMappingParameters
-import ch.pontius.kiar.database.config.mapping.DbEntityMapping
-import ch.pontius.kiar.database.config.mapping.DbParser
+import ch.pontius.kiar.database.config.mapping.*
 import ch.pontius.kiar.utilities.mapToArray
 import io.javalin.http.BadRequestResponse
 import io.javalin.http.Context
@@ -59,6 +57,26 @@ fun listParsers(ctx: Context, store: TransientEntityStore) {
     }
 }
 
+@OpenApi(
+    path = "/api/mappings/formats",
+    methods = [HttpMethod.GET],
+    summary = "Lists all available entity mapping formats.",
+    operationId = "getListMappingFormats",
+    tags = ["Config", "Entity Mapping"],
+    pathParams = [],
+    responses = [
+        OpenApiResponse("200", [OpenApiContent(Array<MappingFormat>::class)]),
+        OpenApiResponse("401", [OpenApiContent(ErrorStatus::class)]),
+        OpenApiResponse("403", [OpenApiContent(ErrorStatus::class)]),
+        OpenApiResponse("500", [OpenApiContent(ErrorStatus::class)]),
+    ]
+)
+fun listMappingFormats(ctx: Context, store: TransientEntityStore) {
+    store.transactional (true) {
+        val parsers = DbFormat.all()
+        ctx.json(parsers.mapToArray { it.toApi() })
+    }
+}
 
 @OpenApi(
     path = "/api/mappings",

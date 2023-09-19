@@ -10,14 +10,14 @@ import kotlinx.serialization.Serializable
  * @version 1.0.0
  */
 @Serializable
-enum class MappingType {
+enum class MappingFormat {
     XML,   /* XML file based mapping. */
     JSON,  /* JSON file based mapping. */
     EXCEL; /* EXCEL file based mapping. */
 
 
     /**
-     * Convenience method to convert this [MappingType] to a [DbFormat]. Requires an ongoing transaction!
+     * Convenience method to convert this [MappingFormat] to a [DbFormat]. Requires an ongoing transaction!
      *
      * @return [DbFormat]
      */

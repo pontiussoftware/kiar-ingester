@@ -15,10 +15,11 @@
 
     <mat-form-field appearance="fill" [style.width]="'10%'">
       <mat-label>Type</mat-label>
-      <select matNativeControl required formControlName="type">
-        <option value="XML">XML</option>
-        <option value="JSON">JSON</option>
-      </select>
+      <mat-select formControlName="type">
+        <mat-option *ngFor="let format of (mappingFormats | async)" [value]="format">
+          {{format}}
+        </mat-option>
+      </mat-select>
     </mat-form-field>
 
     <div class="button-group" [style.margin-top]="'10px'">

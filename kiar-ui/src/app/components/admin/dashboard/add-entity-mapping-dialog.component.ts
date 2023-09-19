@@ -1,7 +1,8 @@
 import {Component} from "@angular/core";
 import {FormControl, FormGroup, Validators} from "@angular/forms";
 import {MatDialogRef} from "@angular/material/dialog";
-import {EntityMapping, MappingType} from "../../../../../openapi";
+import {EntityMapping, EntityMappingService, MappingFormat} from "../../../../../openapi";
+import {Observable, shareReplay} from "rxjs";
 
 @Component({
   selector: 'kiar-add-entity-mapping-dialog',
@@ -16,7 +17,12 @@ export class AddEntityMappingDialogComponent {
     type: new FormControl('', [Validators.required]),
   })
 
-  constructor(private dialogRef: MatDialogRef<AddEntityMappingDialogComponent>) {}
+  /** An {@link Observable} of available {@link MappingFormat}. */
+  public readonly mappingFormats: Observable<Array<MappingFormat>>
+
+  constructor(private dialogRef: MatDialogRef<AddEntityMappingDialogComponent>, private service: EntityMappingService,) {
+    this.mappingFormats = this.service.getListMappingFormats().pipe(shareReplay(1))
+  }
 
   /**
    * Saves the data in this {@link AddEntityMappingDialogComponent}.
@@ -26,7 +32,7 @@ export class AddEntityMappingDialogComponent {
       let object = {
         name: this.formControl.get('name')?.value,
         description: this.formControl.get('description')?.value,
-        type: this.formControl.get('type')?.value as MappingType,
+        type: this.formControl.get('type')?.value as MappingFormat,
         attributes: []
       } as EntityMapping
       this.dialogRef.close(object)

@@ -1,11 +1,11 @@
 import {AfterViewInit, Component} from "@angular/core";
-import {AttributeMapping, EntityMapping, EntityMappingService, MappingType, ValueParser} from "../../../../../openapi";
+import {AttributeMapping, EntityMapping, EntityMappingService, MappingFormat, ValueParser} from "../../../../../openapi";
 import {ActivatedRoute, Router} from "@angular/router";
 import {catchError, map, mergeMap, Observable, of, shareReplay} from "rxjs";
 import {MatSnackBar, MatSnackBarConfig} from "@angular/material/snack-bar";
 import {FormArray, FormControl, FormGroup, Validators} from "@angular/forms";
 import {MatDialog} from "@angular/material/dialog";
-import {AttributeMappingData, AttributeMappingDialogComponent} from "./attribute-mapping-dialog.component";
+import {AttributeMappingDialogComponent} from "./attribute-mapping-dialog.component";
 
 @Component({
   selector: 'kiar-entity-mapping-admin',
@@ -19,6 +19,9 @@ export class EntityMappingComponent implements AfterViewInit {
 
   /** An {@link Observable} of the list of available {@link ValueParser}s. */
   public readonly parsers: Observable<Array<ValueParser>>
+
+  /** An {@link Observable} of available {@link MappingFormat}. */
+  public readonly mappingFormats: Observable<Array<MappingFormat>>
 
   /** List of attribute {@link FormGroup}s. */
   public readonly attributes: FormArray<any> = new FormArray<any>([])
@@ -40,6 +43,7 @@ export class EntityMappingComponent implements AfterViewInit {
   ) {
     this.mappingId = this.route.paramMap.pipe(map(params => params.get('id')!!));
     this.parsers = this.service.getListParsers().pipe(shareReplay(1))
+    this.mappingFormats = this.service.getListMappingFormats().pipe(shareReplay(1))
   }
 
   /**
@@ -165,7 +169,7 @@ export class EntityMappingComponent implements AfterViewInit {
       id: id,
       name: this.formControl.get('name')?.value,
       description: this.formControl.get('description')?.value,
-      type: this.formControl.get('type')?.value as MappingType,
+      type: this.formControl.get('type')?.value as MappingFormat,
       attributes: (this.formControl.get('attributes') as FormArray).controls.map(attr => {
         let map = new Map<string,string>;
         (attr.get('parameters') as FormArray).controls.forEach(param => {

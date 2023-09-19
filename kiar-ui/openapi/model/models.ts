@@ -18,7 +18,7 @@ export * from './jobStatus';
 export * from './jobTemplate';
 export * from './jobType';
 export * from './loginRequest';
-export * from './mappingType';
+export * from './mappingFormat';
 export * from './paginatedInstitutionResult';
 export * from './paginatedJobLogResult';
 export * from './paginatedJobResult';

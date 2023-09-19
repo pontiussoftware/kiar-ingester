@@ -9,7 +9,7 @@
  * https://openapi-generator.tech
  * Do not edit the class manually.
  */
-import { MappingType } from './mappingType';
+import { MappingFormat } from './mappingFormat';
 import { AttributeMapping } from './attributeMapping';
 
 
@@ -17,7 +17,7 @@ export interface EntityMapping {
     id?: string;
     name: string;
     description?: string;
-    type: MappingType;
+    type: MappingFormat;
     createdAt?: number;
     changedAt?: number;
     attributes: Array<AttributeMapping>;

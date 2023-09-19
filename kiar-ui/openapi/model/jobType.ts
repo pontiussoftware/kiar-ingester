@@ -11,11 +11,12 @@
  */
 
 
-export type JobType = 'XML' | 'JSON' | 'KIAR';
+export type JobType = 'XML' | 'JSON' | 'EXCEL' | 'KIAR';
 
 export const JobType = {
     XML: 'XML' as JobType,
     JSON: 'JSON' as JobType,
+    EXCEL: 'EXCEL' as JobType,
     KIAR: 'KIAR' as JobType
 };
 

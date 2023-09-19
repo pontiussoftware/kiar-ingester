@@ -13,7 +13,7 @@ data class EntityMapping(
     val id: String? = null,
     val name: String,
     val description: String?,
-    val type: MappingType,
+    val type: MappingFormat,
     val createdAt: Long? = null,
     val changedAt: Long? = null,
     val attributes: List<AttributeMapping>

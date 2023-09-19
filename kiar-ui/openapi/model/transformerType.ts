@@ -11,10 +11,9 @@
  */
 
 
-export type TransformerType = 'IMAGE' | 'DISPLAY' | 'SYSTEM' | 'RIGHTS';
+export type TransformerType = 'DISPLAY' | 'SYSTEM' | 'RIGHTS';
 
 export const TransformerType = {
-    IMAGE: 'IMAGE' as TransformerType,
     DISPLAY: 'DISPLAY' as TransformerType,
     SYSTEM: 'SYSTEM' as TransformerType,
     RIGHTS: 'RIGHTS' as TransformerType

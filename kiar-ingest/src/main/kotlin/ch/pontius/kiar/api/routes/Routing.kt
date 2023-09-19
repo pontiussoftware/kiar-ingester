@@ -18,6 +18,7 @@ import getListInstitutions
 import io.javalin.apibuilder.ApiBuilder.*
 import jetbrains.exodus.database.TransientEntityStore
 import listEntityMappings
+import listMappingFormats
 import listParsers
 import putUpdateInstitution
 import updateEntityMapping
@@ -102,6 +103,7 @@ fun configureApiRoutes(store: TransientEntityStore, server: IngesterServer, conf
         get("mappings", { ctx -> listEntityMappings(ctx, store) }, Role.ADMINISTRATOR )
         post("mappings", { ctx -> createEntityMapping(ctx, store) }, Role.ADMINISTRATOR )
         path("mappings") {
+            get("formats",  { ctx -> listMappingFormats(ctx, store) }, Role.ADMINISTRATOR )
             get("parsers",  { ctx -> listParsers(ctx, store) }, Role.ADMINISTRATOR )
             get("{id}",  { ctx -> getEntityMapping(ctx, store) }, Role.ADMINISTRATOR )
             put("{id}",  { ctx -> updateEntityMapping(ctx, store) }, Role.ADMINISTRATOR )
