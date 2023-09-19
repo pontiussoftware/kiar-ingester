@@ -5,7 +5,7 @@ import {catchError, map, mergeMap, Observable, of, shareReplay} from "rxjs";
 import {MatSnackBar, MatSnackBarConfig} from "@angular/material/snack-bar";
 import {FormArray, FormControl, FormGroup, Validators} from "@angular/forms";
 import {MatDialog} from "@angular/material/dialog";
-import {AttributeMappingDialogComponent} from "./attribute-mapping-dialog.component";
+import {AttributeMappingData, AttributeMappingDialogComponent} from "./attribute-mapping-dialog.component";
 
 @Component({
   selector: 'kiar-entity-mapping-admin',
@@ -81,7 +81,6 @@ export class EntityMappingComponent implements AfterViewInit {
     this.attributes.insert(newIndex, entry)
   }
 
-
   /**
    * Opens a {@link AttributeMappingDialogComponent} to edit an existing {@link AttributeMapping}.
    *
@@ -89,11 +88,10 @@ export class EntityMappingComponent implements AfterViewInit {
    */
   public editAttributeMapping(index: number) {
     this.dialog.open(AttributeMappingDialogComponent, {
-      data: this.attributes.at(index),
+      data: { form: this.attributes.at(index), new: false } as AttributeMappingData,
       width: '750px'
     })
   }
-
 
 
   /**
