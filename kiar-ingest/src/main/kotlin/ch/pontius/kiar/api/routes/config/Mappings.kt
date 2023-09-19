@@ -12,6 +12,7 @@ import io.javalin.http.Context
 import io.javalin.openapi.*
 import jetbrains.exodus.database.TransientEntityStore
 import kotlinx.dnq.query.asSequence
+import kotlinx.dnq.query.filter
 import kotlinx.dnq.util.findById
 import org.joda.time.DateTime
 
@@ -52,7 +53,7 @@ fun listEntityMappings(ctx: Context, store: TransientEntityStore) {
 )
 fun listParsers(ctx: Context, store: TransientEntityStore) {
     store.transactional (true) {
-        val parsers = DbParser.all()
+        val parsers = DbParser.filter { it.name ne "IMAGE" }
         ctx.json(parsers.mapToArray { it.toApi() })
     }
 }
