@@ -43,18 +43,20 @@ class FileImageValueParser(override val mapping: AttributeMapping): ValueParser<
         if (!Files.exists(path)) {
             LOGGER.warn("Failed to read image file $path: File does not exist")
         } else {
-            try {
-                if (this.mapping.multiValued) {
-                    Files.newInputStream(path, StandardOpenOption.READ).use {
-                        into.addField(mapping.destination, ImageIO.read(it))
-                    }
-                } else {
-                    Files.newInputStream(path, StandardOpenOption.READ).use {
-                        into.setField(mapping.destination, ImageIO.read(it))
-                    }
+            val image = try {
+                Files.newInputStream(path, StandardOpenOption.READ).use {
+                    into.addField(mapping.destination, ImageIO.read(it))
                 }
             } catch (e: Throwable) {
                 LOGGER.warn("Failed to read image file $path: ${e.message}")
+                null
+            }
+            if (image != null) {
+                if (this.mapping.multiValued) {
+                    into.addField(mapping.destination, image)
+                } else {
+                    into.setField(mapping.destination, image)
+                }
             }
         }
     }
