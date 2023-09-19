@@ -115,8 +115,8 @@ fun createJobTemplate(ctx: Context, store: TransientEntityStore, server: Ingeste
             changedAt = DateTime.now()
 
             /* Adds all transformer configuration to template. */
-            this.merge(request.transformers)
-            this.merge(request.deployments)
+            this.mergeTransformers(request.transformers)
+            this.mergeDeployments(request.deployments)
         }
 
         /* Now merge attribute mappings. */
@@ -254,8 +254,8 @@ fun updateJobTemplate(ctx: Context, store: TransientEntityStore) {
         template.changedAt = DateTime.now()
 
         /* Now merge transformers. */
-        template.merge(request.transformers)
-        template.merge(request.deployments)
+        template.mergeTransformers(request.transformers)
+        template.mergeDeployments(request.deployments)
         template.toApi()
     }
 
@@ -267,7 +267,7 @@ fun updateJobTemplate(ctx: Context, store: TransientEntityStore) {
  *
  * @param transformers [List] of [TransformerConfig]s to merge [DbJobTemplate] with.
  */
-private fun DbJobTemplate.merge(transformers: List<TransformerConfig>) {
+private fun DbJobTemplate.mergeTransformers(transformers: List<TransformerConfig>) {
     this.transformers.asSequence().forEach { it.delete() }
     for (t in transformers) {
         this.transformers.add(DbTransformer.new {
@@ -288,7 +288,7 @@ private fun DbJobTemplate.merge(transformers: List<TransformerConfig>) {
  *
  * @param deployment [List] of [ImageDeployment]s to merge [DbJobTemplate] with.
  */
-private fun DbJobTemplate.merge(deployment: List<ImageDeployment>) {
+private fun DbJobTemplate.mergeDeployments(deployment: List<ImageDeployment>) {
     this.deployment.asSequence().forEach { it.delete() }
     for (d in deployment) {
         this.deployment.add(DbImageDeployment.findById(d.id))

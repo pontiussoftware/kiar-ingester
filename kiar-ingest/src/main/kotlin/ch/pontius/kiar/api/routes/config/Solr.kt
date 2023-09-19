@@ -71,7 +71,7 @@ fun createSolrConfig(ctx: Context, store: TransientEntityStore) {
         }
 
         /* Now merge collection data. */
-        solr.merge(request.collections)
+        solr.mergeTransformers(request.collections)
         solr.toApi()
     }
     ctx.json(created)
@@ -182,7 +182,7 @@ fun updateSolrConfig(ctx: Context, store: TransientEntityStore) {
         solr.changedAt = DateTime.now()
 
         /* Now merge attribute mappings. */
-        solr.merge(request.collections)
+        solr.mergeTransformers(request.collections)
         solr.toApi()
     }
 
@@ -194,7 +194,7 @@ fun updateSolrConfig(ctx: Context, store: TransientEntityStore) {
  *
  * @param collections [List] of [CollectionConfig]s to merge [DbSolr] with.
  */
-private fun DbSolr.merge(collections: List<ApacheSolrCollection>) {
+private fun DbSolr.mergeTransformers(collections: List<ApacheSolrCollection>) {
     this.collections.clear()
     for (c in collections) {
         this.collections.add(DbCollection.new {
