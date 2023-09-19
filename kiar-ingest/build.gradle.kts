@@ -29,6 +29,7 @@ configurations {
 
 application {
     mainClass.set("ch.pontius.kiar.ApplicationKt")
+    applicationDefaultJvmArgs = listOf("-Xms512M", "-Xmx2G")
 }
 
 dependencies {
