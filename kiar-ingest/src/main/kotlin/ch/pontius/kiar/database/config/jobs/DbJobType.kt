@@ -16,6 +16,7 @@ class DbJobType(entity: Entity): XdEnumEntity(entity) {
     companion object : XdEnumEntityType<DbJobType>() {
         val XML by DbJobType.enumField { description = "XML"; suffix = "xml" }
         val JSON by DbJobType.enumField { description = "JSON"; suffix = "json" }
+        val EXCEL by DbJobType.enumField { description = "EXCEL"; suffix = "xlsx" }
         val KIAR by DbJobType.enumField { description = "KIAR"; suffix = "kiar" }
     }
 

@@ -9,9 +9,7 @@ import ch.pontius.kiar.database.config.jobs.DbJobType
  * @version 1.1.0
  */
 enum class JobType {
-    XML,
-    JSON,
-    KIAR;
+    XML, JSON, EXCEL, KIAR;
 
     /**
      * Convenience method to convert this [JobType] to a [DbJobType]. Requires an ongoing transaction!
@@ -21,6 +19,7 @@ enum class JobType {
     fun toDb(): DbJobType = when(this) {
         XML -> DbJobType.XML
         JSON ->  DbJobType.JSON
+        EXCEL -> DbJobType.EXCEL
         KIAR ->  DbJobType.KIAR
     }
 }

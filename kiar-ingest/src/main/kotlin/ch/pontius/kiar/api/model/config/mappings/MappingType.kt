@@ -11,8 +11,9 @@ import kotlinx.serialization.Serializable
  */
 @Serializable
 enum class MappingType {
-    XML, /* XML file based mapping. */
-    JSON; /* JSON file based mapping. */
+    XML,   /* XML file based mapping. */
+    JSON,  /* JSON file based mapping. */
+    EXCEL; /* EXCEL file based mapping. */
 
 
     /**
@@ -23,5 +24,6 @@ enum class MappingType {
     fun toDb() = when(this) {
         XML -> DbFormat.XML
         JSON ->  DbFormat.JSON
+        EXCEL ->  DbFormat.EXCEL
     }
 }
