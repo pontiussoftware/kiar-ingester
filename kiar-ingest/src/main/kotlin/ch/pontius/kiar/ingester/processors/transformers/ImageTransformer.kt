@@ -92,6 +92,7 @@ class ImageTransformer(override val input: Source<SolrInputDocument>, parameters
                     counter += 1
                 }
                 it.setField(Field.IMAGECOUNT, counter)
+                it.removeField(Field.RAW) /* Clean-up to safe memory. */
             } else {
                 it.setField(Field.IMAGECOUNT, 0)
             }
