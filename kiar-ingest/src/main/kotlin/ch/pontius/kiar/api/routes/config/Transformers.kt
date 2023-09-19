@@ -10,6 +10,7 @@ import io.javalin.openapi.OpenApi
 import io.javalin.openapi.OpenApiContent
 import io.javalin.openapi.OpenApiResponse
 import jetbrains.exodus.database.TransientEntityStore
+import kotlinx.dnq.query.filter
 
 @OpenApi(
     path = "/api/transformers/types",
@@ -27,7 +28,7 @@ import jetbrains.exodus.database.TransientEntityStore
 )
 fun listTransformerTypes(ctx: Context, store: TransientEntityStore) {
     store.transactional (true) {
-        val mappings = DbTransformerType.all()
+        val mappings = DbTransformerType.filter { it.name ne "IMAGE" }
         ctx.json(mappings.mapToArray { it.toApi() })
     }
 }
