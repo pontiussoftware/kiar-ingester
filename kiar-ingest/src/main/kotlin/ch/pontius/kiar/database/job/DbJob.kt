@@ -6,11 +6,11 @@ import ch.pontius.kiar.database.config.jobs.DbJobTemplate
 import ch.pontius.kiar.database.config.transformers.DbTransformer
 import ch.pontius.kiar.database.institution.DbUser
 import ch.pontius.kiar.ingester.processors.sinks.ApacheSolrSink
-import ch.pontius.kiar.ingester.processors.sinks.DummySink
 import ch.pontius.kiar.ingester.processors.sinks.Sink
 import ch.pontius.kiar.ingester.processors.sources.KiarFileSource
 import ch.pontius.kiar.ingester.processors.sources.Source
 import ch.pontius.kiar.ingester.processors.sources.XmlFileSource
+import ch.pontius.kiar.ingester.processors.transformers.ImageDeployment
 import ch.pontius.kiar.ingester.processors.transformers.Transformer
 import jetbrains.exodus.entitystore.Entity
 import kotlinx.dnq.*
@@ -84,9 +84,14 @@ class DbJob(entity: Entity) : XdEntity(entity) {
         }
         var root = source
 
-        /* Generate all transformers source. */
+        /* Generate all transformers. */
         for (t in template.transformers.asSequence()) {
             root = t.newInstance(root)
+        }
+
+        /* Create image deployment stage (if necessary). */
+        if (template.solr.deployments.size() > 0) {
+            root = ImageDeployment(root, template.solr.deployments.asSequence().map { it.toApi() }.toList())
         }
 
         /* Return ApacheSolrSink. */

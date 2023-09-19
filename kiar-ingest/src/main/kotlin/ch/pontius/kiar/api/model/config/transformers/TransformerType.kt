@@ -9,7 +9,6 @@ import ch.pontius.kiar.database.config.transformers.DbTransformerType
  * @version 1.0.0
  */
 enum class TransformerType {
-    IMAGE,
     DISPLAY,
     SYSTEM,
     RIGHTS;
@@ -20,7 +19,6 @@ enum class TransformerType {
      * @return [DbTransformerType].
      */
     fun toDb(): DbTransformerType = when(this) {
-        IMAGE -> DbTransformerType.IMAGE
         DISPLAY -> DbTransformerType.DISPLAY
         SYSTEM -> DbTransformerType.SYSTEM
         RIGHTS -> DbTransformerType.RIGHTS

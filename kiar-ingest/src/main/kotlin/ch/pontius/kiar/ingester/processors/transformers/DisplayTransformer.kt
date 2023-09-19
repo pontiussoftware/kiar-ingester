@@ -16,7 +16,7 @@ import org.apache.solr.common.SolrInputDocument
 class DisplayTransformer(override val input: Source<SolrInputDocument>): Transformer<SolrInputDocument, SolrInputDocument> {
 
     /**
-     * Returns a [Flow] of this [ImageTransformer].
+     * Returns a [Flow] of this [ImageDeployment].
      */
     override fun toFlow(context: ProcessingContext): Flow<SolrInputDocument> = this.input.toFlow(context).map {
         val type = ObjectType.parse(it.get<String>(Field.OBJEKTTYP) ?: "")

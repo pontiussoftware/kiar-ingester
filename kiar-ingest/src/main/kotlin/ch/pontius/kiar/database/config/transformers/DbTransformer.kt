@@ -47,7 +47,6 @@ class DbTransformer(entity: Entity) : XdEntity(entity) {
     fun newInstance(input: Source<SolrInputDocument>): Transformer<SolrInputDocument,SolrInputDocument> {
         val parameters = this.parameters.asSequence().associate { it.key to it.value }
         return when (this.type.description) {
-            "IMAGE" -> ImageTransformer(input, parameters)
             "DISPLAY" -> DisplayTransformer(input)
             "SYSTEM" -> InstitutionTransformer(input)
             "RIGHTS" -> RightsTransformer(input)

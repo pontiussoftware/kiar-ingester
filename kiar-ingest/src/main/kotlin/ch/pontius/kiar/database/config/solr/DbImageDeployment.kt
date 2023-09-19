@@ -26,7 +26,7 @@ class DbImageDeployment(entity: Entity) : XdEntity(entity) {
     var path by xdRequiredStringProp(trimmed = true)
 
     /** The (public) deployment URL. */
-    var server by xdRequiredStringProp(trimmed = true) { url() }
+    var server by xdStringProp(trimmed = true) { url() }
 
     /** The maximum size of the resulting image. */
     var maxSize by xdRequiredIntProp()

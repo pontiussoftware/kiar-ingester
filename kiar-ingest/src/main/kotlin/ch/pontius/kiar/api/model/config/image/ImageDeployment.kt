@@ -9,4 +9,4 @@ import kotlinx.serialization.Serializable
  * @version 1.0.0
  */
 @Serializable
-data class ImageDeployment(val name: String, val format: ImageFormat, val path: String, val server: String, val maxSize: Int)
+data class ImageDeployment(val name: String, val format: ImageFormat, val path: String, val server: String?, val maxSize: Int)
