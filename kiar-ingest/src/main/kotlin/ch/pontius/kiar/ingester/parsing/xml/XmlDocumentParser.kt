@@ -70,10 +70,21 @@ class XmlDocumentParser(private val config: EntityMapping) {
                     val value = nl.item(i).nodeValue
                     if (!value.isNullOrBlank()) {
                         parser.parse(nl.item(i).nodeValue)
-                        if (mapping.multiValued) {
-                            solrDocument.addField(mapping.destination, parser.get())
+                        val parsedValue = parser.get()
+                        if (parsedValue is Collection<*>) {
+                            parsedValue.forEach { v ->
+                                if (mapping.multiValued) {
+                                    solrDocument.addField(mapping.destination, v)
+                                } else {
+                                    solrDocument.setField(mapping.destination, v)
+                                }
+                            }
                         } else {
-                            solrDocument.setField(mapping.destination, parser.get())
+                            if (mapping.multiValued) {
+                                solrDocument.addField(mapping.destination, parsedValue)
+                            } else {
+                                solrDocument.setField(mapping.destination, parsedValue)
+                            }
                         }
                     }
                 }
