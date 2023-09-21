@@ -57,17 +57,9 @@ class MuseumplusImageParser(override val mapping: AttributeMapping): ValueParser
      */
     private fun downloadImage(url: URL, username: String, password: String): BufferedImage? = try {
         /* Set up basic authentication and open connection. */
-        val connection = url.openConnection() as HttpURLConnection
+        val connection = url.openConnection()
         connection.setRequestProperty("Authorization", "Basic " + Base64.getEncoder().encodeToString("$username:$password".toByteArray()))
-        connection.connect()
-
-        /* Download image. */
-        if (connection.responseCode == HttpURLConnection.HTTP_OK) {
-            connection.inputStream.use {  input -> ImageIO.read(input) }
-        } else {
-            LOGGER.warn("Failed to download image from $url. HTTP-Status: ${connection.responseCode}")
-            null
-        }
+        ImageIO.read(connection.inputStream)
     } catch (e: Throwable) {
         LOGGER.error("Failed to download image from $url: ${e.message}")
         null
