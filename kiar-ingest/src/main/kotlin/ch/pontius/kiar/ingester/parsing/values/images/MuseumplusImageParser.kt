@@ -38,7 +38,7 @@ class MuseumplusImageParser(override val mapping: AttributeMapping): ValueParser
     override fun parse(value: String, into: SolrInputDocument) {
         /* Read IDs. */
         for (id in value.split(',').mapNotNull { it.trim().toIntOrNull() }) {
-            val url = URL("${this.host.path}/ria-ws/application/module/Multimedia/${id}/thumbnail")
+            val url = URL("${this.host}/ria-ws/application/module/Multimedia/${id}/thumbnail")
             val image = this.downloadImage(url, this.username, this.password) ?: continue
             if (this.mapping.multiValued) {
                 into.addField(this.mapping.destination, image)
