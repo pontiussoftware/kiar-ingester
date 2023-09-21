@@ -4,7 +4,7 @@ import org.apache.solr.common.SolrInputDocument
 import org.apache.solr.common.SolrInputField
 
 /**
- * A interface used for (clint-side) validation during inest.
+ * An interface used for (clint-side) validation of [SolrInputField]s during data inest.
  *
  * @author Ralph Gasser
  * @version 1.0.0
@@ -59,18 +59,18 @@ sealed interface FieldValidator {
     }
 
     /**
-     * A [Fixed] field with a definde name.
+     * A [Regular] field with a definde name.
      *
      * @author Ralph Gasser
      * @version 1.0.0
      */
-    data class Fixed(override val name: String, override val required: Boolean, override val multiValued: Boolean, override val hasDefault: Boolean): FieldValidator {
+    data class Regular(override val name: String, override val required: Boolean, override val multiValued: Boolean, override val hasDefault: Boolean): FieldValidator {
 
         /**
          * Compares the provided [SolrInputField] name to this [name] and returns true,if there is a match
          * (i.e., this [FieldValidator] corresponds to the given name).
          *
-         * For [FieldValidator.Fixed] we expect an exact match.
+         * For [FieldValidator.Regular] we expect an exact match.
          *
          * @param name The name of the field to match.
          * @return True, if name is an exact match.
@@ -84,10 +84,16 @@ sealed interface FieldValidator {
      * @author Ralph Gasser
      * @version 1.0.0
      */
-    data class Dynamic(override val name: String, override val required: Boolean, override val multiValued: Boolean, override val hasDefault: Boolean): FieldValidator {
+    data class Dynamic(override val name: String, override val multiValued: Boolean): FieldValidator {
 
         /** [Regex] used */
         private val regex by lazy { this.name.replace("*", ".*").toRegex() }
+
+        /** [FieldValidator.Dynamic] are never required. */
+        override val required: Boolean = false
+
+        /** [FieldValidator.Dynamic] do not have default values. */
+        override val hasDefault: Boolean = false
 
         /**
          * Compares the provided [SolrInputField] name to this [name] and returns true, if there is a match

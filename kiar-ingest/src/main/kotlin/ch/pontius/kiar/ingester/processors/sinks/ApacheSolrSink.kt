@@ -127,7 +127,7 @@ class ApacheSolrSink(override val input: Source<SolrInputDocument>, private val 
             /* List of dynamic fixed. */
             val fields = SchemaRequest.Fields().process(client, c.key).fields.mapNotNull { f ->
                 if (f["name"] !in copyFields && f["name"] !in SYSTEM_FIELDS) {
-                    FieldValidator.Fixed(f["name"] as String, f["required"] as Boolean, f["multiValued"] as Boolean, f.contains("default"))
+                    FieldValidator.Regular(f["name"] as String, f["required"] as? Boolean ?: false, f["multiValued"] as? Boolean ?: false, f.contains("default"))
                 } else {
                     null
                 }
@@ -135,7 +135,7 @@ class ApacheSolrSink(override val input: Source<SolrInputDocument>, private val 
 
             /* List of dynamic fields. */
             val dynamicFields = SchemaRequest.DynamicFields().process(client, c.key).dynamicFields.mapNotNull { f ->
-                FieldValidator.Dynamic(f["name"] as String, f["required"] as Boolean, f["multiValued"] as Boolean, f.contains("default"))
+                FieldValidator.Dynamic(f["name"] as String, (f["multiValued"] as? Boolean) ?: false)
             }
 
             this.validators[c.key] = fields + dynamicFields
@@ -175,7 +175,7 @@ class ApacheSolrSink(override val input: Source<SolrInputDocument>, private val 
 
         /* Now make sure that all required fields that don't have a default value, are accounted for. */
         for (validator in validators) {
-            if (validator.required && !validator.hasDefault && validator is FieldValidator.Fixed) {
+            if (validator.required && !validator.hasDefault && validator is FieldValidator.Regular) {
                 val field = validated[validator.name]
                 if (field == null || field.valueCount == 0) {
                     return null /* Required field is missing. */
