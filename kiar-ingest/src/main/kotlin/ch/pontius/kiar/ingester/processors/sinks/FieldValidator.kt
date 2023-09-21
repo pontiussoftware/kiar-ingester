@@ -38,7 +38,7 @@ sealed interface FieldValidator {
      * @return True if [SolrInputDocument] is valid, false otherwise.
      */
     fun isValid(field: SolrInputField): Boolean {
-        require(field.name == this.name) { "Provided field '${field.name}' does not match field '${this.name}'. This is a programmer's error!" }
+        require(isMatch(field.name)) { "Provided field '${field.name}' does not match field '${this.name}'. This is a programmer's error!" }
         if (this.required && !this.hasDefault && (field.valueCount == 0)) return false
         /* TODO: Type-based validation. */
         return !(!this.multiValued && field.valueCount > 1)
@@ -51,7 +51,7 @@ sealed interface FieldValidator {
      * @return Explanation for why the [SolrInputField] is invalid, or null if it's okay.
      */
     fun getReason(field: SolrInputField): String? {
-        require(field.name == this.name) { "Provided field '${field.name}' does not match field '${this.name}'. This is a programmer's error!" }
+        require(isMatch(field.name)) { "Provided field '${field.name}' does not match field '${this.name}'. This is a programmer's error!" }
         if (this.required && !this.hasDefault && (field.valueCount == 0)) return "Field ${this.name} is required but does not contain any values."
         /* TODO: Type-based validation. */
         if (!this.multiValued && field.valueCount > 1) return "Field ${this.name} is single-valued but contains multiple values."
