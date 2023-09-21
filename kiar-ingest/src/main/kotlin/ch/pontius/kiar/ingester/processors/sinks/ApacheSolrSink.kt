@@ -7,11 +7,10 @@ import ch.pontius.kiar.api.model.job.JobLogContext
 import ch.pontius.kiar.api.model.job.JobLogLevel
 import ch.pontius.kiar.ingester.processors.ProcessingContext
 import ch.pontius.kiar.ingester.processors.sources.Source
-import ch.pontius.kiar.ingester.solrj.Constants
 import ch.pontius.kiar.ingester.solrj.Constants.FIELD_NAME_PARTICIPANT
 import ch.pontius.kiar.ingester.solrj.Constants.SYSTEM_FIELDS
 import ch.pontius.kiar.ingester.solrj.Field
-import ch.pontius.kiar.ingester.solrj.removeField
+import ch.pontius.kiar.ingester.solrj.get
 import kotlinx.coroutines.flow.*
 import org.apache.logging.log4j.LogManager
 import org.apache.solr.client.solrj.SolrServerException
@@ -33,8 +32,8 @@ class ApacheSolrSink(override val input: Source<SolrInputDocument>, private val 
         private val LOGGER = LogManager.getLogger()
     }
 
-    /** [ApacheSolrField] for the different collections. */
-    private val validators = HashMap<String,List<ApacheSolrField>>()
+    /** [FieldValidator] for the different collections. */
+    private val validators = HashMap<String,List<FieldValidator>>()
 
     /** List of collections this [ApacheSolrSink] processes. */
     private val collections = this.config.collections.filter { it.type == CollectionType.OBJECT }.associate { it.name to it.selector }
@@ -63,29 +62,25 @@ class ApacheSolrSink(override val input: Source<SolrInputDocument>, private val 
 
             /* Start collection of incoming flow. */
             this@ApacheSolrSink.input.toFlow(context).collect() { doc ->
-                val uuid = doc[Constants.FIELD_NAME_UUID]?.value as? String
+                val uuid = doc.get<String>(Field.UUID)
                 if (uuid != null) {
                     for (collection in this@ApacheSolrSink.collections) {
                         try {
                             if (this@ApacheSolrSink.isMatch(collection.value, doc)) {
-                                if (this@ApacheSolrSink.validate(collection.key, uuid, doc, context)) {
-                                    val response = client.add(collection.key, this@ApacheSolrSink.sanitize(collection.key, doc))
-                                    if (response.status == 0) {
-                                        LOGGER.info("Ingested document (jobId = {}, collection = {}, docId = {}).", context.jobId, collection, uuid)
-                                        context.processed += 1
-                                    } else {
-                                        context.error += 1
-                                        LOGGER.error("Failed to ingest document (jobId = ${context.jobId}, docId = $uuid).")
-                                        context.log.add(JobLog(null, uuid, collection.key, JobLogContext.SYSTEM, JobLogLevel.ERROR, "Failed to add document due to Apache Solr error."))
-                                    }
+                                val validated = this@ApacheSolrSink.validate(collection.key, uuid, doc, context) ?: continue
+                                val response = client.add(collection.key, validated)
+                                if (response.status == 0) {
+                                    LOGGER.info("Ingested document (jobId = {}, collection = {}, docId = {}).", context.jobId, collection, uuid)
+                                    context.processed += 1
                                 } else {
-                                    context.skipped += 1
+                                    context.error += 1
+                                    LOGGER.error("Failed to ingest document (jobId = ${context.jobId}, docId = $uuid).")
+                                    context.log.add(JobLog(null, uuid, collection.key, JobLogContext.SYSTEM, JobLogLevel.ERROR, "Failed to ingest document due to an Apache Solr error (status = ${response.status})."))
                                 }
+                            } else {
+                                context.skipped += 1
                             }
                         } catch (e: SolrServerException) {
-                            context.error += 1
-                            context.log.add(JobLog(null, uuid, collection.key, JobLogContext.SYSTEM, JobLogLevel.ERROR, "Failed to ingest document due to Apache Solr error: ${e.message}."))
-                        } catch (e: Throwable) {
                             context.error += 1
                             context.log.add(JobLog(null, uuid, collection.key, JobLogContext.SYSTEM, JobLogLevel.SEVERE, "Failed to ingest document due to error: ${e.message}."))
                         }
@@ -121,23 +116,29 @@ class ApacheSolrSink(override val input: Source<SolrInputDocument>, private val 
     }
 
     /**
-     * Initializes the [ApacheSolrField]s for the different collections.
+     * Initializes the [FieldValidator]s for the different collections.
      */
     private fun initializeValidators(client: Http2SolrClient) {
         for (c in this.collections) {
             /* Prepare HTTP client builder. */
-            val fields = SchemaRequest.Fields().process(client, c.key).fields
             val copyFields = SchemaRequest.CopyFields().process(client, c.key).copyFields.map { it["dest"] }.toSet()
             val types = SchemaRequest.FieldTypes().process(client, c.key).fieldTypes /* TODO: Type-based validation. */
 
-            val validators = fields.mapNotNull { schemaField ->
-                if (schemaField["name"] !in copyFields && schemaField["name"] !in SYSTEM_FIELDS) {
-                    ApacheSolrField(schemaField["name"] as String, schemaField["required"] as Boolean, schemaField["multiValued"] as Boolean, schemaField.contains("default"))
+            /* List of dynamic fixed. */
+            val fields = SchemaRequest.Fields().process(client, c.key).fields.mapNotNull { f ->
+                if (f["name"] !in copyFields && f["name"] !in SYSTEM_FIELDS) {
+                    FieldValidator.Fixed(f["name"] as String, f["required"] as Boolean, f["multiValued"] as Boolean, f.contains("default"))
                 } else {
                     null
                 }
             }
-            this.validators[c.key] = validators
+
+            /* List of dynamic fields. */
+            val dynamicFields = SchemaRequest.DynamicFields().process(client, c.key).dynamicFields.mapNotNull { f ->
+                FieldValidator.Dynamic(f["name"] as String, f["required"] as Boolean, f["multiValued"] as Boolean, f.contains("default"))
+            }
+
+            this.validators[c.key] = fields + dynamicFields
         }
     }
 
@@ -149,36 +150,41 @@ class ApacheSolrSink(override val input: Source<SolrInputDocument>, private val 
      * @param doc The [SolrInputDocument] to validate.
      * @return True on successful validation, false otherwise.
      */
-    private fun validate(collection: String, uuid: String, doc: SolrInputDocument, context: ProcessingContext): Boolean {
+    private fun validate(collection: String, uuid: String, doc: SolrInputDocument, context: ProcessingContext): SolrInputDocument? {
+        /* Validated document (empty at first). */
+        val validated = SolrInputDocument()
+
+        /* Obtain validator for collection. */
         val validators = this.validators[collection] ?: throw IllegalStateException("No validators for collection ${collection}. This is a programmer's error!")
-        for (v in validators) {
-            if (!v.isValid(doc)) {
-                LOGGER.info("Failed to validate document: {} (jobId = {}, collection = {}, docId = {}).", v.isInvalidReason(doc), context.jobId, collection, uuid)
-                context.log.add(JobLog(null, uuid, collection, JobLogContext.METADATA, JobLogLevel.VALIDATION, "Failed to validate document: ${v.isInvalidReason(doc)}"))
-                return false
+
+        /* Now validate all present fields and transfer them, based on the validation outcome. */
+        for ((name, field) in doc.entries) {
+            /* Find validator for field. If it is not contained in schema, skip the field. */
+            val validator = validators.firstOrNull { it.isMatch(name) } ?: continue
+
+            /* Validate field using the validator. */
+            if (validator.isValid(field)) {
+                validated[name] = field
+            } else if (validator.required && !validator.hasDefault) { /* Required field is invalid; skip document. */
+                context.log.add(JobLog(null, uuid, collection, JobLogContext.METADATA, JobLogLevel.VALIDATION, "Skipped document, because required field '${name}' failed validation: ${validator.getReason(field)}"))
+                return null
+            } else { /* Optional field is invalid; skip field. */
+                context.log.add(JobLog(null, uuid, collection, JobLogContext.METADATA, JobLogLevel.VALIDATION, "Truncated document, because field '${name}' failed validation: ${validator.getReason(field)}"))
             }
         }
-        return true
-    }
 
-    /**
-     * Sanitizes the provided [SolrInputDocument] and removes all fields that are marked as [Field.transient].
-     *
-     * @param doc The [SolrInputDocument] to sanitize.
-     * @return Sanitized document (same instance).
-     */
-    private fun sanitize(collection: String, doc: SolrInputDocument): SolrInputDocument {
-        val sanitized = doc.deepCopy()
-
-        /* TODO: Remove fields not needed by this collection. */
-
-        /* Remove fields that have been marked as transient */
-        for (field in Field.values()) {
-            if (field.transient) {
-                sanitized.removeField(field)
+        /* Now make sure that all required fields that don't have a default value, are accounted for. */
+        for (validator in validators) {
+            if (validator.required && !validator.hasDefault && validator is FieldValidator.Fixed) {
+                val field = validated[validator.name]
+                if (field == null || field.valueCount == 0) {
+                    return null /* Required field is missing. */
+                }
             }
         }
-        return sanitized
+
+        /* Return validated document. */
+        return validated
     }
 
     /**
