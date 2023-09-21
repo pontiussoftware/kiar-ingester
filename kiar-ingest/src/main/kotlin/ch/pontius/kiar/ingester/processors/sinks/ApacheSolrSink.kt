@@ -80,9 +80,9 @@ class ApacheSolrSink(override val input: Source<SolrInputDocument>, private val 
                             } else {
                                 context.skipped += 1
                             }
-                        } catch (e: SolrServerException) {
+                        } catch (e: Throwable) {
                             context.error += 1
-                            context.log.add(JobLog(null, uuid, collection.key, JobLogContext.SYSTEM, JobLogLevel.SEVERE, "Failed to ingest document due to error: ${e.message}."))
+                            context.log.add(JobLog(null, uuid, collection.key, JobLogContext.SYSTEM, JobLogLevel.SEVERE, "Failed to ingest document due to exception: ${e.message}."))
                         }
                     }
                 } else {
