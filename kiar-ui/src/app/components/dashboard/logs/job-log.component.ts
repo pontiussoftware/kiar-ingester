@@ -16,7 +16,7 @@ export class JobLogComponent implements AfterViewInit, OnInit {
   public dataSource: JobLogDatasource
 
   /** The columns displayed in the data table. */
-  public readonly displayedColumns= ["documentId", "level", "context", "description"];
+  public readonly displayedColumns= ["documentId", "collection", "level", "context", "description"];
 
   public readonly jobId: Observable<string>
 
