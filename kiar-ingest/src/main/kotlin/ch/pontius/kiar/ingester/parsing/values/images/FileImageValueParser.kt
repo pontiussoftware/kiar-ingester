@@ -41,9 +41,7 @@ class FileImageValueParser(override val mapping: AttributeMapping): ValueParser<
         /* Parse path and read file. */
         val path = Paths.get(actualPath)
         val image = try {
-            Files.newInputStream(path, StandardOpenOption.READ).use {
-                into.addField(mapping.destination, ImageIO.read(it))
-            }
+            Files.newInputStream(path, StandardOpenOption.READ).use { ImageIO.read(it) }
         } catch (e: Throwable) {
             LOGGER.warn("Failed to read image file $path: ${e.message}")
             null

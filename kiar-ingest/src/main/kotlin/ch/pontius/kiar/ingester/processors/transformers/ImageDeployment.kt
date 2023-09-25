@@ -57,7 +57,7 @@ class ImageDeployment(override val input: Source<SolrInputDocument>, private val
         return this.input.toFlow(context).map {
             if (it.has(Field.RAW)) {
                 val images = it.getAll<BufferedImage>(Field.RAW)
-                var counter = 1
+                var counter = 0
                 for (original in images) {
                     for (deployment in this@ImageDeployment.deployments) {
                         val deployTo = Paths.get(deployment.path)
