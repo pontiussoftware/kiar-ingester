@@ -15,6 +15,7 @@ import ch.pontius.kiar.database.config.solr.DbImageFormat
 import ch.pontius.kiar.database.config.solr.DbSolr
 import ch.pontius.kiar.database.config.transformers.DbTransformer
 import ch.pontius.kiar.utilities.mapToArray
+import ch.pontius.kiar.utilities.withSuffix
 import io.javalin.http.BadRequestResponse
 import io.javalin.http.Context
 import io.javalin.openapi.*
@@ -204,8 +205,8 @@ fun updateSolrConfig(ctx: Context, store: TransientEntityStore) {
         /* Update basic properties. */
         solr.name = request.name
         solr.description = request.description
-        solr.server = request.server
-        solr.publicServer = request.publicServer
+        solr.server = request.server.withSuffix("/")
+        solr.publicServer = request.publicServer?.withSuffix("/")
         solr.username = request.username
         solr.password = request.password
         solr.changedAt = DateTime.now()
@@ -249,7 +250,7 @@ private fun DbSolr.mergeDeployments(deployment: List<ImageDeployment>) {
             name = d.name
             format = d.format.toDb()
             source = d.source
-            server = d.server
+            server = d.server?.withSuffix("/")
             path = d.path
             maxSize = d.maxSize
         })
