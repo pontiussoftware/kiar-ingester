@@ -64,25 +64,25 @@ class ApacheSolrSink(override val input: Source<SolrInputDocument>, private val 
             this@ApacheSolrSink.input.toFlow(context).collect() { doc ->
                 val uuid = doc.get<String>(Field.UUID)
                 if (uuid != null) {
-                    for (collection in this@ApacheSolrSink.collections) {
+                    for ((collection, selector) in this@ApacheSolrSink.collections) {
                         try {
-                            if (this@ApacheSolrSink.isMatch(collection.value, doc)) {
-                                val validated = this@ApacheSolrSink.validate(collection.key, uuid, doc, context) ?: continue
-                                val response = client.add(collection.key, validated)
+                            if (this@ApacheSolrSink.isMatch(selector, doc)) {
+                                val validated = this@ApacheSolrSink.validate(collection, uuid, doc, context) ?: continue
+                                val response = client.add(collection, validated)
                                 if (response.status == 0) {
                                     LOGGER.info("Ingested document (jobId = {}, collection = {}, docId = {}).", context.jobId, collection, uuid)
                                     context.processed += 1
                                 } else {
                                     context.error += 1
                                     LOGGER.error("Failed to ingest document (jobId = ${context.jobId}, docId = $uuid).")
-                                    context.log.add(JobLog(null, uuid, collection.key, JobLogContext.SYSTEM, JobLogLevel.ERROR, "Failed to ingest document due to an Apache Solr error (status = ${response.status})."))
+                                    context.log.add(JobLog(null, uuid, collection, JobLogContext.SYSTEM, JobLogLevel.ERROR, "Failed to ingest document due to an Apache Solr error (status = ${response.status})."))
                                 }
                             } else {
                                 context.skipped += 1
                             }
                         } catch (e: Throwable) {
                             context.error += 1
-                            context.log.add(JobLog(null, uuid, collection.key, JobLogContext.SYSTEM, JobLogLevel.SEVERE, "Failed to ingest document due to exception: ${e.message}."))
+                            context.log.add(JobLog(null, uuid, collection, JobLogContext.SYSTEM, JobLogLevel.SEVERE, "Failed to ingest document due to exception: ${e.message}."))
                         }
                     }
                 } else {
