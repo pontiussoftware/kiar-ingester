@@ -57,21 +57,24 @@ class ImageDeployment(override val input: Source<SolrInputDocument>, private val
         return this.input.toFlow(context).map {
             if (it.has(Field.RAW)) {
                 val images = it.getAll<BufferedImage>(Field.RAW)
-                var counter = 0
+                it.removeField(Field.RAW) /* Clean-up to safe memory. */
+                var counter = 1
                 for (original in images) {
                     for (deployment in this@ImageDeployment.deployments) {
                         val deployTo = Paths.get(deployment.path)
                         val actual = deployTo.resolve(context.participant).resolve(deployment.name).resolve("${it.uuid()}_%03d.jpg".format(counter))
                         val tmp = deployTo.resolve(context.participant).resolve("${deployment.name}~tmp").resolve("${it.uuid()}_%03d.jpg".format(counter))
 
-                        /* Check size of image. If it's too small, issue a warning. */
-                        if (original.width < deployment.maxSize && original.height < deployment.maxSize) {
+                        /* Check size of image. If it's too small, issue a warning; otherwise, resize it. */
+                        val resized = if (original.width < deployment.maxSize && original.height < deployment.maxSize) {
                             context.log.add(JobLog(null, it.uuid(), null, JobLogContext.RESOURCE, JobLogLevel.WARNING, "Image is smaller than specified maximum size (max = ${deployment.maxSize}, w = ${original.width}, h = ${original.height})."))
+                            original
+                        } else {
+                            this.resize(original, deployment.maxSize)
                         }
 
                         /* Perform conversion. */
-                        val resized = this.resize(original, deployment.maxSize)
-                        if (this.store(resized, tmp)) {
+                        if (this.store(resized, tmp, deployment.format.name)) {
                             if (deployment.server == null) {
                                 it.addField(deployment.name, deployTo.relativize(actual).toString())
                             } else {
@@ -85,8 +88,7 @@ class ImageDeployment(override val input: Source<SolrInputDocument>, private val
                     }
                     counter += 1
                 }
-                it.setField(Field.IMAGECOUNT, counter)
-                it.removeField(Field.RAW) /* Clean-up to safe memory. */
+                it.setField(Field.IMAGECOUNT, counter - 1)
             } else {
                 it.setField(Field.IMAGECOUNT, 0)
             }
@@ -118,10 +120,11 @@ class ImageDeployment(override val input: Source<SolrInputDocument>, private val
      *
      * @param image The [BufferedImage] to store.
      * @param path The [Path] to store the image under.
+     * @param format The name of the image format.
      */
-    private fun store(image: BufferedImage, path: Path): Boolean = try {
+    private fun store(image: BufferedImage, path: Path, format: String): Boolean = try {
         Files.newOutputStream(path, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING, StandardOpenOption.WRITE).use { os ->
-            ImageIO.write(image, "JPEG", os)
+            ImageIO.write(image, format, os)
             LOGGER.debug("Successfully stored image {}!", path)
             true
         }
