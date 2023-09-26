@@ -136,7 +136,11 @@ class IngesterServer(val store: TransientEntityStore, val config: Config) {
 
             /* Return pipeline and job*/
             val pipeline = job.toPipeline(this.config)
-            pipeline to ProcessingContext(jobId, job.template?.participant?.name ?: throw IllegalStateException("Job is not associated with a participant."))
+            pipeline to ProcessingContext(
+                jobId,
+                job.template?.participant?.name ?: throw IllegalStateException("Job is not associated with a participant."),
+                this.store
+            )
         }
 
         /* Prepare flow including finalization. */
@@ -171,17 +175,10 @@ class IngesterServer(val store: TransientEntityStore, val config: Config) {
                 job.error = context.error
                 job.skipped = context.skipped
                 job.changedAt = DateTime.now()
-
-                /* Store logs. */
-                for (log in context.log) {
-                    job.log.add(DbJobLog.new {
-                        this.documentId = log.documentId
-                        this.context = log.context.toDb()
-                        this.level = log.level.toDb()
-                        this.description = log.description
-                    })
-                }
             }
+
+            /* Flush logs. */
+            context.flushLogs()
         }.cancellable()
 
         /* Schedule job for execution. */

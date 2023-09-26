@@ -71,23 +71,18 @@ class ApacheSolrSink(override val input: Source<SolrInputDocument>, private val 
                                 val response = client.add(collection, validated)
                                 if (response.status == 0) {
                                     LOGGER.info("Ingested document (jobId = {}, collection = {}, docId = {}).", context.jobId, collection, uuid)
-                                    context.processed += 1
+                                    context.processed()
                                 } else {
-                                    context.error += 1
                                     LOGGER.error("Failed to ingest document (jobId = ${context.jobId}, docId = $uuid).")
-                                    context.log.add(JobLog(null, uuid, collection, JobLogContext.SYSTEM, JobLogLevel.ERROR, "Failed to ingest document due to an Apache Solr error (status = ${response.status})."))
+                                    context.log(JobLog(null, uuid, collection, JobLogContext.SYSTEM, JobLogLevel.ERROR, "Failed to ingest document due to an Apache Solr error (status = ${response.status})."))
                                 }
-                            } else {
-                                context.skipped += 1
                             }
                         } catch (e: Throwable) {
-                            context.error += 1
-                            context.log.add(JobLog(null, uuid, collection, JobLogContext.SYSTEM, JobLogLevel.SEVERE, "Failed to ingest document due to exception: ${e.message}."))
+                            context.log(JobLog(null, uuid, collection, JobLogContext.SYSTEM, JobLogLevel.SEVERE, "Failed to ingest document due to exception: ${e.message}."))
                         }
                     }
                 } else {
-                    context.log.add(JobLog(null, "<undefined>", null, JobLogContext.SYSTEM, JobLogLevel.SEVERE, "Failed to ingest document, because UUID is missing."))
-                    context.skipped += 1
+                    context.log(JobLog(null, "<undefined>", null, JobLogContext.SYSTEM, JobLogLevel.SEVERE, "Failed to ingest document, because UUID is missing."))
                 }
             }
 
@@ -122,7 +117,7 @@ class ApacheSolrSink(override val input: Source<SolrInputDocument>, private val 
         for (c in this.collections) {
             /* Prepare HTTP client builder. */
             val copyFields = SchemaRequest.CopyFields().process(client, c.key).copyFields.map { it["dest"] }.toSet()
-            val types = SchemaRequest.FieldTypes().process(client, c.key).fieldTypes /* TODO: Type-based validation. */
+            //TODO (Type-based validation): val types = SchemaRequest.FieldTypes().process(client, c.key).fieldTypes
 
             /* List of dynamic fixed. */
             val fields = SchemaRequest.Fields().process(client, c.key).fields.mapNotNull { f ->
@@ -166,10 +161,10 @@ class ApacheSolrSink(override val input: Source<SolrInputDocument>, private val 
             if (validator.isValid(field)) {
                 validated[name] = field
             } else if (validator.required && !validator.hasDefault) { /* Required field is invalid; skip document. */
-                context.log.add(JobLog(null, uuid, collection, JobLogContext.METADATA, JobLogLevel.VALIDATION, "Skipped document, because required field '${name}' failed validation: ${validator.getReason(field)}"))
+                context.log(JobLog(null, uuid, collection, JobLogContext.METADATA, JobLogLevel.VALIDATION, "Skipped document, because required field '${name}' failed validation: ${validator.getReason(field)}"))
                 return null
             } else { /* Optional field is invalid; skip field. */
-                context.log.add(JobLog(null, uuid, collection, JobLogContext.METADATA, JobLogLevel.VALIDATION, "Truncated document, because field '${name}' failed validation: ${validator.getReason(field)}"))
+                context.log(JobLog(null, uuid, collection, JobLogContext.METADATA, JobLogLevel.VALIDATION, "Truncated document, because field '${name}' failed validation: ${validator.getReason(field)}"))
             }
         }
 

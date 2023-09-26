@@ -53,7 +53,7 @@ class RightsTransformer(override val input: Source<SolrInputDocument>): Transfor
         val uuid = doc.asString(Field.UUID)
         if (uuid == null) {
             LOGGER.error("Failed to verify document: Field 'uuid' is missing (jobId = {}, participantId = {}, docId = {}).", context.jobId, context.participant, uuid)
-            context.log.add(JobLog(null, "<undefined>", null, JobLogContext.METADATA, JobLogLevel.SEVERE, "Document skipped: Field 'uuid' is missing."))
+            context.log(JobLog(null, "<undefined>", null, JobLogContext.METADATA, JobLogLevel.VALIDATION, "Document skipped: Field 'uuid' is missing."))
             return@filter false
         }
 
@@ -67,8 +67,7 @@ class RightsTransformer(override val input: Source<SolrInputDocument>): Transfor
             val entry = this@RightsTransformer.rights[value]
             if (entry == null) {
                 LOGGER.warn("Failed to verify document: Rights statement '$value' is unknown (jobId = {}, participantId = {}, docId = {}).", context.jobId, context.participant, uuid)
-                context.log.add(JobLog(null, uuid, null, JobLogContext.METADATA, JobLogLevel.ERROR, "Document skipped: Rights statement '$value' is unknown."))
-                context.skipped += 1
+                context.log(JobLog(null, uuid, null, JobLogContext.METADATA, JobLogLevel.VALIDATION, "Document skipped: Rights statement '$value' is unknown."))
                 return@filter false
             }
             doc.setField(Field.RIGHTS_STATEMENT_LONG, entry.longName)

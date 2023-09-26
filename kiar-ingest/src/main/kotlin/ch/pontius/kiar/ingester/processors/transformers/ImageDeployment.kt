@@ -67,7 +67,7 @@ class ImageDeployment(override val input: Source<SolrInputDocument>, private val
 
                         /* Check size of image. If it's too small, issue a warning; otherwise, resize it. */
                         val resized = if (original.width < deployment.maxSize && original.height < deployment.maxSize) {
-                            context.log.add(JobLog(null, it.uuid(), null, JobLogContext.RESOURCE, JobLogLevel.WARNING, "Image is smaller than specified maximum size (max = ${deployment.maxSize}, w = ${original.width}, h = ${original.height})."))
+                            context.log(JobLog(null, it.uuid(), null, JobLogContext.RESOURCE, JobLogLevel.WARNING, "Image is smaller than specified maximum size (max = ${deployment.maxSize}, w = ${original.width}, h = ${original.height})."))
                             original
                         } else {
                             this.resize(original, deployment.maxSize)
@@ -83,7 +83,7 @@ class ImageDeployment(override val input: Source<SolrInputDocument>, private val
                             it.addField("${deployment.name}height_", resized.height)
                             it.addField("${deployment.name}width_", resized.width)
                         } else {
-                            context.log.add(JobLog(null, it.uuid(), null, JobLogContext.RESOURCE, JobLogLevel.WARNING, "Failed to create preview image for document."))
+                            context.log(JobLog(null, it.uuid(), null, JobLogContext.RESOURCE, JobLogLevel.WARNING, "Failed to create preview image for document."))
                         }
                     }
                     counter += 1
