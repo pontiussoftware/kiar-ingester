@@ -7,7 +7,7 @@ import kotlinx.serialization.Serializable
  * An enumeration of all [ValueParser] supported by Ingester.
  *
  * @author Ralph Gasser
- * @version 1.0.0
+ * @version 1.0.1
  */
 @Serializable
 enum class ValueParser {
@@ -17,6 +17,8 @@ enum class ValueParser {
     DATE,
     INTEGER,
     DOUBLE,
+    COORD_WGS84,
+    COORD_LV95,
     IMAGE_FILE,
     IMAGE_MPLUS;
 
@@ -33,6 +35,8 @@ enum class ValueParser {
         DATE -> DbParser.DATE
         INTEGER -> DbParser.INTEGER
         DOUBLE -> DbParser.DOUBLE
+        COORD_WGS84 -> DbParser.COORD_WGS84
+        COORD_LV95 -> DbParser.COORD_LV95
         IMAGE_FILE -> DbParser.IMAGE_FILE
         IMAGE_MPLUS -> DbParser.IMAGE_MPLUS
     }

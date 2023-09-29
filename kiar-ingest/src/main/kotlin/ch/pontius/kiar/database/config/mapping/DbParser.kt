@@ -9,7 +9,7 @@ import kotlinx.dnq.xdRequiredStringProp
 /**
  *
  * @author Ralph Gasser
- * @version 1.0.0
+ * @version 1.0.1
  */
 class DbParser(entity: Entity): XdEnumEntity(entity) {
     companion object : XdEnumEntityType<DbParser>() {
@@ -19,6 +19,10 @@ class DbParser(entity: Entity): XdEnumEntity(entity) {
         val DATE by DbParser.enumField { description = "DATE" }
         val INTEGER by DbParser.enumField { description = "INTEGER" }
         val DOUBLE by DbParser.enumField { description = "DOUBLE" }
+
+        /* Struct parsers. */
+        val COORD_WGS84 by DbParser.enumField { description = "COORD_WGS84" }
+        val COORD_LV95 by DbParser.enumField { description = "COORD_LV95" }
 
         /* Image parsers. */
         val IMAGE_FILE by DbParser.enumField { description = "IMAGE_FILE" }
