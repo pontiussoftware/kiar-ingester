@@ -155,6 +155,23 @@ private fun initializeDatabase(config: Config): TransientEntityStore {
  * @param config The [Config]
  */
 private fun checkAndSetup(store: TransientEntityStore, config: Config) = store.transactional {
+
+    /* Add links. */
+    for (institution in DbInstitution.all().asSequence()) {
+        if (institution.canton == DbCanton.BE.long) {
+            institution.availableCollections.add(DbCollection.filter { it.name eq "mmbe-objects" }.single())
+            institution.selectedCollections.add(DbCollection.filter { it.name eq "mmbe-objects" }.single())
+
+        }
+        if (institution.canton == DbCanton.BL.long) {
+            institution.availableCollections.add(DbCollection.filter { it.name eq "kimbl-objects" }.single())
+            institution.selectedCollections.add(DbCollection.filter { it.name eq "kimbl-objects" }.single())
+        }
+        institution.availableCollections.add(DbCollection.filter { it.name eq "kimch-objects" }.single())
+        institution.selectedCollections.add(DbCollection.filter { it.name eq "kimch-objects" }.single())
+    }
+
+
     /** */
     if (DbUser.all().size() == 0) {
 
