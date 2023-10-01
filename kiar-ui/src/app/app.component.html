@@ -16,6 +16,10 @@
       <mat-icon>account_balance</mat-icon>
     </button>
 
+    <button mat-icon-button *ngIf="(isAdmin | async)" [routerLink]="['/users']" i18n-matTooltip="@@TooltipGoToUserList" matTooltip="Go to user list.">
+      <mat-icon>person</mat-icon>
+    </button>
+
     <span class="space-flexible"></span>
 
     <button *ngIf="isLoggedIn | async" mat-button [matMenuTriggerFor]="userMenu">{{(username | async)}}</button>

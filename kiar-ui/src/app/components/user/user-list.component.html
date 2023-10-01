@@ -1,0 +1,52 @@
+<h1 i18n="@@HeadingInstitutions">Users
+  <button mat-mini-fab color="primary" (click)="add()" i18n-matTooltip="@@TooltipAddNewUser" matTooltip="Add a new user.">
+    <mat-icon>add</mat-icon>
+  </button>
+  &nbsp;
+</h1>
+
+<table mat-table [dataSource]="dataSource" class="mat-elevation-z8" matSort>
+  <!-- Username Column -->
+  <ng-container matColumnDef="username" i18n="@@LabelUsername">
+    <th mat-header-cell *matHeaderCellDef mat-sort-header sortActionDescription="Sort by name.">Username</th>
+    <td mat-cell *matCellDef="let element"> {{element.username}} </td>
+  </ng-container>
+
+  <!-- E-Mail Column -->
+  <ng-container matColumnDef="email" i18n="@@LabelEmail" >
+    <th mat-header-cell *matHeaderCellDef mat-sort-header sortActionDescription="Sort by email.">E-Mail</th>
+    <td mat-cell *matCellDef="let element">{{element.email}}</td>
+  </ng-container>
+
+  <!-- Role Column -->
+  <ng-container matColumnDef="role" i18n="@@LabelRole">
+    <th mat-header-cell *matHeaderCellDef>Role</th>
+    <td mat-cell *matCellDef="let element">{{element.role}}</td>
+  </ng-container>
+
+  <!-- Institution Column -->
+  <ng-container matColumnDef="institution" i18n="@@LabelInstitution">
+    <th mat-header-cell *matHeaderCellDef>Institution</th>
+    <td mat-cell *matCellDef="let element">{{element.institution}}</td>
+  </ng-container>
+
+  <!-- Active Column-->
+  <ng-container matColumnDef="active" i18n="@@LabelInactive">
+    <th mat-header-cell *matHeaderCellDef>Active</th>
+    <td mat-cell *matCellDef="let element">{{!element.inactive}}</td>
+  </ng-container>
+
+  <!-- Action Column -->
+  <ng-container matColumnDef="action">
+    <th mat-header-cell *matHeaderCellDef i18n="@@LabelAction"> Action </th>
+    <td mat-cell *matCellDef="let element">
+      <button mat-icon-button color="primary" (click)="edit(element)" matTooltip="Edit institution {{element.id}}."><mat-icon>edit</mat-icon></button>
+      <button mat-icon-button color="warn" (click)="delete(element)" matTooltip="Delete institution {{element.id}}."><mat-icon>delete</mat-icon></button>
+    </td>
+  </ng-container>
+
+  <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+  <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
+</table>
+
+<mat-paginator [length]="dataSource.totalSize" [pageSize]="15" [pageSizeOptions]="[15, 25, 50, 100]"></mat-paginator>

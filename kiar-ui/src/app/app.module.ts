@@ -16,6 +16,7 @@ import {DashboardModule} from "./components/dashboard/dashboard.module";
 import {AdminModule} from "./components/admin/admin.module";
 import {InstitutionModule} from "./components/institution/institution.module";
 import {MatTooltipModule} from "@angular/material/tooltip";
+import {UserModule} from "./components/user/user.module";
 
 /**
  * Provides the {@link AppConfig} reference.
@@ -46,6 +47,7 @@ export function initializeApiConfig() {
     /* Own modules. */
     AdminModule,
     InstitutionModule,
+    UserModule,
     DashboardModule,
     SessionModule,
     ServiceModule,
