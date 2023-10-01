@@ -4,7 +4,7 @@
 
     <span class="space-flexible"></span>
 
-    <button mat-icon-button *ngIf="(isViewer | async)" [routerLink]="['/manager/dashboard']" i18n-matTooltip="@@TooltipGoToDashboard" matTooltip="Go to ingest job dashboard.">
+    <button mat-icon-button *ngIf="(isViewer | async)" [routerLink]="['/manager/dashboard']" i18n-matTooltip="@@TooltipGoToDashboard" matTooltip="Go to job dashboard.">
       <mat-icon>dashboard</mat-icon>
     </button>
 
@@ -12,11 +12,11 @@
       <mat-icon>admin_panel_settings</mat-icon>
     </button>
 
-    <button mat-icon-button *ngIf="(isAdmin | async)" [routerLink]="['/institutions']" i18n-matTooltip="@@TooltipGoToInstitutionList" matTooltip="Go to institution list.">
+    <button mat-icon-button *ngIf="(isAdmin | async)" [routerLink]="['/institutions']" i18n-matTooltip="@@TooltipGoToInstitutionManagement" matTooltip="Go to institution management.">
       <mat-icon>account_balance</mat-icon>
     </button>
 
-    <button mat-icon-button *ngIf="(isAdmin | async)" [routerLink]="['/users']" i18n-matTooltip="@@TooltipGoToUserList" matTooltip="Go to user list.">
+    <button mat-icon-button *ngIf="(isAdmin | async)" [routerLink]="['/users']" i18n-matTooltip="@@TooltipGoToUserManagement" matTooltip="Go to user management.">
       <mat-icon>person</mat-icon>
     </button>
 
