@@ -86,7 +86,7 @@
 
       <!-- Tab of available collections (admin only).  -->
       <mat-tab label="Available Collections" i18n-label="@@LabelAvailableCollections">
-        <ul formArrayName="availableCollections">
+        <ul formArrayName="availableCollections" class="checkbox-list">
           <li *ngFor="let option of availableCollectionsForms; let i = index">
             <mat-checkbox [formControl]="option">
               {{allCollections[i].displayName}}
@@ -97,7 +97,7 @@
 
       <!-- Tab of selected collections -->
       <mat-tab label="Published Collections" i18n-label="@@LabelPublishedCollections">
-        <ul formArrayName="selectedCollections">
+        <ul formArrayName="selectedCollections" class="checkbox-list">
           <li *ngFor="let option of selectedCollectionsForms; let i = index">
             <mat-checkbox [formControl]="option">
               {{availableCollections[i].displayName}}

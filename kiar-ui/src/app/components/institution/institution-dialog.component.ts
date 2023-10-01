@@ -6,7 +6,8 @@ import {map, Observable, shareReplay} from "rxjs";
 
 @Component({
   selector: 'kiar-add-institution-dialog',
-  templateUrl: './institution-dialog.component.html'
+  templateUrl: './institution-dialog.component.html',
+  styleUrls: ['./institution-dialog.component.scss']
 })
 export class InstitutionDialogComponent {
 
