@@ -83,6 +83,28 @@
           <input matInput type="text" formControlName="defaultCopyright">
         </mat-form-field>
       </mat-tab>
+
+      <!-- Tab of available collections (admin only).  -->
+      <mat-tab label="Available Collections" i18n-label="@@LabelAvailableCollections">
+        <ul formArrayName="availableCollections">
+          <li *ngFor="let option of availableCollectionsForms; let i = index">
+            <mat-checkbox [formControl]="option">
+              {{allCollections[i].displayName}}
+            </mat-checkbox>
+          </li>
+        </ul>
+      </mat-tab>
+
+      <!-- Tab of selected collections -->
+      <mat-tab label="Published Collections" i18n-label="@@LabelPublishedCollections">
+        <ul formArrayName="selectedCollections">
+          <li *ngFor="let option of selectedCollectionsForms; let i = index">
+            <mat-checkbox [formControl]="option">
+              {{availableCollections[i].displayName}}
+            </mat-checkbox>
+          </li>
+        </ul>
+      </mat-tab>
     </mat-tab-group>
   </form>
 </div>

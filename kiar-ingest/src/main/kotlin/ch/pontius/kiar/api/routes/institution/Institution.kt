@@ -4,6 +4,8 @@ import ch.pontius.kiar.api.model.status.ErrorStatus
 import ch.pontius.kiar.api.model.status.ErrorStatusException
 import ch.pontius.kiar.api.model.status.SuccessStatus
 import ch.pontius.kiar.api.routes.session.currentUser
+import ch.pontius.kiar.database.config.solr.DbCollection
+import ch.pontius.kiar.database.config.solr.DbCollectionType
 import ch.pontius.kiar.database.institution.DbInstitution
 import ch.pontius.kiar.database.institution.DbParticipant
 import ch.pontius.kiar.database.institution.DbRole
@@ -159,6 +161,7 @@ fun putUpdateInstitution(ctx: Context, store: TransientEntityStore) {
         institution.homepage = request.homepage
         institution.defaultCopyright = request.defaultCopyright
         institution.defaultRightStatement = DbRightStatement.filter { it.short eq request.defaultRightStatement }.singleOrNull()
+
         institution.changedAt = DateTime.now()
 
         /* Some data can only be edited by an administrator. */
@@ -167,8 +170,19 @@ fun putUpdateInstitution(ctx: Context, store: TransientEntityStore) {
             institution.participant = DbParticipant.filter { it.name eq request.participantName }.firstOrNull() ?: throw ErrorStatusException(404, "Participant ${request.participantName} could not be found.")
             institution.canton = request.canton
             institution.publish = request.publish
+
+            /* Clear and reconnect available collections. */
+            institution.availableCollections.clear()
+            for (collection in DbCollection.filter { (it.name isIn request.availableCollections) and (it.type.description eq DbCollectionType.OBJECT.description )}.asSequence()) {
+                institution.availableCollections.add(collection)
+            }
         }
 
+        /* Clear and reconnect selected collections. */
+        institution.selectedCollections.clear()
+        for (collection in institution.availableCollections.filter { c -> c.name isIn request.selectedCollections }.asSequence()) {
+            institution.selectedCollections.add(collection)
+        }
 
         institution.name
     }
