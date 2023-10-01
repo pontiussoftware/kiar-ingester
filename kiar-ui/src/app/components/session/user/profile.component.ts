@@ -1,8 +1,9 @@
 import {AfterViewInit, Component} from "@angular/core";
-import {AbstractControl, FormControl, FormGroup, ValidationErrors, ValidatorFn, Validators} from "@angular/forms";
+import {FormControl, FormGroup, Validators} from "@angular/forms";
 import {Role, SessionService, SessionStatus, User} from "../../../../../openapi";
 import {Observer} from "rxjs";
 import {MatSnackBar, MatSnackBarConfig} from "@angular/material/snack-bar";
+import {PASSWORD_MIN_LENGTH, PASSWORD_VALIDATOR} from "../../../utilities/password";
 
 @Component({
   selector: 'app-user-profile',
@@ -11,15 +12,6 @@ import {MatSnackBar, MatSnackBarConfig} from "@angular/material/snack-bar";
 })
 export class ProfileComponent implements AfterViewInit {
 
-  /** A customg {@link ValidatorFn} that makes sure, that two passwords are the same. */
-  private static PASSWORD_VALIDATOR: ValidatorFn = (group: AbstractControl):  ValidationErrors | null => {
-    let passwordFirst = group.get('passwordFirst')?.value;
-    let passwordSecond = group.get('passwordSecond')?.value
-    return passwordFirst === passwordSecond ? null : { notSame: true }
-  }
-
-  /** The minimum length of a password (for validation). */
-  public readonly passwordMinLength = 8
 
   /** The {@link FormControl} that backs this {@link AddJobTemplateDialogComponent}. */
   public formControl: FormGroup =  new FormGroup({
@@ -29,9 +21,9 @@ export class ProfileComponent implements AfterViewInit {
     institution: new FormControl({value: '', disabled: true}, [Validators.required]),
     email: new FormControl('', [Validators.email]),
     password: new FormGroup({
-      passwordFirst: new FormControl('', [Validators.minLength(this.passwordMinLength)]),
-      passwordSecond: new FormControl('', [Validators.minLength(this.passwordMinLength)])
-    },{ validators: ProfileComponent.PASSWORD_VALIDATOR })
+      passwordFirst: new FormControl('', [Validators.minLength(PASSWORD_MIN_LENGTH)]),
+      passwordSecond: new FormControl('', [Validators.minLength(PASSWORD_MIN_LENGTH)])
+    },{ validators: PASSWORD_VALIDATOR })
   })
 
   constructor(private service: SessionService, private snackBar: MatSnackBar) {
@@ -76,7 +68,8 @@ export class ProfileComponent implements AfterViewInit {
           email: this.formControl.get('email')?.value,
           role: this.formControl.get('role')?.value as Role,
           password: this.formControl.get('password')?.get('passwordFirst')?.value,
-          institution: this.formControl.get('institution')?.value
+          institution: this.formControl.get('institution')?.value,
+          active: true
         } as User).subscribe(observer)
       }
     }

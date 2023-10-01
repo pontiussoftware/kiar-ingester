@@ -6,6 +6,7 @@ import {MatSort} from "@angular/material/sort";
 import {MatSnackBar, MatSnackBarConfig} from "@angular/material/snack-bar";
 import {MatDialog} from "@angular/material/dialog";
 import {UserDataSource} from "./user-datasource";
+import {UserDialogComponent} from "./user-dialog.component";
 
 @Component({
   selector: 'kiar-user-list',
@@ -47,34 +48,34 @@ export class UserListComponent implements AfterViewInit  {
    * Opens a dialog to add a new {@link User} to the collection and persists it through the API upon saving.
    */
   public add() {
-    /*this.dialog.open(InstitutionDialogComponent).afterClosed().subscribe(institution => {
-      if (institution != null) {
-        this.institution.postCreateInstitution(institution).subscribe({
+    this.dialog.open(UserDialogComponent).afterClosed().subscribe(user => {
+      if (user != null) {
+        this.user.postCreateUser(user).subscribe({
           next: (value) => {
             this.snackBar.open(value.description, "Dismiss", { duration: 2000 } as MatSnackBarConfig);
             this.dataSource.load(this.paginator.pageIndex, this.paginator.pageSize, this.sort.active, this.sort.direction);
           },
-          error: (err) => this.snackBar.open(`Error occurred while trying to create institution: ${err?.error?.description}.`, "Dismiss", { duration: 2000 } as MatSnackBarConfig),
+          error: (err) => this.snackBar.open(`Error occurred while trying to create user: ${err?.error?.description}.`, "Dismiss", { duration: 2000 } as MatSnackBarConfig),
         })
       }
-    }) */
+    })
   }
 
   /**
    * Opens a dialog to edit an existing {@link User} to the collection and persists it through the API upon saving.
    */
-  public edit(institution: User) {
-    /*this.dialog.open(InstitutionDialogComponent, {data: institution}).afterClosed().subscribe(ret => {
+  public edit(user: User) {
+    this.dialog.open(UserDialogComponent, {data: user}).afterClosed().subscribe(ret => {
       if (ret != null) {
-        this.institution.putUpdateInstitution(ret.id!!, ret).subscribe({
+        this.user.putUpdateUser(ret.id!!, ret).subscribe({
           next: (value) => {
             this.snackBar.open(value.description, "Dismiss", { duration: 2000 } as MatSnackBarConfig);
             this.dataSource.load(this.paginator.pageIndex, this.paginator.pageSize, this.sort.active, this.sort.direction);
           },
-          error: (err) => this.snackBar.open(`Error occurred while trying to create institution: ${err?.error?.description}.`, "Dismiss", { duration: 2000 } as MatSnackBarConfig),
+          error: (err) => this.snackBar.open(`Error occurred while trying to update user: ${err?.error?.description}.`, "Dismiss", { duration: 2000 } as MatSnackBarConfig),
         })
       }
-    })*/
+    })
   }
 
   /**

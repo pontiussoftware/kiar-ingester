@@ -65,7 +65,7 @@ fun getListUsers(ctx: Context, store: TransientEntityStore) {
     methods = [HttpMethod.GET],
     summary = "Lists all available roles.",
     operationId = "getListRoles",
-    tags = ["Users"],
+    tags = ["User"],
     pathParams = [],
     responses = [
         OpenApiResponse("200", [OpenApiContent(Array<Role>::class)]),

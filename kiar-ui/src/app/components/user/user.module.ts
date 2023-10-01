@@ -18,9 +18,13 @@ import {MatSelectModule} from "@angular/material/select";
 import {MatMenuModule} from "@angular/material/menu";
 import {MatTabsModule} from "@angular/material/tabs";
 import {UserListComponent} from "./user-list.component";
+import {UserDialogComponent} from "./user-dialog.component";
 
 @NgModule({
-  declarations: [ UserListComponent ],
+  declarations: [
+      UserListComponent,
+    UserDialogComponent
+  ],
   imports: [
     CommonModule,
     BrowserModule,

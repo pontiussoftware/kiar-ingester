@@ -17,6 +17,7 @@ export interface User {
     username: string;
     password?: string;
     email?: string;
+    active: boolean;
     role: Role;
     institution?: string;
     createdAt?: number;
