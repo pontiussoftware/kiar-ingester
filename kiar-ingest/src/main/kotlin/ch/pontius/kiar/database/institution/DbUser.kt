@@ -1,6 +1,6 @@
 package ch.pontius.kiar.database.institution
 
-import ch.pontius.kiar.api.model.session.User
+import ch.pontius.kiar.api.model.user.User
 import jetbrains.exodus.entitystore.Entity
 import jetbrains.exodus.entitystore.constraints.email
 import kotlinx.dnq.*
@@ -30,6 +30,12 @@ class DbUser(entity: Entity) : XdEntity(entity) {
 
     /** The [DbRole] of this [DbUser]. */
     var role by xdLink1(DbRole)
+
+    /** The date and time this [DbUser] was created. */
+    var createdAt by xdDateTimeProp()
+
+    /** The date and time this [DbUser] was last changed. */
+    var changedAt by xdDateTimeProp()
 
     /** The [DbInstitution] this [DbUser] belongs to. */
     var institution: DbInstitution? by xdLink0_1(DbInstitution::users, onDelete = OnDeletePolicy.CLEAR, onTargetDelete = OnDeletePolicy.CASCADE)

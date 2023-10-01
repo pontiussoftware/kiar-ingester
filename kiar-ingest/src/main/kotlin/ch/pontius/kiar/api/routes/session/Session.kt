@@ -2,7 +2,7 @@ package ch.pontius.kiar.api.routes.session
 
 import ch.pontius.kiar.api.model.session.LoginRequest
 import ch.pontius.kiar.api.model.session.SessionStatus
-import ch.pontius.kiar.api.model.session.User
+import ch.pontius.kiar.api.model.user.User
 import ch.pontius.kiar.api.model.status.ErrorStatus
 import ch.pontius.kiar.api.model.status.ErrorStatusException
 import ch.pontius.kiar.api.model.status.SuccessStatus
@@ -13,10 +13,9 @@ import io.javalin.http.BadRequestResponse
 import io.javalin.http.Context
 import io.javalin.openapi.*
 import jetbrains.exodus.database.TransientEntityStore
-import jetbrains.exodus.kotlin.notNull
 import kotlinx.dnq.query.filter
 import kotlinx.dnq.query.firstOrNull
-import kotlinx.dnq.util.findById
+import org.joda.time.DateTime
 import org.mindrot.jbcrypt.BCrypt
 
 @OpenApi(
@@ -44,12 +43,12 @@ fun login(ctx: Context, store: TransientEntityStore) {
 
     /* Check if user is already logged-in.*/
     if (ctx.sessionAttribute<String>(SESSION_USER_ID) != null && ctx.sessionAttribute<String>(SESSION_USER_NAME) == request.username) {
-        ctx.json(SuccessStatus("Already logged in."));
+        ctx.json(SuccessStatus("Already logged in."))
         return
     }
 
     /* Validate credentials and log-in user. */
-    store.transactional (true) {
+    store.transactional {
         val user = DbUser.filter { (it.name eq request.username) and (it.inactive eq false) }.firstOrNull()
             ?: throw ErrorStatusException(401, "The provided credentials are invalid.")
 
@@ -156,6 +155,8 @@ fun updateUser(ctx: Context, store: TransientEntityStore) {
             if(!request.email.validateEmail()) throw ErrorStatusException(400, "Invalid e-mail address.")
             user.email = request.email
         }
+
+        user.changedAt = DateTime.now()
     }
 
     ctx.json(SuccessStatus("User ${request.username} updated successfully."))

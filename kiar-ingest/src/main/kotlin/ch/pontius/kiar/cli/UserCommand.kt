@@ -2,7 +2,7 @@ package ch.pontius.kiar.cli
 
 import ch.pontius.kiar.api.routes.session.MIN_LENGTH_PASSWORD
 import ch.pontius.kiar.api.routes.session.MIN_LENGTH_USERNAME
-import ch.pontius.kiar.api.model.session.Role
+import ch.pontius.kiar.api.model.user.Role
 import ch.pontius.kiar.api.routes.session.SALT
 import ch.pontius.kiar.database.institution.DbRole
 import ch.pontius.kiar.database.institution.DbUser

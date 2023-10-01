@@ -1,4 +1,4 @@
-package ch.pontius.kiar.api.model.session
+package ch.pontius.kiar.api.model.user
 
 import kotlinx.serialization.Serializable
 

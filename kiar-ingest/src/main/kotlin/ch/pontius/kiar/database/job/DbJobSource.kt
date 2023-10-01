@@ -1,8 +1,6 @@
 package ch.pontius.kiar.database.job
 
 import ch.pontius.kiar.api.model.job.JobSource
-import ch.pontius.kiar.api.model.session.Role
-import ch.pontius.kiar.database.institution.DbRole
 import jetbrains.exodus.entitystore.Entity
 import kotlinx.dnq.XdEnumEntity
 import kotlinx.dnq.XdEnumEntityType

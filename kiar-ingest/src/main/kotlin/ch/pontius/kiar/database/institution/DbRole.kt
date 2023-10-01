@@ -1,6 +1,6 @@
 package ch.pontius.kiar.database.institution
 
-import ch.pontius.kiar.api.model.session.Role
+import ch.pontius.kiar.api.model.user.Role
 import jetbrains.exodus.entitystore.Entity
 import kotlinx.dnq.XdEnumEntity
 import kotlinx.dnq.XdEnumEntityType

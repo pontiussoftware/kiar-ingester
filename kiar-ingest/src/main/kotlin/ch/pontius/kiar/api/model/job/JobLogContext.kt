@@ -1,6 +1,6 @@
 package ch.pontius.kiar.api.model.job
 
-import ch.pontius.kiar.api.model.session.Role
+import ch.pontius.kiar.api.model.user.Role
 import ch.pontius.kiar.database.job.DbJobLogContext
 
 /**

@@ -1,12 +1,15 @@
 package ch.pontius.kiar.api.routes
 
-import ch.pontius.kiar.api.model.session.Role
+import ch.pontius.kiar.api.model.user.Role
 import ch.pontius.kiar.api.routes.config.*
 import ch.pontius.kiar.api.routes.institution.postSyncInstitutions
 import ch.pontius.kiar.api.routes.job.*
 import ch.pontius.kiar.api.routes.masterdata.listCantons
 import ch.pontius.kiar.api.routes.masterdata.listRightStatements
 import ch.pontius.kiar.api.routes.session.*
+import ch.pontius.kiar.api.routes.user.deleteUser
+import ch.pontius.kiar.api.routes.user.getListUsers
+import ch.pontius.kiar.api.routes.user.postCreateUser
 import ch.pontius.kiar.config.Config
 import ch.pontius.kiar.ingester.IngesterServer
 import createEntityMapping
@@ -40,6 +43,23 @@ fun configureApiRoutes(store: TransientEntityStore, server: IngesterServer, conf
             put("user", { ctx -> updateUser(ctx, store) }, Role.ADMINISTRATOR, Role.VIEWER, Role.MANAGER )
         }
 
+        /* Endpoints related to user management. */
+        get("users", { ctx -> getListUsers(ctx, store) }, Role.ADMINISTRATOR )
+        post("users", { ctx -> postCreateUser(ctx, store) }, Role.ADMINISTRATOR )
+        path("users") {
+            delete("{id}", { ctx -> deleteUser(ctx, store) }, Role.ADMINISTRATOR )
+            //put("{id}",  { ctx -> putUpdateInstitution(ctx, store) }, Role.ADMINISTRATOR, Role.MANAGER  )
+        }
+
+        /* Endpoints related to institutions. */
+        get("institutions", { ctx -> getListInstitutions(ctx, store) }, Role.ADMINISTRATOR )
+        post("institutions", { ctx -> postCreateInstitution(ctx, store) }, Role.ADMINISTRATOR )
+        path("institutions") {
+            post("synchronize", { ctx -> postSyncInstitutions(ctx, store) }, Role.ADMINISTRATOR )
+            delete("{id}",  { ctx -> deleteInstitution(ctx, store) }, Role.ADMINISTRATOR )
+            put("{id}",  { ctx -> putUpdateInstitution(ctx, store) }, Role.ADMINISTRATOR, Role.MANAGER  )
+        }
+
         /* Endpoints related to master data. */
         path("masterdata") {
             get("rightstatements", { ctx -> listRightStatements(ctx, store) }, Role.ADMINISTRATOR, Role.MANAGER, Role.VIEWER )
@@ -57,14 +77,6 @@ fun configureApiRoutes(store: TransientEntityStore, server: IngesterServer, conf
                 put("upload",  { ctx -> upload(ctx, store, config) }, Role.ADMINISTRATOR, Role.MANAGER )
                 put("schedule",  { ctx -> scheduleJob(ctx, store, server) }, Role.ADMINISTRATOR, Role.MANAGER )
             }
-        }
-        /* Endpoints related to institutions. */
-        get("institutions", { ctx -> getListInstitutions(ctx, store) }, Role.ADMINISTRATOR )
-        post("institutions", { ctx -> postCreateInstitution(ctx, store) }, Role.ADMINISTRATOR )
-        path("institutions") {
-            post("synchronize", { ctx -> postSyncInstitutions(ctx, store) }, Role.ADMINISTRATOR )
-            delete("{id}",  { ctx -> deleteInstitution(ctx, store) }, Role.ADMINISTRATOR )
-            put("{id}",  { ctx -> putUpdateInstitution(ctx, store) }, Role.ADMINISTRATOR, Role.MANAGER  )
         }
 
         /* Endpoints related to participants. */
