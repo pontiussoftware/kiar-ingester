@@ -10,7 +10,9 @@ import io.javalin.security.RouteRole
  * @version 1.0.0
  */
 enum class Role : RouteRole {
-    ADMINISTRATOR, MANAGER, VIEWER;
+    ADMINISTRATOR,
+    MANAGER,
+    VIEWER;
 
     /**
      * Converts hit [Role] to a [DbRole]. Requires an active transaction.
