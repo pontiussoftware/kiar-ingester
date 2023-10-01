@@ -21,6 +21,8 @@ import io.javalin.http.Context
 import io.javalin.openapi.*
 import jetbrains.exodus.database.TransientEntityStore
 import kotlinx.dnq.query.asSequence
+import kotlinx.dnq.query.filter
+import kotlinx.dnq.query.firstOrNull
 import kotlinx.dnq.util.findById
 import org.joda.time.DateTime
 
@@ -226,33 +228,56 @@ fun updateSolrConfig(ctx: Context, store: TransientEntityStore) {
  * @param collections [List] of [CollectionConfig]s to merge [DbSolr] with.
  */
 private fun DbSolr.mergeCollections(collections: List<ApacheSolrCollection>) {
-    this.collections.clear()
+    /* Update and/or add collections. */
     for (c in collections) {
-        this.collections.add(DbCollection.new {
-            name = c.name
-            displayName = c.displayName
-            type = c.type.toDb()
-            selector = c.selector
-            deleteBeforeIngest = c.deleteBeforeImport
-        })
+        var collection = this.collections.filter { it.name eq c.name }.firstOrNull()
+        if (collection == null) {
+            collection = DbCollection.new {  }
+            this.collections.add(collection)
+        }
+
+        /* Update attributes. */
+        collection.name = c.name
+        collection.displayName = c.displayName
+        collection.type = c.type.toDb()
+        collection.selector = c.selector
+        collection.deleteBeforeIngest = c.deleteBeforeImport
+    }
+
+    /* Delete collections that have been removed. */
+    for (c in this.collections.asSequence()) {
+        if (collections.none { it.name == c.name }) {
+            c.delete()
+        }
     }
 }
 
 /**
  * Overrides a [DbJobTemplate]'s [DbTransformer]s using the provided list.
  *
- * @param deployment [List] of [ImageDeployment]s to merge [DbJobTemplate] with.
+ * @param deployments [List] of [ImageDeployment]s to merge [DbJobTemplate] with.
  */
-private fun DbSolr.mergeDeployments(deployment: List<ImageDeployment>) {
-    this.deployments.asSequence().forEach { it.delete() }
-    for (d in deployment) {
-        this.deployments.add(DbImageDeployment.new {
-            name = d.name
-            format = d.format.toDb()
-            source = d.source
-            server = d.server?.withSuffix("/")
-            path = d.path
-            maxSize = d.maxSize
-        })
+private fun DbSolr.mergeDeployments(deployments: List<ImageDeployment>) {
+    for (d in deployments) {
+        var deployment = this.deployments.filter { it.name eq d.name }.firstOrNull()
+        if (deployment == null) {
+            deployment = DbImageDeployment.new {  }
+            this.deployments.add(deployment)
+        }
+
+        /* Update attributes. */
+        deployment.name = d.name
+        deployment.format = d.format.toDb()
+        deployment.source = d.source
+        deployment.server = d.server?.withSuffix("/")
+        deployment.path = d.path
+        deployment.maxSize = d.maxSize
+    }
+
+    /* Delete deployments that have been removed. */
+    for (d in this.deployments.asSequence()) {
+        if (deployments.none { it.name == d.name }) {
+            d.delete()
+        }
     }
 }
