@@ -9,20 +9,13 @@
  * https://openapi-generator.tech
  * Do not edit the class manually.
  */
-import { Role } from './role';
+import { User } from './user';
 
 
-export interface User { 
-    id?: string;
-    username: string;
-    password?: string;
-    email?: string;
-    role: Role;
-    institution?: string;
-    createdAt?: number;
-    changedAt?: number;
+export interface PaginatedUserResult { 
+    total: number;
+    page: number;
+    pageSize: number;
+    results: Array<User>;
 }
-export namespace User {
-}
-
 

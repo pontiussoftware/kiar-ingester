@@ -18,4 +18,6 @@ export * from './session.service';
 import { SessionService } from './session.service';
 export * from './transformer.service';
 import { TransformerService } from './transformer.service';
-export const APIS = [ApacheSolrService, ConfigService, EntityMappingService, InstitutionService, JobService, JobTemplateService, MasterdataService, ParticipantService, SessionService, TransformerService];
+export * from './user.service';
+import { UserService } from './user.service';
+export const APIS = [ApacheSolrService, ConfigService, EntityMappingService, InstitutionService, JobService, JobTemplateService, MasterdataService, ParticipantService, SessionService, TransformerService, UserService];

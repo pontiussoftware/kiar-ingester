@@ -12,6 +12,7 @@ api/masterdata.service.ts
 api/participant.service.ts
 api/session.service.ts
 api/transformer.service.ts
+api/user.service.ts
 configuration.ts
 encoder.ts
 git_push.sh
@@ -41,6 +42,7 @@ model/models.ts
 model/paginatedInstitutionResult.ts
 model/paginatedJobLogResult.ts
 model/paginatedJobResult.ts
+model/paginatedUserResult.ts
 model/rightStatement.ts
 model/role.ts
 model/sessionStatus.ts

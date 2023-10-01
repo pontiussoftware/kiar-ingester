@@ -22,6 +22,7 @@ export * from './mappingFormat';
 export * from './paginatedInstitutionResult';
 export * from './paginatedJobLogResult';
 export * from './paginatedJobResult';
+export * from './paginatedUserResult';
 export * from './rightStatement';
 export * from './role';
 export * from './sessionStatus';

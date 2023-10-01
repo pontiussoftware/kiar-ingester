@@ -1,6 +1,6 @@
 {
   "name": "@kiar-openapi/api",
-  "version": "1.0.0-SNAPSHOT.202309191625",
+  "version": "1.0.0-SNAPSHOT.202310011104",
   "description": "OpenAPI client for @kiar-openapi/api",
   "author": "OpenAPI-Generator Contributors",
   "repository": {
