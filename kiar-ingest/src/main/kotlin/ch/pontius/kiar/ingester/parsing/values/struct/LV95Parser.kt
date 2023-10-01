@@ -24,7 +24,7 @@ class LV95Parser(override val mapping: AttributeMapping): ValueParser<Double> {
     override fun parse(value: String, into: SolrInputDocument) {
         val coordinates = value.split(this.separator).mapNotNull { it.trim().toDoubleOrNull() }.toTypedArray()
         if (coordinates.size == 2) {
-            into.setField(this.mapping.destination, coordinates)
+            into.setField(this.mapping.destination, "${coordinates[0]},${coordinates[1]}")
         }
     }
 }

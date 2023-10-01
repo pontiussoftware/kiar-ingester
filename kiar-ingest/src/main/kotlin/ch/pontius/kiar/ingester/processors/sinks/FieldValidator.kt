@@ -52,9 +52,9 @@ sealed interface FieldValidator {
      */
     fun getReason(field: SolrInputField): String? {
         require(isMatch(field.name)) { "Provided field '${field.name}' does not match field '${this.name}'. This is a programmer's error!" }
-        if (this.required && !this.hasDefault && (field.valueCount == 0)) return "Field ${this.name} is required but does not contain any values."
+        if (this.required && !this.hasDefault && (field.valueCount == 0)) return "Field '${this.name}' is required but does not contain any values."
         /* TODO: Type-based validation. */
-        if (!this.multiValued && field.valueCount > 1) return "Field ${this.name} is single-valued but contains multiple values."
+        if (!this.multiValued && field.valueCount > 1) return "Field '${this.name}' is single-valued but contains multiple values."
         return null
     }
 
