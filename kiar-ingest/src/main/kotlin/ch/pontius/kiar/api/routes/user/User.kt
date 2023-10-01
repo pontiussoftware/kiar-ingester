@@ -4,9 +4,11 @@ import ch.pontius.kiar.api.model.status.ErrorStatus
 import ch.pontius.kiar.api.model.status.ErrorStatusException
 import ch.pontius.kiar.api.model.status.SuccessStatus
 import ch.pontius.kiar.api.model.user.PaginatedUserResult
+import ch.pontius.kiar.api.model.user.Role
 import ch.pontius.kiar.api.model.user.User
 import ch.pontius.kiar.api.routes.session.SALT
 import ch.pontius.kiar.database.institution.DbInstitution
+import ch.pontius.kiar.database.institution.DbRole
 import ch.pontius.kiar.database.institution.DbUser
 import ch.pontius.kiar.utilities.mapToArray
 import ch.pontius.kiar.utilities.validatePassword
@@ -59,6 +61,26 @@ fun getListUsers(ctx: Context, store: TransientEntityStore) {
 }
 
 @OpenApi(
+    path = "/api/users/roles",
+    methods = [HttpMethod.GET],
+    summary = "Lists all available roles.",
+    operationId = "getListRoles",
+    tags = ["Users"],
+    pathParams = [],
+    responses = [
+        OpenApiResponse("200", [OpenApiContent(Array<Role>::class)]),
+        OpenApiResponse("401", [OpenApiContent(ErrorStatus::class)]),
+        OpenApiResponse("403", [OpenApiContent(ErrorStatus::class)]),
+        OpenApiResponse("500", [OpenApiContent(ErrorStatus::class)]),
+    ]
+)
+fun getListRoles(ctx: Context, store: TransientEntityStore) {
+    store.transactional (true) {
+        ctx.json(DbRole.all().mapToArray { it.toApi() })
+    }
+}
+
+@OpenApi(
     path = "/api/users",
     methods = [HttpMethod.POST],
     summary = "Creates a new user.",
@@ -98,7 +120,7 @@ fun postCreateUser(ctx: Context, store: TransientEntityStore) {
         DbUser.new {
             this.name = request.username.lowercase()
             this.password = BCrypt.hashpw(request.password, SALT)
-            this.inactive = false
+            this.inactive = !request.active
             this.role = request.role.toDb()
             this.institution = request.institution?.let { name -> DbInstitution.filter { it.name eq name }.singleOrNull() ?: throw ErrorStatusException(400, "Specified institution '$name' does not exist.")  }
             this.createdAt = DateTime.now()
@@ -108,6 +130,61 @@ fun postCreateUser(ctx: Context, store: TransientEntityStore) {
 
     /* Return job object. */
     ctx.json(SuccessStatus("User '${user.username}' (id: ${user.id}) created successfully."))
+}
+
+@OpenApi(
+    path = "/api/users/{id}",
+    methods = [HttpMethod.PUT],
+    summary = "Updates an existing user.",
+    operationId = "putUpdateUser",
+    tags = ["User"],
+    requestBody = OpenApiRequestBody([OpenApiContent(User::class)], required = true),
+    pathParams = [
+        OpenApiParam(name = "id", description = "The ID of the user that should be updated.", required = true)
+    ],
+    responses = [
+        OpenApiResponse("200", [OpenApiContent(SuccessStatus::class)]),
+        OpenApiResponse("400", [OpenApiContent(ErrorStatus::class)]),
+        OpenApiResponse("401", [OpenApiContent(ErrorStatus::class)]),
+        OpenApiResponse("403", [OpenApiContent(ErrorStatus::class)]),
+        OpenApiResponse("404", [OpenApiContent(ErrorStatus::class)]),
+        OpenApiResponse("500", [OpenApiContent(ErrorStatus::class)])
+    ]
+)
+fun putUpdateUser(ctx: Context, store: TransientEntityStore) {
+    val institutionId = ctx.pathParam("id")
+    val request = try {
+        ctx.bodyAsClass(User::class.java)
+    } catch (e: BadRequestResponse) {
+        throw ErrorStatusException(400, "Malformed request.")
+    }
+
+    /* Create new job. */
+    val userName = store.transactional {
+        val user = try {
+            DbUser.findById(institutionId)
+        } catch (e: Throwable) {
+            throw ErrorStatusException(404, "Institution with ID $institutionId could not be found.")
+        }
+
+        /* Validate and update password (if present). */
+        if (request.password != null) {
+            if (!request.password.validatePassword()) {
+                throw ErrorStatusException(400, "Invalid password. Password must consist of printable ASCII characters and have at least a length of eight characters and it must contain at least one upper- and lowercase letter and one digit.")
+            }
+            user.password = BCrypt.hashpw(request.password, SALT)
+        }
+
+        /* Update user. */
+        user.name = request.username
+        user.inactive = !request.active
+        user.institution = request.institution?.let { name -> DbInstitution.filter { it.name eq name }.singleOrNull() ?: throw ErrorStatusException(400, "Specified institution '$name' does not exist.")  }
+        user.role = request.role.toDb()
+        user.changedAt = DateTime.now()
+    }
+
+    /* Return job object. */
+    ctx.json(SuccessStatus("Institution '$userName' (id: $institutionId) updated successfully."))
 }
 
 @OpenApi(

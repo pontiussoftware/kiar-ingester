@@ -7,9 +7,7 @@ import ch.pontius.kiar.api.routes.job.*
 import ch.pontius.kiar.api.routes.masterdata.listCantons
 import ch.pontius.kiar.api.routes.masterdata.listRightStatements
 import ch.pontius.kiar.api.routes.session.*
-import ch.pontius.kiar.api.routes.user.deleteUser
-import ch.pontius.kiar.api.routes.user.getListUsers
-import ch.pontius.kiar.api.routes.user.postCreateUser
+import ch.pontius.kiar.api.routes.user.*
 import ch.pontius.kiar.config.Config
 import ch.pontius.kiar.ingester.IngesterServer
 import createEntityMapping
@@ -17,6 +15,7 @@ import postCreateInstitution
 import deleteEntityMapping
 import deleteInstitution
 import getEntityMapping
+import getListInstitutionNames
 import getListInstitutions
 import io.javalin.apibuilder.ApiBuilder.*
 import jetbrains.exodus.database.TransientEntityStore
@@ -47,14 +46,16 @@ fun configureApiRoutes(store: TransientEntityStore, server: IngesterServer, conf
         get("users", { ctx -> getListUsers(ctx, store) }, Role.ADMINISTRATOR )
         post("users", { ctx -> postCreateUser(ctx, store) }, Role.ADMINISTRATOR )
         path("users") {
+            get("roles", { ctx -> getListRoles(ctx, store) }, Role.ADMINISTRATOR )
             delete("{id}", { ctx -> deleteUser(ctx, store) }, Role.ADMINISTRATOR )
-            //put("{id}",  { ctx -> putUpdateInstitution(ctx, store) }, Role.ADMINISTRATOR, Role.MANAGER  )
+            put("{id}",  { ctx -> putUpdateUser(ctx, store) }, Role.ADMINISTRATOR, Role.MANAGER  )
         }
 
         /* Endpoints related to institutions. */
         get("institutions", { ctx -> getListInstitutions(ctx, store) }, Role.ADMINISTRATOR )
         post("institutions", { ctx -> postCreateInstitution(ctx, store) }, Role.ADMINISTRATOR )
         path("institutions") {
+            get("name", { ctx -> getListInstitutionNames(ctx, store) }, Role.ADMINISTRATOR )
             post("synchronize", { ctx -> postSyncInstitutions(ctx, store) }, Role.ADMINISTRATOR )
             delete("{id}",  { ctx -> deleteInstitution(ctx, store) }, Role.ADMINISTRATOR )
             put("{id}",  { ctx -> putUpdateInstitution(ctx, store) }, Role.ADMINISTRATOR, Role.MANAGER  )

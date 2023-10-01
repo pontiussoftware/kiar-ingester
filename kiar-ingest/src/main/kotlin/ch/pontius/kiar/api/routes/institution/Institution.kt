@@ -60,6 +60,28 @@ fun getListInstitutions(ctx: Context, store: TransientEntityStore) {
 }
 
 @OpenApi(
+    path = "/api/institutions/name",
+    methods = [HttpMethod.GET],
+    summary = "Retrieves all institution names registered in the database.",
+    operationId = "getInstitutionNames",
+    tags = ["Institution"],
+    pathParams = [],
+    queryParams = [],
+    responses = [
+        OpenApiResponse("200", [OpenApiContent(Array<String>::class)]),
+        OpenApiResponse("401", [OpenApiContent(ErrorStatus::class)]),
+        OpenApiResponse("403", [OpenApiContent(ErrorStatus::class)]),
+        OpenApiResponse("500", [OpenApiContent(ErrorStatus::class)])
+    ]
+)
+fun getListInstitutionNames(ctx: Context, store: TransientEntityStore) {
+    val list = store.transactional(true) {
+        DbInstitution.all().asSequence().map { it.name }.toList()
+    }
+    ctx.json(list)
+}
+
+@OpenApi(
     path = "/api/institutions",
     methods = [HttpMethod.POST],
     summary = "Creates a new institution.",

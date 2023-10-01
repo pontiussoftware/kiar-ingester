@@ -47,5 +47,5 @@ class DbUser(entity: Entity) : XdEntity(entity) {
      *
      * @return [User]
      */
-    fun toApi() = User(this.xdId, this.name, null, this.email, this.role.toApi(), this.institution?.name, this.createdAt?.millis, this.changedAt?.millis)
+    fun toApi() = User(this.xdId, this.name, null, this.email, !this.inactive, this.role.toApi(), this.institution?.name, this.createdAt?.millis, this.changedAt?.millis)
 }
