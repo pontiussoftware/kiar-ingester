@@ -29,6 +29,7 @@ export interface Institution {
     selectedCollections: Array<string>;
     defaultRightStatement?: string;
     defaultCopyright?: string;
+    imageName?: string;
     createdAt?: number;
     changedAt?: number;
 }
