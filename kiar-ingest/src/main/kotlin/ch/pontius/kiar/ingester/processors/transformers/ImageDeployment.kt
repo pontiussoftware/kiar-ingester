@@ -1,13 +1,17 @@
 package ch.pontius.kiar.ingester.processors.transformers
 
 import ch.pontius.kiar.api.model.config.image.ImageDeployment
+import ch.pontius.kiar.api.model.config.image.ImageFormat.*
 import ch.pontius.kiar.api.model.job.JobLog
 import ch.pontius.kiar.api.model.job.JobLogContext
 import ch.pontius.kiar.api.model.job.JobLogLevel
-import ch.pontius.kiar.config.TransformerConfig
 import ch.pontius.kiar.ingester.processors.ProcessingContext
 import ch.pontius.kiar.ingester.processors.sources.Source
 import ch.pontius.kiar.ingester.solrj.*
+import com.sksamuel.scrimage.ImmutableImage
+import com.sksamuel.scrimage.nio.ImageWriter
+import com.sksamuel.scrimage.nio.JpegWriter
+import com.sksamuel.scrimage.nio.PngWriter
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flowOn
@@ -15,11 +19,8 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onCompletion
 import org.apache.logging.log4j.LogManager
 import org.apache.solr.common.SolrInputDocument
-import java.awt.image.BufferedImage
 import java.io.IOException
 import java.nio.file.*
-import javax.imageio.ImageIO
-
 
 /**
  * A [Transformer] to operates on [SolrInputDocument]s, extracts raw image files, obtains a smaller preview and stores it.
@@ -42,6 +43,7 @@ class ImageDeployment(override val input: Source<SolrInputDocument>, private val
         /** The temporary directory to deploy images to. */
 
         /* Prepare directories. */
+        val writers = mutableMapOf<ImageDeployment, ImageWriter>()
         for (deployment in this.deployments) {
             val deployTo = Paths.get(deployment.path)
             if (!Files.exists(deployTo)) {
@@ -51,12 +53,18 @@ class ImageDeployment(override val input: Source<SolrInputDocument>, private val
             /* Create necessary directories. */
             Files.createDirectories(deployTo.resolve(context.participant).resolve(deployment.name))
             Files.createDirectories(deployTo.resolve(context.participant).resolve("${deployment.name}~tmp"))
+
+            /* Prepare writers. */
+            writers[deployment] = when (deployment.format) {
+                JPEG -> JpegWriter(80, true)
+                PNG -> PngWriter(9)
+            }
         }
 
         /* Return flow for image deployment. */
         return this.input.toFlow(context).map {
             if (it.has(Field.RAW)) {
-                val images = it.getAll<BufferedImage>(Field.RAW)
+                val images = it.getAll<ImmutableImage>(Field.RAW)
                 it.removeField(Field.RAW) /* Clean-up to safe memory. */
                 var counter = 1
                 for (original in images) {
@@ -66,15 +74,17 @@ class ImageDeployment(override val input: Source<SolrInputDocument>, private val
                         val tmp = deployTo.resolve(context.participant).resolve("${deployment.name}~tmp").resolve("${it.uuid()}_%03d.jpg".format(counter))
 
                         /* Check size of image. If it's too small, issue a warning; otherwise, resize it. */
-                        val resized = if (original.width < deployment.maxSize && original.height < deployment.maxSize) {
-                            context.log(JobLog(null, it.uuid(), null, JobLogContext.RESOURCE, JobLogLevel.WARNING, "Image is smaller than specified maximum size (max = ${deployment.maxSize}, w = ${original.width}, h = ${original.height})."))
-                            original
-                        } else {
-                            this.resize(original, deployment.maxSize)
+                        val resized = when {
+                            original.width < deployment.maxSize && original.height < deployment.maxSize -> {
+                                context.log(JobLog(null, it.uuid(), null, JobLogContext.RESOURCE, JobLogLevel.WARNING, "Image is smaller than specified maximum size (max = ${deployment.maxSize}, w = ${original.width}, h = ${original.height})."))
+                                original
+                            }
+                            original.width > deployment.maxSize ->  original.scaleToWidth(deployment.maxSize)
+                            else ->  original.scaleToHeight(deployment.maxSize)
                         }
 
                         /* Perform conversion. */
-                        if (this.store(resized, tmp, deployment.format.name)) {
+                        if (this.store(resized, writers[deployment]!!, tmp)) {
                             if (deployment.server == null) {
                                 it.addField(deployment.name, deployTo.relativize(actual).toString())
                             } else {
@@ -116,39 +126,17 @@ class ImageDeployment(override val input: Source<SolrInputDocument>, private val
     }
 
     /**
-     * Stores the provided [BufferedImage] under the provided [Path].
+     * Stores the provided [ImmutableImage] under the provided [Path].
      *
-     * @param image The [BufferedImage] to store.
+     * @param image The [ImmutableImage] to store.
+     * @param writer The [ImageWriter] to use.
      * @param path The [Path] to store the image under.
-     * @param format The name of the image format.
      */
-    private fun store(image: BufferedImage, path: Path, format: String): Boolean = try {
-        Files.newOutputStream(path, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING, StandardOpenOption.WRITE).use { os ->
-            ImageIO.write(image, format, os)
-            LOGGER.debug("Successfully stored image {}!", path)
-            true
-        }
+    private fun store(image: ImmutableImage, writer: ImageWriter, path: Path): Boolean = try {
+        image.output(writer, path)
+        true
     } catch (e: IOException) {
         LOGGER.error("Failed to save image $path due to IO exception: ${e.message}")
         false
-    }
-
-    /**
-     * Resizes the provided [BufferedImage] to the size specified by [TransformerConfig].
-     *
-     * @param original The [BufferedImage] to resize.
-     * @return The resized [BufferedImage]
-     */
-    private fun resize(original: BufferedImage, maxSize: Int): BufferedImage {
-        val (targetWidth, targetHeight) = if (original.width > original.height) {
-            maxSize to ((maxSize.toFloat() / original.width) * original.height).toInt()
-        } else {
-            ((maxSize .toFloat() / original.height) * original.width).toInt() to maxSize
-        }
-        val resized = BufferedImage(targetWidth, targetHeight, BufferedImage.TYPE_INT_RGB)
-        val graphics2D = resized.createGraphics()
-        graphics2D.drawImage(original, 0, 0, targetWidth, targetHeight, null)
-        graphics2D.dispose()
-        return resized
     }
 }

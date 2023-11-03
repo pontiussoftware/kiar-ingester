@@ -2,23 +2,22 @@ package ch.pontius.kiar.ingester.parsing.values.images
 
 import ch.pontius.kiar.api.model.config.mappings.AttributeMapping
 import ch.pontius.kiar.ingester.parsing.values.ValueParser
+import com.sksamuel.scrimage.ImmutableImage
 import org.apache.logging.log4j.LogManager
 import org.apache.solr.common.SolrInputDocument
-import java.awt.image.BufferedImage
-import java.net.HttpURLConnection
+import java.io.IOException
 import java.net.URL
 import java.util.*
-import javax.imageio.ImageIO
 
 /**
- * A [ValueParser] that converts a [String] (ID) into a [BufferedImage] that is downloaded via the zetcom / museumPlus API.
+ * A [ValueParser] that converts a [String] (ID) into a [ImmutableImage] that is downloaded via the zetcom / museumPlus API.
  *
  * @see http://docs.zetcom.com/framework-public/ws/ws-api-module.html#get-the-thumbnail-of-a-module-item-attachment
  *
  * @author Ralph Gasser
  * @version 2.0.0
  */
-class MuseumplusImageParser(override val mapping: AttributeMapping): ValueParser<List<BufferedImage>> {
+class MuseumplusImageParser(override val mapping: AttributeMapping): ValueParser<List<ImmutableImage>> {
     companion object {
         private val LOGGER = LogManager.getLogger()
     }
@@ -33,7 +32,7 @@ class MuseumplusImageParser(override val mapping: AttributeMapping): ValueParser
     private val password: String = this.mapping.parameters["password"] ?: throw IllegalStateException("Password required but missing.")
 
     /**
-     * Parses the given [BufferedImage].
+     * Parses the given [ImmutableImage].
      */
     override fun parse(value: String, into: SolrInputDocument) {
         /* Read IDs. */
@@ -49,18 +48,18 @@ class MuseumplusImageParser(override val mapping: AttributeMapping): ValueParser
     }
 
     /**
-     * Downloads the [BufferedImage] for the provided [URL].
+     * Downloads the [ImmutableImage] for the provided [URL].
      *
      * @param url The [URL] to download the image from.
      * @param username The username used for authentication.
      * @param password The password used for authentication
      */
-    private fun downloadImage(url: URL, username: String, password: String): BufferedImage? = try {
+    private fun downloadImage(url: URL, username: String, password: String): ImmutableImage? = try {
         /* Set up basic authentication and open connection. */
         val connection = url.openConnection()
         connection.setRequestProperty("Authorization", "Basic " + Base64.getEncoder().encodeToString("$username:$password".toByteArray()))
-        ImageIO.read(connection.inputStream)
-    } catch (e: Throwable) {
+        ImmutableImage.loader().fromStream(connection.inputStream)
+    } catch (e: IOException) {
         LOGGER.error("Failed to download image from $url: ${e.message}")
         null
     }

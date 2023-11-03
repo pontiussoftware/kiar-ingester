@@ -2,21 +2,20 @@ package ch.pontius.kiar.ingester.parsing.values.images
 
 import ch.pontius.kiar.api.model.config.mappings.AttributeMapping
 import ch.pontius.kiar.ingester.parsing.values.ValueParser
+import com.sksamuel.scrimage.ImmutableImage
 import org.apache.logging.log4j.LogManager
 import org.apache.solr.common.SolrInputDocument
-import java.awt.image.BufferedImage
 import java.nio.file.Files
 import java.nio.file.Paths
 import java.nio.file.StandardOpenOption
-import javax.imageio.ImageIO
 
 /**
- * A [ValueParser] that converts a [String] (path) to a [BufferedImage]. Involves reading the image from the file system.
+ * A [ValueParser] that converts a [String] (path) to a [ImmutableImage]. Involves reading the image from the file system.
  *
  * @author Ralph Gasser
  * @version 2.0.0
  */
-class FileImageValueParser(override val mapping: AttributeMapping): ValueParser<List<BufferedImage>> {
+class FileImageValueParser(override val mapping: AttributeMapping): ValueParser<List<ImmutableImage>> {
     companion object {
         private val LOGGER = LogManager.getLogger()
     }
@@ -28,7 +27,7 @@ class FileImageValueParser(override val mapping: AttributeMapping): ValueParser<
     private val replace: String? = this.mapping.parameters["replace"]
 
     /**
-     * Parses the given [BufferedImage].
+     * Parses the given [ImmutableImage].
      */
     override fun parse(value: String, into: SolrInputDocument) {
         /* Read path - apply Regex search/replace if needed. */
@@ -41,7 +40,7 @@ class FileImageValueParser(override val mapping: AttributeMapping): ValueParser<
         /* Parse path and read file. */
         val path = Paths.get(actualPath)
         val image = try {
-            Files.newInputStream(path, StandardOpenOption.READ).use { ImageIO.read(it) }
+            Files.newInputStream(path, StandardOpenOption.READ).use { ImmutableImage.loader().fromStream(it) }
         } catch (e: Throwable) {
             LOGGER.warn("Failed to read image file $path: ${e.message}")
             null
