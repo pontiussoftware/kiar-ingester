@@ -56,6 +56,9 @@ class DbInstitution(entity: Entity) : XdEntity(entity) {
     /** Flag indicating whether this [DbInstitution]'s metadata should be published. */
     var publish by xdBooleanProp()
 
+    /** Name of an image file. */
+    var imageName by xdStringProp()
+
     /** The default value to use in the [Field.RIGHTS_STATEMENT] in case nothing was entered. */
     var defaultRightStatement by xdLink0_1(DbRightStatement, onTargetDelete = OnDeletePolicy.CLEAR)
 
@@ -102,6 +105,7 @@ class DbInstitution(entity: Entity) : XdEntity(entity) {
         selectedCollections = this.selectedCollections.asSequence().map { it.name  }.toList(),
         defaultRightStatement = this.defaultRightStatement?.short,
         defaultCopyright = this.defaultCopyright,
+        imageName = this.imageName,
         createdAt = this.createdAt?.millis,
         changedAt = this.createdAt?.millis
     )

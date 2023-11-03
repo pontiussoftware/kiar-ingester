@@ -52,7 +52,6 @@ fun postSyncInstitutions(ctx: Context, store: TransientEntityStore) {
         val config = collection.solr.toApi()
         val institutions = DbInstitution.filter { it.publish eq true }.asSequence().map { it.toApi() }.toList()
         config to institutions
-
     }
 
     /* Perform actual synchronisation. */
@@ -80,20 +79,31 @@ private fun synchronise(config: ApacheSolrConfig, collection: String, institutio
             client.deleteByQuery(collection, "*:*")
 
             /* Map documents and add them. */
-            val documents = institutions.map {
+            val documents = institutions.map { institution ->
                 val doc = SolrInputDocument()
-                doc.setField(Constants.FIELD_NAME_PARTICIPANT, it.participantName)
-                doc.setField(Constants.FIELD_NAME_CANTON, it.canton)
-                doc.setField(Constants.FIELD_NAME_DISPLAY, it.displayName)
-                if (it.isil != null) doc.setField("isil", it.isil)
-                doc.setField("name", it.name)
-                doc.setField("name_s", it.name)
-                doc.setField("description", it.description)
-                doc.setField("street", it.street)
-                doc.setField("city", it.city)
-                doc.setField("zip", it.zip)
-                doc.setField("email", it.email)
-                doc.setField("website", it.homepage)
+                doc.setField(Constants.FIELD_NAME_PARTICIPANT, institution.participantName)
+                doc.setField(Constants.FIELD_NAME_CANTON, institution.canton)
+                doc.setField(Constants.FIELD_NAME_DISPLAY, institution.displayName)
+                if (institution.isil != null) doc.setField("isil", institution.isil)
+                doc.setField("name", institution.name)
+                doc.setField("name_s", institution.name)
+                doc.setField("description", institution.description)
+                doc.setField("street", institution.street)
+                doc.setField("city", institution.city)
+                doc.setField("zip", institution.zip)
+                doc.setField("email", institution.email)
+                doc.setField("website", institution.homepage)
+
+                /* Add entries for institution image. */
+                for (deployment in config.deployments) {
+                    if (deployment.server == null) {
+                        doc.setField(deployment.name, "/institutions/${deployment.name}/${institution.imageName}")
+                    } else {
+                        doc.setField(deployment.name, "${deployment.server}institutions/${deployment.name}/${institution.imageName}")
+                    }
+                    doc.setField("rights_statement", deployment)
+                }
+
                 doc
             }
 

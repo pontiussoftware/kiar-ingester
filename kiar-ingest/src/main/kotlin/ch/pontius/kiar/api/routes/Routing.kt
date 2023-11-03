@@ -22,6 +22,7 @@ import jetbrains.exodus.database.TransientEntityStore
 import listEntityMappings
 import listMappingFormats
 import listParsers
+import postUploadImage
 import putUpdateInstitution
 import updateEntityMapping
 
@@ -58,7 +59,10 @@ fun configureApiRoutes(store: TransientEntityStore, server: IngesterServer, conf
             get("name", { ctx -> getListInstitutionNames(ctx, store) }, Role.ADMINISTRATOR )
             post("synchronize", { ctx -> postSyncInstitutions(ctx, store) }, Role.ADMINISTRATOR )
             delete("{id}",  { ctx -> deleteInstitution(ctx, store) }, Role.ADMINISTRATOR )
-            put("{id}",  { ctx -> putUpdateInstitution(ctx, store) }, Role.ADMINISTRATOR, Role.MANAGER  )
+            put("{id}",  { ctx -> putUpdateInstitution(ctx, store) }, Role.ADMINISTRATOR, Role.MANAGER)
+            path("{id}") {
+                post("image", { ctx -> postUploadImage(ctx, store) }, Role.ADMINISTRATOR, Role.MANAGER)
+            }
         }
 
         /* Endpoints related to master data. */

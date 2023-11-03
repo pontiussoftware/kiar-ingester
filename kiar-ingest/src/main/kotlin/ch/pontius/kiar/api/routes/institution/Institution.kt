@@ -11,6 +11,8 @@ import ch.pontius.kiar.database.institution.DbParticipant
 import ch.pontius.kiar.database.institution.DbRole
 import ch.pontius.kiar.database.masterdata.DbRightStatement
 import ch.pontius.kiar.utilities.mapToArray
+import com.sksamuel.scrimage.ImmutableImage
+import com.sksamuel.scrimage.nio.JpegWriter
 import io.javalin.http.BadRequestResponse
 import io.javalin.http.Context
 import io.javalin.openapi.*
@@ -18,6 +20,9 @@ import jetbrains.exodus.database.TransientEntityStore
 import kotlinx.dnq.query.*
 import kotlinx.dnq.util.findById
 import org.joda.time.DateTime
+import java.io.IOException
+import java.nio.file.Files
+import java.nio.file.Paths
 
 @OpenApi(
     path = "/api/institutions",
@@ -130,7 +135,6 @@ fun postCreateInstitution(ctx: Context, store: TransientEntityStore) {
     /* Return job object. */
     ctx.json(SuccessStatus("Institution '${institution.name}' (id: ${institution.id}) created successfully."))
 }
-
 @OpenApi(
     path = "/api/institutions/{id}",
     methods = [HttpMethod.PUT],
@@ -211,6 +215,89 @@ fun putUpdateInstitution(ctx: Context, store: TransientEntityStore) {
 
     /* Return job object. */
     ctx.json(SuccessStatus("Institution '$institutionName' (id: $institutionId) updated successfully."))
+}
+
+@OpenApi(
+    path = "/api/institutions/{id}/image",
+    methods = [HttpMethod.POST],
+    summary = "Posts a new image for the provided institution.",
+    operationId = "postUploadImage",
+    tags = ["Institution"],
+    pathParams = [
+        OpenApiParam(name = "id", description = "The ID of the institution the image should be added to.", required = true)
+    ],
+    requestBody = OpenApiRequestBody(content = [
+        OpenApiContent(mimeType = ContentType.FORM_DATA_MULTIPART, properties = [OpenApiContentProperty(name = "image", type = "string", format = "binary")])
+    ], description = "The uploaded image file.", required = true),
+    responses = [
+        OpenApiResponse("200", [OpenApiContent(SuccessStatus::class)]),
+        OpenApiResponse("401", [OpenApiContent(ErrorStatus::class)]),
+        OpenApiResponse("403", [OpenApiContent(ErrorStatus::class)]),
+        OpenApiResponse("404", [OpenApiContent(ErrorStatus::class)]),
+        OpenApiResponse("500", [OpenApiContent(ErrorStatus::class)])
+    ]
+)
+fun postUploadImage(ctx: Context, store: TransientEntityStore) {
+    /* Obtain parameters. */
+    val institutionId = ctx.pathParam("id")
+    val files = ctx.uploadedFiles()
+
+    /* Make sure that a file has been uploaded. */
+    if (files.isEmpty()) throw ErrorStatusException(401, "Uploaded file is missing.")
+
+    /* Start transaction */
+    store.transactional {
+        val institution = try {
+            DbInstitution.findById(institutionId)
+        } catch (e: Throwable) {
+            throw ErrorStatusException(404, "Institution with ID $institutionId could not be found.")
+        }
+
+        /* List of deployment paths. */
+        val deployments = institution.availableCollections.mapDistinct { it.solr }.flatMapDistinct { it.deployments }.asSequence().map { it.toApi() }.toList()
+
+        /* Process images. */
+        for (f in ctx.uploadedFiles()) {
+            /* Open image. */
+            val image = try {
+                ImmutableImage.loader().fromStream(f.content())
+            } catch (e: IOException) {
+                throw ErrorStatusException(400, "Uploaded image file could not be opened.")
+            }
+
+            /* Filename. */
+            val filename = "${institution.xdId}-${System.currentTimeMillis()}.jpg"
+
+            /* Deploy files. */
+            for (d in deployments) {
+                /* Prepare scaled version. */
+                val scaled = if (image.width > image.height) {
+                    image.scaleToWidth(d.maxSize)
+                } else {
+                    image.scaleToHeight(d.maxSize)
+                }
+
+                try {
+                    /* Prepare deployment path and create directories if necessary. */
+                    val path = Paths.get(d.path).resolve("institutions").resolve(d.name).resolve(filename)
+                    if (!Files.exists(path.parent)) {
+                        Files.createDirectories(path.parent)
+                    }
+
+                    /* Write image. */
+                    scaled.output(JpegWriter.Default, path)
+                }  catch (e: IOException) {
+                    throw ErrorStatusException(400, "Could not deploy image.")
+                }
+            }
+
+            /* Update image name. */
+            institution.imageName = filename
+
+            /* One image is enough. */
+            break
+        }
+    }
 }
 
 @OpenApi(

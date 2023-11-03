@@ -11,6 +11,7 @@ val kotlinSerializaion: String by project
 val log4jVersion: String by project
 val picnicVersion: String by project
 val poiVersion: String by project
+val scrimageVersion: String by project
 val solrjVersion: String by project
 val slf4jVersion: String by project
 val twelveMonkeysVersion: String by project
@@ -60,9 +61,9 @@ dependencies {
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json-jvm:$kotlinSerializaion")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core-jvm:$kotlinCoroutines")
 
-    /** Twelve Monkey (image processing). */
-    implementation("com.twelvemonkeys.imageio:imageio-core:$twelveMonkeysVersion")
-    implementation("com.twelvemonkeys.imageio:imageio-jpeg:$twelveMonkeysVersion")
+    /** Scrimage for image processing. */
+    implementation("com.sksamuel.scrimage:scrimage-core:$scrimageVersion")
+    implementation("com.sksamuel.scrimage:scrimage-formats-extra:$scrimageVersion")
 
     /** Javalin + Open API. */
     implementation("io.javalin:javalin:$javalinVersion")

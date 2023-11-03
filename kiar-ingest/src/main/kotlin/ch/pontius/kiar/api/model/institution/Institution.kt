@@ -27,6 +27,7 @@ data class Institution(
     val selectedCollections: List<String> = emptyList(),
     val defaultRightStatement: String? = null,
     val defaultCopyright: String? = null,
+    val imageName: String? = null,
     val createdAt: Long? = null,
     val changedAt: Long? = null,
 )
