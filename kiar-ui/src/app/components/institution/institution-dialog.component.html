@@ -29,10 +29,16 @@
       Publish
     </mat-checkbox>
 
-    <mat-form-field appearance="fill" [style.width]="'100%'">
+    <mat-form-field appearance="fill" [style.width]="'70%'">
       <mat-label i18n="@@LabelDisplayName">Display Name</mat-label>
       <input matInput type="text" formControlName="displayName">
       <mat-error *ngIf="formControl.get('displayName')?.hasError('minlength')">Minimum length is 10.</mat-error>
+    </mat-form-field>
+
+    <mat-form-field appearance="fill" [style.width]="'30%'">
+      <mat-label i18n="@@LabelImageName">Image Name</mat-label>
+      <input matInput type="text" formControlName="imageName" [disabled]="true">
+      <mat-icon matSuffix (click)="uploadImage()">upload</mat-icon>
     </mat-form-field>
 
     <mat-form-field appearance="fill" [style.width]="'100%'">

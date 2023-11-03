@@ -1,8 +1,9 @@
 import {Component, Inject} from "@angular/core";
 import {FormArray, FormControl, FormGroup, Validators} from "@angular/forms";
-import {ApacheSolrCollection, Canton, ConfigService, Institution, MasterdataService, RightStatement} from "../../../../openapi";
+import {ApacheSolrCollection, Canton, ConfigService, Institution, InstitutionService, MasterdataService, RightStatement} from "../../../../openapi";
 import {MAT_DIALOG_DATA, MatDialogRef} from "@angular/material/dialog";
 import {map, Observable, shareReplay} from "rxjs";
+import {MatSnackBar, MatSnackBarConfig} from "@angular/material/snack-bar";
 
 @Component({
   selector: 'kiar-add-institution-dialog',
@@ -38,10 +39,18 @@ export class InstitutionDialogComponent {
   /** A list of selected collections. */
   public selectedCollectionsForms: Array<FormControl> = []
 
-  constructor(private config: ConfigService, private masterdata: MasterdataService, private dialogRef: MatDialogRef<InstitutionDialogComponent>, @Inject(MAT_DIALOG_DATA) private data: Institution | null) {
+  constructor(
+      private config: ConfigService,
+      private masterdata: MasterdataService,
+      private institution: InstitutionService,
+      private dialogRef: MatDialogRef<InstitutionDialogComponent>,
+      private snackBar: MatSnackBar,
+      @Inject(MAT_DIALOG_DATA) private data: Institution | null
+  ) {
     this.participants = this.config.getListParticipants().pipe(shareReplay(1, 30000))
     this.formControl = new FormGroup({
       name: new FormControl(this.data?.name || '', [Validators.required, Validators.minLength(10)]),
+      imageName: new FormControl({value: this.data?.imageName || '', disabled: true}),
       displayName: new FormControl(this.data?.displayName || '', [Validators.required, Validators.minLength(10)]),
       description: new FormControl(this.data?.description || ''),
       participantName: new FormControl(this.data?.participantName || '', [Validators.required]),
@@ -98,7 +107,7 @@ export class InstitutionDialogComponent {
         }
       })
 
-      let object = {
+      let institution = {
         id: this.data?.id || undefined,
         name: this.formControl.get('name')?.value,
         displayName: this.formControl.get('displayName')?.value,
@@ -117,7 +126,44 @@ export class InstitutionDialogComponent {
         availableCollections: availableCollections,
         selectedCollections: selectedCollections,
       } as Institution
-      this.dialogRef.close(object)
+
+      /* Save institution. */
+      if (institution.id) {
+        this.institution.putUpdateInstitution(institution.id, institution).subscribe({
+          next: (value) => {
+            this.snackBar.open(value.description, "Dismiss", { duration: 2000 } as MatSnackBarConfig);
+            this.dialogRef.close(institution);
+          },
+          error: (err) => this.snackBar.open(`Error occurred while trying to update institution: ${err?.error?.description}.`, "Dismiss", { duration: 2000 } as MatSnackBarConfig),
+        })
+      } else {
+        this.institution.postCreateInstitution(institution).subscribe({
+          next: (value) => {
+            this.snackBar.open(value.description, "Dismiss", { duration: 2000 } as MatSnackBarConfig);
+            this.dialogRef.close(institution);
+          },
+          error: (err) => this.snackBar.open(`Error occurred while trying to create institution: ${err?.error?.description}.`, "Dismiss", { duration: 2000 } as MatSnackBarConfig),
+        })
+      }
     }
+  }
+
+  /**
+   * Opens the 'file open' dialog and starts image upload.
+   */
+  public uploadImage() {
+    const fileInput: HTMLInputElement = document.createElement('input');
+    fileInput.type = 'file';
+    fileInput.addEventListener('change', async (event: Event) => {
+      const target = event.target as HTMLInputElement;
+      const file: File | null = target.files?.[0] || null;
+      if (file) {
+        this.institution.postUploadImage(this.data?.id!!, file).subscribe({
+          next: () => this.snackBar.open("Successfully uploaded institution image.", "Dismiss", { duration: 2000 } as MatSnackBarConfig),
+          error: (err) => this.snackBar.open(`Error occurred while trying to upload image: ${err?.error?.description}.`, "Dismiss", { duration: 2000 } as MatSnackBarConfig)
+        });
+      }
+    });
+    fileInput.click();
   }
 }
