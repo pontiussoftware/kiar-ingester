@@ -20,6 +20,8 @@ data class Institution(
     val zip: Int,
     val city: String,
     val canton: String,
+    var longitude: Float? = null,
+    var latitude: Float? = null,
     val email: String,
     val homepage: String? = null,
     val publish: Boolean,

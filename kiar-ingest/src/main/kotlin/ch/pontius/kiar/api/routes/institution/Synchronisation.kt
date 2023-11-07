@@ -103,6 +103,10 @@ private fun synchronise(config: ApacheSolrConfig, collection: String, institutio
                     }
                 }
 
+                if (institution.longitude != null && institution.latitude != null) {
+                    doc.setField("koordinaten_wgs84", "${institution.latitude},${institution.longitude}")
+                }
+
                 doc
             }
 

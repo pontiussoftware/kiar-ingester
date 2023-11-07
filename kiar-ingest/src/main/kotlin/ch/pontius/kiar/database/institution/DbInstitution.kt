@@ -53,6 +53,12 @@ class DbInstitution(entity: Entity) : XdEntity(entity) {
     /** The name held by this [DbInstitution].!*/
     var homepage by xdStringProp(trimmed = true)
 
+    /** The WGS84 longitude of the museum's location. */
+    var longitude by xdFloatProp()
+
+    /** The WGS84 latitude of the museum's location. */
+    var latitude by xdFloatProp()
+
     /** Flag indicating whether this [DbInstitution]'s metadata should be published. */
     var publish by xdBooleanProp()
 
@@ -98,6 +104,8 @@ class DbInstitution(entity: Entity) : XdEntity(entity) {
         city = this.city,
         zip = this.zip,
         canton = this.canton,
+        longitude = this.longitude,
+        latitude = this.latitude,
         email = this.email,
         homepage = this.homepage,
         publish = this.publish,
