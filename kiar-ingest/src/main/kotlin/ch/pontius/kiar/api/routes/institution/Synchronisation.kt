@@ -81,6 +81,7 @@ private fun synchronise(config: ApacheSolrConfig, collection: String, institutio
             /* Map documents and add them. */
             val documents = institutions.map { institution ->
                 val doc = SolrInputDocument()
+                doc.setField(Constants.FIELD_NAME_UUID, institution.id)
                 doc.setField(Constants.FIELD_NAME_PARTICIPANT, institution.participantName)
                 doc.setField(Constants.FIELD_NAME_CANTON, institution.canton)
                 doc.setField(Constants.FIELD_NAME_DISPLAY, institution.displayName)
