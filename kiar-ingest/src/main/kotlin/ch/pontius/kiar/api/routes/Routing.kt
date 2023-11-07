@@ -15,6 +15,7 @@ import postCreateInstitution
 import deleteEntityMapping
 import deleteInstitution
 import getEntityMapping
+import getInstitution
 import getListInstitutionNames
 import getListInstitutions
 import io.javalin.apibuilder.ApiBuilder.*
@@ -58,8 +59,9 @@ fun configureApiRoutes(store: TransientEntityStore, server: IngesterServer, conf
         path("institutions") {
             get("name", { ctx -> getListInstitutionNames(ctx, store) }, Role.ADMINISTRATOR )
             post("synchronize", { ctx -> postSyncInstitutions(ctx, store) }, Role.ADMINISTRATOR )
-            delete("{id}",  { ctx -> deleteInstitution(ctx, store) }, Role.ADMINISTRATOR )
+            get("{id}",  { ctx -> getInstitution(ctx, store) }, Role.ADMINISTRATOR, Role.MANAGER )
             put("{id}",  { ctx -> putUpdateInstitution(ctx, store) }, Role.ADMINISTRATOR, Role.MANAGER)
+            delete("{id}",  { ctx -> deleteInstitution(ctx, store) }, Role.ADMINISTRATOR )
             path("{id}") {
                 post("image", { ctx -> postUploadImage(ctx, store) }, Role.ADMINISTRATOR, Role.MANAGER)
             }

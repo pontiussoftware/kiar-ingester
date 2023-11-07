@@ -45,47 +45,19 @@ export class InstitutionDialogComponent {
       private institution: InstitutionService,
       private dialogRef: MatDialogRef<InstitutionDialogComponent>,
       private snackBar: MatSnackBar,
-      @Inject(MAT_DIALOG_DATA) private data: Institution | null
+      @Inject(MAT_DIALOG_DATA) private institutionId: string | null
   ) {
+    /* Get list of available participants. */
     this.participants = this.config.getListParticipants().pipe(shareReplay(1, 30000))
-    this.formControl = new FormGroup({
-      name: new FormControl(this.data?.name || '', [Validators.required, Validators.minLength(10)]),
-      imageName: new FormControl({value: this.data?.imageName || '', disabled: true}),
-      displayName: new FormControl(this.data?.displayName || '', [Validators.required, Validators.minLength(10)]),
-      description: new FormControl(this.data?.description || ''),
-      participantName: new FormControl(this.data?.participantName || '', [Validators.required]),
-      street: new FormControl(this.data?.street || '', [Validators.required]),
-      zip: new FormControl(this.data?.zip || '', [Validators.required]),
-      city: new FormControl(this.data?.city || '', [Validators.required]),
-      canton: new FormControl(this.data?.canton || '', [Validators.required]),
-      email: new FormControl(this.data?.email || '', [Validators.required, Validators.email]),
-      homepage: new FormControl(this.data?.homepage || ''),
-      publish: new FormControl(this.data?.publish || true, [Validators.required]),
-      defaultRightStatement: new FormControl(this.data?.defaultRightStatement || ''),
-      defaultCopyright: new FormControl(this.data?.defaultCopyright || ''),
-      availableCollections: new FormArray(this.availableCollectionsForms),
-      selectedCollections: new FormArray(this.selectedCollectionsForms)
-    })
-
-    /* Get collections. */
-    this.config.getListSolrConfiguration().pipe(
-        map(config => config.flatMap(c => c.collections).filter(c => c.type == 'OBJECT'))
-    ).subscribe(collections => {
-      for (const c of collections) {
-        this.allCollections.push(c)
-        const isAvailable = (this.data?.availableCollections || []).findIndex(s => s === c.name) > -1
-        this.availableCollectionsForms.push(new FormControl(isAvailable))
-        if (isAvailable) {
-          this.availableCollections.push(c)
-          const isSelected = (this.data?.selectedCollections || []).findIndex(s => s === c.name) > -1
-          this.selectedCollectionsForms.push(new FormControl(isSelected))
-        }
-      }
-    })
 
     /* Get masterdata. */
     this.rightStatements = this.masterdata.getListRightStatements().pipe(shareReplay(1))
     this.cantons = this.masterdata.getListCantons().pipe(shareReplay(1))
+
+    /* Reload institution data. */
+    if (this.institutionId) {
+      this.reload(this.institutionId!!)
+    }
   }
 
   /**
@@ -108,7 +80,7 @@ export class InstitutionDialogComponent {
       })
 
       let institution = {
-        id: this.data?.id || undefined,
+        id: this.institutionId || undefined,
         name: this.formControl.get('name')?.value,
         displayName: this.formControl.get('displayName')?.value,
         description: this.formControl.get('description')?.value,
@@ -152,18 +124,69 @@ export class InstitutionDialogComponent {
    * Opens the 'file open' dialog and starts image upload.
    */
   public uploadImage() {
-    const fileInput: HTMLInputElement = document.createElement('input');
-    fileInput.type = 'file';
-    fileInput.addEventListener('change', async (event: Event) => {
-      const target = event.target as HTMLInputElement;
-      const file: File | null = target.files?.[0] || null;
-      if (file) {
-        this.institution.postUploadImage(this.data?.id!!, file).subscribe({
-          next: () => this.snackBar.open("Successfully uploaded institution image.", "Dismiss", { duration: 2000 } as MatSnackBarConfig),
-          error: (err) => this.snackBar.open(`Error occurred while trying to upload image: ${err?.error?.description}.`, "Dismiss", { duration: 2000 } as MatSnackBarConfig)
-        });
-      }
-    });
-    fileInput.click();
+    if (this.institutionId != null) {
+      const fileInput: HTMLInputElement = document.createElement('input');
+      fileInput.type = 'file';
+      fileInput.addEventListener('change', async (event: Event) => {
+        const target = event.target as HTMLInputElement;
+        const file: File | null = target.files?.[0] || null;
+        if (file) {
+          this.institution.postUploadImage(this.institutionId!!, file).subscribe({
+            next: () => {
+              this.snackBar.open("Successfully uploaded institution image.", "Dismiss", {duration: 2000} as MatSnackBarConfig)
+              this.reload(this.institutionId!!)
+            },
+            error: (err) => this.snackBar.open(`Error occurred while trying to upload image: ${err?.error?.description}.`, "Dismiss", {duration: 2000} as MatSnackBarConfig)
+          });
+        }
+      });
+      fileInput.click();
+    }
+  }
+
+  /**
+   *
+   * @private
+   */
+  private reload(id: string) {
+    this.institution.getInstitution(id, {} as Institution).subscribe({
+      next: (value) => {
+        this.formControl = new FormGroup({
+          name: new FormControl(value.name || '', [Validators.required, Validators.minLength(10)]),
+          imageName: new FormControl({value: value?.imageName || '', disabled: true}),
+          displayName: new FormControl(value.displayName || '', [Validators.required, Validators.minLength(10)]),
+          description: new FormControl(value.description || ''),
+          participantName: new FormControl(value.participantName || '', [Validators.required]),
+          street: new FormControl(value.street || '', [Validators.required]),
+          zip: new FormControl(value.zip || '', [Validators.required]),
+          city: new FormControl(value.city || '', [Validators.required]),
+          canton: new FormControl(value.canton || '', [Validators.required]),
+          email: new FormControl(value.email || '', [Validators.required, Validators.email]),
+          homepage: new FormControl(value?.homepage || ''),
+          publish: new FormControl(value.publish || true, [Validators.required]),
+          defaultRightStatement: new FormControl(value.defaultRightStatement || ''),
+          defaultCopyright: new FormControl(value.defaultCopyright || ''),
+          availableCollections: new FormArray(this.availableCollectionsForms),
+          selectedCollections: new FormArray(this.selectedCollectionsForms)
+        })
+
+        /* Get collections. */
+        this.config.getListSolrConfiguration().pipe(
+            map(config => config.flatMap(c => c.collections).filter(c => c.type == 'OBJECT'))
+        ).subscribe(collections => {
+          for (const c of collections) {
+            this.allCollections.push(c)
+            const isAvailable = (value.availableCollections || []).findIndex(s => s === c.name) > -1
+            this.availableCollectionsForms.push(new FormControl(isAvailable))
+            if (isAvailable) {
+              this.availableCollections.push(c)
+              const isSelected = (value.selectedCollections || []).findIndex(s => s === c.name) > -1
+              this.selectedCollectionsForms.push(new FormControl(isSelected))
+            }
+          }
+        })
+      },
+      error: (err) => this.snackBar.open(`Error occurred while trying to create institution: ${err?.error?.description}.`, "Dismiss", {duration: 2000} as MatSnackBarConfig)
+    })
   }
 }

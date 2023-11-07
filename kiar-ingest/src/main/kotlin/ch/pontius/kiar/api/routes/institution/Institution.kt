@@ -137,6 +137,41 @@ fun postCreateInstitution(ctx: Context, store: TransientEntityStore) {
 }
 @OpenApi(
     path = "/api/institutions/{id}",
+    methods = [HttpMethod.GET],
+    summary = "Gets information about an existing institution.",
+    operationId = "getInstitution",
+    tags = ["Institution"],
+    pathParams = [
+        OpenApiParam(name = "id", description = "The ID of the institution that should be fetched.", required = true)
+    ],
+    responses = [
+        OpenApiResponse("200", [OpenApiContent(Institution::class)]),
+        OpenApiResponse("400", [OpenApiContent(ErrorStatus::class)]),
+        OpenApiResponse("401", [OpenApiContent(ErrorStatus::class)]),
+        OpenApiResponse("403", [OpenApiContent(ErrorStatus::class)]),
+        OpenApiResponse("404", [OpenApiContent(ErrorStatus::class)]),
+        OpenApiResponse("500", [OpenApiContent(ErrorStatus::class)])
+    ]
+)
+
+fun getInstitution(ctx: Context, store: TransientEntityStore) {
+    val institutionId = ctx.pathParam("id")
+
+    /* Create new job. */
+    val institution = store.transactional {
+        try {
+            DbInstitution.findById(institutionId)
+        } catch (e: Throwable) {
+            throw ErrorStatusException(404, "Institution with ID $institutionId could not be found.")
+        }
+    }
+
+    /* Return job object. */
+    ctx.json(institution.toApi())
+}
+
+@OpenApi(
+    path = "/api/institutions/{id}",
     methods = [HttpMethod.PUT],
     summary = "Updates an existing institution.",
     operationId = "putUpdateInstitution",
