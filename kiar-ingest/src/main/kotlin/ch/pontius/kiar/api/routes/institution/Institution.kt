@@ -158,16 +158,16 @@ fun getInstitution(ctx: Context, store: TransientEntityStore) {
     val institutionId = ctx.pathParam("id")
 
     /* Create new job. */
-    val institution = store.transactional {
+    val institution = store.transactional(true) {
         try {
-            DbInstitution.findById(institutionId)
+            DbInstitution.findById(institutionId).toApi()
         } catch (e: Throwable) {
             throw ErrorStatusException(404, "Institution with ID $institutionId could not be found.")
         }
     }
 
     /* Return job object. */
-    ctx.json(institution.toApi())
+    ctx.json(institution)
 }
 
 @OpenApi(
