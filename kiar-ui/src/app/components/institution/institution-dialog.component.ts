@@ -72,6 +72,11 @@ export class InstitutionDialogComponent {
     /* Get list of available participants. */
     this.participants = this.config.getListParticipants().pipe(shareReplay(1, 30000))
 
+    /*  Get list of available collections. */
+    this.config.getListSolrConfiguration().pipe(
+        map(config => config.flatMap(c => c.collections).filter(c => c.type == 'OBJECT'))
+    ).subscribe(c => this.allCollections.push(...c))
+
     /* Get masterdata. */
     this.rightStatements = this.masterdata.getListRightStatements().pipe(shareReplay(1))
     this.cantons = this.masterdata.getListCantons().pipe(shareReplay(1))
@@ -196,21 +201,18 @@ export class InstitutionDialogComponent {
         this.formControl.get('availableCollections')?.setValue(value.availableCollections)
         this.formControl.get('selectedCollections')?.setValue(value.selectedCollections)
 
-        /* Get collections. */
-        this.config.getListSolrConfiguration().pipe(
-            map(config => config.flatMap(c => c.collections).filter(c => c.type == 'OBJECT'))
-        ).subscribe(collections => {
-          for (const c of collections) {
-            this.allCollections.push(c)
-            const isAvailable = (value.availableCollections || []).findIndex(s => s === c.name) > -1
-            this.availableCollectionsForms.push(new FormControl(isAvailable))
-            if (isAvailable) {
-              this.availableCollections.push(c)
-              const isSelected = (value.selectedCollections || []).findIndex(s => s === c.name) > -1
-              this.selectedCollectionsForms.push(new FormControl(isSelected))
-            }
+        /* Assign collections. */
+        this.availableCollectionsForms.length = 0
+        this.selectedCollectionsForms.length = 0
+        for (const c of this.allCollections) {
+          const isAvailable = (value.availableCollections || []).findIndex(s => s === c.name) > -1
+          this.availableCollectionsForms.push(new FormControl(isAvailable))
+          if (isAvailable) {
+            this.availableCollections.push(c)
+            const isSelected = (value.selectedCollections || []).findIndex(s => s === c.name) > -1
+            this.selectedCollectionsForms.push(new FormControl(isSelected))
           }
-        })
+        }
       },
       error: (err) => this.snackBar.open(`Error occurred while trying to create institution: ${err?.error?.description}.`, "Dismiss", {duration: 2000} as MatSnackBarConfig)
     })
