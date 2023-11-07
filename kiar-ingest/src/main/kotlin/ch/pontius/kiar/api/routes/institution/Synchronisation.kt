@@ -96,13 +96,16 @@ private fun synchronise(config: ApacheSolrConfig, collection: String, institutio
                 doc.setField("website", institution.homepage)
 
                 /* Add entries for institution image. */
-                for (deployment in config.deployments) {
-                    if (deployment.server == null) {
-                        doc.setField(deployment.name, "/institutions/${deployment.name}/${institution.imageName}")
-                    } else {
-                        doc.setField(deployment.name, "${deployment.server}institutions/${deployment.name}/${institution.imageName}")
+                if (institution.imageName != null) {
+                    for (deployment in config.deployments) {
+                        if (deployment.server == null) {
+                            doc.setField(deployment.name, "/institutions/${deployment.name}/${institution.imageName}")
+                        } else {
+                            doc.setField(deployment.name, "${deployment.server}institutions/${deployment.name}/${institution.imageName}")
+                        }
                     }
                 }
+
 
                 if (institution.longitude != null && institution.latitude != null) {
                     doc.setField("koordinaten_wgs84", "${institution.latitude},${institution.longitude}")
