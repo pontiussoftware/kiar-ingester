@@ -101,7 +101,6 @@ private fun synchronise(config: ApacheSolrConfig, collection: String, institutio
                     } else {
                         doc.setField(deployment.name, "${deployment.server}institutions/${deployment.name}/${institution.imageName}")
                     }
-                    doc.setField("rights_statement", deployment)
                 }
 
                 doc
