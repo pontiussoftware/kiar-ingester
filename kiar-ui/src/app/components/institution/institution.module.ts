@@ -1,6 +1,6 @@
 import {NgModule} from "@angular/core";
 import {InstitutionListComponent} from "./institution-list.component";
-import {CommonModule} from "@angular/common";
+import {CommonModule, NgOptimizedImage} from "@angular/common";
 import {BrowserModule} from "@angular/platform-browser";
 import {FormsModule, ReactiveFormsModule} from "@angular/forms";
 import {RouterLink} from "@angular/router";
@@ -44,7 +44,8 @@ import {MatTabsModule} from "@angular/material/tabs";
     MatOptionModule,
     MatSelectModule,
     MatMenuModule,
-    MatTabsModule
+    MatTabsModule,
+    NgOptimizedImage
   ],
   exports: [
     InstitutionListComponent
