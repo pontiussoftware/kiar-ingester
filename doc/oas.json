@@ -333,16 +333,6 @@
             "type" : "string"
           }
         } ],
-        "requestBody" : {
-          "content" : {
-            "application/json" : {
-              "schema" : {
-                "$ref" : "#/components/schemas/Institution"
-              }
-            }
-          },
-          "required" : true
-        },
         "responses" : {
           "200" : {
             "description" : "OK",
@@ -3701,6 +3691,14 @@
           },
           "canton" : {
             "type" : "string"
+          },
+          "longitude" : {
+            "type" : "number",
+            "format" : "float"
+          },
+          "latitude" : {
+            "type" : "number",
+            "format" : "float"
           },
           "email" : {
             "type" : "string"

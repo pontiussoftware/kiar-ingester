@@ -47,6 +47,28 @@ export class InstitutionDialogComponent {
       private snackBar: MatSnackBar,
       @Inject(MAT_DIALOG_DATA) private institutionId: string | null
   ) {
+    /* Prepare empty form. */
+    this.formControl = new FormGroup({
+      name: new FormControl('', [Validators.required, Validators.minLength(10)]),
+      imageName: new FormControl({value: '', disabled: true}),
+      displayName: new FormControl('', [Validators.required, Validators.minLength(10)]),
+      description: new FormControl(''),
+      participantName: new FormControl('', [Validators.required]),
+      street: new FormControl('', [Validators.required]),
+      zip: new FormControl('', [Validators.required]),
+      city: new FormControl('', [Validators.required]),
+      canton: new FormControl('', [Validators.required]),
+      longitude: new FormControl('', [Validators.min(-180), Validators.max(180)]),
+      latitude: new FormControl('', [Validators.min(-180), Validators.max(180)]),
+      email: new FormControl('', [Validators.required, Validators.email]),
+      homepage: new FormControl(''),
+      publish: new FormControl(true, [Validators.required]),
+      defaultRightStatement: new FormControl(''),
+      defaultCopyright: new FormControl(''),
+      availableCollections: new FormArray(this.availableCollectionsForms),
+      selectedCollections: new FormArray(this.selectedCollectionsForms)
+    })
+
     /* Get list of available participants. */
     this.participants = this.config.getListParticipants().pipe(shareReplay(1, 30000))
 
@@ -79,6 +101,7 @@ export class InstitutionDialogComponent {
         }
       })
 
+      /* Create institution. */
       let institution = {
         id: this.institutionId || undefined,
         name: this.formControl.get('name')?.value,
@@ -90,6 +113,8 @@ export class InstitutionDialogComponent {
         zip: this.formControl.get('zip')?.value,
         city: this.formControl.get('city')?.value,
         canton: this.formControl.get('canton')?.value,
+        longitude: this.formControl.get('longitude')?.value,
+        latitude: this.formControl.get('latitude')?.value,
         email: this.formControl.get('email')?.value,
         homepage: this.formControl.get('homepage')?.value,
         publish: this.formControl.get('publish')?.value,
@@ -149,26 +174,27 @@ export class InstitutionDialogComponent {
    * @private
    */
   private reload(id: string) {
-    this.institution.getInstitution(id, {} as Institution).subscribe({
+    this.institution.getInstitution(id).subscribe({
       next: (value) => {
-        this.formControl = new FormGroup({
-          name: new FormControl(value.name || '', [Validators.required, Validators.minLength(10)]),
-          imageName: new FormControl({value: value?.imageName || '', disabled: true}),
-          displayName: new FormControl(value.displayName || '', [Validators.required, Validators.minLength(10)]),
-          description: new FormControl(value.description || ''),
-          participantName: new FormControl(value.participantName || '', [Validators.required]),
-          street: new FormControl(value.street || '', [Validators.required]),
-          zip: new FormControl(value.zip || '', [Validators.required]),
-          city: new FormControl(value.city || '', [Validators.required]),
-          canton: new FormControl(value.canton || '', [Validators.required]),
-          email: new FormControl(value.email || '', [Validators.required, Validators.email]),
-          homepage: new FormControl(value?.homepage || ''),
-          publish: new FormControl(value.publish || true, [Validators.required]),
-          defaultRightStatement: new FormControl(value.defaultRightStatement || ''),
-          defaultCopyright: new FormControl(value.defaultCopyright || ''),
-          availableCollections: new FormArray(this.availableCollectionsForms),
-          selectedCollections: new FormArray(this.selectedCollectionsForms)
-        })
+        /* Update form control. */
+        this.formControl.get('name')?.setValue(value.name)
+        this.formControl.get('displayName')?.setValue(value.displayName)
+        this.formControl.get('imageName')?.setValue(value.imageName)
+        this.formControl.get('description')?.setValue(value.description)
+        this.formControl.get('participantName')?.setValue(value.participantName)
+        this.formControl.get('street')?.setValue(value.street)
+        this.formControl.get('zip')?.setValue(value.zip)
+        this.formControl.get('city')?.setValue(value.city)
+        this.formControl.get('canton')?.setValue(value.canton)
+        this.formControl.get('longitude')?.setValue(value.longitude)
+        this.formControl.get('latitude')?.setValue(value.latitude)
+        this.formControl.get('email')?.setValue(value.email)
+        this.formControl.get('homepage')?.setValue(value.homepage)
+        this.formControl.get('publish')?.setValue(value.publish)
+        this.formControl.get('defaultRightStatement')?.setValue(value.defaultRightStatement)
+        this.formControl.get('defaultCopyright')?.setValue(value.defaultCopyright)
+        this.formControl.get('availableCollections')?.setValue(value.availableCollections)
+        this.formControl.get('selectedCollections')?.setValue(value.selectedCollections)
 
         /* Get collections. */
         this.config.getListSolrConfiguration().pipe(

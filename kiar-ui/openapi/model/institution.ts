@@ -22,6 +22,8 @@ export interface Institution {
     zip: number;
     city: string;
     canton: string;
+    longitude?: number;
+    latitude?: number;
     email: string;
     homepage?: string;
     publish: boolean;
