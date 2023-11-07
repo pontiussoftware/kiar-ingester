@@ -1,12 +1,12 @@
 import {CollectionViewer, DataSource} from "@angular/cdk/collections";
 import {Institution, InstitutionService} from "../../../../openapi";
-import {BehaviorSubject, Observable} from "rxjs";
+import {BehaviorSubject, catchError, map, Observable, of} from "rxjs";
 
 /**
  * 
  */
 interface InstitutionWithImage extends Institution {
-  image: Observable<string>
+  image: Observable<string | null>
 }
 
 /**
@@ -61,7 +61,10 @@ export class InstitutionDatasource implements DataSource<Institution> {
         (next) => {
           this.total.next(next.total)
           const institutions = next.results.map(institution => {
-             ((institution as any)['image'] = this.service.getInstitution(institution.id!!))
+             ((institution as any)['image'] = this.service.getImage(institution.id!!).pipe(
+                 map(image => URL.createObjectURL(image)),
+                 catchError(() => of(null))
+             ))
              return institution as InstitutionWithImage
           })
           this.data.next(institutions)
