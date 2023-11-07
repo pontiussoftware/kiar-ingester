@@ -1,4 +1,4 @@
-import {AfterViewInit, Component, OnInit, ViewChild} from "@angular/core";
+import {AfterViewInit, Component, ViewChild} from "@angular/core";
 import {ConfigService, Institution, InstitutionService} from "../../../../openapi";
 import {map, Observable, shareReplay, tap} from "rxjs";
 import {MatPaginator} from "@angular/material/paginator";
@@ -65,7 +65,7 @@ export class InstitutionListComponent implements AfterViewInit  {
    * Opens a dialog to edit an existing {@link Institution} to the collection and persists it through the API upon saving.
    */
   public edit(institution: Institution) {
-    this.dialog.open(InstitutionDialogComponent, {data: institution}).afterClosed().subscribe(ret => {
+    this.dialog.open(InstitutionDialogComponent, {data: institution.id}).afterClosed().subscribe(ret => {
       if (ret != null) {
         this.dataSource.load(this.paginator.pageIndex, this.paginator.pageSize, this.sort.active, this.sort.direction);
       }
