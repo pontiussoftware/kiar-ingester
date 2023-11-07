@@ -1,3 +1,4 @@
+import ch.pontius.kiar.api.model.config.image.ImageFormat
 import ch.pontius.kiar.api.model.institution.Institution
 import ch.pontius.kiar.api.model.institution.PaginatedInstitutionResult
 import ch.pontius.kiar.api.model.status.ErrorStatus
@@ -22,7 +23,9 @@ import kotlinx.dnq.util.findById
 import org.joda.time.DateTime
 import java.io.IOException
 import java.nio.file.Files
+import java.nio.file.Path
 import java.nio.file.Paths
+import java.nio.file.StandardOpenOption
 
 @OpenApi(
     path = "/api/institutions",
@@ -251,6 +254,61 @@ fun putUpdateInstitution(ctx: Context, store: TransientEntityStore) {
     /* Return job object. */
     ctx.json(SuccessStatus("Institution '$institutionName' (id: $institutionId) updated successfully."))
 }
+@OpenApi(
+    path = "/api/institutions/{id}/image",
+    methods = [HttpMethod.GET],
+    summary = "Gets the preview image for the provided institution.",
+    operationId = "getImage",
+    tags = ["Institution"],
+    pathParams = [
+        OpenApiParam(name = "id", description = "The ID of the institution the image should be retrieved for.", required = true)
+    ],
+    responses = [
+        OpenApiResponse("200", [
+            OpenApiContent(mimeType = "image/jpeg"),
+            OpenApiContent(mimeType = "image/png")
+        ]),
+        OpenApiResponse("401", [OpenApiContent(ErrorStatus::class)]),
+        OpenApiResponse("403", [OpenApiContent(ErrorStatus::class)]),
+        OpenApiResponse("404", [OpenApiContent(ErrorStatus::class)]),
+        OpenApiResponse("500", [OpenApiContent(ErrorStatus::class)])
+    ]
+)
+fun getImage(ctx: Context, store: TransientEntityStore) {
+    /* Obtain parameters. */
+    val institutionId = ctx.pathParam("id")
+
+    /* Start transaction */
+    store.transactional(true) {
+        val institution = try {
+            DbInstitution.findById(institutionId)
+        } catch (e: Throwable) {
+            throw ErrorStatusException(404, "Institution with ID $institutionId could not be found.")
+        }
+
+        /* Obtain image name. */
+        val imageName = institution.imageName ?: throw ErrorStatusException(404, "No image found for institution with ID $institutionId.")
+
+        /* Obtain deployment path. */
+        val deployment = institution.availableCollections.mapDistinct { it.solr }.flatMapDistinct { it.deployments }.asSequence().map { it.toApi() }.firstOrNull() ?: throw ErrorStatusException(404, "No deployment found for institution with ID $institutionId.")
+
+        /* Construct image path. */
+        val path = Paths.get(deployment.path).resolve("institutions").resolve(deployment.name).resolve(imageName)
+        if (!Files.exists(path)) {
+            throw ErrorStatusException(404, "No image found for institution with ID $institutionId; missing file.")
+        }
+
+        /* Send back image. */
+        ctx.status(200)
+        when(deployment.format) {
+            ImageFormat.JPEG -> ctx.contentType("image/jpeg")
+            ImageFormat.PNG -> ctx.contentType("image/png")
+        }
+        Files.newInputStream(path, StandardOpenOption.READ).use {
+            ctx.result(it)
+        }
+    }
+}
 
 @OpenApi(
     path = "/api/institutions/{id}/image",
@@ -276,6 +334,7 @@ fun postUploadImage(ctx: Context, store: TransientEntityStore) {
     /* Obtain parameters. */
     val institutionId = ctx.pathParam("id")
     val files = ctx.uploadedFiles()
+    val delete = mutableListOf<Path>()
 
     /* Make sure that a file has been uploaded. */
     if (files.isEmpty()) throw ErrorStatusException(401, "Uploaded file is missing.")
@@ -291,6 +350,10 @@ fun postUploadImage(ctx: Context, store: TransientEntityStore) {
         /* List of deployment paths. */
         val deployments = institution.availableCollections.mapDistinct { it.solr }.flatMapDistinct { it.deployments }.asSequence().map { it.toApi() }.toList()
 
+        /* Define file names. */
+        val oldFilename = institution.imageName
+        val filename = "${institution.xdId}-${System.currentTimeMillis()}.jpg"
+
         /* Process images. */
         for (f in ctx.uploadedFiles()) {
             /* Open image. */
@@ -300,9 +363,6 @@ fun postUploadImage(ctx: Context, store: TransientEntityStore) {
                 throw ErrorStatusException(400, "Uploaded image file could not be opened.")
             }
 
-            /* Filename. */
-            val filename = "${institution.xdId}-${System.currentTimeMillis()}.jpg"
-
             /* Deploy files. */
             for (d in deployments) {
                 /* Prepare scaled version. */
@@ -311,10 +371,14 @@ fun postUploadImage(ctx: Context, store: TransientEntityStore) {
                 } else {
                     image.scaleToHeight(d.maxSize)
                 }
+                /* Mark old file for deletion. */
+                val path = Paths.get(d.path).resolve("institutions").resolve(d.name).resolve(filename)
+                if (oldFilename != null) {
+                    delete.add(Paths.get(d.path).resolve("institutions").resolve(d.name).resolve(oldFilename))
+                }
 
                 try {
                     /* Prepare deployment path and create directories if necessary. */
-                    val path = Paths.get(d.path).resolve("institutions").resolve(d.name).resolve(filename)
                     if (!Files.exists(path.parent)) {
                         Files.createDirectories(path.parent)
                     }
@@ -331,6 +395,13 @@ fun postUploadImage(ctx: Context, store: TransientEntityStore) {
 
             /* One image is enough. */
             break
+        }
+    }
+
+    /* Delete old files. */
+    for (oldPath in delete) {
+        if (Files.exists(oldPath)) {
+            Files.delete(oldPath)
         }
     }
 }
