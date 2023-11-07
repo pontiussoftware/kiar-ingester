@@ -265,8 +265,8 @@ fun putUpdateInstitution(ctx: Context, store: TransientEntityStore) {
     ],
     responses = [
         OpenApiResponse("200", [
-            OpenApiContent(mimeType = "image/jpeg"),
-            OpenApiContent(mimeType = "image/png")
+            OpenApiContent(mimeType = "image/jpeg", type = "string", format = "binary"),
+            OpenApiContent(mimeType = "image/png", type = "string", format = "binary"),
         ]),
         OpenApiResponse("401", [OpenApiContent(ErrorStatus::class)]),
         OpenApiResponse("403", [OpenApiContent(ErrorStatus::class)]),
@@ -304,9 +304,7 @@ fun getImage(ctx: Context, store: TransientEntityStore) {
             ImageFormat.JPEG -> ctx.contentType("image/jpeg")
             ImageFormat.PNG -> ctx.contentType("image/png")
         }
-        Files.newInputStream(path, StandardOpenOption.READ).use {
-            ctx.result(it)
-        }
+        ctx.result(Files.newInputStream(path, StandardOpenOption.READ))
     }
 }
 

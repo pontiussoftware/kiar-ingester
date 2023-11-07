@@ -198,8 +198,6 @@ export class InstitutionDialogComponent {
         this.formControl.get('publish')?.setValue(value.publish)
         this.formControl.get('defaultRightStatement')?.setValue(value.defaultRightStatement)
         this.formControl.get('defaultCopyright')?.setValue(value.defaultCopyright)
-        this.formControl.get('availableCollections')?.setValue(value.availableCollections)
-        this.formControl.get('selectedCollections')?.setValue(value.selectedCollections)
 
         /* Assign collections. */
         this.availableCollectionsForms.length = 0
