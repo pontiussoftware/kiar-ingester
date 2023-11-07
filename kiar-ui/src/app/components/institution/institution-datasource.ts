@@ -3,6 +3,13 @@ import {Institution, InstitutionService} from "../../../../openapi";
 import {BehaviorSubject, Observable} from "rxjs";
 
 /**
+ * 
+ */
+interface InstitutionWithImage extends Institution {
+  image: Observable<string>
+}
+
+/**
  * A {@link DataSource} for {@link Institution} object loaded through the backend API.
  *
  * Can be used as a data source for table.
@@ -53,7 +60,11 @@ export class InstitutionDatasource implements DataSource<Institution> {
     this.service.getInstitutions(page, pageSize, order, orderDir).subscribe(
         (next) => {
           this.total.next(next.total)
-          this.data.next(next.results)
+          const institutions = next.results.map(institution => {
+             ((institution as any)['image'] = this.service.getInstitution(institution.id!!))
+             return institution as InstitutionWithImage
+          })
+          this.data.next(institutions)
         }
     )
   }

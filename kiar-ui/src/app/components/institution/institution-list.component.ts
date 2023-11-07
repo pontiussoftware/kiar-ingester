@@ -1,6 +1,6 @@
 import {AfterViewInit, Component, ViewChild} from "@angular/core";
 import {ConfigService, Institution, InstitutionService} from "../../../../openapi";
-import {catchError, map, Observable, of, shareReplay, tap} from "rxjs";
+import {map, Observable, shareReplay, tap} from "rxjs";
 import {MatPaginator} from "@angular/material/paginator";
 import {InstitutionDatasource} from "./institution-datasource";
 import {MatSort} from "@angular/material/sort";
@@ -98,16 +98,5 @@ export class InstitutionListComponent implements AfterViewInit  {
       next: (value) =>  this.snackBar.open(`Successfully synchronised institutions with Apache Solr backend (${collection} (${config}).`, "Dismiss", { duration: 2000 } as MatSnackBarConfig),
       error: (err) => this.snackBar.open(`Error occurred while synchronising institutions with Apache Solr backend (${collection} (${config}): ${err?.error?.description}.`, "Dismiss", { duration: 2000 } as MatSnackBarConfig),
     })
-  }
-
-  /**
-   *
-   * @param id
-   */
-  public image(id: string): Observable<string> {
-    return this.institution.getImage(id).pipe(
-        map((value) => URL.createObjectURL(value)),
-        catchError((err) => of(""))
-    )
   }
 }
