@@ -1,5 +1,6 @@
 import {Component, Input, OnInit} from "@angular/core";
 import {InstitutionService} from "../../../../openapi";
+import { catchError, of } from "rxjs";
 
 @Component({
   selector: 'app-institution-image',
@@ -21,7 +22,9 @@ export class InstitutionImageComponent implements OnInit {
   constructor(private institutionService: InstitutionService) { }
 
   public ngOnInit() {
-    this.institutionService.getImage(this.institutionId).subscribe({
+    this.institutionService.getImage(this.institutionId).pipe(
+        catchError(err => of(null))
+    ).subscribe({
       next: (imageData) => {
         if (imageData) {
           this.imageUrl = URL.createObjectURL(imageData)
