@@ -120,7 +120,7 @@ fun getUser(ctx: Context, store: TransientEntityStore) {
     path = "/api/session/user",
     methods = [HttpMethod.PUT],
     summary = "Updates the currently active user.",
-    operationId = "putUpdateUser",
+    operationId = "putUpdateCurrentUser",
     tags = ["Session"],
     requestBody = OpenApiRequestBody([OpenApiContent(User::class)], required = true),
     pathParams = [],
