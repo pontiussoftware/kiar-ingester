@@ -54,10 +54,10 @@ class DbInstitution(entity: Entity) : XdEntity(entity) {
     var homepage by xdStringProp(trimmed = true)
 
     /** The WGS84 longitude of the museum's location. */
-    var longitude by xdFloatProp()
+    var longitude by xdNullableFloatProp()
 
     /** The WGS84 latitude of the museum's location. */
-    var latitude by xdFloatProp()
+    var latitude by xdNullableFloatProp()
 
     /** Flag indicating whether this [DbInstitution]'s metadata should be published. */
     var publish by xdBooleanProp()

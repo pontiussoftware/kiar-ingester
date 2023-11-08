@@ -4,6 +4,7 @@ import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.decodeFromStream
 import java.io.IOException
+import java.net.HttpURLConnection
 import java.net.URL
 
 /**
@@ -25,14 +26,24 @@ object Geocoding {
      * @param address The address to obtain coordinates for.
      * @return [GeocodingResponse]
      */
-    fun geocode(address: String): GeocodingResponse? = try {
+    fun geocode(street: String?, city: String, zip: Int): GeocodingResponse? = try {
         /** Reads the search pattern from the parameters map.*/
-        val url: URL = URL("https://nominatim.openstreetmap.org/search?q=${address}&format=json")
-        val connection = url.openConnection()
-        val response = connection.inputStream.use {
-            this.json.decodeFromStream<List<GeocodingResponse>>(it)
+        val url: URL = if (street != null) {
+            URL("https://nominatim.openstreetmap.org/search?street=${street.replace(' ', '+')}&city=${city.replace(' ', '+')}&postalcode=$zip&format=json&limit=1&email=info@kimnet.ch")
+        } else {
+            URL("https://nominatim.openstreetmap.org/search?city=${city.replace(' ', '+')}&postalcode=$zip&format=json&limit=1&email=info@kimnet.ch")
         }
-        response.firstOrNull()
+        val connection = url.openConnection() as HttpURLConnection
+        connection.setRequestMethod("GET");
+        connection.setRequestProperty("User-Agent", "Mozilla/5.0 (compatible; Kiar/1.0.0; +https://www.kimnet.ch)")
+        if (connection.getResponseCode() != 200) {
+            null
+        } else {
+            val response = connection.inputStream.use {
+                this.json.decodeFromStream<List<GeocodingResponse>>(it)
+            }
+            response.firstOrNull()
+        }
     } catch (e: IOException) {
         null
     }

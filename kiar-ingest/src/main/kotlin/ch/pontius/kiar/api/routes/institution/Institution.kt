@@ -116,9 +116,6 @@ fun postCreateInstitution(ctx: Context, store: TransientEntityStore) {
 
     /* Create new job. */
     val institution = store.transactional {
-
-
-
         /* Create new job. */
         DbInstitution.new {
             this.name = request.name
@@ -139,11 +136,7 @@ fun postCreateInstitution(ctx: Context, store: TransientEntityStore) {
 
             /* Applies longitude and latitude, depending on what is available. */
             if (request.longitude == null || request.latitude == null) {
-                val geocoding = if (request.street != null) {
-                    Geocoding.geocode("${request.street}+${request.zip}+${request.city}")
-                } else {
-                    Geocoding.geocode("${request.zip}+${request.city}")
-                }
+                val geocoding = Geocoding.geocode(request.street, request.city, request.zip)
                 if (geocoding != null) {
                     this.longitude = geocoding.lon
                     this.latitude = geocoding.lat
@@ -249,11 +242,7 @@ fun putUpdateInstitution(ctx: Context, store: TransientEntityStore) {
 
         /* Applies longitude and latitude, depending on what is available. */
         if (request.longitude == null || request.latitude == null) {
-            val geocoding = if (request.street != null) {
-                Geocoding.geocode("${request.street}+${request.zip}+${request.city}")
-            } else {
-                Geocoding.geocode("${request.zip}+${request.city}")
-            }
+            val geocoding = Geocoding.geocode(request.street, request.city, request.zip)
             if (geocoding != null) {
                 institution.longitude = geocoding.lon
                 institution.latitude = geocoding.lat
