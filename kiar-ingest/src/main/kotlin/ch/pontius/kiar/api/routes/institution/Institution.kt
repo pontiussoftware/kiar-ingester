@@ -11,6 +11,7 @@ import ch.pontius.kiar.database.institution.DbInstitution
 import ch.pontius.kiar.database.institution.DbParticipant
 import ch.pontius.kiar.database.institution.DbRole
 import ch.pontius.kiar.database.masterdata.DbRightStatement
+import ch.pontius.kiar.utilities.Geocoding
 import ch.pontius.kiar.utilities.mapToArray
 import com.sksamuel.scrimage.ImmutableImage
 import com.sksamuel.scrimage.nio.JpegWriter
@@ -115,6 +116,9 @@ fun postCreateInstitution(ctx: Context, store: TransientEntityStore) {
 
     /* Create new job. */
     val institution = store.transactional {
+
+
+
         /* Create new job. */
         DbInstitution.new {
             this.name = request.name
@@ -132,6 +136,22 @@ fun postCreateInstitution(ctx: Context, store: TransientEntityStore) {
                 ?: throw ErrorStatusException(404, "Participant ${request.participantName} could not be found.")
             this.createdAt = DateTime.now()
             this.changedAt = DateTime.now()
+
+            /* Applies longitude and latitude, depending on what is available. */
+            if (request.longitude == null || request.latitude == null) {
+                val geocoding = if (request.street != null) {
+                    Geocoding.geocode("${request.street}+${request.zip}+${request.city}")
+                } else {
+                    Geocoding.geocode("${request.zip}+${request.city}")
+                }
+                if (geocoding != null) {
+                    this.longitude = geocoding.lon
+                    this.latitude = geocoding.lat
+                }
+            } else {
+                this.longitude = request.longitude!!
+                this.latitude = request.latitude!!
+            }
         }.toApi()
     }
 
@@ -225,8 +245,23 @@ fun putUpdateInstitution(ctx: Context, store: TransientEntityStore) {
         institution.homepage = request.homepage
         institution.defaultCopyright = request.defaultCopyright
         institution.defaultRightStatement = DbRightStatement.filter { it.short eq request.defaultRightStatement }.singleOrNull()
-
         institution.changedAt = DateTime.now()
+
+        /* Applies longitude and latitude, depending on what is available. */
+        if (request.longitude == null || request.latitude == null) {
+            val geocoding = if (request.street != null) {
+                Geocoding.geocode("${request.street}+${request.zip}+${request.city}")
+            } else {
+                Geocoding.geocode("${request.zip}+${request.city}")
+            }
+            if (geocoding != null) {
+                institution.longitude = geocoding.lon
+                institution.latitude = geocoding.lat
+            }
+        } else {
+            institution.longitude = request.longitude!!
+            institution.latitude = request.latitude!!
+        }
 
         /* Some data can only be edited by an administrator. */
         if (currentUser.role == DbRole.ADMINISTRATOR) {
@@ -435,5 +470,6 @@ fun deleteInstitution(ctx: Context, store: TransientEntityStore) {
     }
     ctx.json(SuccessStatus("Institution '$institutionName' (id: $institutionId) deleted successfully."))
 }
+
 
 
