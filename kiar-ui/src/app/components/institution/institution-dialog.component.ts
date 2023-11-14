@@ -49,9 +49,9 @@ export class InstitutionDialogComponent {
   ) {
     /* Prepare empty form. */
     this.formControl = new FormGroup({
-      name: new FormControl('', [Validators.required, Validators.minLength(10)]),
+      name: new FormControl('', [Validators.required, Validators.minLength(5)]),
       imageName: new FormControl({value: '', disabled: true}),
-      displayName: new FormControl('', [Validators.required, Validators.minLength(10)]),
+      displayName: new FormControl('', [Validators.required, Validators.minLength(5)]),
       description: new FormControl(''),
       participantName: new FormControl('', [Validators.required]),
       street: new FormControl('', [Validators.required]),
