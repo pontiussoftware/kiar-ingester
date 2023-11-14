@@ -370,7 +370,14 @@ fun postUploadImage(ctx: Context, store: TransientEntityStore) {
         }
 
         /* List of deployment paths. */
-        val deployments = institution.availableCollections.mapDistinct { it.solr }.flatMapDistinct { it.deployments }.asSequence().map { it.toApi() }.toList()
+        val deployments = institution.availableCollections.mapDistinct {
+            it.solr
+        }.flatMapDistinct {
+            it.deployments
+        }.asSequence().map { it.toApi() }.toList()
+        if (deployments.isEmpty()) {
+            throw ErrorStatusException(400, "No deployment configuration found for institution-")
+        }
 
         /* Define file names. */
         val oldFilename = institution.imageName
