@@ -42,6 +42,7 @@ object Geocoding {
         connection.setRequestMethod("GET");
         connection.setRequestProperty("User-Agent", "Mozilla/5.0 (compatible; Kiar/1.0.0; +https://www.kimnet.ch)")
         if (connection.getResponseCode() != 200) {
+            LOGGER.error("Failed to generate coordinates from address: HTTP Status Code ${connection.getResponseCode()}")
             null
         } else {
             val response = connection.inputStream.use {
@@ -49,7 +50,7 @@ object Geocoding {
             }
             response.firstOrNull()
         }
-    } catch (e: IOException) {
+    } catch (e: Throwable) {
         LOGGER.error("Failed to generate coordinates from address.", e)
         null
     }
