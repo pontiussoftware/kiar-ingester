@@ -3,6 +3,8 @@ package ch.pontius.kiar.utilities
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.decodeFromStream
+import org.apache.logging.log4j.LogManager
+import org.apache.logging.log4j.Logger
 import java.io.IOException
 import java.net.HttpURLConnection
 import java.net.URL
@@ -18,7 +20,10 @@ import java.net.URL
 object Geocoding {
 
     /** The [Json] parser used by [Geocoding]. */
-    private val json = Json { ignoreUnknownKeys = true }
+    private val JSON = Json { ignoreUnknownKeys = true }
+
+    /** The [Logger] used by this [Geocoding]. */
+    private val LOGGER: Logger = LogManager.getLogger()
 
     /**
      * Attempts geocoding to obtain coordinates for the provided address.
@@ -37,14 +42,16 @@ object Geocoding {
         connection.setRequestMethod("GET");
         connection.setRequestProperty("User-Agent", "Mozilla/5.0 (compatible; Kiar/1.0.0; +https://www.kimnet.ch)")
         if (connection.getResponseCode() != 200) {
+            LOGGER.error("Failed to generate coordinates from address: HTTP Status Code ${connection.getResponseCode()}")
             null
         } else {
             val response = connection.inputStream.use {
-                this.json.decodeFromStream<List<GeocodingResponse>>(it)
+                this.JSON.decodeFromStream<List<GeocodingResponse>>(it)
             }
             response.firstOrNull()
         }
-    } catch (e: IOException) {
+    } catch (e: Throwable) {
+        LOGGER.error("Failed to generate coordinates from address.", e)
         null
     }
 
