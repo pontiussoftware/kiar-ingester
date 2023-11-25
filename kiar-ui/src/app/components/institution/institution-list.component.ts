@@ -22,7 +22,7 @@ export class InstitutionListComponent implements AfterViewInit  {
   public readonly collections: Observable<Array<string[]>>
 
   /** The columns that should be displayed in the data table. */
-  public readonly displayedColumns: string[] = ['image', 'name', 'displayName', 'participant', 'street', 'city', 'zip', 'canton', 'email', 'action'];
+  public readonly displayedColumns: string[] = ['image', 'name', 'displayName', 'participant', 'street', 'city', 'zip', 'canton', 'email', 'publish', 'action'];
 
   /** Reference to the {@link MatPaginator}*/
   @ViewChild(MatPaginator) paginator: MatPaginator;
