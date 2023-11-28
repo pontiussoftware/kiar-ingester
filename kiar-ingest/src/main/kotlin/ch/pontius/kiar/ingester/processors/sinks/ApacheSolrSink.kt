@@ -184,13 +184,13 @@ class ApacheSolrSink(override val input: Source<SolrInputDocument>, private val 
     private fun prepareIngest(client: Http2SolrClient, context: ProcessingContext) {
         /* Purge all collections that were configured. */
         for (c in this.collections) {
-            LOGGER.info("Purging collection (name = ${context.jobId} collection = $c).")
-            val response = client.deleteByQuery(c, "$FIELD_NAME_PARTICIPANT:\"${context.participant}\"")
+            LOGGER.info("Purging collection (name = ${context.participant} collection = $c).")
+            val response = client.deleteByQuery(c, "$FIELD_NAME_PARTICIPANT:${context.participant}")
             if (response.status != 0) {
-                LOGGER.error("Purge of collection failed (name = ${context.jobId} collection = $c). Aborting...")
-                throw IllegalArgumentException("Data ingest (name = ${context.jobId}, collection = $c) failed because delete before import could not be executed.")
+                LOGGER.error("Purge of collection failed (name = ${context.participant} collection = $c). Aborting...")
+                throw IllegalArgumentException("Data ingest (name = ${context.participant}, collection = $c) failed because delete before import could not be executed.")
             }
-            LOGGER.info("Purge of collection successful (name = ${context.jobId} collection = $c).")
+            LOGGER.info("Purge of collection successful (name = ${context.participant} collection = $c).")
         }
     }
 
