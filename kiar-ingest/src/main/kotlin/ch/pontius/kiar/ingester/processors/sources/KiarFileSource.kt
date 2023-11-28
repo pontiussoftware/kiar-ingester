@@ -10,6 +10,7 @@ import ch.pontius.kiar.ingester.solrj.Field
 import ch.pontius.kiar.ingester.solrj.addField
 import ch.pontius.kiar.ingester.solrj.setField
 import ch.pontius.kiar.kiar.KiarFile
+import com.sksamuel.scrimage.ImmutableImage
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.channelFlow
@@ -57,7 +58,7 @@ class KiarFileSource(private val file: Path, private val config: EntityMapping, 
                     for (i in 0 until entry.resources()) {
                         entry.openResource(i).use {
                             try {
-                                val image = ImageIO.read(it)
+                                val image = ImmutableImage.loader().fromStream(it)
                                 if (image != null) {
                                     doc.addField(Field.RAW, image)
                                 } else {
