@@ -75,7 +75,7 @@ class ProcessingContext(
             this._skipped.incrementAndGet()
         }
 
-        if (buffer.size > 5000) {
+        if (this.buffer.size > 1000) {
             this.flushLogs()
         }
     }
