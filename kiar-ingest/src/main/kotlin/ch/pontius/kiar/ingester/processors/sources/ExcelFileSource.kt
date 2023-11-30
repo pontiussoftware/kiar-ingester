@@ -3,8 +3,10 @@ package ch.pontius.kiar.ingester.processors.sources
 import ch.pontius.kiar.api.model.config.mappings.EntityMapping
 import ch.pontius.kiar.ingester.parsing.values.ValueParser
 import ch.pontius.kiar.ingester.processors.ProcessingContext
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.onCompletion
 import org.apache.poi.ss.usermodel.CellType
 import org.apache.poi.ss.usermodel.Sheet
@@ -61,5 +63,5 @@ class ExcelFileSource(private val file: Path, private val config: EntityMapping,
         if (deleteFileWhenDone) {
             Files.deleteIfExists(this@ExcelFileSource.file)
         }
-    }
+    }.flowOn(Dispatchers.IO)
 }
