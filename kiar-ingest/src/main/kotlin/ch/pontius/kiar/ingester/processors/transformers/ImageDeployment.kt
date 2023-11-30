@@ -21,6 +21,8 @@ import org.apache.logging.log4j.LogManager
 import org.apache.solr.common.SolrInputDocument
 import java.io.IOException
 import java.nio.file.*
+import java.util.*
+import kotlin.Comparator
 
 /**
  * A [Transformer] to operates on [SolrInputDocument]s, extracts raw image files, obtains a smaller preview and stores it.
@@ -64,10 +66,11 @@ class ImageDeployment(override val input: Source<SolrInputDocument>, private val
         /* Return flow for image deployment. */
         return this.input.toFlow(context).map {
             if (it.has(Field.RAW)) {
-                val images = it.getAll<ImmutableImage>(Field.RAW)
+                val images = LinkedList(it.getAll<ImmutableImage>(Field.RAW))
                 it.removeField(Field.RAW) /* Clean-up to safe memory. */
                 var counter = 1
-                for (original in images) {
+                var original = images.poll()
+                while (original != null) {
                     for (deployment in this@ImageDeployment.deployments) {
                         val deployTo = Paths.get(deployment.path)
                         val actual = deployTo.resolve(context.participant).resolve(deployment.name).resolve("${it.uuid()}_%03d.jpg".format(counter))
@@ -97,6 +100,7 @@ class ImageDeployment(override val input: Source<SolrInputDocument>, private val
                         }
                     }
                     counter += 1
+                    original = images.poll()
                 }
                 it.setField(Field.IMAGECOUNT, counter - 1)
             } else {
