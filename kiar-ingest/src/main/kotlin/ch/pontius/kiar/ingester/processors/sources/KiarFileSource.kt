@@ -36,11 +36,12 @@ class KiarFileSource(private val file: Path, private val config: EntityMapping, 
      *
      * @return [Flow]
      */
-    override fun toFlow(context: ProcessingContext): Flow<SolrInputDocument> = channelFlow {
-        val parser = XmlDocumentParser(this@KiarFileSource.config)
+    override fun toFlow(context: ProcessingContext): Flow<SolrInputDocument> {
+        val kiar = KiarFile(this@KiarFileSource.file)
+        return channelFlow {
+            val parser = XmlDocumentParser(this@KiarFileSource.config)
 
-        /* Iterate over Kiar entries. */
-        KiarFile(this@KiarFileSource.file).use { kiar ->
+            /* Iterate over Kiar entries. */
             for (entry in kiar.iterator()) {
                 val doc = entry.open().use {
                     parser.parse(it)
@@ -60,16 +61,17 @@ class KiarFileSource(private val file: Path, private val config: EntityMapping, 
                 /* Send document down the channel. */
                 this.send(doc)
             }
-        }
-    }.onCompletion {
-        if (it == null && this@KiarFileSource.deleteFileWhenDone) {
-            try {
-                Files.deleteIfExists(this@KiarFileSource.file) /* Tries to delete file. */
-            } catch (e: Throwable) {
-                LOGGER.warn("Failed to delete source KIAR file: ${this@KiarFileSource.file}")
+        }.onCompletion {
+            kiar.close()
+            if (it == null && this@KiarFileSource.deleteFileWhenDone) {
+                try {
+                    Files.deleteIfExists(this@KiarFileSource.file) /* Tries to delete file. */
+                } catch (e: Throwable) {
+                    LOGGER.warn("Failed to delete source KIAR file: ${this@KiarFileSource.file}")
+                }
             }
-        }
-    }.flowOn(Dispatchers.IO)
+        }.flowOn(Dispatchers.IO)
+    }
 
     /**
      * A [MediaProvider.Image] for the images contained in this [KiarFileSource].
