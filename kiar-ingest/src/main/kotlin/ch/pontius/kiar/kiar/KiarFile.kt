@@ -12,7 +12,7 @@ import java.util.zip.ZipFile
  * A class to read KIAR files as handled by th
  *
  * @author Ralph Gasser
- * @version 1.1.0
+ * @version 1.2.0
  */
 class KiarFile(private val path: Path): Closeable, Iterable<KiarFile.KiarEntry> {
 
@@ -27,52 +27,82 @@ class KiarFile(private val path: Path): Closeable, Iterable<KiarFile.KiarEntry> 
     /** The [ZipFile] wrapped by this [KiarFile]. */
     val zip = ZipFile(this.path.toFile())
 
-    /** A [List] of metadata [ZipEntry] found in this [KiarFile]. */
-    private val metadata = LinkedList<KiarEntry>()
-
-    /** A [List] of resource [ZipEntry] found in this [KiarFile]. */
-    private val resources = LinkedList<ZipEntry>()
-
-    /** The path separator used by this [KiarFile]. */
-    var separator: String = "/"
-        private set
-
-    init {
-        var separatorChange = 0
-        for (item in this.zip.stream()) {
-            if (!item.isDirectory) {
-                /* Update directory separator. */
-                if (item.name.contains("\\") && this.separator != "\\") {
-                    this.separator = "\\"
-                    separatorChange += 1
-                    require(separatorChange <= 1) { "File '${this.path}' is not a valid KIAR file: inconsistent directory separators." }
-                } else if (item.name.contains("/") && this.separator != "/") {
-                    this.separator = "/"
-                    separatorChange += 1
-                    require(separatorChange <= 1) { "File '${this.path}' is not a valid KIAR file: inconsistent directory separators." }
-                }
-
-                /* Process actual item. */
-                when {
-                    item.name.startsWith("${METADATA_FOLDER_NAME}${this.separator}", true) -> this.metadata.add(KiarEntry(item))
-                    item.name.startsWith("${RESOURCES_FOLDER_NAME}${this.separator}", true) -> this.resources.add(item)
-                }
-            }
-        }
-        require(this.metadata.size > 0) { "File '${this.path}' is not a valid KIAR file or is empty." }
-    }
-
-    /**
-     * Returns the number of entries contained in this [KiarFile].
-     *
-     * @return Size of this [KiarFile]
-     */
-    fun size(): Int = this.metadata.size
-
     /**
      * Returns an [Iterator] over the [KiarFile.KiarEntry] contained in this [KiarFile].
      */
-    override fun iterator(): Iterator<KiarFile.KiarEntry> = this.metadata.iterator()
+    override fun iterator(): Iterator<KiarFile.KiarEntry> = object: Iterator<KiarFile.KiarEntry> {
+
+        /** The path separator used by this [KiarFile]. */
+        private var separator: String = "/"
+
+        /** A [List] of metadata [ZipEntry] found in this [KiarFile]. */
+        private val metadata = LinkedList<ZipEntry>()
+
+        /** A [List] of resource [ZipEntry] found in this [KiarFile]. */
+        private val resources = LinkedList<ZipEntry>()
+
+        init {
+            var separatorChange = 0
+            this@KiarFile.zip.stream().use { stream ->
+                for (item in stream) {
+                    if (!item.isDirectory) {
+                        /* Update directory separator. */
+                        if (item.name.contains("\\") && this.separator != "\\") {
+                            this.separator = "\\"
+                            separatorChange += 1
+                            require(separatorChange <= 1) { "File '${this@KiarFile.path}' is not a valid KIAR file: inconsistent directory separators." }
+                        } else if (item.name.contains("/") && this.separator != "/") {
+                            this.separator = "/"
+                            separatorChange += 1
+                            require(separatorChange <= 1) { "File '${this@KiarFile.path}' is not a valid KIAR file: inconsistent directory separators." }
+                        }
+
+                        /* Process actual item. */
+                        when {
+                            item.name.startsWith("${METADATA_FOLDER_NAME}${this.separator}", true) -> this.metadata.add(item)
+                            item.name.startsWith("${RESOURCES_FOLDER_NAME}${this.separator}", true) -> this.resources.add(item)
+                        }
+                    }
+                }
+            }
+            require(this.metadata.size > 0) { "File '${this@KiarFile.path}' is not a valid KIAR file or is empty." }
+        }
+
+        /**
+         * Returns true, if metadata entries are left.
+         */
+        override fun hasNext(): Boolean = this.metadata.isNotEmpty()
+
+        /**
+         * Returns next [KiarFile.KiarEntry].
+         */
+        override fun next(): KiarEntry {
+            /* Poll next entry and make sure, that. */
+            val metadata = this.metadata.poll()
+            check(metadata != null) { "No more entries left in KIAR file '${this@KiarFile.path}'." }
+
+            /* Obtain type and UUID for entry. */
+            val type: KiarEntryType = when {
+                metadata.name.endsWith(KiarEntryType.JSON.suffix, true) -> KiarEntryType.JSON
+                metadata.name.endsWith(KiarEntryType.XML.suffix, true) -> KiarEntryType.XML
+                else -> throw InvalidKiarEntryException(metadata.name)
+            }
+            val uuid: UUID = UUID.fromString(metadata.name.replace(type.suffix, "").replace("${METADATA_FOLDER_NAME}${this.separator}", "").lowercase())
+
+            /* Prepare resources. */
+            val resources = LinkedList<ZipEntry>()
+            this.resources.removeIf { e ->
+                val match = e.name.startsWith("${RESOURCES_FOLDER_NAME}${this.separator}${uuid}", true) &&
+                (e.name.endsWith("jpg", ignoreCase = true)  || e.name.endsWith("jfif", ignoreCase = true) || e.name.endsWith("jpeg", ignoreCase = true)
+                || e.name.endsWith("png", ignoreCase = true) || e.name.endsWith("tif", ignoreCase = true) || e.name.endsWith("tiff", ignoreCase = true))
+                if (match) resources.add(e)
+                match
+            }
+
+            /* Return KiarEntry. */
+            return KiarEntry(uuid, type, metadata, resources)
+        }
+    }
 
     /**
      * Closes the [ZipFile] backing this [KiarFile]
@@ -82,33 +112,13 @@ class KiarFile(private val path: Path): Closeable, Iterable<KiarFile.KiarEntry> 
     /**
      * An entry in a [KiarFile].
      */
-    inner class KiarEntry(private val entry: ZipEntry) {
-
-        /** The [KiarEntryType] of this [KiarEntry]. */
-        val type: KiarEntryType = when {
-            this.entry.name.endsWith(KiarEntryType.JSON.suffix, true) -> KiarEntryType.JSON
-            this.entry.name.endsWith(KiarEntryType.XML.suffix, true) -> KiarEntryType.XML
-            else -> throw InvalidKiarEntryException(this.entry.name)
-        }
-
-        /** The UUID that identifies this [KiarEntry]. */
-        val uuid: UUID = UUID.fromString(this.entry.name.replace(this.type.suffix, "").replace("${METADATA_FOLDER_NAME}${this@KiarFile.separator}", "").lowercase())
-
-        /** A [List] of [ZipEntry] that represent resource that belong to this [KiarEntry]. */
-        private val resources: List<ZipEntry> by lazy {
-            this@KiarFile.resources.filter { e ->
-                e.name.startsWith("${RESOURCES_FOLDER_NAME}${this@KiarFile.separator}${this.uuid}", true) &&
-                (e.name.endsWith("jpg", ignoreCase = true)  || e.name.endsWith("jfif", ignoreCase = true) || e.name.endsWith("jpeg", ignoreCase = true)
-                || e.name.endsWith("png", ignoreCase = true) || e.name.endsWith("tif", ignoreCase = true) || e.name.endsWith("tiff", ignoreCase = true))
-            }
-        }
-
+    inner class KiarEntry(val uuid: UUID, val type: KiarEntryType, private val metadata: ZipEntry, private val resources: List<ZipEntry>) {
         /**
          * Opens and returns a [InputStream] for this [KiarEntry].
          *
          * @return [InputStream]
          */
-        fun open(): InputStream = this@KiarFile.zip.getInputStream(this.entry)
+        fun open(): InputStream = this@KiarFile.zip.getInputStream(this.metadata)
 
         /**
          * Returns the number of resources for this [KiarEntry].
