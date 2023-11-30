@@ -5,6 +5,7 @@ import ch.pontius.kiar.api.model.config.image.ImageFormat.*
 import ch.pontius.kiar.api.model.job.JobLog
 import ch.pontius.kiar.api.model.job.JobLogContext
 import ch.pontius.kiar.api.model.job.JobLogLevel
+import ch.pontius.kiar.ingester.media.MediaProvider
 import ch.pontius.kiar.ingester.processors.ProcessingContext
 import ch.pontius.kiar.ingester.processors.sources.Source
 import ch.pontius.kiar.ingester.solrj.*
@@ -66,15 +67,16 @@ class ImageDeployment(override val input: Source<SolrInputDocument>, private val
         /* Return flow for image deployment. */
         return this.input.toFlow(context).map {
             if (it.has(Field.RAW)) {
-                val images = LinkedList(it.getAll<ImmutableImage>(Field.RAW))
-                it.removeField(Field.RAW) /* Clean-up to safe memory. */
+                val providers = LinkedList(it.getAll<MediaProvider.Image>(Field.RAW))
                 var counter = 1
-                var original = images.poll()
-                while (original != null) {
+                for (provider in providers) {
+                    val original = provider.open() ?: continue
                     for (deployment in this@ImageDeployment.deployments) {
+                        val imageName = "${it.uuid()}_%03d.jpg".format(counter)
                         val deployTo = Paths.get(deployment.path)
-                        val actual = deployTo.resolve(context.participant).resolve(deployment.name).resolve("${it.uuid()}_%03d.jpg".format(counter))
-                        val tmp = deployTo.resolve(context.participant).resolve("${deployment.name}~tmp").resolve("${it.uuid()}_%03d.jpg".format(counter))
+                        val actual = deployTo.resolve(context.participant).resolve(deployment.name).resolve(imageName)
+                        val tmp = deployTo.resolve(context.participant).resolve("${deployment.name}~tmp").resolve(imageName)
+                        LOGGER.info("Deploying image (jobId = {}, docId = {}) {}.", context.jobId, it.uuid(), imageName)
 
                         /* Check size of image. If it's too small, issue a warning; otherwise, resize it. */
                         val resized = when {
@@ -100,7 +102,6 @@ class ImageDeployment(override val input: Source<SolrInputDocument>, private val
                         }
                     }
                     counter += 1
-                    original = images.poll()
                 }
                 it.setField(Field.IMAGECOUNT, counter - 1)
             } else {

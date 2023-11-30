@@ -1,11 +1,13 @@
 package ch.pontius.kiar.ingester.parsing.values.images
 
 import ch.pontius.kiar.api.model.config.mappings.AttributeMapping
+import ch.pontius.kiar.ingester.media.MediaProvider
 import ch.pontius.kiar.ingester.parsing.values.ValueParser
 import com.sksamuel.scrimage.ImmutableImage
 import org.apache.logging.log4j.LogManager
 import org.apache.solr.common.SolrInputDocument
 import java.nio.file.Files
+import java.nio.file.Path
 import java.nio.file.Paths
 import java.nio.file.StandardOpenOption
 
@@ -39,18 +41,22 @@ class FileImageValueParser(override val mapping: AttributeMapping): ValueParser<
 
         /* Parse path and read file. */
         val path = Paths.get(actualPath)
-        val image = try {
-            Files.newInputStream(path, StandardOpenOption.READ).use { ImmutableImage.loader().fromStream(it) }
-        } catch (e: Throwable) {
-            LOGGER.warn("Failed to read image file $path: ${e.message}")
-            null
+        if (this.mapping.multiValued) {
+            into.addField(mapping.destination, FileImageProvider(path))
+        } else {
+            into.setField(mapping.destination, FileImageProvider(path))
         }
-        if (image != null) {
-            if (this.mapping.multiValued) {
-                into.addField(mapping.destination, image)
-            } else {
-                into.setField(mapping.destination, image)
-            }
+    }
+
+    /**
+     * A [MediaProvider.Image] for the images addressed by a [Path].
+     */
+    private data class FileImageProvider(private val path: Path): MediaProvider.Image {
+        override fun open(): ImmutableImage? = try {
+            Files.newInputStream(this.path, StandardOpenOption.READ).use { ImmutableImage.loader().fromStream(it) }
+        } catch (e: Throwable) {
+            LOGGER.warn("Failed to decode image from path ${this.path}. An exception occurred: ${e.message}")
+            null
         }
     }
 }

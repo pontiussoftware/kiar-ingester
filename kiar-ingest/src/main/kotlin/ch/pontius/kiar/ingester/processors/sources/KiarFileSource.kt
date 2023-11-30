@@ -1,9 +1,7 @@
 package ch.pontius.kiar.ingester.processors.sources
 
 import ch.pontius.kiar.api.model.config.mappings.EntityMapping
-import ch.pontius.kiar.api.model.job.JobLog
-import ch.pontius.kiar.api.model.job.JobLogContext
-import ch.pontius.kiar.api.model.job.JobLogLevel
+import ch.pontius.kiar.ingester.media.MediaProvider
 import ch.pontius.kiar.ingester.parsing.xml.XmlDocumentParser
 import ch.pontius.kiar.ingester.processors.ProcessingContext
 import ch.pontius.kiar.ingester.solrj.Field
@@ -21,7 +19,6 @@ import org.apache.solr.common.SolrInputDocument
 import java.io.IOException
 import java.nio.file.Files
 import java.nio.file.Path
-import javax.imageio.ImageIO
 
 /**
  * A [Source] for a KIAR file, as delivered by mainly smaller museums.
@@ -56,19 +53,7 @@ class KiarFileSource(private val file: Path, private val config: EntityMapping, 
                 /* Read all resources. */
                 if (!this@KiarFileSource.skipResources) {
                     for (i in 0 until entry.resources()) {
-                        entry.openResource(i).use {
-                            try {
-                                val image = ImmutableImage.loader().fromStream(it)
-                                if (image != null) {
-                                    doc.addField(Field.RAW, image)
-                                } else {
-                                    context.log(JobLog(null, entry.uuid.toString(), null, JobLogContext.RESOURCE, JobLogLevel.WARNING, "Failed to decode image $i from resource."))
-                                }
-                            } catch (e: IOException) {
-                                context.log(JobLog(null, entry.uuid.toString(), null, JobLogContext.RESOURCE, JobLogLevel.WARNING, "Failed to decode image $i from resource. An exception occurred: ${e.message}"))
-                                null
-                            }
-                        }
+                        doc.addField(Field.RAW, KiarImageProvider(i, entry))
                     }
                 }
 
@@ -85,4 +70,18 @@ class KiarFileSource(private val file: Path, private val config: EntityMapping, 
             }
         }
     }.flowOn(Dispatchers.IO)
+
+    /**
+     * A [MediaProvider.Image] for the images contained in this [KiarFileSource].
+     */
+    private data class KiarImageProvider(private val index: Int, private val entry: KiarFile.KiarEntry): MediaProvider.Image {
+        override fun open(): ImmutableImage? = try {
+            this.entry.openResource(this.index).use {
+                ImmutableImage.loader().fromStream(it)
+            }
+        } catch (e: IOException) {
+            LOGGER.warn("Failed to decode image ${this.index} from KIAR entry ${entry.uuid}. An exception occurred: ${e.message}")
+            null
+        }
+    }
 }
