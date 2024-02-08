@@ -24,9 +24,9 @@ class DisplayTransformer(override val input: Source<SolrInputDocument>): Transfo
         if (type != null) {
             /* Generate _display_ field. */
             when (type) {
-                ObjectType.BIBLIOGRAPHISCHES_OBJEKT -> doc.setField(Field.DISPLAY, listOfNotNull(doc.get<String>(Field.OBJEKTBEZEICHNUNG), doc.get<String>(Field.TITEL), doc.get<String>(Field.AUTOR)).joinToString(", "))
-                ObjectType.FOTOGRAFIE -> doc.setField(Field.DISPLAY, listOfNotNull(doc.asString(Field.OBJEKTBEZEICHNUNG), doc.get<String>(Field.TITEL), doc.get<String>(Field.FOTOGRAF)).joinToString(", "))
-                ObjectType.KUNST -> doc.setField(Field.DISPLAY, listOfNotNull(doc.get<String>(Field.OBJEKTBEZEICHNUNG), doc.get<String>(Field.TITEL), doc.get<String>(Field.KUENSTLER)).joinToString(", "))
+                ObjectType.BIBLIOGRAPHISCHES_OBJEKT -> doc.setField(Field.DISPLAY, listOfNotNull(doc.get<String>(Field.OBJEKTBEZEICHNUNG), doc.get<String>(Field.TITEL)).joinToString(", "))
+                ObjectType.FOTOGRAFIE -> doc.setField(Field.DISPLAY, listOfNotNull(doc.asString(Field.OBJEKTBEZEICHNUNG), doc.get<String>(Field.TITEL)).joinToString(", "))
+                ObjectType.KUNST -> doc.setField(Field.DISPLAY, listOfNotNull(doc.get<String>(Field.OBJEKTBEZEICHNUNG), doc.get<String>(Field.TITEL)).joinToString(", "))
                 else -> doc.setField(Field.DISPLAY, doc.get<String>(Field.OBJEKTBEZEICHNUNG) ?: "")
             }
 
