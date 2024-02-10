@@ -24,6 +24,7 @@ export class UserDialogComponent {
   constructor(private user: UserService, private institution: InstitutionService, private dialogRef: MatDialogRef<UserDialogComponent>, @Inject(MAT_DIALOG_DATA) private data: User | null) {
     this.formControl = new FormGroup({
       username: new FormControl(this.data?.username || '', [Validators.required, Validators.minLength(4)]),
+      email: new FormControl(this.data?.email || '', [Validators.email]),
       password: new FormGroup({
         passwordFirst: new FormControl('', [Validators.minLength(PASSWORD_MIN_LENGTH)]),
         passwordSecond: new FormControl('', [Validators.minLength(PASSWORD_MIN_LENGTH)])

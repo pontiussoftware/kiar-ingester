@@ -17,9 +17,9 @@ export class ProfileComponent implements AfterViewInit {
   public formControl: FormGroup =  new FormGroup({
     id: new FormControl('', [Validators.required]),
     username: new FormControl({value: '', disabled: true}, [Validators.required, Validators.minLength(3)]),
+    email: new FormControl('', [Validators.email]),
     role: new FormControl({value: '', disabled: true}, [Validators.required]),
     institution: new FormControl({value: '', disabled: true}, [Validators.required]),
-    email: new FormControl('', [Validators.email]),
     password: new FormGroup({
       passwordFirst: new FormControl('', [Validators.minLength(PASSWORD_MIN_LENGTH)]),
       passwordSecond: new FormControl('', [Validators.minLength(PASSWORD_MIN_LENGTH)])

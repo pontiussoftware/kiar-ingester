@@ -153,7 +153,7 @@ fun updateUser(ctx: Context, store: TransientEntityStore) {
         /* Update user e-mail. */
         if (request.email != null) {
             if(!request.email.validateEmail()) throw ErrorStatusException(400, "Invalid e-mail address.")
-            user.email = request.email
+            user.email = request.email.lowercase()
         }
 
         user.changedAt = DateTime.now()
