@@ -75,15 +75,12 @@ class InstitutionTransformer(override val input: Source<SolrInputDocument>): Tra
             if (!doc.has(Field.CANTON)) {
                 doc.setField(Field.CANTON, entry.canton)
             }
-            if (!doc.has(Field.COPYRIGHT) && entry.defaultCopyright != null) {
+            if (!doc.has(Field.COPYRIGHT) && !entry.defaultCopyright.isNullOrBlank()) {
                 doc.setField(Field.COPYRIGHT, entry.defaultCopyright)
             }
             if (!doc.has(Field.RIGHTS_STATEMENT) && entry.defaultRightStatement != null) {
                 doc.setField(Field.RIGHTS_STATEMENT, entry.defaultRightStatement)
             }
-            //if (!doc.has(Field.OWNER)) {
-            //    doc.setField(Field.OWNER, entry.displayName)
-            //}
             /* Return true. */
             return@filter true
         }
