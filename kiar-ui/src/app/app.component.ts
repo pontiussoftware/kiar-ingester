@@ -69,7 +69,7 @@ export class AppComponent {
   }
 
   /**
-   *
+   * Opens the user profile dialog.
    */
   public userProfile() {
     this.dialog.open(ProfileComponent, {width: '500px'})
@@ -78,9 +78,9 @@ export class AppComponent {
   /**
    * Logs the current user out.
    */
-  public logout() {
+  public logout(): void {
     this.authentication.logout().subscribe(e => {
-      this.router.navigateByUrl('/').then(r => { /* No op. */});
+      void this.router.navigate(['login']);
     })
   }
 }
