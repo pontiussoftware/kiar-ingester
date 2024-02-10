@@ -11,6 +11,7 @@ import ch.pontius.kiar.database.institution.DbInstitution
 import ch.pontius.kiar.database.institution.DbRole
 import ch.pontius.kiar.database.institution.DbUser
 import ch.pontius.kiar.utilities.mapToArray
+import ch.pontius.kiar.utilities.validateEmail
 import ch.pontius.kiar.utilities.validatePassword
 import io.javalin.http.BadRequestResponse
 import io.javalin.http.Context
@@ -119,6 +120,10 @@ fun postCreateUser(ctx: Context, store: TransientEntityStore) {
         /* Create new job. */
         DbUser.new {
             this.name = request.username.lowercase()
+            if (request.email != null) {
+                if(!request.email.validateEmail()) throw ErrorStatusException(400, "Invalid e-mail address.")
+                this.email = request.email.lowercase()
+            }
             this.password = BCrypt.hashpw(request.password, SALT)
             this.inactive = !request.active
             this.role = request.role.toDb()
@@ -176,7 +181,11 @@ fun putUpdateUser(ctx: Context, store: TransientEntityStore) {
         }
 
         /* Update user. */
-        user.name = request.username
+        user.name = request.username.lowercase()
+        if (request.email != null) {
+            if(!request.email.validateEmail()) throw ErrorStatusException(400, "Invalid e-mail address.")
+            user.email = request.email.lowercase()
+        }
         user.inactive = !request.active
         user.institution = request.institution?.let { name -> DbInstitution.filter { it.name eq name }.singleOrNull() ?: throw ErrorStatusException(400, "Specified institution '$name' does not exist.")  }
         user.role = request.role.toDb()
