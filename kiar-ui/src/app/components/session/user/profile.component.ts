@@ -3,7 +3,7 @@ import {FormControl, FormGroup, Validators} from "@angular/forms";
 import {Role, SessionService, SessionStatus, User} from "../../../../../openapi";
 import {Observer} from "rxjs";
 import {MatSnackBar, MatSnackBarConfig} from "@angular/material/snack-bar";
-import {PASSWORD_MIN_LENGTH, PASSWORD_VALIDATOR} from "../../../utilities/password";
+import {PASSWORD_VALIDATOR} from "../../../utilities/password";
 
 @Component({
   selector: 'app-user-profile',
@@ -21,8 +21,8 @@ export class ProfileComponent implements AfterViewInit {
     role: new FormControl({value: '', disabled: true}, [Validators.required]),
     institution: new FormControl({value: '', disabled: true}, [Validators.required]),
     password: new FormGroup({
-      passwordFirst: new FormControl('', [Validators.minLength(PASSWORD_MIN_LENGTH)]),
-      passwordSecond: new FormControl('', [Validators.minLength(PASSWORD_MIN_LENGTH)])
+      passwordFirst: new FormControl(''),
+      passwordSecond: new FormControl('')
     },{ validators: PASSWORD_VALIDATOR })
   })
 

@@ -3,7 +3,7 @@ import {FormControl, FormGroup, Validators} from "@angular/forms";
 import {Observable, shareReplay} from "rxjs";
 import {Institution, InstitutionService, Role, User, UserService} from "../../../../openapi";
 import {MAT_DIALOG_DATA, MatDialogRef} from "@angular/material/dialog";
-import {PASSWORD_MIN_LENGTH, PASSWORD_VALIDATOR} from "../../utilities/password";
+import {PASSWORD_VALIDATOR} from "../../utilities/password";
 
 @Component({
   selector: 'kiar-user-dialog',
@@ -26,8 +26,8 @@ export class UserDialogComponent {
       username: new FormControl(this.data?.username || '', [Validators.required, Validators.minLength(4)]),
       email: new FormControl(this.data?.email || '', [Validators.email]),
       password: new FormGroup({
-        passwordFirst: new FormControl('', [Validators.minLength(PASSWORD_MIN_LENGTH)]),
-        passwordSecond: new FormControl('', [Validators.minLength(PASSWORD_MIN_LENGTH)])
+        passwordFirst: new FormControl(''),
+        passwordSecond: new FormControl('')
       },{ validators: PASSWORD_VALIDATOR }),
       active: new FormControl(this.data?.active),
       role: new FormControl(this.data?.role || ''),

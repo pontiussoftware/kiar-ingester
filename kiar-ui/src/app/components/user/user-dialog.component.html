@@ -38,7 +38,7 @@
       <mat-form-field [style.width]="'100%'">
         <mat-label i18n="@@LabelPassword">Password:</mat-label>
         <input type="password" matInput placeholder="Minimum of 8 characters" formControlName="passwordFirst" />
-        <mat-error *ngIf="formControl.get('password')?.get('passwordFirst')?.hasError('minlength')">Password must have at least 8 characters.</mat-error>
+        <mat-error *ngIf="formControl.get('password')?.hasError('notLongEnough')">Password must have at least 8 characters.</mat-error>
       </mat-form-field>
 
       <mat-form-field [style.width]="'100%'">
