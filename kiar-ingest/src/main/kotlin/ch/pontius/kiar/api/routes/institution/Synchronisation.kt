@@ -56,6 +56,9 @@ fun postSyncInstitutions(ctx: Context, store: TransientEntityStore) {
 
     /* Perform actual synchronisation. */
     synchronise(data.first, collectionName, data.second)
+
+    /* Return success status. */
+    ctx.json(SuccessStatus("Successfully synchronized institutions."))
 }
 
 
