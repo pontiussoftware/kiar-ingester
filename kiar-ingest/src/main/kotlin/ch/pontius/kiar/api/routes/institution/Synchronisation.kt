@@ -8,6 +8,7 @@ import ch.pontius.kiar.api.model.status.SuccessStatus
 import ch.pontius.kiar.database.config.solr.DbCollectionType
 import ch.pontius.kiar.database.config.solr.DbSolr
 import ch.pontius.kiar.database.institution.DbInstitution
+import ch.pontius.kiar.ingester.processors.sinks.ApacheSolrSink
 import ch.pontius.kiar.ingester.solrj.Constants
 import io.javalin.http.Context
 import io.javalin.openapi.*
@@ -16,8 +17,11 @@ import kotlinx.dnq.query.asSequence
 import kotlinx.dnq.query.filter
 import kotlinx.dnq.query.firstOrNull
 import kotlinx.dnq.query.flatMapDistinct
+import org.apache.logging.log4j.LogManager
 import org.apache.solr.client.solrj.impl.Http2SolrClient
 import org.apache.solr.common.SolrInputDocument
+
+private val LOGGER = LogManager.getLogger()
 
 @OpenApi(
     path = "/api/institutions/synchronize",
@@ -56,6 +60,9 @@ fun postSyncInstitutions(ctx: Context, store: TransientEntityStore) {
 
     /* Perform actual synchronisation. */
     synchronise(data.first, collectionName, data.second)
+
+    /* Return success status. */
+    ctx.json(SuccessStatus("Successfully synchronized institutions."))
 }
 
 
@@ -72,11 +79,15 @@ private fun synchronise(config: ApacheSolrConfig, collection: String, institutio
     if (config.username != null && config.password != null) {
         httpBuilder = httpBuilder.withBasicAuthCredentials(config.username, config.password)
     }
-    val client = httpBuilder.build()
-    client.use {
+    httpBuilder.build().use { client ->
         try {
             /* Delete all existing entries. */
-            client.deleteByQuery(collection, "*:*")
+            var response = client.deleteByQuery(collection, "*:*")
+            if (response.status == 0) {
+                LOGGER.info("Purged collection (collection = {}).", collection)
+            } else {
+                LOGGER.error("Failed to purge collection (collection = {}).", collection)
+            }
 
             /* Map documents and add them. */
             val documents = institutions.map { institution ->
@@ -110,12 +121,24 @@ private fun synchronise(config: ApacheSolrConfig, collection: String, institutio
                 if (institution.longitude != null && institution.latitude != null) {
                     doc.setField("koordinaten_wgs84", "${institution.latitude},${institution.longitude}")
                 }
-
                 doc
             }
 
-            client.add(collection, documents)
-            client.commit(collection)
+            /* Add documents. */
+            response = client.add(collection, documents)
+            if (response.status == 0) {
+                LOGGER.debug("Ingested {} documents (collection = {}).", documents.size, collection)
+            } else {
+                LOGGER.error("Failed to ingest documents (collection = {}).", collection)
+            }
+
+            /* Commit changes. */
+            response = client.commit(collection)
+            if (response.status == 0) {
+                LOGGER.info("Committed {} documents (collection = {}).", documents.size, collection)
+            } else {
+                LOGGER.error("Failed to commit documents (collection = {}).", collection)
+            }
         } catch (e: Throwable) {
             throw ErrorStatusException(500, "Error occurred while trying to purge Apache Solr collection: ${e.message}")
         }
