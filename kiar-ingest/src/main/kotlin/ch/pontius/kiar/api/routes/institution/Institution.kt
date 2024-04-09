@@ -224,7 +224,7 @@ fun putUpdateInstitution(ctx: Context, store: TransientEntityStore) {
         /* Make sure, that the current user can actually edit this institution. */
         val currentUser = ctx.currentUser()
         if (currentUser.role != DbRole.ADMINISTRATOR && currentUser.institution != institution) {
-            throw ErrorStatusException(403, "Institution with ID $institutionId cannot be editet by current user.")
+            throw ErrorStatusException(403, "Institution with ID $institutionId cannot be edited by current user.")
         }
 
         /* Update institution. */
