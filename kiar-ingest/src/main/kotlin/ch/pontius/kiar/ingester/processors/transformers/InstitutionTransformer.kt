@@ -13,9 +13,6 @@ import kotlinx.dnq.query.asSequence
 import kotlinx.dnq.query.filter
 import org.apache.logging.log4j.LogManager
 import org.apache.solr.common.SolrInputDocument
-import java.math.BigInteger
-import java.security.MessageDigest
-import java.util.*
 
 /**
  * A [Transformer] that a) validates incoming [SolrInputDocument]s with respect to required fields, b) checks and correct the association of the document
@@ -79,15 +76,6 @@ class InstitutionTransformer(override val input: Source<SolrInputDocument>): Tra
                 context.log(JobLog(null, uuid, null, JobLogContext.METADATA, JobLogLevel.WARNING, "Collection not specified; using institution name instead."))
             }
 
-            /* Validate UUID format and construct 'artifical' UUID if necessary. */
-            try {
-                UUID.fromString(uuid)
-            } catch (e: IllegalArgumentException) {
-                doc.setField(Field.UUID, artificialUuid(uuid, institutionName))
-                LOGGER.warn("UUID does not adhere to format. Generating artificial UUID, which may be unstable (jobId = {}, participantId = {}, docId = {}).", context.jobId, context.participant, uuid)
-                context.log(JobLog(null, uuid, null, JobLogContext.METADATA, JobLogLevel.WARNING, "UUID does not adhere to format. Generating artificial UUID, which may be unstable"))
-            }
-
             /* Enrich Apache Solr with institution-based information. */
             if (!doc.has(Field.PARTICIPANT)) {
                 doc.setField(Field.PARTICIPANT, entry.participantName)
@@ -104,19 +92,5 @@ class InstitutionTransformer(override val input: Source<SolrInputDocument>): Tra
             /* Return true. */
             return@filter true
         }
-    }
-
-    /**
-     * Generates an artificial UUID string using some unique ID and the institution name.
-     *
-     * @param uid Some unique ID.
-     * @param institution The name of the institution.
-     * @return Artificial UUID. May not be stable.
-     */
-    private fun artificialUuid(uid: String, institution: String): String {
-        val messageDigest = MessageDigest.getInstance("MD5")
-        val hashBytes = messageDigest.digest("${uid}-${institution}".toByteArray())
-        val bigInt = BigInteger(1, hashBytes)
-        return String.format("%032x", bigInt)
     }
 }
