@@ -23,7 +23,7 @@ class UuidValueParser(override val mapping: AttributeMapping): ValueParser<Strin
         val uuid = try {
             UUID.fromString(value).toString()
         } catch (e: IllegalArgumentException) {
-            UUID.randomUUID()
+            UUID.randomUUID().toString()
         }
         if (this.mapping.multiValued) {
             into.addField(this.mapping.destination, uuid)
