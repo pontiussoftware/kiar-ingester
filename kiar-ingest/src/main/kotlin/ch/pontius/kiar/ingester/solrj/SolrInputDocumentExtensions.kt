@@ -40,7 +40,7 @@ inline fun <reified T> SolrInputDocument.getAll(field: Field): Collection<T> = t
  * @param field The [Field] to retrieve.
  * @return The value as [String] or null.
  */
-fun SolrInputDocument.asString(field: Field) : String? = this[field.solr]?.firstValue as? String
+fun SolrInputDocument.asString(field: Field) : String? = this[field.solr]?.firstValue?.toString()
 
 /**
  * Sets a [Field]'s value in this [SolrInputDocument].
