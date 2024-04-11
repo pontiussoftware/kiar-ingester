@@ -38,7 +38,7 @@ class ExcelFileSource(private val file: Path, private val config: EntityMapping,
                         if (index > -1) {
                             map.add(attribute.newParser() to index)
                         } else if (attribute.required) {
-                            throw IllegalStateException("Row with name '${attribute.source}' is missing,")
+                            throw IllegalStateException("Row with name '${attribute.source}' is missing.")
                         }
                     }
                     first = false
