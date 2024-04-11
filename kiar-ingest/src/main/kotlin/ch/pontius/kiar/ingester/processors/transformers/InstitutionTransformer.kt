@@ -72,7 +72,7 @@ class InstitutionTransformer(override val input: Source<SolrInputDocument>): Tra
             val collectionNam = doc.asString(Field.SAMMLUNG)
             if (collectionNam == null) {
                 doc.setField(Field.SAMMLUNG, institutionName)
-                LOGGER.warn("Collection not specified; using institution name instead (jobId = {}, participantId = {}, docId = {}).", context.jobId, context.participant, uuid)
+                LOGGER.warn("Collection name not specified; using institution name instead (jobId = {}, participantId = {}, docId = {}).", context.jobId, context.participant, uuid)
                 context.log(JobLog(null, uuid, null, JobLogContext.METADATA, JobLogLevel.WARNING, "Collection not specified; using institution name instead."))
             }
 
