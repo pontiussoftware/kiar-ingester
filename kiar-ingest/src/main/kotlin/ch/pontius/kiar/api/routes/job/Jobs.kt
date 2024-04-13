@@ -6,6 +6,7 @@ import ch.pontius.kiar.api.model.job.PaginatedJobLogResult
 import ch.pontius.kiar.api.model.job.PaginatedJobResult
 import ch.pontius.kiar.api.model.status.ErrorStatus
 import ch.pontius.kiar.api.model.status.ErrorStatusException
+import ch.pontius.kiar.api.model.status.SuccessStatus
 import ch.pontius.kiar.api.routes.session.currentUser
 import ch.pontius.kiar.database.config.jobs.DbJobTemplate
 import ch.pontius.kiar.database.institution.DbRole
@@ -152,6 +153,36 @@ fun getJobLogs(ctx: Context, store: TransientEntityStore) {
     ctx.json(PaginatedJobLogResult(result.first, page, pageSize, result.second))
 }
 
+@OpenApi(
+    path = "/api/jobs/{id}/logs",
+    methods = [HttpMethod.DELETE],
+    summary = "Purges the logs for the job with the provided ID.",
+    operationId = "deletePurgeJobLog",
+    tags = ["Job"],
+    pathParams = [
+        OpenApiParam(name = "id", description = "The ID of the Job for which the logs should be pruged.", required = true)
+    ],
+    queryParams = [
+        OpenApiParam(name = "page", type = Int::class, description = "The page index (zero-based) for pagination.", required = false),
+        OpenApiParam(name = "pageSize", type = Int::class, description = "The page size  for pagination.", required = false)
+    ],
+    responses = [
+        OpenApiResponse("200", [OpenApiContent(PaginatedJobLogResult::class)]),
+        OpenApiResponse("401", [OpenApiContent(ErrorStatus::class)]),
+        OpenApiResponse("403", [OpenApiContent(ErrorStatus::class)]),
+        OpenApiResponse("500", [OpenApiContent(ErrorStatus::class)])
+    ]
+)
+fun purgeJobLogs(ctx: Context, store: TransientEntityStore) {
+    val jobId = ctx.pathParam("id")
+    store.transactional(false) {
+        val job = DbJob.findById(jobId)
+        for (log in job.log) {
+            log.delete()
+        }
+    }
+    ctx.json(SuccessStatus("Logs for job $jobId purged successfully."))
+}
 
 @OpenApi(
     path = "/api/jobs",

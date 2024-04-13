@@ -62,7 +62,7 @@ export class ProfileComponent implements AfterViewInit {
           }
         } as Observer<SessionStatus>
 
-        this.service.putUpdateUser({
+        this.service.putUpdateCurrentUser({
           id: this.formControl.get('id')?.value,
           username: this.formControl.get('username')?.value,
           email: this.formControl.get('email')?.value,

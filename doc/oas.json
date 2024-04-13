@@ -3,7 +3,12 @@
   "info" : {
     "title" : "KIAR Dashboard API",
     "version" : "1.0.0",
-    "description" : "API for the KIAR Dashboard."
+    "description" : "API for the KIAR Dashboard.",
+    "contact" : {
+      "name" : "API Support",
+      "url" : "https://support.kimnet.ch",
+      "email" : "support@kimnet.ch"
+    }
   },
   "paths" : {
     "/api/institutions" : {
@@ -1046,6 +1051,88 @@
           "name" : "id",
           "in" : "path",
           "description" : "The ID of the Job for which the logs should be retrieved.",
+          "required" : true,
+          "deprecated" : false,
+          "allowEmptyValue" : false,
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "name" : "page",
+          "in" : "query",
+          "description" : "The page index (zero-based) for pagination.",
+          "required" : false,
+          "deprecated" : false,
+          "allowEmptyValue" : false,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int32"
+          }
+        }, {
+          "name" : "pageSize",
+          "in" : "query",
+          "description" : "The page size  for pagination.",
+          "required" : false,
+          "deprecated" : false,
+          "allowEmptyValue" : false,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int32"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/PaginatedJobLogResult"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorStatus"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Forbidden",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorStatus"
+                }
+              }
+            }
+          },
+          "500" : {
+            "description" : "Server Error",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorStatus"
+                }
+              }
+            }
+          }
+        },
+        "deprecated" : false,
+        "security" : [ ]
+      },
+      "delete" : {
+        "tags" : [ "Job" ],
+        "summary" : "Purges the logs for the job with the provided ID.",
+        "operationId" : "deletePurgeJobLog",
+        "parameters" : [ {
+          "name" : "id",
+          "in" : "path",
+          "description" : "The ID of the Job for which the logs should be pruged.",
           "required" : true,
           "deprecated" : false,
           "allowEmptyValue" : false,
@@ -2168,7 +2255,7 @@
       "put" : {
         "tags" : [ "Session" ],
         "summary" : "Updates the currently active user.",
-        "operationId" : "putUpdateUser",
+        "operationId" : "putUpdateCurrentUser",
         "parameters" : [ ],
         "requestBody" : {
           "content" : {

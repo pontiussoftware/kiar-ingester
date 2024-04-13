@@ -148,4 +148,19 @@ export class DashboardComponent implements AfterViewInit, OnDestroy {
         error: (err) => this.snackBar.open(`Error occurred while aborting job ${job.id}: ${err?.error?.description}.`, "Dismiss", { duration: 2000 } as MatSnackBarConfig)
     })
   }
+
+  /**
+   * Purges the {@link ActiveJob} log.
+   *
+   * @param job
+   */
+  public purgeLog(job: Job) {
+    this.service.deletePurgeJobLog(job.id!!).subscribe({
+      next: (next) => {
+        this.snackBar.open(`Successfully purged job ${job.id} log.`, "Dismiss", { duration: 2000 } as MatSnackBarConfig)
+        this.reload()
+      },
+      error: (err) => this.snackBar.open(`Error occurred while purging job ${job.id} log: ${err?.error?.description}.`, "Dismiss", { duration: 2000 } as MatSnackBarConfig)
+    })
+  }
 }
