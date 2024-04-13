@@ -22,11 +22,9 @@ import ch.pontius.kiar.database.job.*
 import ch.pontius.kiar.database.masterdata.DbCanton
 import ch.pontius.kiar.database.masterdata.DbRightStatement
 import ch.pontius.kiar.ingester.IngesterServer
+import ch.pontius.kiar.tasks.PurgeJobLogTask
 import ch.pontius.kiar.utilities.KotlinxJsonMapper
 import ch.pontius.kiar.utilities.generatePassword
-import com.fasterxml.jackson.databind.JsonNode
-import com.fasterxml.jackson.databind.node.ObjectNode
-import com.fasterxml.jackson.databind.node.TextNode
 import io.javalin.Javalin
 import io.javalin.http.staticfiles.Location
 import io.javalin.openapi.*
@@ -43,7 +41,7 @@ import org.mindrot.jbcrypt.BCrypt
 import java.io.FileNotFoundException
 import java.nio.file.Files
 import java.nio.file.Paths
-import javax.management.relation.Role
+import java.util.*
 import kotlin.system.exitProcess
 
 
@@ -66,6 +64,10 @@ fun main(args: Array<String>) {
         if (config.web) {
             initializeWebserver(store, server, config).start(config.webPort)
         }
+
+        /* Schedule timer tasks. */
+        val timer = Timer("Task scheduler")
+        timer.scheduleAtFixedRate(PurgeJobLogTask(store, config.jobLogRetention), 5000, 86400000)
 
         /* Start CLI (if configured). */
         if (config.cli) {
@@ -164,98 +166,8 @@ private fun checkAndSetup(store: TransientEntityStore, config: Config) = store.t
             inactive = false
         }
         println("Generated a new user 'admin' with password '$pw'.")
-
-        println("Importing configuration settings.")
-        /* Persist Apache Solr configurations. */
-        for (solr in config.solr) {
-            if (DbSolr.filter { it.name eq solr.name }.isEmpty) {
-                DbSolr.new {
-                    name = solr.name
-                    server = solr.server
-                    username = solr.username
-                    password = solr.password
-                    for (c in solr.collections) {
-                        collections.add(DbCollection.new{
-                            name = c.name
-                            type = c.type.toDb()
-                            selector = c.selector
-                            deleteBeforeIngest = c.deleteBeforeImport
-                        })
-                    }
-                }
-            }
-        }
-
-        /* Persist Attribute mappings. */
-        for (mapping in config.mappers) {
-            if (DbEntityMapping.filter { it.name eq mapping.name }.isEmpty) {
-                DbEntityMapping.new {
-                    name = mapping.name
-                    description = mapping.description
-                    type = DbFormat.XML
-                    for (a in mapping.values) {
-                        attributes.add(DbAttributeMapping.new {
-                            source = a.source
-                            destination = a.destination
-                            parser = a.parser.toDb()
-                            required = a.required
-                            multiValued = a.multiValued
-                            for (p in a.parameters) {
-                                parameters.add(DbAttributeMappingParameters.new {
-                                    key = p.key
-                                    value = p.value
-                                })
-                            }
-                        })
-                    }
-                }
-            }
-        }
-
-        /* Persist Job configurations. */
-        for (job in config.jobs) {
-            if (DbJobTemplate.filter { it.name eq job.name }.isEmpty) {
-                val p = DbParticipant.new {
-                    name = job.name
-                }
-                DbJobTemplate.new {
-                    name = job.name
-                    participant = p
-                    solr = DbSolr.filter { it.name eq job.solrConfig }.first()
-                    mapping = DbEntityMapping.filter { it.name eq job.mappingConfig }.first()
-                    type = DbJobType.XML
-                    startAutomatically = job.startOnCreation
-
-                    /* Persist transformers. */
-                    for (t in job.transformers) {
-                        transformers.add(DbTransformer.new {
-                            type = t.type.toDb()
-                            for (p in t.parameters) {
-                                parameters.add(
-                                    DbTransformerParameter.new {
-                                        key = p.key
-                                        value = p.value
-                                    }
-                                )
-                            }
-                        })
-                    }
-                }
-            }
-        }
-
-        println("Setup completed!")
-    }
-
-
-    /* Delete deprecated transformer entries. */
-    for (t in DbAttributeMapping.filter { it.parser.description eq "IMAGE" }.asIterable()) {
-        t.parser = DbParser.IMAGE_FILE
     }
 }
-
-
-
 
 /**
  * Initializes and returns the [TransientEntityStore] based on the provided [Config].
