@@ -37,9 +37,11 @@ export class JobLogDatasource implements DataSource<JobLog> {
    * Reloads the data using the provided page index and page size.
    * @param page The requested page index.
    * @param pageSize The requested page size.
+   * @param level The log level to filter for.
+   * @param context The context to filter for.
    */
-  public load(page: number, pageSize: number) {
-    this.service.getJobLog(this.jobId, page, pageSize).subscribe(
+  public load(page: number, pageSize: number, level: string | undefined, context: string | undefined) {
+    this.service.getJobLog(this.jobId, page, pageSize, level, context).subscribe(
         (next) => {
           this.total.next(next.total)
           this.data.next(next.results)

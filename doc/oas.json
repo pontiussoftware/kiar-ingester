@@ -1079,6 +1079,26 @@
             "type" : "integer",
             "format" : "int32"
           }
+        }, {
+          "name" : "level",
+          "in" : "query",
+          "description" : "A filter for the 'level' field.",
+          "required" : false,
+          "deprecated" : false,
+          "allowEmptyValue" : false,
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "name" : "context",
+          "in" : "query",
+          "description" : "A filter for the 'context' field.",
+          "required" : false,
+          "deprecated" : false,
+          "allowEmptyValue" : false,
+          "schema" : {
+            "type" : "string"
+          }
         } ],
         "responses" : {
           "200" : {
@@ -1138,28 +1158,6 @@
           "allowEmptyValue" : false,
           "schema" : {
             "type" : "string"
-          }
-        }, {
-          "name" : "page",
-          "in" : "query",
-          "description" : "The page index (zero-based) for pagination.",
-          "required" : false,
-          "deprecated" : false,
-          "allowEmptyValue" : false,
-          "schema" : {
-            "type" : "integer",
-            "format" : "int32"
-          }
-        }, {
-          "name" : "pageSize",
-          "in" : "query",
-          "description" : "The page size  for pagination.",
-          "required" : false,
-          "deprecated" : false,
-          "allowEmptyValue" : false,
-          "schema" : {
-            "type" : "integer",
-            "format" : "int32"
           }
         } ],
         "responses" : {

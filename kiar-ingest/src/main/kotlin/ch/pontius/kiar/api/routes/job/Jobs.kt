@@ -131,7 +131,9 @@ fun getInactiveJobs(ctx: Context, store: TransientEntityStore) {
     ],
     queryParams = [
         OpenApiParam(name = "page", type = Int::class, description = "The page index (zero-based) for pagination.", required = false),
-        OpenApiParam(name = "pageSize", type = Int::class, description = "The page size  for pagination.", required = false)
+        OpenApiParam(name = "pageSize", type = Int::class, description = "The page size  for pagination.", required = false) ,
+        OpenApiParam(name = "level", type = String::class, description = "A filter for the 'level' field.", required = false),
+        OpenApiParam(name = "context", type = String::class, description = "A filter for the 'context' field.", required = false),
     ],
     responses = [
         OpenApiResponse("200", [OpenApiContent(PaginatedJobLogResult::class)]),
@@ -144,10 +146,23 @@ fun getJobLogs(ctx: Context, store: TransientEntityStore) {
     val jobId = ctx.pathParam("id")
     val page = ctx.queryParam("page")?.toIntOrNull() ?: 0
     val pageSize = ctx.queryParam("pageSize")?.toIntOrNull() ?: 50
+    val level = ctx.queryParam("level")?.uppercase()
+    val context = ctx.queryParam("context")?.uppercase()
     val result = store.transactional(true) {
         val job = DbJob.findById(jobId)
-        val logs = DbJobLog.filter { it.job eq job }.drop(page * pageSize).take(pageSize).mapToArray { it.toApi() }
-        val total = DbJobLog.filter { it.job eq job }.size()
+
+        /* Construct query. */
+        var logsQuery = DbJobLog.filter { it.job eq job }
+        if (level != null) {
+            logsQuery = logsQuery.filter { it.level.description eq level }
+        }
+        if (context != null) {
+            logsQuery = logsQuery.filter { it.context.description eq context }
+        }
+
+        /* Materialize logs that match query. */
+        val logs = logsQuery.drop(page * pageSize).take(pageSize).mapToArray { it.toApi() }
+        val total = logsQuery.size()
         total to logs
     }
     ctx.json(PaginatedJobLogResult(result.first, page, pageSize, result.second))
@@ -161,10 +176,6 @@ fun getJobLogs(ctx: Context, store: TransientEntityStore) {
     tags = ["Job"],
     pathParams = [
         OpenApiParam(name = "id", description = "The ID of the Job for which the logs should be pruged.", required = true)
-    ],
-    queryParams = [
-        OpenApiParam(name = "page", type = Int::class, description = "The page index (zero-based) for pagination.", required = false),
-        OpenApiParam(name = "pageSize", type = Int::class, description = "The page size  for pagination.", required = false)
     ],
     responses = [
         OpenApiResponse("200", [OpenApiContent(PaginatedJobLogResult::class)]),

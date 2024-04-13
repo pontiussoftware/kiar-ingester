@@ -177,27 +177,15 @@ export class JobService {
     /**
      * Purges the logs for the job with the provided ID.
      * @param id The ID of the Job for which the logs should be pruged.
-     * @param page The page index (zero-based) for pagination.
-     * @param pageSize The page size  for pagination.
      * @param observe set whether or not to return the data Observable as the body, response or events. defaults to returning the body.
      * @param reportProgress flag to report request and response progress.
      */
-    public deletePurgeJobLog(id: string, page?: number, pageSize?: number, observe?: 'body', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext}): Observable<PaginatedJobLogResult>;
-    public deletePurgeJobLog(id: string, page?: number, pageSize?: number, observe?: 'response', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext}): Observable<HttpResponse<PaginatedJobLogResult>>;
-    public deletePurgeJobLog(id: string, page?: number, pageSize?: number, observe?: 'events', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext}): Observable<HttpEvent<PaginatedJobLogResult>>;
-    public deletePurgeJobLog(id: string, page?: number, pageSize?: number, observe: any = 'body', reportProgress: boolean = false, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext}): Observable<any> {
+    public deletePurgeJobLog(id: string, observe?: 'body', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext}): Observable<PaginatedJobLogResult>;
+    public deletePurgeJobLog(id: string, observe?: 'response', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext}): Observable<HttpResponse<PaginatedJobLogResult>>;
+    public deletePurgeJobLog(id: string, observe?: 'events', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext}): Observable<HttpEvent<PaginatedJobLogResult>>;
+    public deletePurgeJobLog(id: string, observe: any = 'body', reportProgress: boolean = false, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext}): Observable<any> {
         if (id === null || id === undefined) {
             throw new Error('Required parameter id was null or undefined when calling deletePurgeJobLog.');
-        }
-
-        let localVarQueryParameters = new HttpParams({encoder: this.encoder});
-        if (page !== undefined && page !== null) {
-          localVarQueryParameters = this.addToHttpParams(localVarQueryParameters,
-            <any>page, 'page');
-        }
-        if (pageSize !== undefined && pageSize !== null) {
-          localVarQueryParameters = this.addToHttpParams(localVarQueryParameters,
-            <any>pageSize, 'pageSize');
         }
 
         let localVarHeaders = this.defaultHeaders;
@@ -235,7 +223,6 @@ export class JobService {
         return this.httpClient.request<PaginatedJobLogResult>('delete', `${this.configuration.basePath}${localVarPath}`,
             {
                 context: localVarHttpContext,
-                params: localVarQueryParameters,
                 responseType: <any>responseType_,
                 withCredentials: this.configuration.withCredentials,
                 headers: localVarHeaders,
@@ -384,13 +371,15 @@ export class JobService {
      * @param id The ID of the Job for which the logs should be retrieved.
      * @param page The page index (zero-based) for pagination.
      * @param pageSize The page size  for pagination.
+     * @param level A filter for the \&#39;level\&#39; field.
+     * @param context A filter for the \&#39;context\&#39; field.
      * @param observe set whether or not to return the data Observable as the body, response or events. defaults to returning the body.
      * @param reportProgress flag to report request and response progress.
      */
-    public getJobLog(id: string, page?: number, pageSize?: number, observe?: 'body', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext}): Observable<PaginatedJobLogResult>;
-    public getJobLog(id: string, page?: number, pageSize?: number, observe?: 'response', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext}): Observable<HttpResponse<PaginatedJobLogResult>>;
-    public getJobLog(id: string, page?: number, pageSize?: number, observe?: 'events', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext}): Observable<HttpEvent<PaginatedJobLogResult>>;
-    public getJobLog(id: string, page?: number, pageSize?: number, observe: any = 'body', reportProgress: boolean = false, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext}): Observable<any> {
+    public getJobLog(id: string, page?: number, pageSize?: number, level?: string, context?: string, observe?: 'body', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext}): Observable<PaginatedJobLogResult>;
+    public getJobLog(id: string, page?: number, pageSize?: number, level?: string, context?: string, observe?: 'response', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext}): Observable<HttpResponse<PaginatedJobLogResult>>;
+    public getJobLog(id: string, page?: number, pageSize?: number, level?: string, context?: string, observe?: 'events', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext}): Observable<HttpEvent<PaginatedJobLogResult>>;
+    public getJobLog(id: string, page?: number, pageSize?: number, level?: string, context?: string, observe: any = 'body', reportProgress: boolean = false, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext}): Observable<any> {
         if (id === null || id === undefined) {
             throw new Error('Required parameter id was null or undefined when calling getJobLog.');
         }
@@ -403,6 +392,14 @@ export class JobService {
         if (pageSize !== undefined && pageSize !== null) {
           localVarQueryParameters = this.addToHttpParams(localVarQueryParameters,
             <any>pageSize, 'pageSize');
+        }
+        if (level !== undefined && level !== null) {
+          localVarQueryParameters = this.addToHttpParams(localVarQueryParameters,
+            <any>level, 'level');
+        }
+        if (context !== undefined && context !== null) {
+          localVarQueryParameters = this.addToHttpParams(localVarQueryParameters,
+            <any>context, 'context');
         }
 
         let localVarHeaders = this.defaultHeaders;
