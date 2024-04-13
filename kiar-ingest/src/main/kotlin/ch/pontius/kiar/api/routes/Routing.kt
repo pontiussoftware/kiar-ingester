@@ -85,7 +85,7 @@ fun configureApiRoutes(store: TransientEntityStore, server: IngesterServer, conf
                 put("upload",  { ctx -> upload(ctx, store, config) }, Role.ADMINISTRATOR, Role.MANAGER )
                 put("schedule",  { ctx -> scheduleJob(ctx, store, server) }, Role.ADMINISTRATOR, Role.MANAGER )
                 get("logs",  { ctx -> getJobLogs(ctx, store) }, Role.ADMINISTRATOR, Role.MANAGER )
-                delete("logs",  { ctx -> getJobLogs(ctx, store) }, Role.ADMINISTRATOR, Role.MANAGER )
+                delete("logs",  { ctx -> purgeJobLogs(ctx, store) }, Role.ADMINISTRATOR, Role.MANAGER )
             }
         }
 
