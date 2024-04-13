@@ -572,15 +572,22 @@ export class JobService {
     /**
      * Starts execution of a job.
      * @param id The ID of the Job that should be started.
+     * @param test True, if only a test-run should be executed.
      * @param observe set whether or not to return the data Observable as the body, response or events. defaults to returning the body.
      * @param reportProgress flag to report request and response progress.
      */
-    public putScheduleJob(id: string, observe?: 'body', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext}): Observable<SuccessStatus>;
-    public putScheduleJob(id: string, observe?: 'response', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext}): Observable<HttpResponse<SuccessStatus>>;
-    public putScheduleJob(id: string, observe?: 'events', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext}): Observable<HttpEvent<SuccessStatus>>;
-    public putScheduleJob(id: string, observe: any = 'body', reportProgress: boolean = false, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext}): Observable<any> {
+    public putScheduleJob(id: string, test?: boolean, observe?: 'body', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext}): Observable<SuccessStatus>;
+    public putScheduleJob(id: string, test?: boolean, observe?: 'response', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext}): Observable<HttpResponse<SuccessStatus>>;
+    public putScheduleJob(id: string, test?: boolean, observe?: 'events', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext}): Observable<HttpEvent<SuccessStatus>>;
+    public putScheduleJob(id: string, test?: boolean, observe: any = 'body', reportProgress: boolean = false, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext}): Observable<any> {
         if (id === null || id === undefined) {
             throw new Error('Required parameter id was null or undefined when calling putScheduleJob.');
+        }
+
+        let localVarQueryParameters = new HttpParams({encoder: this.encoder});
+        if (test !== undefined && test !== null) {
+          localVarQueryParameters = this.addToHttpParams(localVarQueryParameters,
+            <any>test, 'test');
         }
 
         let localVarHeaders = this.defaultHeaders;
@@ -618,6 +625,7 @@ export class JobService {
         return this.httpClient.request<SuccessStatus>('put', `${this.configuration.basePath}${localVarPath}`,
             {
                 context: localVarHttpContext,
+                params: localVarQueryParameters,
                 responseType: <any>responseType_,
                 withCredentials: this.configuration.withCredentials,
                 headers: localVarHeaders,

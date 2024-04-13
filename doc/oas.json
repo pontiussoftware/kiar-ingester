@@ -1221,6 +1221,16 @@
           "schema" : {
             "type" : "string"
           }
+        }, {
+          "name" : "test",
+          "in" : "query",
+          "description" : "True, if only a test-run should be executed.",
+          "required" : false,
+          "deprecated" : false,
+          "allowEmptyValue" : false,
+          "schema" : {
+            "type" : "boolean"
+          }
         } ],
         "responses" : {
           "200" : {

@@ -123,9 +123,10 @@ export class DashboardComponent implements AfterViewInit, OnDestroy {
    * Starts the data ingest for the selected {@link ActiveJob}.
    *
    * @param job {@link ActiveJob} to start data ingest for.
+   * @param test Whether to run the ingest in test mode.
    */
-  public startIngest(job: ActiveJob) {
-    this.service.putScheduleJob(job.id!!).subscribe({
+  public startIngest(job: ActiveJob, test: boolean) {
+    this.service.putScheduleJob(job.id!!, test).subscribe({
       next: (next) => {
         this.snackBar.open(`Successfully scheduled job ${job.id}.`, "Dismiss", { duration: 2000 } as MatSnackBarConfig)
         this.reload()

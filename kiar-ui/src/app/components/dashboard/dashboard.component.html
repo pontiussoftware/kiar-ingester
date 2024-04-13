@@ -70,8 +70,12 @@
               <mat-icon>upload_file</mat-icon>
             </button>
 
-            <button *ngIf="element.status === 'HARVESTED' || element.status === 'INTERRUPTED' || element.status === 'FAILED'" (click)="startIngest(element)" mat-icon-button matTooltip="Schedule for data ingest." i18n-matTooltip="@@TooltipStartIngest">
-              <mat-icon>cloud</mat-icon>
+            <button *ngIf="element.status === 'HARVESTED' || element.status === 'INTERRUPTED' || element.status === 'FAILED'" (click)="startIngest(element, false)" mat-icon-button matTooltip="Schedule for data ingest." i18n-matTooltip="@@TooltipStartIngest">
+              <mat-icon>publish</mat-icon>
+            </button>
+
+            <button *ngIf="element.status === 'HARVESTED' || element.status === 'INTERRUPTED' || element.status === 'FAILED'" (click)="startIngest(element, true)" mat-icon-button matTooltip="Schedule for test run." i18n-matTooltip="@@TooltipStartIngest">
+              <mat-icon>cruelty_free</mat-icon>
             </button>
 
             <button *ngIf="element.status !== 'ABORTED' && element.status !== 'INGESTED'" (click)="abortJob(element)" mat-icon-button matTooltip="Abort job." i18n-matTooltip="@@TooltipAbortJob">

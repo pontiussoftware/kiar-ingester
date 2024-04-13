@@ -33,7 +33,7 @@ import kotlin.Comparator
  * @author Ralph Gasser
  * @version 1.3.0
  */
-class ImageDeployment(override val input: Source<SolrInputDocument>, private val deployments: List<ImageDeployment>): Transformer<SolrInputDocument, SolrInputDocument> {
+class ImageDeployment(override val input: Source<SolrInputDocument>, private val deployments: List<ImageDeployment>, val test: Boolean = false): Transformer<SolrInputDocument, SolrInputDocument> {
 
     companion object {
         private val LOGGER = LogManager.getLogger(ImageDeployment::class.java)
@@ -89,7 +89,7 @@ class ImageDeployment(override val input: Source<SolrInputDocument>, private val
                         }
 
                         /* Perform conversion. */
-                        if (this.store(resized, writers[deployment]!!, tmp)) {
+                        if (this@ImageDeployment.test || this.store(resized, writers[deployment]!!, tmp)) {
                             if (deployment.server == null) {
                                 it.addField(deployment.name, deployTo.relativize(actual).toString())
                             } else {
