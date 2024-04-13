@@ -140,6 +140,30 @@ export class EntityMappingComponent implements AfterViewInit {
   }
 
   /**
+   * Downloads the current {@link EntityMapping} as a file.
+   */
+  public download() {
+    this.mappingId.pipe(
+        mergeMap(id => this.service.getEntityMapping(id)),
+        catchError((err) => {
+          this.snackBar.open(`Error occurred while trying to load entity mapping: ${err?.error?.description}.`, "Dismiss", { duration: 2000 } as MatSnackBarConfig);
+          return of(null)
+        })
+    ).subscribe(data => {
+      if (data != null) {
+        const fileName = 'mapping.json';
+        const fileToSave = new Blob([JSON.stringify(data, null, 2)], {type: 'application/json'});
+
+        /* Create download */
+        const a = document.createElement("a");
+        a.href = URL.createObjectURL(fileToSave);
+        a.download = fileName;
+        a.click();
+      }
+    })
+  }
+
+  /**
    * Updates the {@link FormControl} backing this view with a new {@link EntityMapping}.
    *
    * @param mapping The {@link EntityMapping} to apply.

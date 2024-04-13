@@ -57,6 +57,9 @@
       <button mat-raised-button i18n="@@ButtonReload" matTooltip="Reloads this entity mapping, reverting all unsaved changes."  (click)="refresh()">
         Reload
       </button>
+      <button mat-raised-button matTooltip="Downloads this job template as JSON." (click)="download()">
+        Download
+      </button>
       <button mat-raised-button color="warn"  i18n="@@ButtonDelete" matTooltip="Deletes this entity mapping." (click)="delete()">
         Delete
       </button>
