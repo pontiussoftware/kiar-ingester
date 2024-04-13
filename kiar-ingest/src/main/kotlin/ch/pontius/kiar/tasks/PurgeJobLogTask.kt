@@ -24,11 +24,15 @@ class PurgeJobLogTask(private val store: TransientEntityStore, private val reten
 
     override fun run() {
         var deleted = 0L
-        this.store.transactional {
+        this.store.transactional { transaction ->
             val threshold = DateTime.now().minusDays(this.retentionTime)
             DbJobLog.filter { it.job.createdAt le threshold }.asSequence().forEach {
                 it.delete()
                 deleted++
+                if (deleted % 100_000L == 0L) {
+                    transaction.flush()
+                    LOGGER.info("Purged $deleted job logs.")
+                }
             }
         }
         if (deleted > 0L) {
