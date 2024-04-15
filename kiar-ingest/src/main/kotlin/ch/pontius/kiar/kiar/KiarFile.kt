@@ -59,8 +59,11 @@ class KiarFile(private val path: Path): Closeable, Iterable<KiarFile.KiarEntry> 
 
                         /* Process actual item. */
                         when {
-                            item.name.startsWith("${METADATA_FOLDER_NAME}${this.separator}", true) -> this.metadata.add(item)
-                            item.name.startsWith("${RESOURCES_FOLDER_NAME}${this.separator}", true) -> this.resources.add(item)
+                            item.name.startsWith("${METADATA_FOLDER_NAME}${this.separator}", true) &&
+                            (item.name.endsWith(KiarEntryType.JSON.suffix) || item.name.endsWith(KiarEntryType.XML.suffix))-> this.metadata.add(item)
+                            item.name.startsWith("${RESOURCES_FOLDER_NAME}${this.separator}", true) &&
+                            (item.name.endsWith("jpg", ignoreCase = true)  || item.name.endsWith("jfif", ignoreCase = true) || item.name.endsWith("jpeg", ignoreCase = true)
+                            || item.name.endsWith("png", ignoreCase = true) || item.name.endsWith("tif", ignoreCase = true) || item.name.endsWith("tiff", ignoreCase = true)) -> this.resources.add(item)
                         }
                     }
                 }
