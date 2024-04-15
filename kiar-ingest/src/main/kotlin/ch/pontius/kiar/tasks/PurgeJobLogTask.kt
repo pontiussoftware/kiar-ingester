@@ -1,5 +1,6 @@
 package ch.pontius.kiar.tasks
 
+import ch.pontius.kiar.config.Config
 import ch.pontius.kiar.database.job.DbJobLog
 import ch.pontius.kiar.ingester.IngesterServer
 import jetbrains.exodus.database.TransientEntityStore
@@ -16,7 +17,7 @@ import java.util.*
  * @author Ralph Gasser
  * @version 1.0.0
  */
-class PurgeJobLogTask(private val store: TransientEntityStore, private val retentionTime: Int): TimerTask() {
+class PurgeJobLogTask(private val store: TransientEntityStore, private val config: Config): TimerTask() {
     companion object {
         /** The [Logger] used by this [IngesterServer]. */
         private val LOGGER: Logger = LogManager.getLogger()
@@ -25,7 +26,7 @@ class PurgeJobLogTask(private val store: TransientEntityStore, private val reten
     override fun run() {
         var deleted = 0L
         this.store.transactional { transaction ->
-            val threshold = DateTime.now().minusDays(this.retentionTime)
+            val threshold = DateTime.now().minusDays(this.config.jobLogRetentionDays)
             DbJobLog.filter { it.job.createdAt le threshold }.asSequence().forEach {
                 it.delete()
                 deleted++

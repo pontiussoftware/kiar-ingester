@@ -23,6 +23,7 @@ import ch.pontius.kiar.database.masterdata.DbCanton
 import ch.pontius.kiar.database.masterdata.DbRightStatement
 import ch.pontius.kiar.ingester.IngesterServer
 import ch.pontius.kiar.tasks.PurgeJobLogTask
+import ch.pontius.kiar.tasks.RemoveInputFilesTask
 import ch.pontius.kiar.utilities.KotlinxJsonMapper
 import ch.pontius.kiar.utilities.generatePassword
 import io.javalin.Javalin
@@ -67,7 +68,8 @@ fun main(args: Array<String>) {
 
         /* Schedule timer tasks. */
         val timer = Timer("Task scheduler")
-        timer.scheduleAtFixedRate(PurgeJobLogTask(store, config.jobLogRetention), 5000, 86400000)
+        timer.scheduleAtFixedRate(PurgeJobLogTask(store, config), 5000, 86400000)
+        timer.scheduleAtFixedRate(RemoveInputFilesTask(store, config), 5000, 86400000)
 
         /* Start CLI (if configured). */
         if (config.cli) {

@@ -34,5 +34,8 @@ data class Config(
     val logPath: Path,
 
     /** Number of day to retain job logs. */
-    val jobLogRetention: Int = 30
+    val jobLogRetentionDays: Int = 30,
+
+    /** Number of input files to retain. */
+    val inputRetentionCount: Int = 1
 )
