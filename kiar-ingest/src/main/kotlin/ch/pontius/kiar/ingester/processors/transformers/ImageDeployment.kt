@@ -31,7 +31,7 @@ import kotlin.Comparator
  * The [SolrInputDocument] is updated to contain the path to the new file.
  *
  * @author Ralph Gasser
- * @version 1.3.0
+ * @version 1.4.0
  */
 class ImageDeployment(override val input: Source<SolrInputDocument>, private val deployments: List<ImageDeployment>, val test: Boolean = false): Transformer<SolrInputDocument, SolrInputDocument> {
 
@@ -101,7 +101,12 @@ class ImageDeployment(override val input: Source<SolrInputDocument>, private val
                             context.log(JobLog(null, it.uuid(), null, JobLogContext.RESOURCE, JobLogLevel.WARNING, "Failed to create preview image for document."))
                         }
                     }
+
+                    /* Increment counter. */
                     counter += 1
+
+                    /* Extract metadata from image. */
+                    this.extractMetadata(image = original, document = it)
                 }
                 it.setField(Field.IMAGECOUNT, counter - 1)
             } else {
@@ -143,5 +148,49 @@ class ImageDeployment(override val input: Source<SolrInputDocument>, private val
     } catch (e: IOException) {
         LOGGER.error("Failed to save image $path due to IO exception: ${e.message}")
         false
+    }
+
+    /**
+     * Extracts metadata from the provided [ImmutableImage].
+     *
+     * @param image The [ImmutableImage] to extract metadata from.
+     * @param document The [SolrInputDocument] to enrich with metadata.
+     */
+    private fun extractMetadata(image: ImmutableImage, document: SolrInputDocument) {
+        val metadata = image.metadata
+        var artist: String? = null
+        var copyright: String? = null
+
+        /* Extract EXIF & IPTC metadata for media file. */
+        for (directory in metadata.directories) {
+            when (directory.name) {
+                "Exif IFD0",
+                "Exif IFD1"-> {
+                    for (tag in directory.tags) {
+                        if (tag.name == "Artist") {
+                            artist = tag.value
+                        }
+                        if (tag.name == "Copyright") {
+                            copyright = tag.value
+                        }
+                    }
+                }
+                "IPTC" -> {
+                    for (tag in directory.tags) {
+                        if (tag.name == "Copyright Notice") {
+                            artist = tag.value
+                        }
+                        if (tag.name == "By-line") {
+                            copyright = tag.value
+                        }
+                    }
+                }
+                else -> continue
+            }
+        }
+
+        /* Add metadata to document. */
+        document.addField("_image_metadata_artist_", artist)
+        document.addField("_image_metadata_copyright_", copyright)
     }
 }
