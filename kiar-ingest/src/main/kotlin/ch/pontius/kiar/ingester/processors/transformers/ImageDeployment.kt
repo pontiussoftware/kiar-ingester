@@ -158,8 +158,8 @@ class ImageDeployment(override val input: Source<SolrInputDocument>, private val
      */
     private fun extractMetadata(image: ImmutableImage, document: SolrInputDocument) {
         val metadata = image.metadata
-        var artist: String? = null
-        var copyright: String? = null
+        var artist: String = ""
+        var copyright: String = ""
 
         /* Extract EXIF & IPTC metadata for media file. */
         for (directory in metadata.directories) {
