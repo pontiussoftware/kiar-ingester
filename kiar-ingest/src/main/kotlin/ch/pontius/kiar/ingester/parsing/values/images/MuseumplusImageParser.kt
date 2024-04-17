@@ -1,6 +1,7 @@
 package ch.pontius.kiar.ingester.parsing.values.images
 
 import ch.pontius.kiar.api.model.config.mappings.AttributeMapping
+import ch.pontius.kiar.ingester.media.MediaProvider
 import ch.pontius.kiar.ingester.parsing.values.ValueParser
 import com.sksamuel.scrimage.ImmutableImage
 import org.apache.logging.log4j.LogManager
@@ -41,11 +42,13 @@ class MuseumplusImageParser(override val mapping: AttributeMapping): ValueParser
         /* Read IDs. */
         for (id in value.split(this.delimiter).mapNotNull { it.trim().toBigDecimalOrNull()?.toInt() }) {
             val url = URL("${this.host}/ria-ws/application/module/Multimedia/${id}/thumbnail?size=EXTRA_EXTRA_LARGE")
-            val image = this.downloadImage(url, this.username, this.password) ?: continue
+            val provider = object: MediaProvider.Image {
+                override fun open(): ImmutableImage? = this@MuseumplusImageParser.downloadImage(url, this@MuseumplusImageParser.username, this@MuseumplusImageParser.password)
+            }
             if (this.mapping.multiValued) {
-                into.addField(this.mapping.destination, image)
+                into.addField(this.mapping.destination, provider)
             } else {
-                into.setField(this.mapping.destination, image)
+                into.setField(this.mapping.destination, provider)
             }
         }
     }
@@ -60,12 +63,18 @@ class MuseumplusImageParser(override val mapping: AttributeMapping): ValueParser
     private fun downloadImage(url: URL, username: String, password: String): ImmutableImage? = try {
         /* Set up basic authentication and open connection. */
         val connection = url.openConnection() as HttpURLConnection
-        connection.setRequestProperty("Authorization", "Basic " + Base64.getEncoder().encodeToString("$username:$password".toByteArray()))
-        if (connection.responseCode == HttpURLConnection.HTTP_OK) {
-            ImmutableImage.loader().fromStream(connection.inputStream)
-        } else {
-            LOGGER.error("Failed to download image from $url; service responded with HTTP status ${connection.responseCode}.")
-            null
+        try {
+            connection.setRequestProperty("Authorization", "Basic " + Base64.getEncoder().encodeToString("$username:$password".toByteArray()))
+            if (connection.responseCode == HttpURLConnection.HTTP_OK) {
+                connection.inputStream.use {
+                    ImmutableImage.loader().fromStream(it)
+                }
+            } else {
+                LOGGER.error("Failed to download image from $url; service responded with HTTP status ${connection.responseCode}.")
+                null
+            }
+        } finally {
+            connection.disconnect()
         }
     } catch (e: IOException) {
         LOGGER.error("Failed to download image from $url: ${e.message}")
