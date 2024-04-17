@@ -1,7 +1,7 @@
 import {AfterViewInit, Component, OnInit, ViewChild} from "@angular/core";
 import {JobService} from "../../../../../openapi";
 import {JobLogDatasource} from "./job-log-datasource";
-import {asapScheduler, map, Observable, tap} from "rxjs";
+import {map, Observable, tap} from "rxjs";
 import {ActivatedRoute} from "@angular/router";
 import {MatPaginator} from "@angular/material/paginator";
 
@@ -18,6 +18,13 @@ export class JobLogComponent implements AfterViewInit, OnInit {
   /** The columns displayed in the data table. */
   public readonly displayedColumns= ["documentId", "collection", "level", "context", "description"];
 
+  /** Value for the level filter. */
+  public levelFilter = 'ALL'
+
+  /** Value for the context filter. */
+  public contextFilter = 'ALL'
+
+  /** Observable holding the currently active job ID. */
   public readonly jobId: Observable<string>
 
   /** Reference to the {@link MatPaginator}*/
@@ -38,9 +45,16 @@ export class JobLogComponent implements AfterViewInit, OnInit {
    * Registers an observable for page change.
    */
   public ngAfterViewInit() {
-    this.dataSource.load(this.paginator.pageIndex, this.paginator.pageSize);
-    this.paginator.page.pipe(tap(() => this.dataSource.load(this.paginator.pageIndex, this.paginator.pageSize))).subscribe();
+    this.reload()
+    this.paginator.page.pipe(tap(() => this.reload())).subscribe();
   }
 
-  protected readonly asapScheduler = asapScheduler;
+  /**
+   * Reloads the data using the current settings.
+   */
+  public reload() {
+    const actualLevel = this.levelFilter === 'ALL' ? undefined : this.levelFilter
+    const actualContext = this.contextFilter === 'ALL' ? undefined : this.contextFilter
+    this.dataSource.load(this.paginator.pageIndex, this.paginator.pageSize, actualLevel, actualContext);
+  }
 }

@@ -35,6 +35,9 @@ enum class Field(val solr: String, val required: Boolean = false, val multiValue
     OBJEKTTYP("objekttyp", true),
 
     /** Field containing the name of the institution the object belongs to. */
+    SAMMLUNG("sammlung", true),
+
+    /** Field containing the name of the institution the object belongs to. */
     INSTITUTION("institution", true),
 
     /** Field containing title information. */

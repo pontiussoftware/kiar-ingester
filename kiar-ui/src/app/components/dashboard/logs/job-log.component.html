@@ -4,6 +4,25 @@
   </button>
 
   Job Logs (ID: {{(jobId | async)}})
+
+  &nbsp;
+
+  <mat-button-toggle-group name="fontStyle" aria-label="Font Style" [(ngModel)]="levelFilter" (change)="reload()">
+    <mat-button-toggle value="ALL">ALL</mat-button-toggle>
+    <mat-button-toggle value="WARNING">Warning</mat-button-toggle>
+    <mat-button-toggle value="VALIDATION">Validation</mat-button-toggle>
+    <mat-button-toggle value="ERROR">Error</mat-button-toggle>
+    <mat-button-toggle value="SEVERE">Severe</mat-button-toggle>
+  </mat-button-toggle-group>
+
+  &nbsp;
+
+  <mat-button-toggle-group name="fontStyle" aria-label="Font Style" [(ngModel)]="contextFilter" (change)="reload()">
+    <mat-button-toggle value="ALL">ALL</mat-button-toggle>
+    <mat-button-toggle value="METADATA">Metadata</mat-button-toggle>
+    <mat-button-toggle value="RESOURCE">Resource</mat-button-toggle>
+    <mat-button-toggle value="SYSTEM">System</mat-button-toggle>
+  </mat-button-toggle-group>
 </h1>
 
 <table mat-table [dataSource]="dataSource" class="mat-elevation-z8">

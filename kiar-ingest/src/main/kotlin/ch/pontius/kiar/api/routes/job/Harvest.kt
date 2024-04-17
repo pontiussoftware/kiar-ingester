@@ -124,6 +124,9 @@ fun upload(ctx: Context, store: TransientEntityStore, config: Config) {
     pathParams = [
         OpenApiParam(name = "id", description = "The ID of the Job that should be started.", required = true)
     ],
+    queryParams = [
+        OpenApiParam(name = "test", type = Boolean::class, description = "True, if only a test-run should be executed.", required = false),
+    ],
     responses = [
         OpenApiResponse("200", [OpenApiContent(SuccessStatus::class)]),
         OpenApiResponse("401", [OpenApiContent(ErrorStatus::class)]),
@@ -133,6 +136,7 @@ fun upload(ctx: Context, store: TransientEntityStore, config: Config) {
 )
 fun scheduleJob(ctx: Context, store: TransientEntityStore, server: IngesterServer) {
     val jobId = ctx.pathParam("id")
+    val test = ctx.queryParam("test")?.toBoolean() ?: false
 
     /* Perform sanity checks. */
     store.transactional(true) {
@@ -155,7 +159,7 @@ fun scheduleJob(ctx: Context, store: TransientEntityStore, server: IngesterServe
     }
 
     /* Schedule job for execution. */
-    server.scheduleJob(jobId)
+    server.scheduleJob(jobId, test)
 
     /* Return success. */
     ctx.json(SuccessStatus("Job $jobId scheduled successfully."))

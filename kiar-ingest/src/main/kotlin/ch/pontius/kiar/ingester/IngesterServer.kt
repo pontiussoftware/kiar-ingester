@@ -3,7 +3,6 @@ package ch.pontius.kiar.ingester
 import ch.pontius.kiar.config.Config
 import ch.pontius.kiar.database.config.jobs.DbJobTemplate
 import ch.pontius.kiar.database.job.DbJob
-import ch.pontius.kiar.database.job.DbJobLog
 import ch.pontius.kiar.database.job.DbJobStatus
 import ch.pontius.kiar.ingester.processors.ProcessingContext
 import ch.pontius.kiar.ingester.watcher.FileWatcher
@@ -123,7 +122,7 @@ class IngesterServer(val store: TransientEntityStore, val config: Config) {
      *
      * @param jobId The ID of the job to schedule.
      */
-    fun scheduleJob(jobId: String) {
+    fun scheduleJob(jobId: String, test: Boolean = false) {
         val (pipeline, context) = this.store.transactional {
             val job = DbJob.findById(jobId)
 
@@ -135,7 +134,7 @@ class IngesterServer(val store: TransientEntityStore, val config: Config) {
             job.changedAt = DateTime.now()
 
             /* Return pipeline and job*/
-            val pipeline = job.toPipeline(this.config)
+            val pipeline = job.toPipeline(this.config, test)
             pipeline to ProcessingContext(
                 jobId,
                 job.template?.participant?.name ?: throw IllegalStateException("Job is not associated with a participant."),
@@ -158,14 +157,18 @@ class IngesterServer(val store: TransientEntityStore, val config: Config) {
                 val job = DbJob.findById(jobId)
                 when (e) {
                     null -> {
-                        LOGGER.info("Data ingest (name = ${job.name}) completed successfully!")
-                        job.status = DbJobStatus.INGESTED
+                        LOGGER.info("Data ingest (name = ${job.name}, test = ${test}) completed successfully!")
+                        if (test) {
+                            job.status = DbJobStatus.HARVESTED
+                        } else {
+                            job.status = DbJobStatus.INGESTED
+                        }
                     }
                     is CancellationException -> {
                         job.status = DbJobStatus.ABORTED
                     }
                     else -> {
-                        LOGGER.error("Data ingest for job (name = ${job.name}) failed: ${e.printStackTrace()}")
+                        LOGGER.error("Data ingest for job (name = ${job.name}, test = ${test}) failed: ${e.printStackTrace()}")
                         job.status = DbJobStatus.FAILED
                     }
                 }

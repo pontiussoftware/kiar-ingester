@@ -123,9 +123,10 @@ export class DashboardComponent implements AfterViewInit, OnDestroy {
    * Starts the data ingest for the selected {@link ActiveJob}.
    *
    * @param job {@link ActiveJob} to start data ingest for.
+   * @param test Whether to run the ingest in test mode.
    */
-  public startIngest(job: ActiveJob) {
-    this.service.putScheduleJob(job.id!!).subscribe({
+  public startIngest(job: ActiveJob, test: boolean) {
+    this.service.putScheduleJob(job.id!!, test).subscribe({
       next: (next) => {
         this.snackBar.open(`Successfully scheduled job ${job.id}.`, "Dismiss", { duration: 2000 } as MatSnackBarConfig)
         this.reload()
@@ -146,6 +147,21 @@ export class DashboardComponent implements AfterViewInit, OnDestroy {
           this.reload()
         },
         error: (err) => this.snackBar.open(`Error occurred while aborting job ${job.id}: ${err?.error?.description}.`, "Dismiss", { duration: 2000 } as MatSnackBarConfig)
+    })
+  }
+
+  /**
+   * Purges the {@link ActiveJob} log.
+   *
+   * @param job
+   */
+  public purgeLog(job: Job) {
+    this.service.deletePurgeJobLog(job.id!!).subscribe({
+      next: (next) => {
+        this.snackBar.open(`Successfully purged job ${job.id} log.`, "Dismiss", { duration: 2000 } as MatSnackBarConfig)
+        this.reload()
+      },
+      error: (err) => this.snackBar.open(`Error occurred while purging job ${job.id} log: ${err?.error?.description}.`, "Dismiss", { duration: 2000 } as MatSnackBarConfig)
     })
   }
 }

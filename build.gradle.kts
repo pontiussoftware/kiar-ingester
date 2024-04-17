@@ -1,15 +1,15 @@
 
 plugins {
     /* Kotlin JVM version. */
-    kotlin("jvm") version "1.8.21"
+    kotlin("jvm") version "1.9.23"
 
     /* Kotlinx serialization plugin. */
-    id("org.jetbrains.kotlin.plugin.serialization") version "1.8.21"
+    id("org.jetbrains.kotlin.plugin.serialization") version "1.9.23"
 
     /* OpenAPI Generator for Frontend internal API generation */
-    id ("org.openapi.generator") version "5.2.0"
+    id ("org.openapi.generator") version "7.4.0"
 
-    id ("de.undercouch.download") version "5.4.0"
+    id ("de.undercouch.download") version "5.6.0"
 
     idea
 }
@@ -44,22 +44,16 @@ subprojects {
     /* Our current version, on dev branch this should always be release+1-SNAPSHOT */
     version = "1.0.0-SNAPSHOT"
 
-    dependencies {
-        /** UnitTest dependencies. */
-        testImplementation("org.junit.jupiter:junit-jupiter-api:5.9.2")
-        testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:1.9.2")
-    }
-
     tasks {
         compileKotlin {
             kotlinOptions {
-                jvmTarget = "11"
+                jvmTarget = "17"
             }
         }
 
         compileTestKotlin {
             kotlinOptions {
-                jvmTarget = "11"
+                jvmTarget = "17"
             }
         }
 

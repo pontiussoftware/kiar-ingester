@@ -68,6 +68,14 @@ class InstitutionTransformer(override val input: Source<SolrInputDocument>): Tra
                 return@filter false
             }
 
+            /* Check presence of collection name. */
+            val collectionNam = doc.asString(Field.SAMMLUNG)
+            if (collectionNam == null) {
+                doc.setField(Field.SAMMLUNG, institutionName)
+                LOGGER.warn("Collection name not specified; using institution name instead (jobId = {}, participantId = {}, docId = {}).", context.jobId, context.participant, uuid)
+                context.log(JobLog(null, uuid, null, JobLogContext.METADATA, JobLogLevel.WARNING, "Collection not specified; using institution name instead."))
+            }
+
             /* Enrich Apache Solr with institution-based information. */
             if (!doc.has(Field.PARTICIPANT)) {
                 doc.setField(Field.PARTICIPANT, entry.participantName)

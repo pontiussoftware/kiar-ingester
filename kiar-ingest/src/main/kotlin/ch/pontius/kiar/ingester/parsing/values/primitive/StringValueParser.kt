@@ -18,10 +18,13 @@ class StringValueParser(override val mapping: AttributeMapping): ValueParser<Str
      * @param into The [SolrInputDocument] to append the value to.
      */
     override fun parse(value: String, into: SolrInputDocument) {
-        if (this.mapping.multiValued) {
-            into.addField(this.mapping.destination, value)
-        } else {
-            into.setField(this.mapping.destination, value)
+        val cleaned = value.trim()
+        if (cleaned.isNotBlank()) {
+            if (this.mapping.multiValued) {
+                into.addField(this.mapping.destination, cleaned)
+            } else {
+                into.setField(this.mapping.destination, cleaned)
+            }
         }
     }
 }

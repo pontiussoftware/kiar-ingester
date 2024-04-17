@@ -24,10 +24,15 @@ class MultiStringValueParser(override val mapping: AttributeMapping): ValueParse
     override fun parse(value: String, into: SolrInputDocument) {
         val split = value.split(this.separator)
         if (split.isNotEmpty()) {
-            if (this.mapping.multiValued) {
-                split.forEach { into.addField(this.mapping.destination, it) }
-            } else {
-                into.setField(this.mapping.destination, split.first())
+            for (s in split) {
+                val cleaned = s.trim()
+                if (cleaned.isNotBlank()) {
+                    if (this.mapping.multiValued) {
+                        into.addField(this.mapping.destination, cleaned)
+                    } else {
+                        into.setField(this.mapping.destination, cleaned)
+                    }
+                }
             }
         }
     }

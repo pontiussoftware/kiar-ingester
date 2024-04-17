@@ -70,9 +70,10 @@ class DbJob(entity: Entity) : XdEntity(entity) {
      * Requires an ongoing transactional context!
      *
      * @param config The KIAR tools [Config] object.
+     * @param test Flag indicating whether this pipeline is for testing purposes.
      * @return [Sink] representing the pipelin.
      */
-    fun toPipeline(config: Config): Sink<SolrInputDocument> {
+    fun toPipeline(config: Config, test: Boolean = false): Sink<SolrInputDocument> {
         val template = this.template ?: throw IllegalStateException("Failed to generated execution pipeline for job ${this.xdId}: Missing template.")
 
         /* Generate file source. */
@@ -92,43 +93,15 @@ class DbJob(entity: Entity) : XdEntity(entity) {
 
         /* Create image deployment stage (if necessary). */
         if (template.solr.deployments.size() > 0) {
-            root = ImageDeployment(root, template.solr.deployments.asSequence().map { it.toApi() }.toList())
+            root = ImageDeployment(root, template.solr.deployments.asSequence().map { it.toApi() }.toList(), test)
         }
 
         /* Return ApacheSolrSink. */
-        return ApacheSolrSink(root, template.solr.toApi())
-    }
-
-    /**
-     * Generates and a test pipeline from this [DbJob].
-     *
-     * A test pipeline uses a [DummySink] and does not perform any image deployment. Hence, it can be used to test functionality.
-     *
-     * Requires an ongoing transactional context!
-     *
-     * @param config The KIAR tools [Config] object.
-     * @return [Sink] representing the pipelin.
-     */
-    fun toTestPipeline(config: Config): Sink<SolrInputDocument> {
-        val template = this.template ?: throw IllegalStateException("Failed to generated execution pipeline for job ${this.xdId}: Missing template.")
-
-        /* Generate file source. */
-        val sourcePath = config.ingestPath.resolve(template.participant.name).resolve(this.xdId)
-        val source: Source<SolrInputDocument> = when (template.type.description) {
-            "XML" -> XmlFileSource(sourcePath, template.mapping.toApi())
-            "KIAR" -> KiarFileSource(sourcePath, template.mapping.toApi())
-            "EXCEL" -> ExcelFileSource(sourcePath, template.mapping.toApi())
-            else -> throw IllegalStateException("Unsupported template type '${template.type.description}'. This is a programmer's error!")
+        return if (test) {
+            DummySink(root)
+        } else {
+            ApacheSolrSink(root, template.solr.toApi())
         }
-        var root = source
-
-        /* Generate all transformers. */
-        for (t in template.transformers.asSequence()) {
-            root = t.newInstance(root)
-        }
-
-        /* Return ApacheSolrSink. */
-        return DummySink(root)
     }
 
     /**

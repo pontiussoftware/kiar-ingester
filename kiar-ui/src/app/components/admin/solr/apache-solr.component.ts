@@ -1,5 +1,5 @@
 import {AfterViewInit, Component} from "@angular/core";
-import {map, mergeMap, Observable, shareReplay} from "rxjs";
+import {catchError, map, mergeMap, Observable, of, shareReplay} from "rxjs";
 import {ApacheSolrCollection, ApacheSolrConfig, ApacheSolrService, AttributeMapping, ImageDeployment, ImageFormat} from "../../../../../openapi";
 import {ActivatedRoute, Router} from "@angular/router";
 import {FormArray, FormControl, FormGroup, Validators} from "@angular/forms";
@@ -94,6 +94,30 @@ export class ApacheSolrComponent implements AfterViewInit{
         error: (err) => this.snackBar.open(`Error occurred while trying to delete Apache Solr configuration: ${err?.error?.description}.`, "Dismiss", { duration: 2000 } as MatSnackBarConfig)
       })
     }
+  }
+
+  /**
+   * Downloads the current {@link ApacheSolrConfig} as a file.
+   */
+  public download() {
+    this.solrId.pipe(
+        mergeMap(id => this.service.getSolrConfig(id)),
+        catchError((err) => {
+          this.snackBar.open(`Error occurred while trying to load Apache Solr configuration: ${err?.error?.description}.`, "Dismiss", { duration: 2000 } as MatSnackBarConfig);
+          return of(null)
+        })
+    ).subscribe(data => {
+      if (data != null) {
+        const fileName = 'solr.json';
+        const fileToSave = new Blob([JSON.stringify(data, null, 2)], {type: 'application/json'});
+
+        /* Create download */
+        const a = document.createElement("a");
+        a.href = URL.createObjectURL(fileToSave);
+        a.download = fileName;
+        a.click();
+      }
+    })
   }
 
   /**

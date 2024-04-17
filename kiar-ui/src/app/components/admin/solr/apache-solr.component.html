@@ -29,13 +29,16 @@
     </mat-form-field>
 
     <div class="button-group" [style.margin-top]="'10px'">
-      <button mat-raised-button color="primary" i18n="@@ButtonSave" matTooltip="Saves all changes made to this entity mapping." (click)="save()">
+      <button mat-raised-button color="primary" i18n="@@ButtonSave" matTooltip="Saves all changes made to this Apache Solr configuration." (click)="save()">
         Save
       </button>
-      <button mat-raised-button i18n="@@ButtonReload" matTooltip="Reloads this entity mapping, reverting all unsaved changes."  (click)="refresh()">
+      <button mat-raised-button i18n="@@ButtonReload" matTooltip="Reloads this Apache Solr configuration, reverting all unsaved changes."  (click)="refresh()">
         Reload
       </button>
-      <button mat-raised-button color="warn"  i18n="@@ButtonDelete" matTooltip="Deletes this entity mapping." (click)="delete()">
+      <button mat-raised-button matTooltip="Downloads this Apache Solr configuration as JSON." (click)="download()">
+        Download
+      </button>
+      <button mat-raised-button color="warn"  i18n="@@ButtonDelete" matTooltip="Deletes this Apache Solr configuration." (click)="delete()">
         Delete
       </button>
     </div>

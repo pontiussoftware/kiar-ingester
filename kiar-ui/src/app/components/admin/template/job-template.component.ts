@@ -1,5 +1,5 @@
 import {AfterViewInit, Component} from "@angular/core";
-import {map, mergeMap, Observable, shareReplay} from "rxjs";
+import {catchError, map, mergeMap, Observable, of, shareReplay} from "rxjs";
 import {FormArray, FormControl, FormGroup, Validators} from "@angular/forms";
 import {ApacheSolrConfig, ConfigService, EntityMapping, JobTemplate, JobType, TransformerConfig, TransformerType} from "../../../../../openapi";
 import {ActivatedRoute, Router} from "@angular/router";
@@ -82,7 +82,7 @@ export class JobTemplateComponent implements AfterViewInit {
   }
 
   /**
-   * Tries to save the current state of the {@link ApacheSolrConfig} represented by the local {@link FormControl}
+   * Tries to save the current state of the {@link JobTemplate} represented by the local {@link FormControl}
    */
   public save() {
     this.templateId.pipe(
@@ -94,7 +94,7 @@ export class JobTemplateComponent implements AfterViewInit {
   }
 
   /**
-   * Deletes this {@link ApacheSolrConfig}.
+   * Deletes this {@link JobTemplate}.
    */
   public delete() {
     if (confirm("Are you sure that you want to delete this Job template?\nAfter deletion, it can no longer be retrieved.")) {
@@ -108,6 +108,31 @@ export class JobTemplateComponent implements AfterViewInit {
         error: (err) => this.snackBar.open(`Error occurred while trying to delete job template: ${err?.error?.description}.`, "Dismiss", { duration: 2000 } as MatSnackBarConfig)
       })
     }
+  }
+
+
+  /**
+   * Downloads the current {@link JobTemplate} as a file.
+   */
+  public download() {
+    this.templateId.pipe(
+        mergeMap(id => this.service.getJobTemplate(id)),
+        catchError((err) => {
+          this.snackBar.open(`Error occurred while trying to load job template: ${err?.error?.description}.`, "Dismiss", {duration: 2000} as MatSnackBarConfig);
+          return of(null)
+        })
+    ).subscribe(data => {
+      if (data != null) {
+        const fileName = 'template.json';
+        const fileToSave = new Blob([JSON.stringify(data, null, 2)], {type: 'application/json'});
+
+        /* Create download */
+        const a = document.createElement("a");
+        a.href = URL.createObjectURL(fileToSave);
+        a.download = fileName;
+        a.click();
+      }
+    })
   }
 
   /**

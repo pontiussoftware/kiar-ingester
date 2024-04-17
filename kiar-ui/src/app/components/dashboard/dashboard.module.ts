@@ -19,6 +19,7 @@ import {RouterLink} from "@angular/router";
 import {MatPaginatorModule} from "@angular/material/paginator";
 import {MatBadgeModule} from "@angular/material/badge";
 import {MatProgressBarModule} from "@angular/material/progress-bar";
+import {MatButtonToggleModule} from "@angular/material/button-toggle";
 
 @NgModule({
   declarations: [
@@ -45,6 +46,7 @@ import {MatProgressBarModule} from "@angular/material/progress-bar";
     MatPaginatorModule,
     MatBadgeModule,
     MatProgressBarModule,
+    MatButtonToggleModule,
   ],
   exports: [
     DashboardComponent,

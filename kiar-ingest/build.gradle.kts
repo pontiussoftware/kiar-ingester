@@ -31,7 +31,7 @@ configurations {
 
 application {
     mainClass.set("ch.pontius.kiar.ApplicationKt")
-    applicationDefaultJvmArgs = listOf("-Xms512M", "-Xmx2G")
+    applicationDefaultJvmArgs = listOf("-Xms512M", "-Xmx4G")
 }
 
 dependencies {
@@ -71,10 +71,6 @@ dependencies {
     implementation("io.javalin.community.openapi:javalin-swagger-plugin:$javalinVersion")
     implementation("io.javalin.community.ssl:ssl-plugin:$javalinVersion")
     kapt("io.javalin.community.openapi:openapi-annotation-processor:$javalinVersion")
-
-    /** Jackson databind. */
-    implementation("com.fasterxml.jackson.core:jackson-databind:$jacksonVersion")
-    implementation("com.fasterxml.jackson.module:jackson-module-kotlin:$jacksonVersion")
 
     /** Xodus & Xodus DNQ */
     implementation("org.jetbrains.xodus:xodus-openAPI:$xodusVersion")
