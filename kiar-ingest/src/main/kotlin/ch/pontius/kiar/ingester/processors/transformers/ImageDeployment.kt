@@ -71,7 +71,6 @@ class ImageDeployment(override val input: Source<SolrInputDocument>, private val
                 var counter = 1
                 for (provider in providers) {
                     val original = provider.open() ?: continue
-                    val nested = SolrInputDocument() /* Nested document for image information. */
                     for (deployment in this@ImageDeployment.deployments) {
                         val imageName = "${it.uuid()}_%03d.jpg".format(counter)
                         val deployTo = Paths.get(deployment.path)
@@ -93,15 +92,11 @@ class ImageDeployment(override val input: Source<SolrInputDocument>, private val
                         if (this@ImageDeployment.test || this.store(resized, writers[deployment]!!, tmp)) {
                             if (deployment.server == null) {
                                 it.addField(deployment.name, deployTo.relativize(actual).toString())
-                                nested.addField(deployment.name, deployTo.relativize(actual).toString())
                             } else {
                                 it.addField(deployment.name, "${deployment.server}${deployTo.relativize(actual)}")
-                                nested.addField(deployment.name, "${deployment.server}${deployTo.relativize(actual)}")
                             }
                             it.addField("${deployment.name}height_", resized.height)
-                            nested.addField("${deployment.name}height_", resized.height)
                             it.addField("${deployment.name}width_", resized.width)
-                            nested.addField("${deployment.name}height_", resized.height)
                         } else {
                             context.log(JobLog(null, it.uuid(), null, JobLogContext.RESOURCE, JobLogLevel.WARNING, "Failed to create preview image for document."))
                         }
@@ -111,10 +106,7 @@ class ImageDeployment(override val input: Source<SolrInputDocument>, private val
                     counter += 1
 
                     /* Extract metadata from image. */
-                    this.extractMetadata(image = original, document = nested)
-
-                    /* Append nested field. */
-                    it.addField(Field.IMAGES, nested)
+                    this.extractMetadata(image = original, document = it)
                 }
                 it.setField(Field.IMAGECOUNT, counter - 1)
             } else {
@@ -198,7 +190,7 @@ class ImageDeployment(override val input: Source<SolrInputDocument>, private val
         }
 
         /* Add metadata to document. */
-        document.addField("artist", artist)
-        document.addField("metadata", copyright)
+        document.addField("_images_metadata_artist_", artist)
+        document.addField("_images_metadata_copyright_", copyright)
     }
 }

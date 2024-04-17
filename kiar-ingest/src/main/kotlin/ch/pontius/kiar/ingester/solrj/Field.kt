@@ -11,9 +11,6 @@ enum class Field(val solr: String, val required: Boolean = false, val multiValue
     RAW("_raw_", false, true, true),
 
     /** Field used to store the number of available images. */
-    IMAGES("_images_", false, true, false),
-
-    /** Field used to store the number of available images. */
     IMAGECOUNT("_imagecount_", true, false, false),
 
     /** Name of the participant an object belongs to (often, this is transitively dependent on the institution). */
