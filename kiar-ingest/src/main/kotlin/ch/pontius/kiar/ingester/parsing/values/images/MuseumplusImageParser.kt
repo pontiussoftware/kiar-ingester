@@ -16,12 +16,14 @@ import java.util.*
  * @see http://docs.zetcom.com/framework-public/ws/ws-api-module.html#get-the-thumbnail-of-a-module-item-attachment
  *
  * @author Ralph Gasser
- * @version 2.0.0
+ * @version 2.1.0
  */
 class MuseumplusImageParser(override val mapping: AttributeMapping): ValueParser<List<ImmutableImage>> {
     companion object {
         private val LOGGER = LogManager.getLogger()
     }
+    /** The separator used for splitting. */
+    private val delimiter: String = this.mapping.parameters["delimiter"] ?: ","
 
     /** Reads the search pattern from the parameters map.*/
     private val host: URL = this.mapping.parameters["host"]?.let { URL(it) }  ?: throw IllegalStateException("Host required but missing.")
@@ -37,7 +39,7 @@ class MuseumplusImageParser(override val mapping: AttributeMapping): ValueParser
      */
     override fun parse(value: String, into: SolrInputDocument) {
         /* Read IDs. */
-        for (id in value.split(',').mapNotNull { it.trim().toBigDecimalOrNull()?.toInt() }) {
+        for (id in value.split(this.delimiter).mapNotNull { it.trim().toBigDecimalOrNull()?.toInt() }) {
             val url = URL("${this.host}/ria-ws/application/module/Multimedia/${id}/thumbnail?size=EXTRA_EXTRA_LARGE")
             val image = this.downloadImage(url, this.username, this.password) ?: continue
             if (this.mapping.multiValued) {
