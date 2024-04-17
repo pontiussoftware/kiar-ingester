@@ -6,6 +6,7 @@ import com.sksamuel.scrimage.ImmutableImage
 import org.apache.logging.log4j.LogManager
 import org.apache.solr.common.SolrInputDocument
 import java.io.IOException
+import java.net.HttpURLConnection
 import java.net.URL
 import java.util.*
 
@@ -56,9 +57,14 @@ class MuseumplusImageParser(override val mapping: AttributeMapping): ValueParser
      */
     private fun downloadImage(url: URL, username: String, password: String): ImmutableImage? = try {
         /* Set up basic authentication and open connection. */
-        val connection = url.openConnection()
+        val connection = url.openConnection() as HttpURLConnection
         connection.setRequestProperty("Authorization", "Basic " + Base64.getEncoder().encodeToString("$username:$password".toByteArray()))
-        ImmutableImage.loader().fromStream(connection.inputStream)
+        if (connection.responseCode == HttpURLConnection.HTTP_OK) {
+            ImmutableImage.loader().fromStream(connection.inputStream)
+        } else {
+            LOGGER.error("Failed to download image from $url; service responded with HTTP status ${connection.responseCode}.")
+            null
+        }
     } catch (e: IOException) {
         LOGGER.error("Failed to download image from $url: ${e.message}")
         null
