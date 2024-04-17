@@ -66,9 +66,7 @@ class MuseumplusImageParser(override val mapping: AttributeMapping): ValueParser
         try {
             connection.setRequestProperty("Authorization", "Basic " + Base64.getEncoder().encodeToString("$username:$password".toByteArray()))
             if (connection.responseCode == HttpURLConnection.HTTP_OK) {
-                connection.inputStream.use {
-                    ImmutableImage.loader().fromStream(it)
-                }
+                connection.inputStream.use { ImmutableImage.loader().fromStream(it) }
             } else {
                 LOGGER.error("Failed to download image from $url; service responded with HTTP status ${connection.responseCode}.")
                 null
