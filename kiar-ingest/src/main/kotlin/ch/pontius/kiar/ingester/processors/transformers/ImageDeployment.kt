@@ -177,10 +177,10 @@ class ImageDeployment(override val input: Source<SolrInputDocument>, private val
                 }
                 "IPTC" -> {
                     for (tag in directory.tags) {
-                        if (tag.name == "Copyright Notice") {
+                        if (tag.name == "By-line") {
                             artist = tag.value
                         }
-                        if (tag.name == "By-line") {
+                        if (tag.name == "Copyright Notice") {
                             copyright = tag.value
                         }
                     }
