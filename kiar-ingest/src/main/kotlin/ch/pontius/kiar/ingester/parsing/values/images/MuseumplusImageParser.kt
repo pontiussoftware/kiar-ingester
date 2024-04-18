@@ -1,11 +1,13 @@
 package ch.pontius.kiar.ingester.parsing.values.images
 
 import ch.pontius.kiar.api.model.config.mappings.AttributeMapping
+import ch.pontius.kiar.ingester.media.MediaProvider
 import ch.pontius.kiar.ingester.parsing.values.ValueParser
 import com.sksamuel.scrimage.ImmutableImage
 import org.apache.logging.log4j.LogManager
 import org.apache.solr.common.SolrInputDocument
 import java.io.IOException
+import java.net.HttpURLConnection
 import java.net.URL
 import java.util.*
 
@@ -15,12 +17,14 @@ import java.util.*
  * @see http://docs.zetcom.com/framework-public/ws/ws-api-module.html#get-the-thumbnail-of-a-module-item-attachment
  *
  * @author Ralph Gasser
- * @version 2.0.0
+ * @version 2.1.0
  */
 class MuseumplusImageParser(override val mapping: AttributeMapping): ValueParser<List<ImmutableImage>> {
     companion object {
         private val LOGGER = LogManager.getLogger()
     }
+    /** The separator used for splitting. */
+    private val delimiter: String = this.mapping.parameters["delimiter"] ?: ","
 
     /** Reads the search pattern from the parameters map.*/
     private val host: URL = this.mapping.parameters["host"]?.let { URL(it) }  ?: throw IllegalStateException("Host required but missing.")
@@ -36,13 +40,15 @@ class MuseumplusImageParser(override val mapping: AttributeMapping): ValueParser
      */
     override fun parse(value: String, into: SolrInputDocument) {
         /* Read IDs. */
-        for (id in value.split(',').mapNotNull { it.trim().toIntOrNull() }) {
+        for (id in value.split(this.delimiter).mapNotNull { it.trim().toBigDecimalOrNull()?.toInt() }) {
             val url = URL("${this.host}/ria-ws/application/module/Multimedia/${id}/thumbnail?size=EXTRA_EXTRA_LARGE")
-            val image = this.downloadImage(url, this.username, this.password) ?: continue
+            val provider = object: MediaProvider.Image {
+                override fun open(): ImmutableImage? = this@MuseumplusImageParser.downloadImage(url, this@MuseumplusImageParser.username, this@MuseumplusImageParser.password)
+            }
             if (this.mapping.multiValued) {
-                into.addField(this.mapping.destination, image)
+                into.addField(this.mapping.destination, provider)
             } else {
-                into.setField(this.mapping.destination, image)
+                into.setField(this.mapping.destination, provider)
             }
         }
     }
@@ -56,9 +62,18 @@ class MuseumplusImageParser(override val mapping: AttributeMapping): ValueParser
      */
     private fun downloadImage(url: URL, username: String, password: String): ImmutableImage? = try {
         /* Set up basic authentication and open connection. */
-        val connection = url.openConnection()
-        connection.setRequestProperty("Authorization", "Basic " + Base64.getEncoder().encodeToString("$username:$password".toByteArray()))
-        ImmutableImage.loader().fromStream(connection.inputStream)
+        val connection = url.openConnection() as HttpURLConnection
+        try {
+            connection.setRequestProperty("Authorization", "Basic " + Base64.getEncoder().encodeToString("$username:$password".toByteArray()))
+            if (connection.responseCode == HttpURLConnection.HTTP_OK) {
+                connection.inputStream.use { ImmutableImage.loader().fromStream(it) }
+            } else {
+                LOGGER.error("Failed to download image from $url; service responded with HTTP status ${connection.responseCode}.")
+                null
+            }
+        } finally {
+            connection.disconnect()
+        }
     } catch (e: IOException) {
         LOGGER.error("Failed to download image from $url: ${e.message}")
         null
