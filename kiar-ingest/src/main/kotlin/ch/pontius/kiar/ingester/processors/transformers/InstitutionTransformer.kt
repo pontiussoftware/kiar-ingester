@@ -42,7 +42,7 @@ class InstitutionTransformer(override val input: Source<SolrInputDocument>): Tra
             val uuid = doc.asString(Field.UUID)
             if (uuid == null) {
                 LOGGER.error("Failed to verify document: Field 'uuid' is missing (jobId = {}, participantId = {}, docId = {}).", context.jobId, context.participant, uuid)
-                context.log(JobLog(null, "<undefined>", null, JobLogContext.METADATA, JobLogLevel.SEVERE, "Document skipped: Field 'uuid' is missing."))
+                context.log(JobLog(null, "<undefined>", null, JobLogContext.METADATA, JobLogLevel.VALIDATION, "Field 'uuid' is missing."))
                 return@filter false
             }
 
@@ -53,7 +53,7 @@ class InstitutionTransformer(override val input: Source<SolrInputDocument>): Tra
                 val institution = institutions.values.singleOrNull { it.participantName == context.participant }
                 if (institution == null) {
                     LOGGER.warn("Failed to verify document: Field institution could not be derived from participant (jobId = {}, participantId = {}, docId = {}).", context.jobId, context.participant, uuid)
-                    context.log(JobLog(null, uuid, null, JobLogContext.METADATA, JobLogLevel.VALIDATION, "Document skipped: Fields 'institution' and '_participant_' are missing."))
+                    context.log(JobLog(null, uuid, null, JobLogContext.METADATA, JobLogLevel.VALIDATION, "Field 'institution' could not be derived from '_participant_'."))
                     return@filter false
                 }
                 doc.setField(Field.INSTITUTION, institution.name)
@@ -64,7 +64,7 @@ class InstitutionTransformer(override val input: Source<SolrInputDocument>): Tra
             val entry = institutions[institutionName]
             if (entry == null) {
                 LOGGER.warn("Failed to verify document: Institution '$institutionName' is unknown (jobId = {}, participantId = {}, docId = {}).", context.jobId, context.participant, uuid)
-                context.log(JobLog(null, uuid, null, JobLogContext.METADATA, JobLogLevel.VALIDATION, "Document skipped: Could not find database entry for institution '${institutionName}'."))
+                context.log(JobLog(null, uuid, null, JobLogContext.METADATA, JobLogLevel.VALIDATION, "Failed to verify document: Institution '$institutionName'."))
                 return@filter false
             }
 
