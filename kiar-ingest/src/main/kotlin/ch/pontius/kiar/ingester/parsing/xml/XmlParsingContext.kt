@@ -3,13 +3,19 @@ package ch.pontius.kiar.ingester.parsing.xml
 import ch.pontius.kiar.api.model.config.mappings.AttributeMapping
 import ch.pontius.kiar.api.model.config.mappings.EntityMapping
 import ch.pontius.kiar.ingester.parsing.values.ValueParser
-import ch.pontius.kiar.ingester.solrj.Constants
 import org.apache.logging.log4j.LogManager
 import org.apache.solr.common.SolrInputDocument
+import org.w3c.dom.Document
+import org.w3c.dom.Element
+import org.w3c.dom.Node
 import org.xml.sax.Attributes
 import org.xml.sax.SAXParseException
 import org.xml.sax.helpers.DefaultHandler
-import java.util.*
+import javax.xml.parsers.DocumentBuilder
+import javax.xml.parsers.DocumentBuilderFactory
+import javax.xml.xpath.XPathExpression
+import javax.xml.xpath.XPathFactory
+
 
 /**
  * A [XmlParsingContext] used to parse and map XML files to [SolrInputDocument]s.
@@ -24,78 +30,78 @@ class XmlParsingContext(config: EntityMapping, val callback: (SolrInputDocument)
         private val LOGGER = LogManager.getLogger()
     }
 
-    /** The current [SolrInputDocument] that is being processed. */
-    private var document = SolrInputDocument()
-
     /** Internal [StringBuffer] used for buffering raw characters during XML parsing. */
     private var buffer = StringBuffer()
 
     /** The current XPath this [XmlParsingContext] is currently in. */
-    private var xpath = "/"
-
-    /** The current XPath this [XmlParsingContext] is currently in. */
-    private val stack = Stack<String>()
-
-    /** The longest, common prefix found for all [AttributeMapping]. This prefix will be used to distinguish between different objects. */
-    private val mappings = HashMap<String, MutableList<ValueParser<*>>>()
+    private var xpath = ""
 
     /** The longest, common prefix found for all [AttributeMapping]. This prefix will be used to distinguish between different objects. */
     private val newDocumentOn: String
+
+    /** The [DocumentBuilder] instance used by this [XmlDocumentParser]. */
+    private val documentBuilder: DocumentBuilder = DocumentBuilderFactory.newInstance().newDocumentBuilder()
+
+    /** A [Map] of all [XPathExpression]s used for document parsing. */
+    private val mappings: List<Pair<ValueParser<*>, XPathExpression>>
+
+    /** The currently active XML [Node] (to which new [Element]s will be appended). */
+    private var appendTo: Node = this.documentBuilder.newDocument()
 
     /** An internal error flag */
     private var error: Boolean = false
 
     init {
+        /* Determine common prefix. */
         var commonPrefix = config.attributes.first().source
         config.attributes.forEach {
-            this.mappings.compute(it.source) { k, v ->
-                var list = v
-                if (list == null) {
-                    list = mutableListOf()
-                }
-                list.add(it.newParser())
-                list
-            }
             commonPrefix = commonPrefix.commonPrefixWith(it.source)
         }
         val prefixArray = commonPrefix.split('/')
         this.newDocumentOn = prefixArray.subList(0, prefixArray.size - 2).joinToString("/")
+
+        /* Create mappings with XPath expressions (relative to common prefix). */
+        val factory = XPathFactory.newInstance().newXPath()
+        this.mappings = config.attributes.map { it.newParser() to factory.compile("/${it.source.replace(this.newDocumentOn, "")}") }
     }
 
     /**
      * Adds the new element to the stack.
      */
     override fun startElement(uri: String, localName: String, qName: String, attributes: Attributes) {
-        this.stack.add(qName)
-        this.xpath = "/${this.stack.joinToString("/")}"
+        this.xpath += "/$qName"
+
+        if (this.xpath.length > this.newDocumentOn.length) {
+            /* Create new XML element and append to current one. */
+            this.appendTo = newElement(this.appendTo, qName, attributes)
+        }
     }
 
     /**
      * Removes the new element from the stack
      */
     override fun endElement(uri: String, localName: String, qName: String) {
-        /* Flush old context into document (if required). */
-        val parsers = this.mappings[this.xpath] ?: emptyList()
-        for (parser in parsers) {
-            parser.parse(this.buffer.toString().trim(), this.document)
-        }
-
         /* Pop stack. */
-        this.stack.pop()
-        this.xpath = "/${this.stack.joinToString("/")}"
-
-        /* Reset string buffer. */
-        this.buffer = StringBuffer()
+        this.xpath = this.xpath.removeSuffix("/$qName")
 
         /* Flush old document (if needed). */
         if (this.xpath == this.newDocumentOn) {
             if (this.error) {
-                LOGGER.warn("Skipping document due to parse error (uuid = ${this.document[Constants.FIELD_NAME_UUID]}).")
+                LOGGER.warn("Skipping document due to parse error.")
                 this.error = false /* Clear error flag when new document starts. */
             } else {
-                this.callback(this.document)
+                val solrDocument = this.mappings.parse(this.appendTo.ownerDocument)
+                this.callback(solrDocument)
             }
-            this.document = SolrInputDocument()
+
+            /* Create new XML document. */
+            this.appendTo = this.documentBuilder.newDocument()
+        } else {
+            if (this.buffer.isNotBlank()) {
+                this.appendTo.textContent = this.buffer.toString().trim()
+                this.buffer = StringBuffer()
+            }
+            this.appendTo = this.appendTo.parentNode
         }
     }
 
@@ -116,7 +122,27 @@ class XmlParsingContext(config: EntityMapping, val callback: (SolrInputDocument)
      * @param e [SAXParseException]
      */
     override fun error(e: SAXParseException) {
-        LOGGER.error("SAX parse error encountered while parsing document (uuid = ${this.document[Constants.FIELD_NAME_UUID]}): ${e.message}.")
+        LOGGER.error("SAX parse error encountered while parsing document: ${e.message}.")
         this.error = true
+    }
+
+    /**
+     * Creates a new [Element] in the given [Document].
+     *
+     * @param node The [Node] to append [Element] to.
+     * @param qName The qualified name of the [Element].
+     * @param attributes The [Attributes] of the [Element].
+     */
+    private fun newElement(node: Node, qName: String, attributes: Attributes): Element {
+        val element = if (node is Document) {
+            node.createElement(qName)
+        } else{
+            node.ownerDocument.createElement(qName)
+        }
+        for (i in 0 until attributes.length) {
+            element?.setAttribute(attributes.getQName(i), attributes.getValue(i))
+        }
+        node.appendChild(element)
+        return element
     }
 }
