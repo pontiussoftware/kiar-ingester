@@ -101,7 +101,9 @@ class XmlParsingContext(config: EntityMapping, val callback: (SolrInputDocument)
                 this.appendTo.textContent = this.buffer.toString().trim()
                 this.buffer = StringBuffer()
             }
-            this.appendTo = this.appendTo.parentNode
+            if (this.appendTo.parentNode != null) {
+                this.appendTo = this.appendTo.parentNode
+            }
         }
     }
 
