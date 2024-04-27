@@ -16,7 +16,8 @@ class DummySink(override val input: Source<SolrInputDocument>): Sink<SolrInputDo
     override fun toFlow(context: ProcessingContext): Flow<Unit> {
         return flow {
             /* Start collect incoming flow. */
-            this@DummySink.input.toFlow(context).collect() {
+            this@DummySink.input.toFlow(context).collect {
+                context.processed()
             }
 
             /* Finalize. */
