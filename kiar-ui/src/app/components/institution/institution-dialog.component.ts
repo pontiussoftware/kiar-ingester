@@ -2,7 +2,7 @@ import {Component, Inject} from "@angular/core";
 import {FormArray, FormControl, FormGroup, Validators} from "@angular/forms";
 import {ApacheSolrCollection, Canton, ConfigService, Institution, InstitutionService, MasterdataService, RightStatement} from "../../../../openapi";
 import {MAT_DIALOG_DATA, MatDialogRef} from "@angular/material/dialog";
-import {map, Observable, shareReplay} from "rxjs";
+import {combineLatestWith, map, Observable, shareReplay} from "rxjs";
 import {MatSnackBar, MatSnackBarConfig} from "@angular/material/snack-bar";
 
 @Component({
@@ -30,7 +30,7 @@ export class InstitutionDialogComponent {
   /** A list of all collections. */
   public allCollections: Array<ApacheSolrCollection> = []
 
-  /** A list of all available collections. */
+  /** A list of available collections. */
   public availableCollections: Array<ApacheSolrCollection> = []
 
   /** A list of available collections. */
@@ -179,35 +179,41 @@ export class InstitutionDialogComponent {
    * @private
    */
   private reload(id: string) {
-    this.institution.getInstitution(id).subscribe({
-      next: (value) => {
+    this.config.getListSolrConfiguration().pipe(
+        map(c => c.flatMap(c => c.collections).filter(c => c.type == 'OBJECT')),
+        combineLatestWith(this.institution.getInstitution(id))
+    ).subscribe({
+      next: ([collections, institution]) => {
         /* Update form control. */
-        this.formControl.get('name')?.setValue(value.name)
-        this.formControl.get('displayName')?.setValue(value.displayName)
-        this.formControl.get('imageName')?.setValue(value.imageName)
-        this.formControl.get('description')?.setValue(value.description)
-        this.formControl.get('participantName')?.setValue(value.participantName)
-        this.formControl.get('street')?.setValue(value.street)
-        this.formControl.get('zip')?.setValue(value.zip)
-        this.formControl.get('city')?.setValue(value.city)
-        this.formControl.get('canton')?.setValue(value.canton)
-        this.formControl.get('longitude')?.setValue(value.longitude)
-        this.formControl.get('latitude')?.setValue(value.latitude)
-        this.formControl.get('email')?.setValue(value.email)
-        this.formControl.get('homepage')?.setValue(value.homepage)
-        this.formControl.get('publish')?.setValue(value.publish)
-        this.formControl.get('defaultRightStatement')?.setValue(value.defaultRightStatement)
-        this.formControl.get('defaultCopyright')?.setValue(value.defaultCopyright)
+        this.formControl.get('name')?.setValue(institution.name)
+        this.formControl.get('displayName')?.setValue(institution.displayName)
+        this.formControl.get('imageName')?.setValue(institution.imageName)
+        this.formControl.get('description')?.setValue(institution.description)
+        this.formControl.get('participantName')?.setValue(institution.participantName)
+        this.formControl.get('street')?.setValue(institution.street)
+        this.formControl.get('zip')?.setValue(institution.zip)
+        this.formControl.get('city')?.setValue(institution.city)
+        this.formControl.get('canton')?.setValue(institution.canton)
+        this.formControl.get('longitude')?.setValue(institution.longitude)
+        this.formControl.get('latitude')?.setValue(institution.latitude)
+        this.formControl.get('email')?.setValue(institution.email)
+        this.formControl.get('homepage')?.setValue(institution.homepage)
+        this.formControl.get('publish')?.setValue(institution.publish)
+        this.formControl.get('defaultRightStatement')?.setValue(institution.defaultRightStatement)
+        this.formControl.get('defaultCopyright')?.setValue(institution.defaultCopyright)
 
         /* Assign collections. */
+        this.allCollections.length = 0
+        this.availableCollections.length = 0
         this.availableCollectionsForms.length = 0
         this.selectedCollectionsForms.length = 0
-        for (const c of this.allCollections) {
-          const isAvailable = (value.availableCollections || []).findIndex(s => s === c.name) > -1
+        for (const c of collections) {
+          const isAvailable = (institution.availableCollections || []).findIndex(s => s === c.name) > -1
+          this.allCollections.push(c)
           this.availableCollectionsForms.push(new FormControl(isAvailable))
           if (isAvailable) {
             this.availableCollections.push(c)
-            const isSelected = (value.selectedCollections || []).findIndex(s => s === c.name) > -1
+            const isSelected = (institution.selectedCollections || []).findIndex(s => s === c.name) > -1
             this.selectedCollectionsForms.push(new FormControl(isSelected))
           }
         }

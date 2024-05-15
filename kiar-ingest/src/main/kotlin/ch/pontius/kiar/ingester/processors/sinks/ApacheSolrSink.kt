@@ -15,6 +15,7 @@ import ch.pontius.kiar.ingester.solrj.get
 import kotlinx.coroutines.flow.*
 import kotlinx.dnq.query.asSequence
 import kotlinx.dnq.query.filter
+import kotlinx.dnq.query.size
 import org.apache.logging.log4j.LogManager
 import org.apache.solr.client.solrj.SolrServerException
 import org.apache.solr.client.solrj.impl.Http2SolrClient
@@ -42,7 +43,7 @@ class ApacheSolrSink(override val input: Source<SolrInputDocument>, private val 
     private val collections = this.config.collections.filter { it.type == CollectionType.OBJECT }.map { it.name }
 
     /** A [Map] of [DbInstitution] name to selected collections. */
-    private val institutions = DbInstitution.filter { (it.publish eq true) }.asSequence().associate {
+    private val institutions = DbInstitution.filter { (it.selectedCollections.size() ge 0) }.asSequence().associate {
         it.name to it.selectedCollections.asSequence().map { c -> c.name }.toSet()
     }
 
