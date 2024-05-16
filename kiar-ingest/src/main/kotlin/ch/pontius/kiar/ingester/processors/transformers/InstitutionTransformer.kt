@@ -27,7 +27,7 @@ class InstitutionTransformer(override val input: Source<SolrInputDocument>): Tra
         private val LOGGER = LogManager.getLogger(InstitutionTransformer::class.java)
     }
 
-    private val institutions = DbInstitution.filter { (it.publish eq true) }.asSequence().associate { it.name to it.toApi() }
+    private val institutions = DbInstitution.filter { (it.selectedCollections.isNotEmpty() ) }.asSequence().associate { it.name to it.toApi() }
 
 
     /**
