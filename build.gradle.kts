@@ -1,13 +1,13 @@
 
 plugins {
     /* Kotlin JVM version. */
-    kotlin("jvm") version "1.9.23"
+    kotlin("jvm") version "1.9.24"
 
     /* Kotlinx serialization plugin. */
-    id("org.jetbrains.kotlin.plugin.serialization") version "1.9.23"
+    id("org.jetbrains.kotlin.plugin.serialization") version "1.9.24"
 
     /* OpenAPI Generator for Frontend internal API generation */
-    id ("org.openapi.generator") version "7.4.0"
+    id ("org.openapi.generator") version "7.6.0"
 
     id ("de.undercouch.download") version "5.6.0"
 

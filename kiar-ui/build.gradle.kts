@@ -1,7 +1,7 @@
 import org.gradle.kotlin.dsl.*
 
 plugins {
-    id("com.github.node-gradle.node") version "4.0.0"
+    id("com.github.node-gradle.node") version "7.0.2"
 }
 
 configurations {
@@ -14,7 +14,7 @@ configurations {
 
 val includeConfig: Boolean by lazy { project.hasProperty("includeConfig") }
 node {
-    this.version.value("18.16.0")
+    this.version.value("20.14.0")
     this.download.value(true)
     this.workDir.dir("${project.projectDir}/.gradle/nodejs")
     this.yarnWorkDir.dir("${project.projectDir}/.gradle/nodejs")
@@ -36,11 +36,11 @@ val buildFrontend by tasks.registering(com.github.gradle.node.npm.task.NpxTask::
 val packageFrontend by tasks.registering(Zip::class) {
     dependsOn(buildFrontend)
     outputs.upToDateWhen {
-        file("$buildDir/libs/kiar-ui.jar").exists()
+        file("${project.layout.buildDirectory}/libs/kiar-ui.jar").exists()
     }
     archiveFileName.set("kiar-ui.jar")
-    destinationDirectory.set(file("$buildDir/libs"))
-    from("$buildDir/dist") {
+    destinationDirectory.set(file("${project.layout.buildDirectory}/libs"))
+    from("${project.layout.buildDirectory}/dist") {
         into("html")
     }
 }
