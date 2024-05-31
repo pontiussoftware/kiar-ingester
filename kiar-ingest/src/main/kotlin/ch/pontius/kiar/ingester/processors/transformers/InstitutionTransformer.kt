@@ -89,6 +89,7 @@ class InstitutionTransformer(override val input: Source<SolrInputDocument>): Tra
             if (!doc.has(Field.RIGHTS_STATEMENT) && entry.defaultRightStatement != null) {
                 doc.setField(Field.RIGHTS_STATEMENT, entry.defaultRightStatement)
             }
+
             /* Return true. */
             return@filter true
         }

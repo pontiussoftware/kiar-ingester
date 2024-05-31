@@ -26,7 +26,7 @@ class DisplayTransformer(override val input: Source<SolrInputDocument>): Transfo
             when (type) {
                 ObjectType.BIBLIOGRAPHISCHES_OBJEKT -> doc.setField(Field.DISPLAY, listOfNotNull(doc.get<String>(Field.OBJEKTBEZEICHNUNG), doc.get<String>(Field.TITEL)).joinToString(", "))
                 ObjectType.FOTOGRAFIE -> doc.setField(Field.DISPLAY, listOfNotNull(doc.asString(Field.OBJEKTBEZEICHNUNG), doc.get<String>(Field.TITEL)).joinToString(", "))
-                ObjectType.KUNST -> doc.setField(Field.DISPLAY, listOfNotNull(doc.get<String>(Field.OBJEKTBEZEICHNUNG), doc.get<String>(Field.TITEL), doc.get<String>(Field.KUENSTLER)).joinToString(", "))
+                ObjectType.KUNST -> doc.setField(Field.DISPLAY, listOfNotNull(doc.get<String>(Field.KUENSTLER), listOfNotNull(doc.get<String>(Field.OBJEKTBEZEICHNUNG), doc.get<String>(Field.TITEL)).joinToString(", ")).joinToString(" - "))
                 else -> doc.setField(Field.DISPLAY, doc.get<String>(Field.OBJEKTBEZEICHNUNG) ?: "")
             }
 
