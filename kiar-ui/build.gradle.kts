@@ -36,11 +36,11 @@ val buildFrontend by tasks.registering(com.github.gradle.node.npm.task.NpxTask::
 val packageFrontend by tasks.registering(Zip::class) {
     dependsOn(buildFrontend)
     outputs.upToDateWhen {
-        file("${project.layout.buildDirectory}/libs/kiar-ui.jar").exists()
+        project.layout.buildDirectory.file("/libs/kiar-ui.jar").get().asFile.exists()
     }
     archiveFileName.set("kiar-ui.jar")
-    destinationDirectory.set(file("${project.layout.buildDirectory}/libs"))
-    from("${project.layout.buildDirectory}/dist") {
+    destinationDirectory.set(project.layout.buildDirectory.dir("libs").get())
+    from(project.layout.buildDirectory.dir("dist").get()) {
         into("html")
     }
 }
