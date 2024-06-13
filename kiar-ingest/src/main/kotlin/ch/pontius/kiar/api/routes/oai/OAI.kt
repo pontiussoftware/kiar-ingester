@@ -25,7 +25,7 @@ import javax.xml.transform.stream.StreamResult
     tags = ["OAI"],
     queryParams = [
         OpenApiParam(name = "verb", type = String::class, description = "The OAI-PMH verb.", required = true),
-        OpenApiParam(name = "resumptionToken", type = String::class, description = "The OAI-PMH resumption token (used for ListIdentifiers and ListRecords).", required = true),
+        OpenApiParam(name = "resumptionToken", type = String::class, description = "The OAI-PMH resumption token (used for ListIdentifiers and ListRecords).", required = false),
     ],
     pathParams = [
         OpenApiParam(name = "collection", type = String::class, description = "The collection that should be harvested.", required = true),
