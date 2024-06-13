@@ -6,10 +6,12 @@ import ch.pontius.kiar.api.routes.institution.postSyncInstitutions
 import ch.pontius.kiar.api.routes.job.*
 import ch.pontius.kiar.api.routes.masterdata.listCantons
 import ch.pontius.kiar.api.routes.masterdata.listRightStatements
+import ch.pontius.kiar.api.routes.oai.oaiPmh
 import ch.pontius.kiar.api.routes.session.*
 import ch.pontius.kiar.api.routes.user.*
 import ch.pontius.kiar.config.Config
 import ch.pontius.kiar.ingester.IngesterServer
+import ch.pontius.kiar.oai.OaiServer
 import createEntityMapping
 import postCreateInstitution
 import deleteEntityMapping
@@ -130,6 +132,13 @@ fun configureApiRoutes(store: TransientEntityStore, server: IngesterServer, conf
             get("{id}",  { ctx -> getEntityMapping(ctx, store) }, Role.ADMINISTRATOR )
             put("{id}",  { ctx -> updateEntityMapping(ctx, store) }, Role.ADMINISTRATOR )
             delete("{id}",  { ctx -> deleteEntityMapping(ctx, store) }, Role.ADMINISTRATOR )
+        }
+
+        /* Endpoints related to collections. */
+        path("{collection}") {
+            val server = OaiServer(store)
+            get("oai-pmh",  { ctx -> oaiPmh(ctx, server) } )
+            post("oai-pmh",  { ctx -> oaiPmh(ctx, server) } )
         }
     }
 }
