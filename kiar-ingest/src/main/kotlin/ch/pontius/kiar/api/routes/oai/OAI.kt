@@ -41,7 +41,7 @@ fun oaiPmh(ctx: Context, server: OaiServer) {
     /* Generate response document using OAI server. */
     val doc = try {
          when (verb) {
-            IDENTIFY -> server.handleIdentify()
+            IDENTIFY -> server.handleIdentify(collection)
             LISTSETS -> server.handleListSets()
             LISTMETADATAFORMATS -> server.handleListMetadataFormats()
             LISTIDENTIFIERS -> server.handleListIdentifiers(collection, ctx.queryParam("resumptionToken"))
