@@ -82,14 +82,10 @@ class OaiServer(private val store: TransientEntityStore): Closeable {
 
         /* Construct response document. */
         val root = this.documentBuilder.generateResponse(verb)
-        this.store.transactional(true) {
-            DbCollection.filter { it.oai eq true }.asSequence().forEach {
-                val setElement = root.ownerDocument.createElement("set")
-                setElement.appendChild(root.ownerDocument.createElement("setSpec").apply { textContent = it.name })
-                setElement.appendChild(root.ownerDocument.createElement("setName").apply { textContent = it.displayName })
-                root.appendChild(setElement)
-            }
-        }
+        root.appendChild(root.ownerDocument.createElement("error").apply {
+            this.setAttribute("code", "noSetHierarchy")
+            this.textContent = "This repository does not support sets."
+        })
 
         return root.ownerDocument
     }
@@ -115,6 +111,48 @@ class OaiServer(private val store: TransientEntityStore): Closeable {
         return root.ownerDocument
     }
 
+    /**
+     * Handles the OAI-PMH verb "ListIdentifiers".
+     *
+     * @param collection The [String] name of the collection to harvest.
+     * @param identifier The optional resumption token.
+     * @return [Document] representing the OAI-PMH response.
+     */
+    fun handleGetRecord(collection: String, identifier: String): Document {
+        val verb = "GetRecord"
+        val client = getOrLoadClient(collection)
+        val response = client.getById(collection, identifier)
+
+        /* Generate response document. */
+        val root = this.documentBuilder.generateResponse(verb)
+        val doc = root.ownerDocument
+
+        /* Handle error case. */
+        if (response == null) {
+            root.appendChild(doc.createElement("error").apply {
+                this.setAttribute("code", "idDoesNotExist")
+                this.textContent = "The provided identifier does not exist."
+            })
+            return doc
+        }
+
+        val recordElement = doc.createElement("record")
+        root.appendChild(recordElement)
+
+        val headerElement = doc.createElement("header")
+        recordElement.appendChild(headerElement)
+
+        val identifierElement = doc.createElement("identifier")
+        headerElement.appendChild(identifierElement)
+        identifierElement.appendChild(doc.createTextNode(response.uuid()))
+
+        /* Map and append metadata. */
+        val metadataElement = doc.createElement("metadata")
+        EDMMapper.map(metadataElement, response)
+        recordElement.appendChild(metadataElement)
+
+        return doc
+    }
 
     /**
      * Handles the OAI-PMH verb "ListIdentifiers".
@@ -242,7 +280,8 @@ class OaiServer(private val store: TransientEntityStore): Closeable {
      */
     private fun getOrLoadClient(collection: String): Http2SolrClient {
         val config = this.store.transactional(true) {
-            DbCollection.filter {  (it.name eq collection) and (it.type.name eq DbCollectionType.OBJECT.name) }.firstOrNull()?.solr?.toApi() ?: throw IllegalArgumentException("Collection '$collection' does not exist.")
+            DbCollection.filter { (it.name eq collection) and (it.type.name eq DbCollectionType.OBJECT.name) and (it.oai eq true) }.firstOrNull()?.solr?.toApi()
+                ?: throw IllegalArgumentException("Collection '$collection' does not exist.")
         }
 
         return this.clients.computeIfAbsent(config) {
