@@ -178,20 +178,15 @@ class OaiServer(private val store: TransientEntityStore): Closeable {
 
         /* Obtain client and query for entry. */
         val client = getOrLoadClient(collection)
-        val response = client.getById(collection, identifier)
+        val response = try {
+            client.getById(collection, identifier) ?: return handleError("idDoesNotExist", "The provided identifier '${identifier}' does not exist.")
+        } catch (e: IllegalArgumentException) {
+            return handleError("idDoesNotExist", "The provided identifier '${identifier}' does not exist.")
+        }
 
         /* Generate response document. */
         val root = this.documentBuilder.generateResponse("GetRecord")
         val doc = root.ownerDocument
-
-        /* Handle error case. */
-        if (response == null) {
-            root.appendChild(doc.createElement("error").apply {
-                this.setAttribute("code", "idDoesNotExist")
-                this.textContent = "The provided identifier does not exist."
-            })
-            return doc
-        }
 
         val recordElement = doc.createElement("record")
         root.appendChild(recordElement)
