@@ -15,10 +15,13 @@ import org.apache.solr.client.solrj.impl.Http2SolrClient
 import org.w3c.dom.Document
 import org.w3c.dom.Element
 import java.io.Closeable
+import java.text.DateFormat
+import java.text.SimpleDateFormat
 import java.util.*
 import java.util.concurrent.ConcurrentHashMap
 import javax.xml.parsers.DocumentBuilder
 import javax.xml.parsers.DocumentBuilderFactory
+
 
 /**
  *
@@ -44,8 +47,14 @@ class OaiServer(private val store: TransientEntityStore): Closeable {
      *
      */
     fun handleIdentify(): Document {
-        val doc = this.documentBuilder.newDocument()
-        return doc
+        val verb = "Identify"
+        val root = this.documentBuilder.generateResponse(verb)
+        root.appendChild(root.ownerDocument.createElement("repositoryName").apply { textContent = "Kiar" })
+        root.appendChild(root.ownerDocument.createElement("protocolVersion").apply { textContent = "2.0" })
+        root.appendChild(root.ownerDocument.createElement("deletedRecord").apply { textContent = "no" })
+        root.appendChild(root.ownerDocument.createElement("earliestDatestamp").apply { textContent = "2024-01-01" })
+        root.appendChild(root.ownerDocument.createElement("granularity").apply { textContent = "YYYY-MM-DD" })
+        return root.ownerDocument
     }
 
     /**
@@ -252,8 +261,11 @@ class OaiServer(private val store: TransientEntityStore): Closeable {
         doc.appendChild(rootElement)
 
         /* Append response date. */
+        val tz = TimeZone.getTimeZone("UTC")
+        val df: DateFormat = SimpleDateFormat("yyyy-MM-dd'T'HH:mm'Z'") // Quoted "Z" to indicate UTC, no timezone offset
+        df.timeZone = tz
         val responseDate = doc.createElement("responseDate")
-        responseDate.textContent = Date().toString()
+        responseDate.textContent =df.format(Date())
         rootElement.appendChild(responseDate)
 
         /* Append response date. */
