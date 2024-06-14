@@ -43,6 +43,13 @@ class OaiServer(private val store: TransientEntityStore): Closeable {
     /** A [ConcurrentHashMap] of [Http2SolrClient] used by this [OaiServer] to fetch data. */
     private val tokens = ConcurrentHashMap<String, Int>()
 
+    /** The [DateFormat] used by this [OaiServer]. */
+    private val df = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'")
+
+    init {
+        df.timeZone = TimeZone.getTimeZone("UTC")
+    }
+
     /**
      * Handles a error during OAI-PMH processing.
      *
@@ -139,12 +146,11 @@ class OaiServer(private val store: TransientEntityStore): Closeable {
         val recordElement = doc.createElement("record")
         root.appendChild(recordElement)
 
+        /* Create header element. */
         val headerElement = doc.createElement("header")
+        headerElement.appendChild(doc.createElement("identifier").apply { textContent = response.uuid()})
+        headerElement.appendChild(doc.createElement("datestamp").apply { textContent = "2024-01-01" })
         recordElement.appendChild(headerElement)
-
-        val identifierElement = doc.createElement("identifier")
-        headerElement.appendChild(identifierElement)
-        identifierElement.appendChild(doc.createTextNode(response.uuid()))
 
         /* Map and append metadata. */
         val metadataElement = doc.createElement("metadata")
@@ -188,9 +194,10 @@ class OaiServer(private val store: TransientEntityStore): Closeable {
             val headerElement = doc.createElement("header")
             recordElement.appendChild(headerElement)
 
-            val identifierElement = doc.createElement("identifier")
-            headerElement.appendChild(identifierElement)
-            identifierElement.appendChild(doc.createTextNode(document.uuid()))
+            /* Create header element. */
+            headerElement.appendChild(doc.createElement("identifier").apply { textContent = document.uuid()})
+            headerElement.appendChild(doc.createElement("datestamp").apply { textContent = "2024-01-01" })
+            recordElement.appendChild(headerElement)
 
             /* Map and append metadata. */
             val metadataElement = doc.createElement("metadata")
@@ -315,11 +322,8 @@ class OaiServer(private val store: TransientEntityStore): Closeable {
         doc.appendChild(rootElement)
 
         /* Append response date. */
-        val tz = TimeZone.getTimeZone("UTC")
-        val df: DateFormat = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'") // Quoted "Z" to indicate UTC, no timezone offset
-        df.timeZone = tz
         val responseDate = doc.createElement("responseDate")
-        responseDate.textContent =df.format(Date())
+        responseDate.textContent = this@OaiServer.df.format(Date())
         rootElement.appendChild(responseDate)
 
         /* Append response date. */
