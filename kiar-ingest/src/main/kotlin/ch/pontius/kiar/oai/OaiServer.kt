@@ -69,7 +69,7 @@ class OaiServer(private val store: TransientEntityStore): Closeable {
         val collection = ctx.pathParam("collection")
 
         /* Extract OAI verb from query parameters. */
-        val verb = parameters["verb"]?.firstOrNull() ?: return handleError("badVerb", "Missing verb.")
+        val verb = parameters["verb"] ?: return handleError("badVerb", "Missing verb.")
         val verbParsed = try {
             Verbs.valueOf(verb.uppercase())
         } catch (e: IllegalArgumentException) {
