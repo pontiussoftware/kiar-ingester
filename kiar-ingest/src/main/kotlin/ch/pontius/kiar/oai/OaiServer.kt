@@ -60,7 +60,7 @@ class OaiServer(private val store: TransientEntityStore): Closeable {
      */
     fun handle(ctx: Context): Document {
         /* Extract OAI verb from query parameters. */
-        val verb = ctx.queryParam("verb") ?: return handleError("badArgument", "Missing verb.")
+        val verb = ctx.queryParam("verb") ?: return handleError("badVerb", "Missing verb.")
         val verbParsed = try {
             Verbs.valueOf(verb.uppercase())
         } catch (e: IllegalArgumentException) {
@@ -175,21 +175,6 @@ class OaiServer(private val store: TransientEntityStore): Closeable {
         val collection = ctx.pathParam("collection")
         val identifier = ctx.queryParam("identifier") ?: return handleError("badArgument", "Missing identifier.")
         val prefix = ctx.queryParam("metadataPrefix") ?: return handleError("badArgument", "Missing metadata prefix.")
-        val from = ctx.queryParam("from")?.let {
-            try {
-                SimpleDateFormat("yyyy-MM-dd").parse(it)
-            } catch (e: ParseException) {
-                return handleError("badArgument", "Malformed 'from'.")
-            }
-        }
-        val until = ctx.queryParam("until")?.let {
-            try {
-                SimpleDateFormat("yyyy-MM-dd").parse(it)
-            } catch (e: ParseException) {
-                return handleError("badArgument", "Malformed 'until'.")
-            }
-        }
-
         val mapper = Formats.entries.find { it.prefix == prefix }?.mapper ?: return handleError("cannotDisseminateFormat", "Unsupported metadata prefix '$prefix'.")
 
         /* Obtain client and query for entry. */
@@ -230,6 +215,20 @@ class OaiServer(private val store: TransientEntityStore): Closeable {
     private fun handleListRecords(ctx: Context): Document {
         val collection = ctx.pathParam("collection")
         val token = ctx.queryParam("resumptionToken")
+        val from = ctx.queryParam("from")?.let {
+            try {
+                SimpleDateFormat("yyyy-MM-dd").parse(it)
+            } catch (e: ParseException) {
+                return handleError("badArgument", "Malformed 'from'.")
+            }
+        }
+        val until = ctx.queryParam("until")?.let {
+            try {
+                SimpleDateFormat("yyyy-MM-dd").parse(it)
+            } catch (e: ParseException) {
+                return handleError("badArgument", "Malformed 'until'.")
+            }
+        }
 
         /* Determine start and mapper to use. */
         val (start, mapper) = if (token != null) {
