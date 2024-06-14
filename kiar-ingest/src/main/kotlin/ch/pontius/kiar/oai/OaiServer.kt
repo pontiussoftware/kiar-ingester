@@ -8,6 +8,7 @@ import ch.pontius.kiar.ingester.parsing.xml.XmlDocumentParser
 import ch.pontius.kiar.ingester.solrj.uuid
 import ch.pontius.kiar.oai.mapper.OAIMapper
 import io.javalin.http.Context
+import io.javalin.http.HandlerType
 import jetbrains.exodus.database.TransientEntityStore
 import kotlinx.dnq.query.filter
 import kotlinx.dnq.query.firstOrNull
@@ -59,8 +60,16 @@ class OaiServer(private val store: TransientEntityStore): Closeable {
      * @return [Document] representing the OAI-PMH response.
      */
     fun handle(ctx: Context): Document {
+        /* Extract parameters. */
+        val parameters = when (ctx.method()) {
+            HandlerType.GET -> ctx.queryParamMap().map { it.key to it.value.first() }.toMap()
+            HandlerType.POST -> ctx.formParamMap().map { it.key to it.value.first() }.toMap()
+            else -> return handleError("badArgument", "Unsupported HTTP method.")
+        }
+        val collection = ctx.pathParam("collection")
+
         /* Extract OAI verb from query parameters. */
-        val verb = ctx.queryParam("verb") ?: return handleError("badVerb", "Missing verb.")
+        val verb = parameters["verb"]?.firstOrNull() ?: return handleError("badVerb", "Missing verb.")
         val verbParsed = try {
             Verbs.valueOf(verb.uppercase())
         } catch (e: IllegalArgumentException) {
@@ -69,12 +78,12 @@ class OaiServer(private val store: TransientEntityStore): Closeable {
 
         /* Generate response document using OAI server. */
         return when (verbParsed) {
-            IDENTIFY -> this.handleIdentify(ctx)
+            IDENTIFY -> this.handleIdentify(collection)
             LISTSETS -> this.handleListSets()
             LISTMETADATAFORMATS -> this.handleListMetadataFormats()
-            LISTIDENTIFIERS -> this.handleListIdentifiers(ctx)
-            LISTRECORDS -> this.handleListRecords(ctx)
-            GETRECORD -> this.handleGetRecord(ctx)
+            LISTIDENTIFIERS -> this.handleListIdentifiers(collection, parameters)
+            LISTRECORDS -> this.handleListRecords(collection, parameters)
+            GETRECORD -> this.handleGetRecord(collection, parameters)
         }
     }
 
@@ -110,11 +119,10 @@ class OaiServer(private val store: TransientEntityStore): Closeable {
     /**
      * Handles the OAI-PMH verb "Identify".
      *
-     * @param ctx The Javalin [Context] object
+     * @param collection Name of the collection to harvest.
      * @return [Document] representing the OAI-PMH response.
      */
-    private fun handleIdentify(ctx: Context): Document {
-        val collection = ctx.pathParam("collection")
+    private fun handleIdentify(collection: String): Document {
         val root = this.documentBuilder.generateResponse("Identify")
         root.appendChild(root.ownerDocument.createElement("repositoryName").apply { textContent = "Kiar" })
         root.appendChild(root.ownerDocument.createElement("baseURL").apply { textContent = "https://ingest.kimnet.ch/api/$collection/oai-pmh" })
@@ -168,13 +176,13 @@ class OaiServer(private val store: TransientEntityStore): Closeable {
     /**
      * Handles the OAI-PMH verb "ListIdentifiers".
      *
-     * @param ctx The Javalin [Context] object
+     * @param collection Name of the collection to harvest.
+     * @param parameters The request parameters.
      * @return [Document] representing the OAI-PMH response.
      */
-    private fun handleGetRecord(ctx: Context): Document {
-        val collection = ctx.pathParam("collection")
-        val identifier = ctx.queryParam("identifier") ?: return handleError("badArgument", "Missing identifier.")
-        val prefix = ctx.queryParam("metadataPrefix") ?: return handleError("badArgument", "Missing metadata prefix.")
+    private fun handleGetRecord(collection: String, parameters: Map<String,String>): Document {
+        val identifier = parameters["identifier"] ?: return handleError("badArgument", "Missing identifier.")
+        val prefix = parameters["metadataPrefix"] ?: return handleError("badArgument", "Missing metadata prefix.")
         val mapper = Formats.entries.find { it.prefix == prefix }?.mapper ?: return handleError("cannotDisseminateFormat", "Unsupported metadata prefix '$prefix'.")
 
         /* Obtain client and query for entry. */
@@ -209,20 +217,20 @@ class OaiServer(private val store: TransientEntityStore): Closeable {
     /**
      * Handles the OAI-PMH verb "ListRecords".
      *
-     * @param ctx The Javalin [Context] object
+     * @param collection Name of the collection to harvest.
+     * @param parameters The request parameters.
      * @return [Document] representing the OAI-PMH response.
      */
-    private fun handleListRecords(ctx: Context): Document {
-        val collection = ctx.pathParam("collection")
-        val token = ctx.queryParam("resumptionToken")
-        val from = ctx.queryParam("from")?.let {
+    private fun handleListRecords(collection: String, parameters: Map<String,String>): Document {
+        val token = parameters["resumptionToken"]
+        val from = parameters["from"]?.let {
             try {
                 SimpleDateFormat("yyyy-MM-dd").parse(it)
             } catch (e: ParseException) {
                 return handleError("badArgument", "Malformed 'from'.")
             }
         }
-        val until = ctx.queryParam("until")?.let {
+        val until = parameters["until"]?.let {
             try {
                 SimpleDateFormat("yyyy-MM-dd").parse(it)
             } catch (e: ParseException) {
@@ -234,7 +242,7 @@ class OaiServer(private val store: TransientEntityStore): Closeable {
         val (start, mapper) = if (token != null) {
             this.tokens[token] ?: return handleError("badResumptionToken", "Invalid resumption token.")
         } else {
-            val prefix = ctx.queryParam("metadataPrefix") ?: return handleError("badArgument", "Missing metadata prefix.")
+            val prefix = parameters["metadataPrefix"] ?: return handleError("badArgument", "Missing metadata prefix.")
             val mapper = Formats.entries.find { it.prefix == prefix }?.mapper ?: return handleError("cannotDisseminateFormat", "Unsupported metadata prefix '$prefix'.")
             0 to mapper
         }
@@ -294,18 +302,18 @@ class OaiServer(private val store: TransientEntityStore): Closeable {
     /**
      * Handles the OAI-PMH verb "ListIdentifiers".
      *
-     * @param ctx The Javalin [Context] object
+     * @param collection Name of the collection to harvest.
+     * @param parameters The request parameters.
      * @return [Document] representing the OAI-PMH response.
      */
-    private fun handleListIdentifiers(ctx: Context): Document {
-        val collection = ctx.pathParam("collection")
-        val token = ctx.queryParam("resumptionToken")
+    private fun handleListIdentifiers(collection: String, parameters: Map<String,String>): Document {
+        val token = parameters["resumptionToken"]
 
         /* Determine start and mapper to use. */
         val (start, mapper) = if (token != null) {
             this.tokens[token] ?: return handleError("badResumptionToken", "Invalid resumption token.")
         } else {
-            val prefix = ctx.queryParam("metadataPrefix") ?: return handleError("badArgument", "Missing metadata prefix.")
+            val prefix = parameters["metadataPrefix"] ?: return handleError("badArgument", "Missing metadata prefix.")
             val mapper = Formats.entries.find { it.prefix == prefix }?.mapper ?: return handleError("cannotDisseminateFormat", "Unsupported metadata prefix '$prefix'.")
             0 to mapper
         }

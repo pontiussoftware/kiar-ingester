@@ -136,9 +136,9 @@ fun configureApiRoutes(store: TransientEntityStore, server: IngesterServer, conf
 
         /* Endpoints related to OAI-PMH. */
         path("{collection}") {
-            val server = OaiServer(store)
-            get("oai-pmh",  { ctx -> oaiPmh(ctx, server) } )
-            post("oai-pmh",  { ctx -> oaiPmh(ctx, server) } )
+            val oai = OaiServer(store)
+            get("oai-pmh",  { ctx -> oaiPmh(ctx, oai) } )
+            post("oai-pmh",  { ctx -> oaiPmh(ctx, oai) } )
         }
     }
 }
