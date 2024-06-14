@@ -44,12 +44,16 @@ class OaiServer(private val store: TransientEntityStore): Closeable {
     private val tokens = ConcurrentHashMap<String, Int>()
 
     /**
+     * Handles the OAI-PMH verb "Identify".
      *
+     * @return [Document] representing the OAI-PMH response.
      */
     fun handleIdentify(): Document {
         val verb = "Identify"
         val root = this.documentBuilder.generateResponse(verb)
         root.appendChild(root.ownerDocument.createElement("repositoryName").apply { textContent = "Kiar" })
+        root.appendChild(root.ownerDocument.createElement("baseURL").apply { textContent = "https://ingest.kimnet.ch/api/oai-pmh" })
+        root.appendChild(root.ownerDocument.createElement("adminEmail").apply { textContent = "info@kimnet.ch" })
         root.appendChild(root.ownerDocument.createElement("protocolVersion").apply { textContent = "2.0" })
         root.appendChild(root.ownerDocument.createElement("deletedRecord").apply { textContent = "no" })
         root.appendChild(root.ownerDocument.createElement("earliestDatestamp").apply { textContent = "2024-01-01" })
@@ -262,7 +266,7 @@ class OaiServer(private val store: TransientEntityStore): Closeable {
 
         /* Append response date. */
         val tz = TimeZone.getTimeZone("UTC")
-        val df: DateFormat = SimpleDateFormat("yyyy-MM-dd'T'HH:mm'Z'") // Quoted "Z" to indicate UTC, no timezone offset
+        val df: DateFormat = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'") // Quoted "Z" to indicate UTC, no timezone offset
         df.timeZone = tz
         val responseDate = doc.createElement("responseDate")
         responseDate.textContent =df.format(Date())
