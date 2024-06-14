@@ -49,12 +49,20 @@ inline fun <reified T> SolrDocument.get(field: Field): T? = this.getFieldValue(f
 inline fun <reified T> SolrInputDocument.get(field: Field): T? = this.getFieldValue(field.solr) as? T
 
 /**
+ * Returns the provided [Field] from this [SolrDocument].
+ *
+ * @param field The [Field] to return.
+ * @return The [Field]'s value [T] or null
+ */
+inline fun <reified T> SolrDocument.getAll(field: Field): List<T> = this.getFieldValues(field.solr)?.filterIsInstance<T>() ?: emptyList()
+
+/**
  * Returns the provided [Field] from this [SolrInputDocument].
  *
  * @param field The [Field] to return.
  * @return The [Field]'s value [T] or null
  */
-inline fun <reified T> SolrInputDocument.getAll(field: Field): Collection<T> = this.getFieldValues(field.solr).filterIsInstance<T>()
+inline fun <reified T> SolrInputDocument.getAll(field: Field): List<T> = this.getFieldValues(field.solr)?.filterIsInstance<T>() ?: emptyList()
 
 /**
  * Returns a [Field]'s value in this [SolrInputDocument] as [String].

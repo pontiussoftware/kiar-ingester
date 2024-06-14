@@ -128,7 +128,8 @@ export class ApacheSolrComponent implements AfterViewInit{
       displayName: new FormControl('', [Validators.required]),
       name: new FormControl('', [Validators.required]),
       type: new FormControl('', [Validators.required]),
-      selector: new FormControl('')
+      selector: new FormControl(''),
+      oai: new FormControl(false)
     }))
   }
 
@@ -196,7 +197,8 @@ export class ApacheSolrComponent implements AfterViewInit{
         displayName: new FormControl(collection.displayName || '', [Validators.required]),
         name: new FormControl(collection.name || '', [Validators.required]),
         type: new FormControl(collection.type || '', [Validators.required]),
-        selector: new FormControl(collection.selector || '')
+        selector: new FormControl(collection.selector || ''),
+        oai: new FormControl(collection.oai || false)
       }))
     }
 
@@ -233,7 +235,8 @@ export class ApacheSolrComponent implements AfterViewInit{
           displayName: collection.get('displayName')?.value,
           name: collection.get('name')?.value,
           type: collection.get('type')?.value,
-          selector: collection.get('selector')?.value
+          selector: collection.get('selector')?.value,
+          oai: collection.get('oai')?.value
         } as ApacheSolrCollection
       }),
       deployments: this.deployments.map((deployment) => {

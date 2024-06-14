@@ -7,6 +7,7 @@ import ch.pontius.kiar.ingester.parsing.xml.XmlDocumentParser
 import ch.pontius.kiar.ingester.solrj.uuid
 import ch.pontius.kiar.oai.mapper.EDMMapper
 import jetbrains.exodus.database.TransientEntityStore
+import kotlinx.dnq.query.asSequence
 import kotlinx.dnq.query.filter
 import kotlinx.dnq.query.firstOrNull
 import org.apache.solr.client.solrj.SolrQuery
@@ -44,9 +45,52 @@ class OaiServer(private val store: TransientEntityStore): Closeable {
      */
     fun handleIdentify(): Document {
         val doc = this.documentBuilder.newDocument()
-
         return doc
     }
+
+    /**
+     * Handles the OAI-PMH verb "ListSets".
+     *
+     * @return [Document] representing the OAI-PMH response.
+     */
+    fun handleListSets(): Document {
+        val verb = "ListSets"
+
+        /* Construct response document. */
+        val root = this.documentBuilder.generateResponse(verb)
+        this.store.transactional(true) {
+            DbCollection.filter { it.oai eq true }.asSequence().forEach {
+                val setElement = root.ownerDocument.createElement("set")
+                setElement.appendChild(root.ownerDocument.createElement("setSpec").apply { textContent = it.name })
+                setElement.appendChild(root.ownerDocument.createElement("setName").apply { textContent = it.displayName })
+                root.appendChild(setElement)
+            }
+        }
+
+        return root.ownerDocument
+    }
+
+    /**
+     * Handles the OAI-PMH verb "ListSets".
+     *
+     * @return [Document] representing the OAI-PMH response.
+     */
+    fun handleListMetadataFormats(): Document {
+        val verb = "ListMetadataFormats"
+
+        /* Construct response document. */
+        val root = this.documentBuilder.generateResponse(verb)
+        Formats.entries.forEach { format ->
+            val formatElement = root.ownerDocument.createElement("metadataFormat")
+            formatElement.appendChild(root.ownerDocument.createElement("metadataPrefix").apply { textContent = format.prefix })
+            formatElement.appendChild(root.ownerDocument.createElement("schema").apply { textContent = format.schema })
+            formatElement.appendChild(root.ownerDocument.createElement("metadataNamespace").apply { textContent = format.namespace })
+            root.appendChild(formatElement)
+        }
+
+        return root.ownerDocument
+    }
+
 
     /**
      * Handles the OAI-PMH verb "ListIdentifiers".

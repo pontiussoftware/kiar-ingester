@@ -4,6 +4,7 @@ import ch.pontius.kiar.api.model.oai.Verbs
 import ch.pontius.kiar.api.model.status.ErrorStatus
 import ch.pontius.kiar.api.model.status.SuccessStatus
 import ch.pontius.kiar.api.model.oai.Verbs.*
+import ch.pontius.kiar.api.model.status.ErrorStatusException
 import ch.pontius.kiar.oai.OaiServer
 import io.javalin.http.Context
 import io.javalin.openapi.*
@@ -12,23 +13,16 @@ import javax.xml.transform.TransformerFactory
 import javax.xml.transform.dom.DOMSource
 import javax.xml.transform.stream.StreamResult
 
-/**
- *
- * @author Ralph Gasser
- * @version 1.0.0
- */
 @OpenApi(
-    path = "/api/{collection}/oai-pmh",
+    path = "/api/oai-pmh",
     methods = [HttpMethod.GET, HttpMethod.POST],
     summary = "Attempts a login using the credentials provided in the request body.",
     operationId = "oaiPmh",
     tags = ["OAI"],
     queryParams = [
         OpenApiParam(name = "verb", type = String::class, description = "The OAI-PMH verb.", required = true),
+        OpenApiParam(name = "set", type = String::class, description = "The OAI-PMH set to harvest (used for ListIdentifiers and ListRecords).", required = false),
         OpenApiParam(name = "resumptionToken", type = String::class, description = "The OAI-PMH resumption token (used for ListIdentifiers and ListRecords).", required = false),
-    ],
-    pathParams = [
-        OpenApiParam(name = "collection", type = String::class, description = "The collection that should be harvested.", required = true),
     ],
     responses = [
         OpenApiResponse("200", [OpenApiContent(SuccessStatus::class)]),
@@ -39,17 +33,22 @@ import javax.xml.transform.stream.StreamResult
 )
 fun oaiPmh(ctx: Context, server: OaiServer) {
     val verb = ctx.queryParam("verb")?.let { Verbs.valueOf(it.uppercase()) }
-    val collection = ctx.pathParam("collection")
 
     /* Generate response document using OAI server. */
     val doc = when (verb) {
         IDENTIFY -> server.handleIdentify()
-        LISTSETS -> TODO()
-        LISTMETADATAFORMATS -> TODO()
-        LISTIDENTIFIERS -> server.handleListIdentifiers(collection, ctx.queryParam("resumptionToken"))
-        LISTRECORDS -> server.handleListRecords(collection, ctx.queryParam("resumptionToken"))
+        LISTSETS -> server.handleListSets()
+        LISTMETADATAFORMATS -> server.handleListMetadataFormats()
+        LISTIDENTIFIERS -> server.handleListIdentifiers(
+            ctx.queryParam("set") ?: throw ErrorStatusException(400, "Parameter 'set' must be specified."),
+            ctx.queryParam("resumptionToken")
+        )
+        LISTRECORDS -> server.handleListRecords(
+            ctx.queryParam("set")?: throw ErrorStatusException(400, "Parameter 'set' must be specified."),
+            ctx.queryParam("resumptionToken")
+        )
         GETRECORD -> TODO()
-        null -> TODO()
+        null -> throw ErrorStatusException(400, "Parameter 'verb' must be specified.")
     }
 
     /* Convert Document to XML string */
@@ -59,5 +58,5 @@ fun oaiPmh(ctx: Context, server: OaiServer) {
     val xmlString = writer.toString()
 
     /* Return XML response */
-    ctx.contentType("application/xml").result(xmlString)
+    ctx.contentType("application/xml; charset=utf-8").result(xmlString)
 }

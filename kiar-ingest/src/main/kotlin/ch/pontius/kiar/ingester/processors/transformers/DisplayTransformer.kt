@@ -8,7 +8,7 @@ import kotlinx.coroutines.flow.map
 import org.apache.solr.common.SolrInputDocument
 
 /**
- * A [Transformer] that generates the [Field.DISPLAY] based on the [Field.OBJEKTTYP].
+ * A [Transformer] that generates the [Field.DISPLAY] based on the [Field.OBJECTTYPE].
  *
  * @author Ralph Gasser
  * @author Cristina Illi
@@ -20,25 +20,25 @@ class DisplayTransformer(override val input: Source<SolrInputDocument>): Transfo
      * Returns a [Flow] of this [ImageDeployment].
      */
     override fun toFlow(context: ProcessingContext): Flow<SolrInputDocument> = this.input.toFlow(context).map { doc ->
-        val type = ObjectType.parse(doc.get<String>(Field.OBJEKTTYP) ?: "")
+        val type = ObjectType.parse(doc.get<String>(Field.OBJECTTYPE) ?: "")
         if (type != null) {
             /* Generate _display_ field. */
             when (type) {
-                ObjectType.BIBLIOGRAPHISCHES_OBJEKT -> doc.setField(Field.DISPLAY, listOfNotNull(doc.get<String>(Field.OBJEKTBEZEICHNUNG), doc.get<String>(Field.TITEL)).joinToString(", "))
-                ObjectType.FOTOGRAFIE -> doc.setField(Field.DISPLAY, listOfNotNull(doc.asString(Field.OBJEKTBEZEICHNUNG), doc.get<String>(Field.TITEL)).joinToString(", "))
-                ObjectType.KUNST -> doc.setField(Field.DISPLAY, listOfNotNull(doc.get<String>(Field.KUENSTLER), listOfNotNull(doc.get<String>(Field.OBJEKTBEZEICHNUNG), doc.get<String>(Field.TITEL)).joinToString(", ")).joinToString(" - "))
-                else -> doc.setField(Field.DISPLAY, doc.get<String>(Field.OBJEKTBEZEICHNUNG) ?: "")
+                ObjectType.BIBLIOGRAPHISCHES_OBJEKT -> doc.setField(Field.DISPLAY, listOfNotNull(doc.get<String>(Field.DESIGNATION), doc.get<String>(Field.TITEL)).joinToString(", "))
+                ObjectType.FOTOGRAFIE -> doc.setField(Field.DISPLAY, listOfNotNull(doc.asString(Field.DESIGNATION), doc.get<String>(Field.TITEL)).joinToString(", "))
+                ObjectType.KUNST -> doc.setField(Field.DISPLAY, listOfNotNull(doc.get<String>(Field.ARTIST), listOfNotNull(doc.get<String>(Field.DESIGNATION), doc.get<String>(Field.TITEL)).joinToString(", ")).joinToString(" - "))
+                else -> doc.setField(Field.DISPLAY, doc.get<String>(Field.DESIGNATION) ?: "")
             }
 
             /* Generate _display_list_ field. */
             val list = when (type) {
                 ObjectType.ARCHAEOLOGIE -> listOfNotNull(doc.get<String>(Field.POLITISCHER_FUNDORT))
-                ObjectType.BIBLIOGRAPHISCHES_OBJEKT -> listOfNotNull(doc.get<String>(Field.TITEL), doc.get<String>(Field.AUTOR), doc.get<String>(Field.ERSCHEINUNGSORT))
+                ObjectType.BIBLIOGRAPHISCHES_OBJEKT -> listOfNotNull(doc.get<String>(Field.TITEL), doc.get<String>(Field.AUTHOR), doc.get<String>(Field.ERSCHEINUNGSORT))
                 ObjectType.BIOLOGIE -> listOfNotNull(doc.get<String>(Field.POLITISCHER_FUNDORT))
-                ObjectType.ETHNOLOGIE ->listOfNotNull(doc.get<String>(Field.HERSTELLER), doc.get<String>(Field.HERSTELLUNGSORT))
-                ObjectType.FOTOGRAFIE -> listOfNotNull(doc.get<String>(Field.TITEL), doc.get<String>(Field.FOTOGRAF), doc.get<String>(Field.HERSTELLUNGSORT))
+                ObjectType.ETHNOLOGIE ->listOfNotNull(doc.get<String>(Field.CREATOR), doc.get<String>(Field.HERSTELLUNGSORT))
+                ObjectType.FOTOGRAFIE -> listOfNotNull(doc.get<String>(Field.TITEL), doc.get<String>(Field.PHOTOGRAPHER), doc.get<String>(Field.HERSTELLUNGSORT))
                 ObjectType.GEOLOGIE -> listOfNotNull(doc.get<String>(Field.POLITISCHER_FUNDORT))
-                ObjectType.KUNST -> listOfNotNull(doc.get<String>(Field.TITEL), doc.get<String>(Field.KUENSTLER), doc.get<String>(Field.HERSTELLUNGSORT))
+                ObjectType.KUNST -> listOfNotNull(doc.get<String>(Field.TITEL), doc.get<String>(Field.ARTIST), doc.get<String>(Field.HERSTELLUNGSORT))
             }
             list.forEach { doc.addField(Field.DISPLAY_LIST, it) }
         }

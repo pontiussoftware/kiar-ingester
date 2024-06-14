@@ -9,7 +9,7 @@ import kotlinx.dnq.*
  * A named Apache Solr collection managed by these KIAR tools.
  *
  * @author Ralph Gasser
- * @version 1.0.0
+ * @version 1.1.0
  */
 class DbCollection(entity: Entity) : XdEntity(entity) {
     companion object: XdNaturalEntityType<DbCollection>()
@@ -25,6 +25,9 @@ class DbCollection(entity: Entity) : XdEntity(entity) {
 
     /** The collection selector for this [DbCollection]. */
     var selector by xdStringProp(trimmed = true)
+
+    /** Flag indicating that the [DbCollection] can be harvested via OAI-PMH. */
+    var oai by xdBooleanProp()
 
     /** Flag indicating, that the [DbCollection] should be deleted before starting an ingest. */
     var deleteBeforeIngest by xdBooleanProp()

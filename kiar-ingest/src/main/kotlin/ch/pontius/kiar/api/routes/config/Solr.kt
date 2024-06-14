@@ -242,6 +242,7 @@ private fun DbSolr.mergeCollections(collections: List<ApacheSolrCollection>) {
         collection.type = c.type.toDb()
         collection.selector = c.selector
         collection.deleteBeforeIngest = c.deleteBeforeImport
+        collection.oai = c.oai
     }
 
     /* Delete collections that have been removed. */

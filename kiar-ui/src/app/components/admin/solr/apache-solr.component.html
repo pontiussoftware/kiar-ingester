@@ -135,6 +135,7 @@
         <th>Name</th>
         <th>Type</th>
         <th>Selector</th>
+        <th>OAI-PMH</th>
       </tr>
     </thead>
     <tr *ngFor="let e of collections; let i = index" [formGroupName]="i">
@@ -172,6 +173,10 @@
           <mat-label i18n="@@LabelSelector">Selector</mat-label>
           <input matInput type="text" formControlName="selector"/>
         </mat-form-field>
+      </td>
+
+      <td>
+        <mat-checkbox type="text" formControlName="oai"/>
       </td>
     </tr>
   </table>

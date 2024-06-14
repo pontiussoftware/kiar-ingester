@@ -1954,6 +1954,188 @@
         "security" : [ ]
       }
     },
+    "/api/oai-pmh" : {
+      "get" : {
+        "tags" : [ "OAI" ],
+        "summary" : "Attempts a login using the credentials provided in the request body.",
+        "operationId" : "oaiPmh",
+        "parameters" : [ {
+          "name" : "collection",
+          "in" : "path",
+          "description" : "The collection that should be harvested.",
+          "required" : true,
+          "deprecated" : false,
+          "allowEmptyValue" : false,
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "name" : "verb",
+          "in" : "query",
+          "description" : "The OAI-PMH verb.",
+          "required" : true,
+          "deprecated" : false,
+          "allowEmptyValue" : false,
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "name" : "set",
+          "in" : "query",
+          "description" : "The OAI-PMH set to harvest (used for ListIdentifiers and ListRecords).",
+          "required" : false,
+          "deprecated" : false,
+          "allowEmptyValue" : false,
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "name" : "resumptionToken",
+          "in" : "query",
+          "description" : "The OAI-PMH resumption token (used for ListIdentifiers and ListRecords).",
+          "required" : false,
+          "deprecated" : false,
+          "allowEmptyValue" : false,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/SuccessStatus"
+                }
+              }
+            }
+          },
+          "400" : {
+            "description" : "Bad Request",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorStatus"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorStatus"
+                }
+              }
+            }
+          },
+          "500" : {
+            "description" : "Server Error",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorStatus"
+                }
+              }
+            }
+          }
+        },
+        "deprecated" : false,
+        "security" : [ ]
+      },
+      "post" : {
+        "tags" : [ "OAI" ],
+        "summary" : "Attempts a login using the credentials provided in the request body.",
+        "operationId" : "oaiPmh",
+        "parameters" : [ {
+          "name" : "collection",
+          "in" : "path",
+          "description" : "The collection that should be harvested.",
+          "required" : true,
+          "deprecated" : false,
+          "allowEmptyValue" : false,
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "name" : "verb",
+          "in" : "query",
+          "description" : "The OAI-PMH verb.",
+          "required" : true,
+          "deprecated" : false,
+          "allowEmptyValue" : false,
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "name" : "set",
+          "in" : "query",
+          "description" : "The OAI-PMH set to harvest (used for ListIdentifiers and ListRecords).",
+          "required" : false,
+          "deprecated" : false,
+          "allowEmptyValue" : false,
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "name" : "resumptionToken",
+          "in" : "query",
+          "description" : "The OAI-PMH resumption token (used for ListIdentifiers and ListRecords).",
+          "required" : false,
+          "deprecated" : false,
+          "allowEmptyValue" : false,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/SuccessStatus"
+                }
+              }
+            }
+          },
+          "400" : {
+            "description" : "Bad Request",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorStatus"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorStatus"
+                }
+              }
+            }
+          },
+          "500" : {
+            "description" : "Server Error",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorStatus"
+                }
+              }
+            }
+          }
+        },
+        "deprecated" : false,
+        "security" : [ ]
+      }
+    },
     "/api/participants" : {
       "get" : {
         "tags" : [ "Config", "Participant" ],
@@ -3699,6 +3881,9 @@
           "selector" : {
             "type" : "string"
           },
+          "oai" : {
+            "type" : "boolean"
+          },
           "deleteBeforeImport" : {
             "type" : "boolean"
           },
@@ -3706,7 +3891,7 @@
             "type" : "boolean"
           }
         },
-        "required" : [ "name", "type", "deleteBeforeImport", "acceptEmptyFilter" ]
+        "required" : [ "name", "type", "oai", "deleteBeforeImport", "acceptEmptyFilter" ]
       },
       "ApacheSolrConfig" : {
         "type" : "object",

@@ -9,6 +9,7 @@ api/institution.service.ts
 api/job.service.ts
 api/jobTemplate.service.ts
 api/masterdata.service.ts
+api/oAI.service.ts
 api/participant.service.ts
 api/session.service.ts
 api/transformer.service.ts

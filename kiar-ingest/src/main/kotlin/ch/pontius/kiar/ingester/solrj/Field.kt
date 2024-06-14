@@ -13,6 +13,15 @@ enum class Field(val solr: String, val required: Boolean = false, val multiValue
     /** Field used to store the number of available images. */
     IMAGECOUNT("_imagecount_", true, false, false),
 
+    /** Field used to store the number of available images. */
+    PREVIEW("_previews_", false, true, false),
+
+    /** Field used to store the number of available images. */
+    IMAGE_ARTISTS("_images_metadata_artist_", false, true, false),
+
+    /** Field used to store the number of available images. */
+    IMAGE_COPYRIGHT("_images_metadata_copyright_", false, true, false),
+
     /** Name of the participant an object belongs to (often, this is transitively dependent on the institution). */
     PARTICIPANT("_participant_", true),
 
@@ -31,14 +40,23 @@ enum class Field(val solr: String, val required: Boolean = false, val multiValue
     /** Field containing the object's inventory number. */
     INVENTORY_NUMBER("inventarnummer", true),
 
+    /** Field containing the object's ISBN number. */
+    ISBN("isbn", false),
+
     /** Field containing an object's designation. */
-    OBJEKTBEZEICHNUNG("objektbezeichnung", true),
+    DESIGNATION("objektbezeichnung", true),
+
+    /** Field containing an object's designation. */
+    ALTERNATIVE_DESIGNATION("alternative_objektbezeichnung", false),
+
+    /** Field containing an object's description. */
+    DESCRIPTION("description", false),
 
     /** Field containing an object's type. */
-    OBJEKTTYP("objekttyp", true),
+    OBJECTTYPE("objekttyp", true),
 
     /** Field containing the name of the institution the object belongs to. */
-    SAMMLUNG("sammlung", true),
+    COLLECTION("sammlung", true),
 
     /** Field containing the name of the institution the object belongs to. */
     INSTITUTION("institution", true),
@@ -65,20 +83,22 @@ enum class Field(val solr: String, val required: Boolean = false, val multiValue
     /** Name of an object's owner. */
     OWNER("eigentuemer", false),
 
+    /** The language of an object. */
+    LANGUAGE("sprache", false),
+
     /* Personen */
 
     /** Field containing author information (person). */
-    AUTOR("person_name_autor", false),
+    AUTHOR("person_name_autor", false),
 
     /** Field containing artist information (person). */
-    KUENSTLER("person_name_kuenstler", false),
+    ARTIST("person_name_kuenstler", false),
 
     /** Field containing photographer information (person). */
-    FOTOGRAF("person_name_fotograf", false),
+    PHOTOGRAPHER("person_name_fotograf", false),
 
     /** Field containing producer information (person). */
-    HERSTELLER("person_name_hersteller", false),
-
+    CREATOR("person_name_hersteller", false),
 
 
     /* Orte */
@@ -91,6 +111,4 @@ enum class Field(val solr: String, val required: Boolean = false, val multiValue
 
     /** Field containing location of publication information. */
     ERSCHEINUNGSORT("ort_erscheinung", false);
-
-
 }

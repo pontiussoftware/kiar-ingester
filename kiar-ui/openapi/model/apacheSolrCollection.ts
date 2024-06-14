@@ -17,6 +17,7 @@ export interface ApacheSolrCollection {
     displayName?: string;
     type: CollectionType;
     selector?: string;
+    oai: boolean;
     deleteBeforeImport: boolean;
     acceptEmptyFilter: boolean;
 }
