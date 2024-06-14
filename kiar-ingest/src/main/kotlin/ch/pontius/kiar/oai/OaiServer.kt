@@ -58,9 +58,24 @@ class OaiServer(private val store: TransientEntityStore): Closeable {
      * @return [Document] representing the OAI-PMH response.
      */
     fun handleError(code: String, message: String): Document  {
-        val root = this.documentBuilder.generateResponse("error")
-        root.textContent = message
-        root.setAttribute("code", code)
+        /* Construct response document. */
+        val doc = this.documentBuilder.newDocument()
+
+        /* Root element. */
+        val root = doc.createElement("OAI-PMH")
+        root.setAttributeNS("http://www.w3.org/2000/xmlns/", "xmlns", "http://www.openarchives.org/OAI/2.0/")
+        root.setAttributeNS("http://www.w3.org/2000/xmlns/", "xmlns:xsi", "http://www.w3.org/2001/XMLSchema-instance")
+        root.setAttributeNS("http://www.w3.org/2001/XMLSchema-instance", "xsi:schemaLocation", "http://www.openarchives.org/OAI/2.0/ http://www.openarchives.org/OAI/2.0/OAI-PMH.xsd")
+        doc.appendChild(root)
+
+        /* Append response date. */
+        root.appendChild(doc.createElement("responseDate").apply { this.textContent = this@OaiServer.df.format(Date()) })
+
+        /* Append error element date. */
+        root.appendChild(doc.createElement("error").apply {
+            this.setAttribute("code", code)
+            this.textContent = message
+        })
         return root.ownerDocument
     }
 
