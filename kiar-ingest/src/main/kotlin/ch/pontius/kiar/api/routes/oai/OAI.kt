@@ -1,9 +1,7 @@
 package ch.pontius.kiar.api.routes.oai
 
-import ch.pontius.kiar.api.model.oai.Verbs
 import ch.pontius.kiar.api.model.status.ErrorStatus
 import ch.pontius.kiar.api.model.status.SuccessStatus
-import ch.pontius.kiar.api.model.oai.Verbs.*
 import ch.pontius.kiar.oai.OaiServer
 import io.javalin.http.Context
 import io.javalin.openapi.*

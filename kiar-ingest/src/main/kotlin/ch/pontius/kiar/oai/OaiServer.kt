@@ -1,13 +1,12 @@
 package ch.pontius.kiar.oai
 
 import ch.pontius.kiar.api.model.config.solr.ApacheSolrConfig
-import ch.pontius.kiar.api.model.oai.Verbs
-import ch.pontius.kiar.api.model.oai.Verbs.*
+import ch.pontius.kiar.oai.Verbs.*
 import ch.pontius.kiar.database.config.solr.DbCollection
 import ch.pontius.kiar.database.config.solr.DbCollectionType
 import ch.pontius.kiar.ingester.parsing.xml.XmlDocumentParser
 import ch.pontius.kiar.ingester.solrj.uuid
-import ch.pontius.kiar.oai.mapper.EDMMapper
+import ch.pontius.kiar.oai.mapper.OAIMapper
 import io.javalin.http.Context
 import jetbrains.exodus.database.TransientEntityStore
 import kotlinx.dnq.query.filter
@@ -43,13 +42,13 @@ class OaiServer(private val store: TransientEntityStore): Closeable {
     private val clients = ConcurrentHashMap<ApacheSolrConfig, Http2SolrClient>()
 
     /** A [ConcurrentHashMap] of [Http2SolrClient] used by this [OaiServer] to fetch data. */
-    private val tokens = ConcurrentHashMap<String, Int>()
+    private val tokens = ConcurrentHashMap<String, Pair<Int,OAIMapper>>()
 
     /** The [DateFormat] used by this [OaiServer]. */
-    private val df = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'")
+    private val responseDateFormat = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'")
 
     init {
-        df.timeZone = TimeZone.getTimeZone("UTC")
+        responseDateFormat.timeZone = TimeZone.getTimeZone("UTC")
     }
 
     /**
@@ -97,7 +96,7 @@ class OaiServer(private val store: TransientEntityStore): Closeable {
         doc.appendChild(root)
 
         /* Append response date. */
-        root.appendChild(doc.createElement("responseDate").apply { this.textContent = this@OaiServer.df.format(Date()) })
+        root.appendChild(doc.createElement("responseDate").apply { this.textContent = this@OaiServer.responseDateFormat.format(Date()) })
 
         /* Append error element date. */
         root.appendChild(doc.createElement("error").apply {
@@ -174,6 +173,8 @@ class OaiServer(private val store: TransientEntityStore): Closeable {
     private fun handleGetRecord(ctx: Context): Document {
         val collection = ctx.pathParam("collection")
         val identifier = ctx.queryParam("identifier") ?: return handleError("badArgument", "Missing identifier.")
+        val prefix = ctx.queryParam("metadataPrefix") ?: return handleError("badArgument", "Missing metadata prefix.")
+        val mapper = Formats.entries.find { it.prefix == prefix }?.mapper ?: return handleError("cannotDisseminateFormat", "Unsupported metadata prefix '$prefix'.")
 
         /* Obtain client and query for entry. */
         val client = getOrLoadClient(collection)
@@ -203,7 +204,7 @@ class OaiServer(private val store: TransientEntityStore): Closeable {
 
         /* Map and append metadata. */
         val metadataElement = doc.createElement("metadata")
-        EDMMapper.map(metadataElement, response)
+        mapper.map(metadataElement, response)
         recordElement.appendChild(metadataElement)
 
         return doc
@@ -219,11 +220,13 @@ class OaiServer(private val store: TransientEntityStore): Closeable {
         val collection = ctx.pathParam("collection")
         val token = ctx.queryParam("resumptionToken")
 
-        /* Determine start based on resumption token. */
-        val start = if (token != null) {
+        /* Determine start and mapper to use. */
+        val (start, mapper) = if (token != null) {
             this.tokens[token] ?: return handleError("badResumptionToken", "Invalid resumption token.")
         } else {
-            0
+            val prefix = ctx.queryParam("metadataPrefix") ?: return handleError("badArgument", "Missing metadata prefix.")
+            val mapper = Formats.entries.find { it.prefix == prefix }?.mapper ?: return handleError("cannotDisseminateFormat", "Unsupported metadata prefix '$prefix'.")
+            0 to mapper
         }
 
         /* Prepare Apache Solr query. */
@@ -255,7 +258,7 @@ class OaiServer(private val store: TransientEntityStore): Closeable {
 
             /* Map and append metadata. */
             val metadataElement = doc.createElement("metadata")
-            EDMMapper.map(metadataElement, document)
+            mapper.map(metadataElement, document)
             recordElement.appendChild(metadataElement)
         }
 
@@ -264,12 +267,12 @@ class OaiServer(private val store: TransientEntityStore): Closeable {
         if (response.results.numFound > lastElement) {
             /* Update resumption token. */
             val newToken = UUID.randomUUID().toString()
-            this.tokens[newToken] = lastElement
+            this.tokens[newToken] = lastElement to mapper
 
             /* Include new token in response. */
             val resumptionTokenElement = doc.createElement("resumptionToken")
             resumptionTokenElement.setAttribute("completeListSize", "${response.results.numFound}")
-            resumptionTokenElement.setAttribute("cursor", "$lastElement")
+            resumptionTokenElement.setAttribute("cursor", "$start")
             resumptionTokenElement.appendChild(doc.createTextNode(newToken))
             root.appendChild(resumptionTokenElement)
         }
@@ -288,12 +291,15 @@ class OaiServer(private val store: TransientEntityStore): Closeable {
         val collection = ctx.pathParam("collection")
         val token = ctx.queryParam("resumptionToken")
 
-        /* Determine start based on resumption token. */
-        val start = if (token != null) {
+        /* Determine start and mapper to use. */
+        val (start, mapper) = if (token != null) {
             this.tokens[token] ?: return handleError("badResumptionToken", "Invalid resumption token.")
         } else {
-            0
+            val prefix = ctx.queryParam("metadataPrefix") ?: return handleError("badArgument", "Missing metadata prefix.")
+            val mapper = Formats.entries.find { it.prefix == prefix }?.mapper ?: return handleError("cannotDisseminateFormat", "Unsupported metadata prefix '$prefix'.")
+            0 to mapper
         }
+
 
         /* Prepare Apache Solr query. */
         val query = SolrQuery("*:*")
@@ -330,12 +336,12 @@ class OaiServer(private val store: TransientEntityStore): Closeable {
         if (response.results.numFound > lastElement) {
             /* Update resumption token. */
             val newToken = UUID.randomUUID().toString()
-            this.tokens[newToken] = lastElement
+            this.tokens[newToken] = lastElement to mapper
 
             /* Include new token in response. */
             val resumptionTokenElement = doc.createElement("resumptionToken")
             resumptionTokenElement.setAttribute("completeListSize", "${response.results.numFound}")
-            resumptionTokenElement.setAttribute("cursor", "$lastElement")
+            resumptionTokenElement.setAttribute("cursor", "$start")
             resumptionTokenElement.appendChild(doc.createTextNode(newToken))
             root.appendChild(resumptionTokenElement)
         }
@@ -385,7 +391,7 @@ class OaiServer(private val store: TransientEntityStore): Closeable {
 
         /* Append response date. */
         val responseDate = doc.createElement("responseDate")
-        responseDate.textContent = this@OaiServer.df.format(Date())
+        responseDate.textContent = this@OaiServer.responseDateFormat.format(Date())
         rootElement.appendChild(responseDate)
 
         /* Append response date. */
