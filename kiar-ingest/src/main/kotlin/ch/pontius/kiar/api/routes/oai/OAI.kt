@@ -34,23 +34,7 @@ import javax.xml.transform.stream.StreamResult
     ]
 )
 fun oaiPmh(ctx: Context, server: OaiServer) {
-    val doc = try {
-        /* Extract OAI verb from query parameters. */
-        val verb = Verbs.valueOf(ctx.queryParam("verb") ?: "UNKNOWN")
-
-        /* Generate response document using OAI server. */
-        when (verb) {
-            IDENTIFY -> server.handleIdentify(ctx)
-            LISTSETS -> server.handleListSets()
-            LISTMETADATAFORMATS -> server.handleListMetadataFormats()
-            LISTIDENTIFIERS -> server.handleListIdentifiers(ctx)
-            LISTRECORDS -> server.handleListRecords(ctx)
-            GETRECORD -> server.handleGetRecord(ctx)
-        }
-    } catch (e: IllegalArgumentException) {
-        server.handleError("badVerb","Illegal OAI verb.")
-        return
-    }
+    val doc = server.handle(ctx)
 
     /* Convert Document to XML string */
     val transformer = TransformerFactory.newInstance().newTransformer()

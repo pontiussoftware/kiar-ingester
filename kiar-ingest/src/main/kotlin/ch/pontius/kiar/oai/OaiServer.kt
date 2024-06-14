@@ -1,6 +1,8 @@
 package ch.pontius.kiar.oai
 
 import ch.pontius.kiar.api.model.config.solr.ApacheSolrConfig
+import ch.pontius.kiar.api.model.oai.Verbs
+import ch.pontius.kiar.api.model.oai.Verbs.*
 import ch.pontius.kiar.database.config.solr.DbCollection
 import ch.pontius.kiar.database.config.solr.DbCollectionType
 import ch.pontius.kiar.ingester.parsing.xml.XmlDocumentParser
@@ -51,13 +53,39 @@ class OaiServer(private val store: TransientEntityStore): Closeable {
     }
 
     /**
+     * Handles an OAI-PMH request.
+     *
+     * @param ctx The Javalin [Context] object
+     * @return [Document] representing the OAI-PMH response.
+     */
+    fun handle(ctx: Context): Document {
+        /* Extract OAI verb from query parameters. */
+        val verb = ctx.queryParam("verb") ?: return handleError("badArgument", "Missing verb.")
+        val verbParsed = try {
+            Verbs.valueOf(verb.uppercase())
+        } catch (e: IllegalArgumentException) {
+            return handleError("badVerb", "Illegal OAI verb '${verb}'.")
+        }
+
+        /* Generate response document using OAI server. */
+        return when (verbParsed) {
+            IDENTIFY -> this.handleIdentify(ctx)
+            LISTSETS -> this.handleListSets()
+            LISTMETADATAFORMATS -> this.handleListMetadataFormats()
+            LISTIDENTIFIERS -> this.handleListIdentifiers(ctx)
+            LISTRECORDS -> this.handleListRecords(ctx)
+            GETRECORD -> this.handleGetRecord(ctx)
+        }
+    }
+
+    /**
      * Handles a error during OAI-PMH processing.
      *
      * @param code The error code.
      * @param message The error message.
      * @return [Document] representing the OAI-PMH response.
      */
-    fun handleError(code: String, message: String): Document  {
+    private fun handleError(code: String, message: String): Document  {
         /* Construct response document. */
         val doc = this.documentBuilder.newDocument()
 
@@ -76,7 +104,7 @@ class OaiServer(private val store: TransientEntityStore): Closeable {
             this.setAttribute("code", code)
             this.textContent = message
         })
-        return root.ownerDocument
+        return doc
     }
 
     /**
@@ -85,7 +113,7 @@ class OaiServer(private val store: TransientEntityStore): Closeable {
      * @param ctx The Javalin [Context] object
      * @return [Document] representing the OAI-PMH response.
      */
-    fun handleIdentify(ctx: Context): Document {
+    private fun handleIdentify(ctx: Context): Document {
         val collection = ctx.pathParam("collection")
         val root = this.documentBuilder.generateResponse("Identify")
         root.appendChild(root.ownerDocument.createElement("repositoryName").apply { textContent = "Kiar" })
@@ -103,7 +131,7 @@ class OaiServer(private val store: TransientEntityStore): Closeable {
      *
      * @return [Document] representing the OAI-PMH response.
      */
-    fun handleListSets(): Document {
+    private fun handleListSets(): Document {
         val verb = "ListSets"
 
         /* Construct response document. */
@@ -121,7 +149,7 @@ class OaiServer(private val store: TransientEntityStore): Closeable {
      *
      * @return [Document] representing the OAI-PMH response.
      */
-    fun handleListMetadataFormats(): Document {
+    private fun handleListMetadataFormats(): Document {
         val verb = "ListMetadataFormats"
 
         /* Construct response document. */
@@ -143,7 +171,7 @@ class OaiServer(private val store: TransientEntityStore): Closeable {
      * @param ctx The Javalin [Context] object
      * @return [Document] representing the OAI-PMH response.
      */
-    fun handleGetRecord(ctx: Context): Document {
+    private fun handleGetRecord(ctx: Context): Document {
         val collection = ctx.pathParam("collection")
         val identifier = ctx.queryParam("identifier") ?: return handleError("badArgument", "Missing identifier.")
 
@@ -187,7 +215,7 @@ class OaiServer(private val store: TransientEntityStore): Closeable {
      * @param ctx The Javalin [Context] object
      * @return [Document] representing the OAI-PMH response.
      */
-    fun handleListRecords(ctx: Context): Document {
+    private fun handleListRecords(ctx: Context): Document {
         val collection = ctx.pathParam("collection")
         val token = ctx.queryParam("resumptionToken")
 
@@ -256,7 +284,7 @@ class OaiServer(private val store: TransientEntityStore): Closeable {
      * @param ctx The Javalin [Context] object
      * @return [Document] representing the OAI-PMH response.
      */
-    fun handleListIdentifiers(ctx: Context): Document {
+    private fun handleListIdentifiers(ctx: Context): Document {
         val collection = ctx.pathParam("collection")
         val token = ctx.queryParam("resumptionToken")
 
