@@ -58,7 +58,7 @@ class OaiServer(private val store: TransientEntityStore): Closeable {
     fun handleListRecords(collection: String, resumptionToken: String? = null): Document {
         /* Parse resumption token and start value. */
         val start = resumptionToken?.let { this.tokens[it] ?: throw IllegalArgumentException("Invalid resumption token.") } ?: 0
-        val verb = "ListIdentifiers"
+        val verb = "ListRecords"
 
         /* Prepare Apache Solr query. */
         val query = SolrQuery("*:*")
@@ -70,22 +70,24 @@ class OaiServer(private val store: TransientEntityStore): Closeable {
         val response = client.query(collection, query)
 
         /* Construct response document. */
-        val (doc, root) = this.documentBuilder.generateResponse(verb)
+        val root = this.documentBuilder.generateResponse(verb)
+        val doc = root.ownerDocument
+
 
         /* Process results. */
         for (document in response.results) {
-            val recordElement = doc.createElement("oai:record")
+            val recordElement = doc.createElement("record")
             root.appendChild(recordElement)
 
-            val headerElement = doc.createElement("oai:header")
+            val headerElement = doc.createElement("header")
             recordElement.appendChild(headerElement)
 
-            val identifierElement = doc.createElement("oai:identifier")
+            val identifierElement = doc.createElement("identifier")
             headerElement.appendChild(identifierElement)
             identifierElement.appendChild(doc.createTextNode(document.uuid()))
 
             /* Map and append metadata. */
-            val metadataElement = doc.createElement("oai:metadata")
+            val metadataElement = doc.createElement("metadata")
             EDMMapper.map(metadataElement, document)
             recordElement.appendChild(metadataElement)
         }
@@ -98,7 +100,7 @@ class OaiServer(private val store: TransientEntityStore): Closeable {
             this.tokens[newToken] = lastElement
 
             /* Include new token in response. */
-            val resumptionTokenElement = doc.createElement("oai:resumptionToken")
+            val resumptionTokenElement = doc.createElement("resumptionToken")
             resumptionTokenElement.setAttribute("completeListSize", "${response.results.numFound}")
             resumptionTokenElement.setAttribute("cursor", "$lastElement")
             resumptionTokenElement.appendChild(doc.createTextNode(newToken))
@@ -132,17 +134,18 @@ class OaiServer(private val store: TransientEntityStore): Closeable {
         val response = client.query(collection, query)
 
         /* Construct response document. */
-        val (doc, root) = this.documentBuilder.generateResponse(verb)
+        val root = this.documentBuilder.generateResponse(verb)
+        val doc = root.ownerDocument
 
         /* Process results. */
         for (document in response.results) {
-            val recordElement = doc.createElement("oai:record")
+            val recordElement = doc.createElement("record")
             root.appendChild(recordElement)
 
-            val headerElement = doc.createElement("oai:header")
+            val headerElement = doc.createElement("header")
             recordElement.appendChild(headerElement)
 
-            val identifierElement = doc.createElement("oai:identifier")
+            val identifierElement = doc.createElement("identifier")
             headerElement.appendChild(identifierElement)
             identifierElement.appendChild(doc.createTextNode(document.uuid()))
         }
@@ -155,8 +158,8 @@ class OaiServer(private val store: TransientEntityStore): Closeable {
             this.tokens[newToken] = lastElement
 
             /* Include new token in response. */
-            val resumptionTokenElement = doc.createElement("oai:resumptionToken")
-            resumptionTokenElement.setAttribute("oai:completeListSize", "${response.results.numFound}")
+            val resumptionTokenElement = doc.createElement("resumptionToken")
+            resumptionTokenElement.setAttribute("completeListSize", "${response.results.numFound}")
             resumptionTokenElement.setAttribute("cursor", "$lastElement")
             resumptionTokenElement.appendChild(doc.createTextNode(newToken))
             root.appendChild(resumptionTokenElement)
@@ -177,6 +180,7 @@ class OaiServer(private val store: TransientEntityStore): Closeable {
         return this.clients.computeIfAbsent(config) {
             /* Prepare builder */
             var httpBuilder = Http2SolrClient.Builder(config.server)
+            httpBuilder.useHttp1_1(true)
             if (config.username != null && config.password != null) {
                 httpBuilder = httpBuilder.withBasicAuthCredentials(config.username, config.password)
             }
@@ -192,24 +196,24 @@ class OaiServer(private val store: TransientEntityStore): Closeable {
      * @param verb The OAI-PMH verb.
      * @return [Pair] of [Document] and root [Element]
      */
-    private fun DocumentBuilder.generateResponse(verb: String): Pair<Document, Element> {
+    private fun DocumentBuilder.generateResponse(verb: String):Element {
         /* Construct response document. */
         val doc = this.newDocument()
 
         /* Root element. */
         val rootElement = doc.createElement("OAI-PMH")
-        rootElement.setAttributeNodeNS(doc.createAttributeNS("http://www.openarchives.org/OAI/2.0/", "oai"))
-        rootElement.setAttributeNodeNS(doc.createAttributeNS("http://www.w3.org/2001/XMLSchema-instance/", "xsi"))
-        rootElement.setAttributeNodeNS(doc.createAttribute("xsi:schemaLocation")?.also { it.value = "http://www.openarchives.org/OAI/2.0/ http://www.openarchives.org/OAI/2.0/OAI-PMH.xsd" })
+        rootElement.setAttributeNS("http://www.w3.org/2000/xmlns/", "xmlns", "http://www.openarchives.org/OAI/2.0/")
+        rootElement.setAttributeNS("http://www.w3.org/2000/xmlns/", "xmlns:xsi", "http://www.w3.org/2001/XMLSchema-instance")
+        rootElement.setAttributeNS("http://www.w3.org/2001/XMLSchema-instance", "xsi:schemaLocation", "http://www.openarchives.org/OAI/2.0/ http://www.openarchives.org/OAI/2.0/OAI-PMH.xsd")
         doc.appendChild(rootElement)
 
         /* Append response date. */
-        val responseDate = doc.createElement("oai:responseDate")
+        val responseDate = doc.createElement("responseDate")
         responseDate.textContent = Date().toString()
         rootElement.appendChild(responseDate)
 
         /* Append response date. */
-        val request = doc.createElement("oai:request")
+        val request = doc.createElement("request")
         request.setAttribute("verb", verb)
         rootElement.appendChild(request)
 
@@ -217,7 +221,7 @@ class OaiServer(private val store: TransientEntityStore): Closeable {
         val verbElement = doc.createElement(verb)
         rootElement.appendChild(verbElement)
 
-        return doc to rootElement
+        return verbElement
     }
 
     /**

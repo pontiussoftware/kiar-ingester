@@ -44,15 +44,15 @@ object EDMMapper: OAIMapper {
 
         /* Create RDF element. */
         val rdfElement = doc.createElement("rdf:RDF")
-        rdfElement.setAttributeNodeNS(doc.createAttributeNS("http://www.w3.org/1999/02/22-rdf-syntax-ns#", "rdf"))
-        rdfElement.setAttributeNodeNS(doc.createAttributeNS("http://www.w3.org/2001/XMLSchema-instance", "xsi"))
-        rdfElement.setAttributeNodeNS(doc.createAttributeNS("http://www.europeana.eu/schemas/edm/", "edm"))
-        rdfElement.setAttributeNodeNS(doc.createAttributeNS("http://www.w3.org/2003/01/geo/wgs84_pos#", "wgs84_pos"))
-        rdfElement.setAttributeNodeNS(doc.createAttributeNS("http://xmlns.com/foaf/0.1/", " foaf"))
-        rdfElement.setAttributeNodeNS(doc.createAttributeNS("http://rdvocab.info/ElementsGr2/", "rdaGr2"))
-        rdfElement.setAttributeNodeNS(doc.createAttributeNS("http://www.w3.org/2002/07/owl#", "owl"))
-        rdfElement.setAttributeNodeNS(doc.createAttributeNS("http://www.w3.org/2004/02/skos/core#", "skos"))
-        rdfElement.setAttributeNodeNS(doc.createAttributeNS("http://purl.org/dc/terms/", "dcterms"))
+        rdfElement.setAttributeNS("http://www.w3.org/2000/xmlns/", "xmlns:rdf", "http://www.w3.org/1999/02/22-rdf-syntax-ns#")
+        rdfElement.setAttributeNS("http://www.w3.org/2000/xmlns/", "xmlns:xsi", "http://www.w3.org/2001/XMLSchema-instance")
+        rdfElement.setAttributeNS("http://www.w3.org/2000/xmlns/", "xmlns:edm", "http://www.europeana.eu/schemas/edm/")
+        rdfElement.setAttributeNS("http://www.w3.org/2000/xmlns/", "xmlns:wgs84_pos", "http://www.w3.org/2003/01/geo/wgs84_pos#")
+        rdfElement.setAttributeNS("http://www.w3.org/2000/xmlns/", "xmlns:foaf", "http://xmlns.com/foaf/0.1/")
+        rdfElement.setAttributeNS("http://www.w3.org/2000/xmlns/", "xmlns:rdaGr2", "http://rdvocab.info/ElementsGr2/")
+        rdfElement.setAttributeNS("http://www.w3.org/2000/xmlns/", "xmlns:owl", "http://www.w3.org/2002/07/owl#")
+        rdfElement.setAttributeNS("http://www.w3.org/2000/xmlns/", "xmlns:skos", "http://www.w3.org/2004/02/skos/core#")
+        rdfElement.setAttributeNS("http://www.w3.org/2000/xmlns/", "xmlns:dcterms", "http://purl.org/dc/terms/")
         appendTo.appendChild(rdfElement)
 
         /* Create EDM element. */
