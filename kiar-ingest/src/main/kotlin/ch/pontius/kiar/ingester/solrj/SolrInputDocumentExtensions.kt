@@ -1,6 +1,15 @@
 package ch.pontius.kiar.ingester.solrj
 
+import org.apache.solr.common.SolrDocument
 import org.apache.solr.common.SolrInputDocument
+
+
+/**
+ * Checks if the [SolrInputDocument] has the specified [Field].
+ *
+ * @return True if [Field] is contained in [SolrInputDocument], false otherwise.
+ */
+fun SolrDocument.uuid(): String = this.get<String>(Field.UUID) ?: throw IllegalArgumentException("Field 'uuid' is missing. This is a programmer's error, since such entries should be filtered at the source.")
 
 /**
  * Checks if the [SolrInputDocument] has the specified [Field].
@@ -10,11 +19,26 @@ import org.apache.solr.common.SolrInputDocument
 fun SolrInputDocument.uuid(): String = this.get<String>(Field.UUID) ?:  throw IllegalArgumentException("Field 'uuid' is missing. This is a programmer's error, since such entries should be filtered at the source.")
 
 /**
+ * Checks if the [SolrDocument] has the specified [Field].
+ *
+ * @return True if [Field] is contained in [SolrInputDocument], false otherwise.
+ */
+fun SolrDocument.has(field: Field): Boolean = this.containsKey(field.solr)
+
+/**
  * Checks if the [SolrInputDocument] has the specified [Field].
  *
  * @return True if [Field] is contained in [SolrInputDocument], false otherwise.
  */
 fun SolrInputDocument.has(field: Field): Boolean = this.containsKey(field.solr)
+
+/**
+ * Returns the provided [Field] from this [SolrDocument].
+ *
+ * @param field The [Field] to return.
+ * @return The [Field]'s value [T] or null
+ */
+inline fun <reified T> SolrDocument.get(field: Field): T? = this.getFieldValue(field.solr) as? T
 
 /**
  * Returns the provided [Field] from this [SolrInputDocument].

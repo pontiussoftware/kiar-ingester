@@ -4,6 +4,8 @@ import ch.pontius.kiar.api.model.config.solr.ApacheSolrConfig
 import ch.pontius.kiar.database.config.solr.DbCollection
 import ch.pontius.kiar.database.config.solr.DbCollectionType
 import ch.pontius.kiar.ingester.parsing.xml.XmlDocumentParser
+import ch.pontius.kiar.ingester.solrj.uuid
+import ch.pontius.kiar.oai.mapper.EDMMapper
 import jetbrains.exodus.database.TransientEntityStore
 import kotlinx.dnq.query.filter
 import kotlinx.dnq.query.firstOrNull
@@ -25,7 +27,7 @@ import javax.xml.parsers.DocumentBuilderFactory
 class OaiServer(private val store: TransientEntityStore): Closeable {
 
     companion object {
-        const val PAGE_SIZE = 1000
+        const val PAGE_SIZE = 100
     }
 
     /** The [DocumentBuilder] instance used by this [XmlDocumentParser]. */
@@ -33,6 +35,9 @@ class OaiServer(private val store: TransientEntityStore): Closeable {
 
     /** A [ConcurrentHashMap] of [Http2SolrClient] used by this [OaiServer] to fetch data. */
     private val clients = ConcurrentHashMap<ApacheSolrConfig, Http2SolrClient>()
+
+    /** A [ConcurrentHashMap] of [Http2SolrClient] used by this [OaiServer] to fetch data. */
+    private val tokens = ConcurrentHashMap<String, Int>()
 
     /**
      *
@@ -44,20 +49,21 @@ class OaiServer(private val store: TransientEntityStore): Closeable {
     }
 
     /**
+     * Handles the OAI-PMH verb "ListIdentifiers".
      *
+     * @param collection The [String] name of the collection to harvest.
+     * @param resumptionToken The optional resumption token.
+     * @return [Document] representing the OAI-PMH response.
      */
-    fun handleListIdentifiers(collection: String, resumptionToken: String? = null): Document {
+    fun handleListRecords(collection: String, resumptionToken: String? = null): Document {
         /* Parse resumption token and start value. */
-        val split = resumptionToken?.split(":")
-        val start = split?.get(0)?.toInt() ?: 0
-        val size = split?.get(1)?.toInt() ?: PAGE_SIZE
+        val start = resumptionToken?.let { this.tokens[it] ?: throw IllegalArgumentException("Invalid resumption token.") } ?: 0
         val verb = "ListIdentifiers"
 
         /* Prepare Apache Solr query. */
         val query = SolrQuery("*:*")
-        query.addField("uuid")
         query.start = start
-        query.rows = size
+        query.rows = PAGE_SIZE
 
         /* Execute query. */
         val client = getOrLoadClient(collection)
@@ -76,13 +82,83 @@ class OaiServer(private val store: TransientEntityStore): Closeable {
 
             val identifierElement = doc.createElement("identifier")
             headerElement.appendChild(identifierElement)
-            identifierElement.appendChild(doc.createTextNode(document.getFieldValue("uuid").toString()))
+            identifierElement.appendChild(doc.createTextNode(document.uuid()))
+
+            /* Map and append metadata. */
+            val metadataElement = doc.createElement("metadata")
+            EDMMapper.map(metadataElement, document)
+            recordElement.appendChild(metadataElement)
         }
 
         /* If there are more documents to return, include a resumptionToken. */
-        if (response.results.numFound > start + size) {
+        val lastElement = start + PAGE_SIZE
+        if (response.results.numFound > lastElement) {
+            /* Update resumption token. */
+            val newToken = UUID.randomUUID().toString()
+            this.tokens[newToken] = lastElement
+
+            /* Include new token in response. */
             val resumptionTokenElement = doc.createElement("resumptionToken")
-            resumptionTokenElement.appendChild(doc.createTextNode("${start + size}:$size"))
+            resumptionTokenElement.setAttribute("completeListSize", "${response.results.numFound}")
+            resumptionTokenElement.setAttribute("cursor", "$lastElement")
+            resumptionTokenElement.appendChild(doc.createTextNode(newToken))
+            root.appendChild(resumptionTokenElement)
+        }
+
+        /* Store resumption token. */
+        return doc
+    }
+
+    /**
+     * Handles the OAI-PMH verb "ListIdentifiers".
+     *
+     * @param collection The [String] name of the collection to harvest.
+     * @param resumptionToken The optional resumption token.
+     * @return [Document] representing the OAI-PMH response.
+     */
+    fun handleListIdentifiers(collection: String, resumptionToken: String? = null): Document {
+        /* Parse resumption token and start value. */
+        val start = resumptionToken?.let { this.tokens[it] ?: throw IllegalArgumentException("Invalid resumption token.") } ?: 0
+        val verb = "ListIdentifiers"
+
+        /* Prepare Apache Solr query. */
+        val query = SolrQuery("*:*")
+        query.addField("uuid")
+        query.start = start
+        query.rows = PAGE_SIZE
+
+        /* Execute query. */
+        val client = getOrLoadClient(collection)
+        val response = client.query(collection, query)
+
+        /* Construct response document. */
+        val (doc, root) = this.documentBuilder.generateResponse(verb)
+
+        /* Process results. */
+        for (document in response.results) {
+            val recordElement = doc.createElement("record")
+            root.appendChild(recordElement)
+
+            val headerElement = doc.createElement("header")
+            recordElement.appendChild(headerElement)
+
+            val identifierElement = doc.createElement("identifier")
+            headerElement.appendChild(identifierElement)
+            identifierElement.appendChild(doc.createTextNode(document.uuid()))
+        }
+
+        /* If there are more documents to return, include a resumptionToken. */
+        val lastElement = start + PAGE_SIZE
+        if (response.results.numFound > lastElement) {
+            /* Update resumption token. */
+            val newToken = UUID.randomUUID().toString()
+            this.tokens[newToken] = lastElement
+
+            /* Include new token in response. */
+            val resumptionTokenElement = doc.createElement("resumptionToken")
+            resumptionTokenElement.setAttribute("completeListSize", "${response.results.numFound}")
+            resumptionTokenElement.setAttribute("cursor", "$lastElement")
+            resumptionTokenElement.appendChild(doc.createTextNode(newToken))
             root.appendChild(resumptionTokenElement)
         }
 

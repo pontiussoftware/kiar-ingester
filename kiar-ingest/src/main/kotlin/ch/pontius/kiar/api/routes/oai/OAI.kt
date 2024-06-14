@@ -46,8 +46,8 @@ fun oaiPmh(ctx: Context, server: OaiServer) {
         IDENTIFY -> server.handleIdentify()
         LISTSETS -> TODO()
         LISTMETADATAFORMATS -> TODO()
-        LISTIDENTIFIERS -> server.handleListIdentifiers(collection)
-        LISTRECORDS -> TODO()
+        LISTIDENTIFIERS -> server.handleListIdentifiers(collection, ctx.queryParam("resumptionToken"))
+        LISTRECORDS -> server.handleListRecords(collection, ctx.queryParam("resumptionToken"))
         GETRECORD -> TODO()
         null -> TODO()
     }

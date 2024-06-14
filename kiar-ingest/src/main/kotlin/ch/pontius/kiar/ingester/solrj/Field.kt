@@ -28,6 +28,9 @@ enum class Field(val solr: String, val required: Boolean = false, val multiValue
     /** Field containing the object's UUID. */
     UUID("uuid", true),
 
+    /** Field containing the object's inventory number. */
+    INVENTORY_NUMBER("inventarnummer", true),
+
     /** Field containing an object's designation. */
     OBJEKTBEZEICHNUNG("objektbezeichnung", true),
 
