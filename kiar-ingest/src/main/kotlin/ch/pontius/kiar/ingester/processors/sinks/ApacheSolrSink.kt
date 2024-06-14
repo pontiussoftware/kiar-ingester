@@ -12,6 +12,8 @@ import ch.pontius.kiar.ingester.solrj.Constants.FIELD_NAME_PARTICIPANT
 import ch.pontius.kiar.ingester.solrj.Constants.SYSTEM_FIELDS
 import ch.pontius.kiar.ingester.solrj.Field
 import ch.pontius.kiar.ingester.solrj.get
+import ch.pontius.kiar.ingester.solrj.has
+import ch.pontius.kiar.ingester.solrj.setField
 import kotlinx.coroutines.flow.*
 import kotlinx.dnq.query.asSequence
 import kotlinx.dnq.query.filter
@@ -23,12 +25,13 @@ import org.apache.solr.client.solrj.request.schema.SchemaRequest
 import org.apache.solr.common.SolrInputDocument
 import java.io.IOException
 import java.lang.IllegalStateException
+import java.util.Date
 
 /**
  * A [Sink] that processes [SolrInputDocument]s and ingests them into Apache Solr.
  *
  * @author Ralph Gasser
- * @version 1.2.0
+ * @version 1.2.1
  */
 class ApacheSolrSink(override val input: Source<SolrInputDocument>, private val config: ApacheSolrConfig): Sink<SolrInputDocument> {
 
@@ -73,6 +76,12 @@ class ApacheSolrSink(override val input: Source<SolrInputDocument>, private val 
             this@ApacheSolrSink.input.toFlow(context).collect() { doc ->
                 val uuid = doc.get<String>(Field.UUID)
                 if (uuid != null) {
+                    /* Set last change field. */
+                    if (!doc.has(Field.LASTCHANGE)) {
+                        doc.setField(Field.LASTCHANGE, Date())
+                    }
+
+                    /* Ingest into collections. */
                     for (collection in this@ApacheSolrSink.collections) {
                         try {
                             if (this@ApacheSolrSink.institutions[doc.get<String>(Field.INSTITUTION)]?.contains(collection) == true) {
