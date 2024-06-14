@@ -6,7 +6,8 @@ import ch.pontius.kiar.api.routes.institution.postSyncInstitutions
 import ch.pontius.kiar.api.routes.job.*
 import ch.pontius.kiar.api.routes.masterdata.listCantons
 import ch.pontius.kiar.api.routes.masterdata.listRightStatements
-import ch.pontius.kiar.api.routes.oai.oaiPmh
+import ch.pontius.kiar.api.routes.oai.getOaiPmh
+import ch.pontius.kiar.api.routes.oai.postOaiPmh
 import ch.pontius.kiar.api.routes.session.*
 import ch.pontius.kiar.api.routes.user.*
 import ch.pontius.kiar.config.Config
@@ -137,8 +138,8 @@ fun configureApiRoutes(store: TransientEntityStore, server: IngesterServer, conf
         /* Endpoints related to OAI-PMH. */
         path("{collection}") {
             val oai = OaiServer(store)
-            get("oai-pmh",  { ctx -> oaiPmh(ctx, oai) } )
-            post("oai-pmh",  { ctx -> oaiPmh(ctx, oai) } )
+            get("oai-pmh",  { ctx -> getOaiPmh(ctx, oai) } )
+            post("oai-pmh",  { ctx -> postOaiPmh(ctx, oai) } )
         }
     }
 }
