@@ -18,6 +18,7 @@ import javax.xml.transform.stream.StreamResult
         OpenApiParam(name = "verb", type = String::class, description = "The OAI-PMH verb.", required = true),
         OpenApiParam(name = "identifier", type = String::class, description = "The identifier to harvest (used for GetRecord ).", required = false),
         OpenApiParam(name = "resumptionToken", type = String::class, description = "The OAI-PMH resumption token (used for ListIdentifiers and ListRecords).", required = false),
+        OpenApiParam(name = "metadataPrefix", type = String::class, description = "The OAI-PMH metadata prefix (used for GetRecord, ListIdentifiers and ListRecords).", required = false),
     ],
     pathParams = [
         OpenApiParam(name = "collection", type = String::class, description = "The collection to harvest.", required = true)
@@ -45,11 +46,18 @@ fun getOaiPmh(ctx: Context, server: OaiServer) {
     summary = "An endpoint that provides OAI-PMH harvesting for the specified collection.",
     operationId = "postOaiPmh",
     tags = ["OAI"],
-    formParams = [
-        OpenApiParam(name = "verb", type = String::class, description = "The OAI-PMH verb.", required = true),
-        OpenApiParam(name = "identifier", type = String::class, description = "The identifier to harvest (used for GetRecord ).", required = false),
-        OpenApiParam(name = "resumptionToken", type = String::class, description = "The OAI-PMH resumption token (used for ListIdentifiers and ListRecords).", required = false),
-    ],
+    requestBody = OpenApiRequestBody(
+        content = [
+            OpenApiContent(mimeType ="application/x-www-form-urlencoded", type = "object", properties = [
+                OpenApiContentProperty(name = "verb", type = "string"),
+                OpenApiContentProperty(name = "identifier", type = "string"),
+                OpenApiContentProperty(name = "resumptionToken", type = "string"),
+                OpenApiContentProperty(name = "metadataPrefix", type = "string")
+            ])
+        ],
+        description = "Multipart form data containing the form fields to upload.",
+        required = true
+    ),
     pathParams = [
         OpenApiParam(name = "collection", type = String::class, description = "The collection to harvest.", required = true)
     ],
