@@ -17,6 +17,7 @@ import org.w3c.dom.Document
 import org.w3c.dom.Element
 import java.io.Closeable
 import java.text.DateFormat
+import java.text.ParseException
 import java.text.SimpleDateFormat
 import java.util.*
 import java.util.concurrent.ConcurrentHashMap
@@ -174,13 +175,28 @@ class OaiServer(private val store: TransientEntityStore): Closeable {
         val collection = ctx.pathParam("collection")
         val identifier = ctx.queryParam("identifier") ?: return handleError("badArgument", "Missing identifier.")
         val prefix = ctx.queryParam("metadataPrefix") ?: return handleError("badArgument", "Missing metadata prefix.")
+        val from = ctx.queryParam("from")?.let {
+            try {
+                SimpleDateFormat("yyyy-MM-dd").parse(it)
+            } catch (e: ParseException) {
+                return handleError("badArgument", "Malformed 'from'.")
+            }
+        }
+        val until = ctx.queryParam("until")?.let {
+            try {
+                SimpleDateFormat("yyyy-MM-dd").parse(it)
+            } catch (e: ParseException) {
+                return handleError("badArgument", "Malformed 'until'.")
+            }
+        }
+
         val mapper = Formats.entries.find { it.prefix == prefix }?.mapper ?: return handleError("cannotDisseminateFormat", "Unsupported metadata prefix '$prefix'.")
 
         /* Obtain client and query for entry. */
         val client = getOrLoadClient(collection)
         val response = try {
             client.getById(collection, identifier) ?: return handleError("idDoesNotExist", "The provided identifier '${identifier}' does not exist.")
-        } catch (e: IllegalArgumentException) {
+        } catch (e: Throwable) {
             return handleError("idDoesNotExist", "The provided identifier '${identifier}' does not exist.")
         }
 
@@ -193,7 +209,7 @@ class OaiServer(private val store: TransientEntityStore): Closeable {
 
         /* Create header element. */
         val headerElement = doc.createElement("header")
-        headerElement.appendChild(doc.createElement("identifier").apply { textContent = response.uuid()})
+        headerElement.appendChild(doc.createElement("identifier").apply { textContent = response.uuid() })
         headerElement.appendChild(doc.createElement("datestamp").apply { textContent = "2024-01-01" })
         recordElement.appendChild(headerElement)
 
