@@ -35,20 +35,29 @@ fun oaiPmh(ctx: Context, server: OaiServer) {
     val verb = ctx.queryParam("verb")?.let { Verbs.valueOf(it.uppercase()) }
 
     /* Generate response document using OAI server. */
-    val doc = when (verb) {
-        IDENTIFY -> server.handleIdentify()
-        LISTSETS -> server.handleListSets()
-        LISTMETADATAFORMATS -> server.handleListMetadataFormats()
-        LISTIDENTIFIERS -> server.handleListIdentifiers(
-            ctx.queryParam("set") ?: throw ErrorStatusException(400, "Parameter 'set' must be specified."),
-            ctx.queryParam("resumptionToken")
-        )
-        LISTRECORDS -> server.handleListRecords(
-            ctx.queryParam("set")?: throw ErrorStatusException(400, "Parameter 'set' must be specified."),
-            ctx.queryParam("resumptionToken")
-        )
-        GETRECORD -> TODO()
-        null -> throw ErrorStatusException(400, "Parameter 'verb' must be specified.")
+    val doc = try {
+         when (verb) {
+            IDENTIFY -> server.handleIdentify()
+            LISTSETS -> server.handleListSets()
+            LISTMETADATAFORMATS -> server.handleListMetadataFormats()
+            LISTIDENTIFIERS -> server.handleListIdentifiers(
+                ctx.queryParam("set") ?: throw ErrorStatusException(400, "Parameter 'set' must be specified."),
+                ctx.queryParam("resumptionToken")
+            )
+
+            LISTRECORDS -> server.handleListRecords(
+                ctx.queryParam("set") ?: throw ErrorStatusException(400, "Parameter 'set' must be specified."),
+                ctx.queryParam("resumptionToken")
+            )
+            GETRECORD -> TODO()
+            else ->  server.handleError("Illegal OAI verb.")
+        }
+    } catch (e: ErrorStatusException) {
+        ctx.status(e.statusCode)
+        server.handleError(e.message)
+    } catch (e: Throwable) {
+        ctx.status(500)
+        server.handleError(e.message ?: "An unknown error occurred.")
     }
 
     /* Convert Document to XML string */
@@ -58,5 +67,5 @@ fun oaiPmh(ctx: Context, server: OaiServer) {
     val xmlString = writer.toString()
 
     /* Return XML response */
-    ctx.contentType("text/xml; charset=utf-8").result(xmlString)
+    ctx.contentType("text/xml").result(xmlString)
 }

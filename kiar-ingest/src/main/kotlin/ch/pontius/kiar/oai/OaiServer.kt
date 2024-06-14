@@ -44,6 +44,17 @@ class OaiServer(private val store: TransientEntityStore): Closeable {
     private val tokens = ConcurrentHashMap<String, Int>()
 
     /**
+     * Handles a error during OAI-PMH processing.
+     *
+     * @return [Document] representing the OAI-PMH response.
+     */
+    fun handleError(message: String): Document  {
+        val root = this.documentBuilder.generateResponse("error")
+        root.textContent = message
+        return root.ownerDocument
+    }
+
+    /**
      * Handles the OAI-PMH verb "Identify".
      *
      * @return [Document] representing the OAI-PMH response.
