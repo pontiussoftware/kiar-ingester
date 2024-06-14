@@ -58,5 +58,5 @@ fun oaiPmh(ctx: Context, server: OaiServer) {
     val xmlString = writer.toString()
 
     /* Return XML response */
-    ctx.contentType("application/xml; charset=utf-8").result(xmlString)
+    ctx.contentType("text/xml; charset=utf-8").result(xmlString)
 }

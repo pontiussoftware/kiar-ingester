@@ -54,10 +54,10 @@ class OaiServer(private val store: TransientEntityStore): Closeable {
         root.appendChild(root.ownerDocument.createElement("repositoryName").apply { textContent = "Kiar" })
         root.appendChild(root.ownerDocument.createElement("baseURL").apply { textContent = "https://ingest.kimnet.ch/api/oai-pmh" })
         root.appendChild(root.ownerDocument.createElement("protocolVersion").apply { textContent = "2.0" })
+        root.appendChild(root.ownerDocument.createElement("adminEmail").apply { textContent = "info@kimnet.ch" })
         root.appendChild(root.ownerDocument.createElement("earliestDatestamp").apply { textContent = "2024-01-01" })
         root.appendChild(root.ownerDocument.createElement("deletedRecord").apply { textContent = "no" })
         root.appendChild(root.ownerDocument.createElement("granularity").apply { textContent = "YYYY-MM-DD" })
-        root.appendChild(root.ownerDocument.createElement("adminEmail").apply { textContent = "info@kimnet.ch" })
         return root.ownerDocument
     }
 
