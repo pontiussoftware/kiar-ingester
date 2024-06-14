@@ -10,6 +10,9 @@ enum class Field(val solr: String, val required: Boolean = false, val multiValue
     /** A transient field used to store raw image information. */
     RAW("_raw_", false, true, true),
 
+    /** Field containing date of the last change. */
+    LASTCHANGE("_lastchange_", true, false, false),
+
     /** Field used to store the number of available images. */
     IMAGECOUNT("_imagecount_", true, false, false),
 
