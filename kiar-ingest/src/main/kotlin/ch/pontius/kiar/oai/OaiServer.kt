@@ -6,8 +6,8 @@ import ch.pontius.kiar.database.config.solr.DbCollectionType
 import ch.pontius.kiar.ingester.parsing.xml.XmlDocumentParser
 import ch.pontius.kiar.ingester.solrj.uuid
 import ch.pontius.kiar.oai.mapper.EDMMapper
+import io.javalin.http.Context
 import jetbrains.exodus.database.TransientEntityStore
-import kotlinx.dnq.query.asSequence
 import kotlinx.dnq.query.filter
 import kotlinx.dnq.query.firstOrNull
 import org.apache.solr.client.solrj.SolrQuery
@@ -53,22 +53,26 @@ class OaiServer(private val store: TransientEntityStore): Closeable {
     /**
      * Handles a error during OAI-PMH processing.
      *
+     * @param code The error code.
+     * @param message The error message.
      * @return [Document] representing the OAI-PMH response.
      */
-    fun handleError(message: String): Document  {
+    fun handleError(code: String, message: String): Document  {
         val root = this.documentBuilder.generateResponse("error")
         root.textContent = message
+        root.setAttribute("code", code)
         return root.ownerDocument
     }
 
     /**
      * Handles the OAI-PMH verb "Identify".
      *
+     * @param ctx The Javalin [Context] object
      * @return [Document] representing the OAI-PMH response.
      */
-    fun handleIdentify(collection: String): Document {
-        val verb = "Identify"
-        val root = this.documentBuilder.generateResponse(verb)
+    fun handleIdentify(ctx: Context): Document {
+        val collection = ctx.pathParam("collection")
+        val root = this.documentBuilder.generateResponse("Identify")
         root.appendChild(root.ownerDocument.createElement("repositoryName").apply { textContent = "Kiar" })
         root.appendChild(root.ownerDocument.createElement("baseURL").apply { textContent = "https://ingest.kimnet.ch/api/$collection/oai-pmh" })
         root.appendChild(root.ownerDocument.createElement("protocolVersion").apply { textContent = "2.0" })
@@ -121,17 +125,19 @@ class OaiServer(private val store: TransientEntityStore): Closeable {
     /**
      * Handles the OAI-PMH verb "ListIdentifiers".
      *
-     * @param collection The [String] name of the collection to harvest.
-     * @param identifier The optional resumption token.
+     * @param ctx The Javalin [Context] object
      * @return [Document] representing the OAI-PMH response.
      */
-    fun handleGetRecord(collection: String, identifier: String): Document {
-        val verb = "GetRecord"
+    fun handleGetRecord(ctx: Context): Document {
+        val collection = ctx.pathParam("collection")
+        val identifier = ctx.queryParam("identifier") ?: return handleError("badArgument", "Missing identifier.")
+
+        /* Obtain client and query for entry. */
         val client = getOrLoadClient(collection)
         val response = client.getById(collection, identifier)
 
         /* Generate response document. */
-        val root = this.documentBuilder.generateResponse(verb)
+        val root = this.documentBuilder.generateResponse("GetRecord")
         val doc = root.ownerDocument
 
         /* Handle error case. */
@@ -161,16 +167,21 @@ class OaiServer(private val store: TransientEntityStore): Closeable {
     }
 
     /**
-     * Handles the OAI-PMH verb "ListIdentifiers".
+     * Handles the OAI-PMH verb "ListRecords".
      *
-     * @param collection The [String] name of the collection to harvest.
-     * @param resumptionToken The optional resumption token.
+     * @param ctx The Javalin [Context] object
      * @return [Document] representing the OAI-PMH response.
      */
-    fun handleListRecords(collection: String, resumptionToken: String? = null): Document {
-        /* Parse resumption token and start value. */
-        val start = resumptionToken?.let { this.tokens[it] ?: throw IllegalArgumentException("Invalid resumption token.") } ?: 0
-        val verb = "ListRecords"
+    fun handleListRecords(ctx: Context): Document {
+        val collection = ctx.pathParam("collection")
+        val token = ctx.queryParam("resumptionToken")
+
+        /* Determine start based on resumption token. */
+        val start = if (token != null) {
+            this.tokens[token] ?: return handleError("badResumptionToken", "Invalid resumption token.")
+        } else {
+            0
+        }
 
         /* Prepare Apache Solr query. */
         val query = SolrQuery("*:*")
@@ -182,7 +193,7 @@ class OaiServer(private val store: TransientEntityStore): Closeable {
         val response = client.query(collection, query)
 
         /* Construct response document. */
-        val root = this.documentBuilder.generateResponse(verb)
+        val root = this.documentBuilder.generateResponse("ListRecords")
         val doc = root.ownerDocument
 
 
@@ -227,14 +238,19 @@ class OaiServer(private val store: TransientEntityStore): Closeable {
     /**
      * Handles the OAI-PMH verb "ListIdentifiers".
      *
-     * @param collection The [String] name of the collection to harvest.
-     * @param resumptionToken The optional resumption token.
+     * @param ctx The Javalin [Context] object
      * @return [Document] representing the OAI-PMH response.
      */
-    fun handleListIdentifiers(collection: String, resumptionToken: String? = null): Document {
-        /* Parse resumption token and start value. */
-        val start = resumptionToken?.let { this.tokens[it] ?: throw IllegalArgumentException("Invalid resumption token.") } ?: 0
-        val verb = "ListIdentifiers"
+    fun handleListIdentifiers(ctx: Context): Document {
+        val collection = ctx.pathParam("collection")
+        val token = ctx.queryParam("resumptionToken")
+
+        /* Determine start based on resumption token. */
+        val start = if (token != null) {
+            this.tokens[token] ?: return handleError("badResumptionToken", "Invalid resumption token.")
+        } else {
+            0
+        }
 
         /* Prepare Apache Solr query. */
         val query = SolrQuery("*:*")
@@ -245,9 +261,12 @@ class OaiServer(private val store: TransientEntityStore): Closeable {
         /* Execute query. */
         val client = getOrLoadClient(collection)
         val response = client.query(collection, query)
+        if (response.results.numFound == 0L) {
+            return handleError("noRecordsMatch", "No records match the query.")
+        }
 
         /* Construct response document. */
-        val root = this.documentBuilder.generateResponse(verb)
+        val root = this.documentBuilder.generateResponse("ListIdentifiers")
         val doc = root.ownerDocument
 
         /* Process results. */

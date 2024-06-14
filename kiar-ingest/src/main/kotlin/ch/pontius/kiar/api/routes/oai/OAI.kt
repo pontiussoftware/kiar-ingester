@@ -4,7 +4,6 @@ import ch.pontius.kiar.api.model.oai.Verbs
 import ch.pontius.kiar.api.model.status.ErrorStatus
 import ch.pontius.kiar.api.model.status.SuccessStatus
 import ch.pontius.kiar.api.model.oai.Verbs.*
-import ch.pontius.kiar.api.model.status.ErrorStatusException
 import ch.pontius.kiar.oai.OaiServer
 import io.javalin.http.Context
 import io.javalin.openapi.*
@@ -35,26 +34,22 @@ import javax.xml.transform.stream.StreamResult
     ]
 )
 fun oaiPmh(ctx: Context, server: OaiServer) {
-    val verb = ctx.queryParam("verb")?.let { Verbs.valueOf(it.uppercase()) }
-    val collection = ctx.pathParam("collection")
-
-    /* Generate response document using OAI server. */
     val doc = try {
-         when (verb) {
-            IDENTIFY -> server.handleIdentify(collection)
+        /* Extract OAI verb from query parameters. */
+        val verb = Verbs.valueOf(ctx.queryParam("verb") ?: "UNKNOWN")
+
+        /* Generate response document using OAI server. */
+        when (verb) {
+            IDENTIFY -> server.handleIdentify(ctx)
             LISTSETS -> server.handleListSets()
             LISTMETADATAFORMATS -> server.handleListMetadataFormats()
-            LISTIDENTIFIERS -> server.handleListIdentifiers(collection, ctx.queryParam("resumptionToken"))
-            LISTRECORDS -> server.handleListRecords(collection, ctx.queryParam("resumptionToken"))
-            GETRECORD -> server.handleGetRecord(collection, ctx.queryParam("identifier") ?: "")
-            else ->  server.handleError("Illegal OAI verb.")
+            LISTIDENTIFIERS -> server.handleListIdentifiers(ctx)
+            LISTRECORDS -> server.handleListRecords(ctx)
+            GETRECORD -> server.handleGetRecord(ctx)
         }
-    } catch (e: ErrorStatusException) {
-        ctx.status(e.statusCode)
-        server.handleError(e.message)
-    } catch (e: Throwable) {
-        ctx.status(500)
-        server.handleError(e.message ?: "An unknown error occurred.")
+    } catch (e: IllegalArgumentException) {
+        server.handleError("badVerb","Illegal OAI verb.")
+        return
     }
 
     /* Convert Document to XML string */
