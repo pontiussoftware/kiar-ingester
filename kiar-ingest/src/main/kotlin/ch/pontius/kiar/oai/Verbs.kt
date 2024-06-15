@@ -3,7 +3,7 @@ package ch.pontius.kiar.oai
 /**
  * Enumeration of OAI-PMH verbs.
  *
- * @see https://www.openarchives.org/OAI/openarchivesprotocol.html#VerbDefinitions
+ * See [OAI-PMH Protocol](https://www.openarchives.org/OAI/openarchivesprotocol.html#VerbDefinitions)
  *
  * @author Ralph Gasser
  * @version 1.0.0

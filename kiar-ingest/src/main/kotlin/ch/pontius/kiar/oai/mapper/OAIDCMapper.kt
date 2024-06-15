@@ -9,23 +9,12 @@ import org.w3c.dom.Element
 import org.w3c.dom.Node
 
 /**
+ * [OAIMapper] implementation that maps to the OAI DC format.
  *
  * @author Ralph Gasser
- * @version 1.0
+ * @version 1.0.0
  */
 object OAIDCMapper: OAIMapper {
-
-    /** */
-    private val languages = mapOf(
-        "Deutsch" to "deu",
-        "Französisch" to "fra",
-        "Lateinisch" to "lat",
-        "Italienisch" to "ita",
-        "Englisch" to "eng",
-        "Räteromanisch" to "fra",
-        "Spanisch" to "spa"
-    )
-
     /**
      * Maps the provided [SolrDocument] to an EDM element.
      *
@@ -44,7 +33,7 @@ object OAIDCMapper: OAIMapper {
         /* Map source language. */
         element.appendChild(doc.createElement("dc:language").apply {
             val language = document.get<String>(Field.LANGUAGE) ?: "Deutsch"
-            this.textContent = (languages[language] ?: language)
+            this.textContent = language
         })
 
         /* Map source institution. */

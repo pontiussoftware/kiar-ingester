@@ -15,18 +15,6 @@ import org.w3c.dom.Node
  * @version 1.0.0
  */
 object EDMMapper: OAIMapper {
-
-    /** */
-    private val languages = mapOf(
-        "Deutsch" to "deu",
-        "Französisch" to "fra",
-        "Lateinisch" to "lat",
-        "Italienisch" to "ita",
-        "Englisch" to "eng",
-        "Räteromanisch" to "fra",
-        "Spanisch" to "spa"
-    )
-
     /**
      * Maps the provided [SolrDocument] to an EDM element.
      *
@@ -63,7 +51,7 @@ object EDMMapper: OAIMapper {
         /* Map source language. */
         element.appendChild(doc.createElement("dc:language").apply {
             val language = document.get<String>(Field.LANGUAGE) ?: "Deutsch"
-            this.textContent = (this@EDMMapper.languages[language] ?: language)
+            this.textContent = language
         })
 
         /* Map source institution. */

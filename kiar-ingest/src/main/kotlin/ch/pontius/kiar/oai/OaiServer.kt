@@ -27,6 +27,9 @@ import javax.xml.parsers.DocumentBuilderFactory
 
 
 /**
+ * A simple OAI-PMH server implementation for harvesting data contained in collections.
+ *
+ * See [OAI-PMH Protocol](https://www.openarchives.org/OAI/openarchivesprotocol.html) for more information.
  *
  * @author Ralph Gasser
  * @version 1.0.0
@@ -35,6 +38,9 @@ class OaiServer(private val store: TransientEntityStore): Closeable {
 
     companion object {
         const val PAGE_SIZE = 100
+
+        /** The simple date format used for queries. */
+        private val GRANULARITY_FORMAT = SimpleDateFormat("yyyy-MM-dd")
     }
 
     /** The [DocumentBuilder] instance used by this [XmlDocumentParser]. */
@@ -225,14 +231,14 @@ class OaiServer(private val store: TransientEntityStore): Closeable {
         val token = parameters["resumptionToken"]
         val from = parameters["from"]?.let {
             try {
-                SimpleDateFormat("yyyy-MM-dd").parse(it)
+                GRANULARITY_FORMAT.parse(it)
             } catch (e: ParseException) {
                 return handleError("badArgument", "Malformed 'from'.")
             }
         }
         val until = parameters["until"]?.let {
             try {
-                SimpleDateFormat("yyyy-MM-dd").parse(it)
+                GRANULARITY_FORMAT.parse(it)
             } catch (e: ParseException) {
                 return handleError("badArgument", "Malformed 'until'.")
             }
@@ -249,6 +255,13 @@ class OaiServer(private val store: TransientEntityStore): Closeable {
 
         /* Prepare Apache Solr query. */
         val query = SolrQuery("*:*")
+        if (from != null && until != null) {
+            query.addFilterQuery("date:[${GRANULARITY_FORMAT.format(from)} TO ${GRANULARITY_FORMAT.format(until)}]")
+        } else if (from != null) {
+            query.addFilterQuery("date:[${GRANULARITY_FORMAT.format(from)} TO *]")
+        } else if (until != null) {
+            query.addFilterQuery("date:[* TO ${GRANULARITY_FORMAT.format(until)}]")
+        }
         query.start = start
         query.rows = PAGE_SIZE
 
@@ -318,9 +331,31 @@ class OaiServer(private val store: TransientEntityStore): Closeable {
             0 to mapper
         }
 
+        /* Parse optional start and end date. */
+        val from = parameters["from"]?.let {
+            try {
+                GRANULARITY_FORMAT.parse(it)
+            } catch (e: ParseException) {
+                return handleError("badArgument", "Malformed 'from'.")
+            }
+        }
+        val until = parameters["until"]?.let {
+            try {
+                GRANULARITY_FORMAT.parse(it)
+            } catch (e: ParseException) {
+                return handleError("badArgument", "Malformed 'until'.")
+            }
+        }
 
         /* Prepare Apache Solr query. */
         val query = SolrQuery("*:*")
+        if (from != null && until != null) {
+            query.addFilterQuery("date:[${GRANULARITY_FORMAT.format(from)} TO ${GRANULARITY_FORMAT.format(until)}]")
+        } else if (from != null) {
+            query.addFilterQuery("date:[${GRANULARITY_FORMAT.format(from)} TO *]")
+        } else if (until != null) {
+            query.addFilterQuery("date:[* TO ${GRANULARITY_FORMAT.format(until)}]")
+        }
         query.addField("uuid")
         query.start = start
         query.rows = PAGE_SIZE
