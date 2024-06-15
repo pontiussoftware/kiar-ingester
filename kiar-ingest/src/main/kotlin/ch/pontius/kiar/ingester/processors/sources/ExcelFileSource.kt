@@ -51,7 +51,7 @@ class ExcelFileSource(private val file: Path, private val config: EntityMapping,
                             CellType.NUMERIC -> cell.numericCellValue.toString()
                             CellType.BOOLEAN -> cell.booleanCellValue.toString()
                             else -> null /* TODO: Can formulas be parsed? */
-                        }?.trim() ?: continue, doc)
+                        }?.trim() ?: continue, doc, context)
                     }
 
                     /* Emit document. */

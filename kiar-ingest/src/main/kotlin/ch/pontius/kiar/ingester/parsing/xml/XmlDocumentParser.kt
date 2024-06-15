@@ -2,6 +2,7 @@ package ch.pontius.kiar.ingester.parsing.xml
 
 import ch.pontius.kiar.api.model.config.mappings.EntityMapping
 import ch.pontius.kiar.ingester.parsing.values.ValueParser
+import ch.pontius.kiar.ingester.processors.ProcessingContext
 import org.apache.solr.common.SolrInputDocument
 import org.w3c.dom.Node
 import java.io.InputStream
@@ -17,9 +18,9 @@ import javax.xml.xpath.XPathFactory
  * A parser for parsing simple XML [Node]s and documents into [SolrInputDocument]s using an [EntityMapping].
  *
  * @author Ralph Gasser
- * @version 1.1.0
+ * @version 1.2.1
  */
-class XmlDocumentParser(config: EntityMapping) {
+class XmlDocumentParser(config: EntityMapping, private val context: ProcessingContext) {
     /** The [DocumentBuilder] instance used by this [XmlDocumentParser]. */
     private val documentBuilder: DocumentBuilder = DocumentBuilderFactory.newInstance().newDocumentBuilder()
 
@@ -49,6 +50,6 @@ class XmlDocumentParser(config: EntityMapping) {
      */
     fun parse(stream: InputStream): SolrInputDocument {
         val xmlDocument = this.documentBuilder.parse(stream)
-        return this.mappings.parse(xmlDocument)
+        return this.mappings.parse(xmlDocument, this.context)
     }
 }

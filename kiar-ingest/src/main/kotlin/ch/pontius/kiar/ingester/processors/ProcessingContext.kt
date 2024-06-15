@@ -6,6 +6,7 @@ import ch.pontius.kiar.database.job.DbJob
 import ch.pontius.kiar.database.job.DbJobLog
 import jetbrains.exodus.database.TransientEntityStore
 import kotlinx.dnq.util.findById
+import org.apache.logging.log4j.LogManager
 import java.util.*
 import java.util.concurrent.atomic.AtomicLong
 
@@ -13,7 +14,7 @@ import java.util.concurrent.atomic.AtomicLong
  * A [ProcessingContext] that captures contextual information about a running job.
  *
  * @author Ralph Gasser
- * @version 1.0.0
+ * @version 1.1.0
  */
 class ProcessingContext(
     /** The ID of the job this [ProcessingContext] belongs to. */
@@ -25,6 +26,11 @@ class ProcessingContext(
     /** */
     private val store: TransientEntityStore
 ) {
+
+    companion object {
+        private val LOGGER = LogManager.getLogger()
+    }
+
     /** Number of items processed in this [ProcessingContext]. */
     private val _processed = AtomicLong(0L)
 
@@ -65,16 +71,21 @@ class ProcessingContext(
     fun log(log: JobLog) {
         this.buffer.add(log)
 
-        /* Errors are logged in statistics as well. */
-        if (log.level in setOf(JobLogLevel.SEVERE, JobLogLevel.ERROR)) {
-            this._error.incrementAndGet()
+        /* Process event. */
+        when(log.level) {
+            JobLogLevel.WARNING -> LOGGER.info(log.description)
+            JobLogLevel.VALIDATION -> {
+                LOGGER.warn(log.description)
+                this._skipped.incrementAndGet()
+            }
+            JobLogLevel.ERROR,
+            JobLogLevel.SEVERE -> {
+                this._error.incrementAndGet()
+                LOGGER.error(log.description)
+            }
         }
 
-        /* Validation errors are logged in statistics. */
-        if (log.level == JobLogLevel.VALIDATION) {
-            this._skipped.incrementAndGet()
-        }
-
+        /* Flush logs if buffer is full. */
         if (this.buffer.size > 1000) {
             this.flushLogs()
         }

@@ -37,7 +37,7 @@ class KiarFileSource(private val file: Path, private val config: EntityMapping, 
     override fun toFlow(context: ProcessingContext): Flow<SolrInputDocument> {
         val kiar = KiarFile(this@KiarFileSource.file)
         return channelFlow {
-            val parser = XmlDocumentParser(this@KiarFileSource.config)
+            val parser = XmlDocumentParser(this@KiarFileSource.config, context)
 
             /* Iterate over Kiar entries. */
             for (entry in kiar.iterator()) {

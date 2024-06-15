@@ -2,6 +2,7 @@ package ch.pontius.kiar.ingester.parsing.values.struct
 
 import ch.pontius.kiar.api.model.config.mappings.AttributeMapping
 import ch.pontius.kiar.ingester.parsing.values.ValueParser
+import ch.pontius.kiar.ingester.processors.ProcessingContext
 import org.apache.solr.common.SolrInputDocument
 
 /**
@@ -21,7 +22,7 @@ class LV95Parser(override val mapping: AttributeMapping): ValueParser<Double> {
      * @param value The [String] value to parse.
      * @param into The [SolrInputDocument] to append the value to.
      */
-    override fun parse(value: String, into: SolrInputDocument) {
+    override fun parse(value: String, into: SolrInputDocument, context: ProcessingContext) {
         val coordinates = value.split(this.separator).mapNotNull { it.trim().toDoubleOrNull() }.toTypedArray()
         if (coordinates.size == 2) {
             into.setField(this.mapping.destination, "${coordinates[0]},${coordinates[1]}")

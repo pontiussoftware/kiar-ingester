@@ -33,7 +33,7 @@ class XmlFileSource(private val file: Path, private val config: EntityMapping): 
         val factory: SAXParserFactory = SAXParserFactory.newInstance()
         val saxParser: SAXParser = factory.newSAXParser()
         Files.newInputStream(this@XmlFileSource.file).use { input ->
-            val parser = XmlParsingContext(this@XmlFileSource.config) { doc ->
+            val parser = XmlParsingContext(this@XmlFileSource.config, context) { doc ->
                 runBlocking {
                     doc.setField(Field.PARTICIPANT, context.participant)
                     channel.send(doc)

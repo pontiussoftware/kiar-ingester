@@ -3,6 +3,7 @@ package ch.pontius.kiar.ingester.parsing.xml
 import ch.pontius.kiar.api.model.config.mappings.AttributeMapping
 import ch.pontius.kiar.api.model.config.mappings.EntityMapping
 import ch.pontius.kiar.ingester.parsing.values.ValueParser
+import ch.pontius.kiar.ingester.processors.ProcessingContext
 import org.apache.logging.log4j.LogManager
 import org.apache.solr.common.SolrInputDocument
 import org.w3c.dom.Document
@@ -23,9 +24,9 @@ import javax.xml.xpath.XPathFactory
  * Processing of the individual [SolrInputDocument] is provided by a callback method.
  *
  * @author Ralph Gasser
- * @version 1.1.0
+ * @version 1.2.0
  */
-class XmlParsingContext(config: EntityMapping, val callback: (SolrInputDocument) -> Unit): DefaultHandler() {
+class XmlParsingContext(config: EntityMapping, private val context: ProcessingContext, private val callback: (SolrInputDocument) -> Unit): DefaultHandler() {
     companion object {
         private val LOGGER = LogManager.getLogger()
     }
@@ -90,7 +91,7 @@ class XmlParsingContext(config: EntityMapping, val callback: (SolrInputDocument)
                 LOGGER.warn("Skipping document due to parse error.")
                 this.error = false /* Clear error flag when new document starts. */
             } else {
-                val solrDocument = this.mappings.parse(this.appendTo.ownerDocument)
+                val solrDocument = this.mappings.parse(this.appendTo.ownerDocument, this.context)
                 this.callback(solrDocument)
             }
 
