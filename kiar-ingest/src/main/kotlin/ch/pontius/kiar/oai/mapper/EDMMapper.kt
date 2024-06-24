@@ -29,7 +29,27 @@ object EDMMapper: OAIMapper {
         val doc = element.ownerDocument
 
         /* Set RDF about attribute. */
-        element.setAttribute("rdf:about", "https://www.kimnet.ch/objects/${document.get<String>(Field.UUID)}")
+        val identifier = "#kimnet:${document.get<String>(Field.UUID)}"
+        val objectUrl = "https://www.kimnet.ch/objects/${document.get<String>(Field.UUID)}"
+        element.setAttribute("rdf:about", identifier)
+
+        /* Append ore:Aggregation element. */
+        val oreAggregation = doc.createElement("ore:Aggregation")
+        oreAggregation.setAttribute("rdf:about", identifier)
+        oreAggregation.appendChild(doc.createElement("edm:aggregatedCHO").apply {
+            this.setAttribute("rdf:resource", identifier)
+        })
+
+        oreAggregation.appendChild(doc.createElement("edm:isShownAt").apply {
+            this.setAttribute("rdf:resource", objectUrl)
+        })
+
+        /* Set rights statement. */
+        oreAggregation.appendChild(doc.createElement("edm:rights").apply {
+            this.setAttribute("rdf:resource", rights)
+        })
+
+        element.appendChild(oreAggregation)
 
         /* Rights statement URL. */
         element.appendChild(doc.createElement("edm:right").apply {
@@ -64,6 +84,12 @@ object EDMMapper: OAIMapper {
             this.textContent = document.get<String>(Field.DISPLAY)
         })
 
+        /* Map source collection. */
+        element.appendChild(doc.createElement("dcterms:isPartOf").apply {
+            val string = document.get<String>(Field.COLLECTION) ?: "Sammlung unbekannt"
+            this.textContent = if (string.contains("Sammlung")) string else "Sammlung: $string"
+        })
+
         /* Map description. */
         if (document.has(Field.DESCRIPTION)) {
             element.appendChild(doc.createElement("dc:description").apply {
@@ -78,36 +104,73 @@ object EDMMapper: OAIMapper {
             })
         }
 
-        /* Add artist and creators. */
-        document.getAll<String>(Field.ARTIST).forEach { artist ->
-            element.appendChild(doc.createElement("dc:creator").apply {
-                this.textContent = artist
+        /* Append publisher. */
+        if (document.has(Field.PUBLISHER)) {
+            document.getAll<String>(Field.PUBLISHER).forEach { publisher ->
+                element.appendChild(doc.createElement("dc:publisher").apply {
+                    this.textContent = publisher
+                })
+            }
+        }
+
+        /* Append creators. */
+        listOf(Field.ARTIST, Field.PHOTOGRAPHER, Field.AUTHOR, Field.CREATOR).forEach { field ->
+            document.getAll<String>(field).forEach { creator ->
+                element.appendChild(doc.createElement("dc:creator").apply {
+                    this.textContent = creator
+                })
+            }
+        }
+
+        /* Append material information */
+        document.getAll<String>(Field.MATERIAL).forEach { material ->
+            element.appendChild(doc.createElement("dcterms:medium").apply {
+                this.setAttribute("xml:lang", "de")
+                this.textContent = material
             })
         }
 
-        document.getAll<String>(Field.PHOTOGRAPHER).forEach { photographer ->
-            element.appendChild(doc.createElement("dc:creator").apply {
-                this.textContent = photographer
+        /* Append technique information */
+        document.getAll<String>(Field.TECHNIQUE).forEach { technique ->
+            element.appendChild(doc.createElement("dc:type").apply {
+                this.setAttribute("xml:lang", "de")
+                this.textContent = technique
             })
         }
 
-        document.getAll<String>(Field.AUTHOR).forEach { author ->
-            element.appendChild(doc.createElement("dc:creator").apply {
-                this.textContent = author
-            })
+        /* Append subjects. */
+        listOf(Field.ICONOGRAPHY, Field.SUBJECT, Field.TYPOLOGY).forEach { field ->
+            document.getAll<String>(field).forEach { subject ->
+                element.appendChild(doc.createElement("dc:subject").apply {
+                    this.setAttribute("xml:lang", "de")
+                    this.textContent = subject
+                })
+            }
         }
-
-        document.getAll<String>(Field.CREATOR).forEach { creator ->
-            element.appendChild(doc.createElement("dc:creator").apply {
-                this.textContent = creator
-            })
-        }
-
 
         /* Append images (& associated metadata). */
         var index = 0
         if (document.has(Field.PREVIEW)) {
+            element.appendChild(doc.createElement("edm:type").apply {
+                this.textContent = "IMAGE"
+            })
+
             document.getAll<String>(Field.PREVIEW).forEach { url ->
+                /* First image is appended to ore:Aggregation element as edm:isShownBy others as edm:hasView. */
+                if (index == 0) {
+                    oreAggregation.appendChild(doc.createElement("edm:isShownBy").apply {
+                        this.setAttribute("rdf:resource", url)
+                    })
+                    oreAggregation.appendChild(doc.createElement("edm:object").apply {
+                        this.setAttribute("rdf:resource", url)
+                    })
+                } else {
+                    oreAggregation.appendChild(doc.createElement("edm:hasView").apply {
+                        this.setAttribute("rdf:resource", url)
+                    })
+                }
+
+                /* Every resource is appended to the edm:ProvidedCHO as edm:WebResource. */
                 val resource = doc.createElement("edm:WebResource")
                 resource.appendChild(doc.createElement("rdf:about").apply {
                     this.textContent = url
@@ -130,6 +193,10 @@ object EDMMapper: OAIMapper {
                 element.appendChild(resource)
                 index++
             }
+        } else {
+            element.appendChild(doc.createElement("edm:type").apply {
+                this.textContent = "TEXT"
+            })
         }
     }
 

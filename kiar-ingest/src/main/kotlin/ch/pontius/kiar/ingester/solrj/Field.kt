@@ -89,7 +89,28 @@ enum class Field(val solr: String, val required: Boolean = false, val multiValue
     /** The language of an object. */
     LANGUAGE("sprache", false),
 
-    /* Personen */
+    /* Material & technique. */
+
+    /** */
+    MATERIAL("material", false),
+
+    /** */
+    TECHNIQUE("material", false),
+
+
+    /* Classifications. */
+
+    ICONOGRAPHY("klassifikation_ikonographie", false),
+
+    SUBJECT("klassifikation_ikonographie", false),
+
+    TYPOLOGY("klassifikation_typologie", false),
+
+
+    /* Persons */
+
+    /** Field containing publisher information (person). */
+    PUBLISHER("person_name_verlag", false),
 
     /** Field containing author information (person). */
     AUTHOR("person_name_autor", false),
