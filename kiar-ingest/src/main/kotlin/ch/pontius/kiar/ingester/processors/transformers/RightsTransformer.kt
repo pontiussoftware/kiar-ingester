@@ -33,13 +33,15 @@ class RightsTransformer(override val input: Source<SolrInputDocument>): Transfor
 
     init {
         /* Special case for KIM.bl and AMBL objects. */
-
         this.rights["Public Domain Mark"] = DbRightStatement.PDM.toApi()
         this.rights["Urheberrechtsschutz nicht bewertet"] = DbRightStatement.CNE.toApi()
         this.rights["Urheberrechtsschutz"] = DbRightStatement.InC.toApi()
         this.rights["Urheberrechtsschutz - Nutzung zu Bildungszwecken erlaubt"] = DbRightStatement.InC_EDU.toApi()
         this.rights["Freier Zugriff, keine Nachnutzung"] = DbRightStatement.InC.toApi()
         this.rights["Alle Rechte vorbehalten"] = DbRightStatement.InC.toApi()
+
+        /* Special case: Typos */
+        this.rights["CC BY-SA-NC 4.0"] = DbRightStatement.CC_BY_NC_SA.toApi()
     }
 
     /**
