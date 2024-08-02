@@ -7,7 +7,7 @@ val jacksonVersion: String by project
 val jlineVersion: String by project
 val kotlinVersion: String by project
 val kotlinCoroutines: String by project
-val kotlinSerializaion: String by project
+val kotlinSerialization: String by project
 val log4jVersion: String by project
 val picnicVersion: String by project
 val poiVersion: String by project
@@ -58,7 +58,7 @@ dependencies {
     implementation("org.slf4j:slf4j-api:$slf4jVersion")
 
     /** Kotlinx. */
-    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json-jvm:$kotlinSerializaion")
+    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json-jvm:$kotlinSerialization")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core-jvm:$kotlinCoroutines")
 
     /** Scrimage for image processing. */
