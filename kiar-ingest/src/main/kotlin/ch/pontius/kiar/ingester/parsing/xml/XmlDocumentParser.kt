@@ -2,6 +2,7 @@ package ch.pontius.kiar.ingester.parsing.xml
 
 import ch.pontius.kiar.api.model.config.mappings.EntityMapping
 import ch.pontius.kiar.ingester.parsing.values.ValueParser
+import ch.pontius.kiar.ingester.parsing.xml.XmlParsingContext.Companion.parse
 import ch.pontius.kiar.ingester.processors.ProcessingContext
 import org.apache.solr.common.SolrInputDocument
 import org.w3c.dom.Node

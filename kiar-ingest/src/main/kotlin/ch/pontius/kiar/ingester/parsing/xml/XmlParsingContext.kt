@@ -9,11 +9,13 @@ import org.apache.solr.common.SolrInputDocument
 import org.w3c.dom.Document
 import org.w3c.dom.Element
 import org.w3c.dom.Node
+import org.w3c.dom.NodeList
 import org.xml.sax.Attributes
 import org.xml.sax.SAXParseException
 import org.xml.sax.helpers.DefaultHandler
 import javax.xml.parsers.DocumentBuilder
 import javax.xml.parsers.DocumentBuilderFactory
+import javax.xml.xpath.XPathConstants
 import javax.xml.xpath.XPathExpression
 import javax.xml.xpath.XPathFactory
 
@@ -29,6 +31,28 @@ import javax.xml.xpath.XPathFactory
 class XmlParsingContext(config: EntityMapping, private val context: ProcessingContext, private val callback: (SolrInputDocument) -> Unit): DefaultHandler() {
     companion object {
         private val LOGGER = LogManager.getLogger()
+
+        /**
+         * Parses a XML [Node] into [SolrInputDocument].
+         *
+         * @param node The [Node] to parse.
+         * @return [SolrInputDocument]
+         */
+        fun List<Pair<ValueParser<*>, XPathExpression>>.parse(node: Node, context: ProcessingContext): SolrInputDocument {
+            val doc = SolrInputDocument()
+            for ((parser, expr) in this) {
+                val nl = expr.evaluate(node, XPathConstants.NODESET) as? NodeList
+                if (nl != null) {
+                    for (i in 0 until nl.length) {
+                        val value = nl.item(i).nodeValue
+                        if (!value.isNullOrBlank()) {
+                            parser.parse(nl.item(i).nodeValue, doc, context)
+                        }
+                    }
+                }
+            }
+            return doc
+        }
     }
 
     /** Internal [StringBuffer] used for buffering raw characters during XML parsing. */

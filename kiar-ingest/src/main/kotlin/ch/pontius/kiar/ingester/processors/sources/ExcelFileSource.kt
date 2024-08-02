@@ -46,12 +46,16 @@ class ExcelFileSource(private val file: Path, private val config: EntityMapping,
                     val doc = SolrInputDocument()
                     for ((parser, cellIndex) in map) {
                         val cell = row.getCell(cellIndex)
-                        parser.parse(when (cell.cellType) {
+                        val value = when (cell.cellType) {
                             CellType.STRING -> cell.stringCellValue
                             CellType.NUMERIC -> cell.numericCellValue.toString()
                             CellType.BOOLEAN -> cell.booleanCellValue.toString()
                             else -> null /* TODO: Can formulas be parsed? */
-                        }?.trim() ?: continue, doc, context)
+                        }?.trim()
+
+                        if (!value.isNullOrBlank()) {
+                            parser.parse(value, doc, context)
+                        }
                     }
 
                     /* Emit document. */
