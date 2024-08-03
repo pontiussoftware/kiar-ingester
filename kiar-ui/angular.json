@@ -73,10 +73,10 @@
           "builder": "@angular-devkit/build-angular:dev-server",
           "configurations": {
             "production": {
-              "browserTarget": "kiar-ui:build:production"
+              "buildTarget": "kiar-ui:build:production"
             },
             "development": {
-              "browserTarget": "kiar-ui:build:development"
+              "buildTarget": "kiar-ui:build:development"
             }
           },
           "defaultConfiguration": "development"
@@ -84,7 +84,7 @@
         "extract-i18n": {
           "builder": "@angular-devkit/build-angular:extract-i18n",
           "options": {
-            "browserTarget": "kiar-ui:build"
+            "buildTarget": "kiar-ui:build"
           }
         },
         "test": {
