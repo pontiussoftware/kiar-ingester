@@ -13,7 +13,6 @@ import io.javalin.http.Context
 import io.javalin.openapi.*
 import jetbrains.exodus.database.TransientEntityStore
 import kotlinx.dnq.util.findById
-import org.apache.commons.fileupload2.jakarta.JakartaServletFileUpload
 import org.joda.time.DateTime
 import java.nio.file.Files
 import java.nio.file.StandardOpenOption
@@ -67,10 +66,8 @@ fun upload(ctx: Context, store: TransientEntityStore, config: Config) {
         Files.createDirectories(ingestPath)
     }
 
-    /* Important: Streaming upload! */
     /* Make sure that one file has been uploaded. */
-    val upload = JakartaServletFileUpload().getItemIterator(ctx.req())
-    if (!upload.hasNext()) throw ErrorStatusException(401, "Uploaded file is missing.")
+    val upload = ctx.uploadedFiles("file").firstOrNull() ?: throw ErrorStatusException(401, "Uploaded file is missing.")
 
     /* Create or re-use output file. TODO: In case of an error, we need a way to recover here. */
     val outputStream = if (first) {
@@ -81,7 +78,7 @@ fun upload(ctx: Context, store: TransientEntityStore, config: Config) {
 
     /* Upload the first file. */
     outputStream.use { output ->
-        upload.next().inputStream.use { input ->
+        upload.content().use { input ->
             val buffer = ByteArray(5_000_000) /* 5 MB buffer. */
             var read = input.read(buffer)
             if (read == -1) {
