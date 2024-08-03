@@ -7,10 +7,7 @@ import ch.pontius.kiar.database.institution.DbUser
 import ch.pontius.kiar.ingester.processors.sinks.ApacheSolrSink
 import ch.pontius.kiar.ingester.processors.sinks.DummySink
 import ch.pontius.kiar.ingester.processors.sinks.Sink
-import ch.pontius.kiar.ingester.processors.sources.ExcelFileSource
-import ch.pontius.kiar.ingester.processors.sources.KiarFileSource
-import ch.pontius.kiar.ingester.processors.sources.Source
-import ch.pontius.kiar.ingester.processors.sources.XmlFileSource
+import ch.pontius.kiar.ingester.processors.sources.*
 import ch.pontius.kiar.ingester.processors.transformers.ImageDeployment
 import jetbrains.exodus.entitystore.Entity
 import kotlinx.dnq.*
@@ -80,6 +77,7 @@ class DbJob(entity: Entity) : XdEntity(entity) {
         val sourcePath = config.ingestPath.resolve(template.participant.name).resolve(this.xdId)
         val source: Source<SolrInputDocument> = when (template.type.description) {
             "XML" -> XmlFileSource(sourcePath, template.mapping.toApi())
+            "JSON" -> JsonFileSource(sourcePath, template.mapping.toApi())
             "KIAR" -> KiarFileSource(sourcePath, template.mapping.toApi())
             "EXCEL" -> ExcelFileSource(sourcePath, template.mapping.toApi())
             else -> throw IllegalStateException("Unsupported template type '${template.type.description}'. This is a programmer's error!")

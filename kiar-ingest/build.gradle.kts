@@ -5,6 +5,7 @@ val cliktVersion: String by project
 val javalinVersion: String by project
 val jacksonVersion: String by project
 val jlineVersion: String by project
+val jsonPathVersion: String by project
 val kotlinVersion: String by project
 val kotlinCoroutines: String by project
 val kotlinSerialization: String by project
@@ -38,9 +39,6 @@ dependencies {
     /** Frontend. */
     implementation(project(":kiar-ui", "frontendFiles"))
 
-    /** Apache Commons */
-    implementation("org.apache.commons:commons-fileupload2-jakarta:2.0.0-M1")
-
     /** SolrJ. */
     implementation("org.apache.solr:solr-solrj:$solrjVersion")
 
@@ -56,6 +54,9 @@ dependencies {
     implementation("org.apache.logging.log4j:log4j-core:$log4jVersion")
     implementation("org.apache.logging.log4j:log4j-slf4j2-impl:$log4jVersion")
     implementation("org.slf4j:slf4j-api:$slf4jVersion")
+
+    /** JSON path. */
+    implementation("com.jayway.jsonpath:json-path:$jsonPathVersion")
 
     /** Kotlinx. */
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json-jvm:$kotlinSerialization")
