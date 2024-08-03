@@ -26,33 +26,11 @@ import javax.xml.xpath.XPathFactory
  * Processing of the individual [SolrInputDocument] is provided by a callback method.
  *
  * @author Ralph Gasser
- * @version 1.2.0
+ * @version 1.2.1
  */
 class XmlParsingContext(config: EntityMapping, private val context: ProcessingContext, private val callback: (SolrInputDocument) -> Unit): DefaultHandler() {
     companion object {
         private val LOGGER = LogManager.getLogger()
-
-        /**
-         * Parses a XML [Node] into [SolrInputDocument].
-         *
-         * @param node The [Node] to parse.
-         * @return [SolrInputDocument]
-         */
-        fun List<Pair<ValueParser<*>, XPathExpression>>.parse(node: Node, context: ProcessingContext): SolrInputDocument {
-            val doc = SolrInputDocument()
-            for ((parser, expr) in this) {
-                val nl = expr.evaluate(node, XPathConstants.NODESET) as? NodeList
-                if (nl != null) {
-                    for (i in 0 until nl.length) {
-                        val value = nl.item(i).nodeValue
-                        if (!value.isNullOrBlank()) {
-                            parser.parse(nl.item(i).nodeValue, doc, context)
-                        }
-                    }
-                }
-            }
-            return doc
-        }
     }
 
     /** Internal [StringBuffer] used for buffering raw characters during XML parsing. */
@@ -67,8 +45,8 @@ class XmlParsingContext(config: EntityMapping, private val context: ProcessingCo
     /** The [DocumentBuilder] instance used by this [XmlDocumentParser]. */
     private val documentBuilder: DocumentBuilder = DocumentBuilderFactory.newInstance().newDocumentBuilder()
 
-    /** A [Map] of all [XPathExpression]s used for document parsing. */
-    private val mappings: List<Pair<ValueParser<*>, XPathExpression>>
+    /** The [XmlDocumentParser] to use for parsing individual documents. */
+    private val parser = XmlDocumentParser(config, this.context)
 
     /** The currently active XML [Node] (to which new [Element]s will be appended). */
     private var appendTo: Node = this.documentBuilder.newDocument()
@@ -84,10 +62,6 @@ class XmlParsingContext(config: EntityMapping, private val context: ProcessingCo
         }
         val prefixArray = commonPrefix.split('/')
         this.newDocumentOn = prefixArray.subList(0, prefixArray.size - 2).joinToString("/")
-
-        /* Create mappings with XPath expressions (relative to common prefix). */
-        val factory = XPathFactory.newInstance().newXPath()
-        this.mappings = config.attributes.map { it.newParser() to factory.compile("/${it.source.replace(this.newDocumentOn, "")}") }
     }
 
     /**
@@ -115,7 +89,7 @@ class XmlParsingContext(config: EntityMapping, private val context: ProcessingCo
                 LOGGER.warn("Skipping document due to parse error.")
                 this.error = false /* Clear error flag when new document starts. */
             } else {
-                val solrDocument = this.mappings.parse(this.appendTo.ownerDocument, this.context)
+                val solrDocument = this.parser.parse(this.appendTo.ownerDocument, this.context)
                 this.callback(solrDocument)
             }
 

@@ -22,9 +22,9 @@ import java.nio.file.StandardOpenOption
  * A [Source] for a single Microsoft Excel file. This is, for example, used by museumPlus import.
  *
  * @author Ralph Gasser
- * @version 1.0.0
+ * @version 1.0.1
  */
-class ExcelFileSource(private val file: Path, private val config: EntityMapping, private val deleteFileWhenDone: Boolean = true): Source<SolrInputDocument> {
+class ExcelFileSource(private val file: Path, private val config: EntityMapping): Source<SolrInputDocument> {
     override fun toFlow(context: ProcessingContext): Flow<SolrInputDocument> = flow {
         Files.newInputStream(this@ExcelFileSource.file, StandardOpenOption.READ).use { input ->
             val workbook: Workbook = XSSFWorkbook(input)
@@ -62,10 +62,6 @@ class ExcelFileSource(private val file: Path, private val config: EntityMapping,
                     emit(doc)
                 }
             }
-        }
-    }.onCompletion {
-        if (deleteFileWhenDone) {
-            Files.deleteIfExists(this@ExcelFileSource.file)
         }
     }.flowOn(Dispatchers.IO)
 }

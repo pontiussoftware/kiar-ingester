@@ -2,16 +2,17 @@ package ch.pontius.kiar.ingester.parsing.xml
 
 import ch.pontius.kiar.api.model.config.mappings.EntityMapping
 import ch.pontius.kiar.ingester.parsing.values.ValueParser
-import ch.pontius.kiar.ingester.parsing.xml.XmlParsingContext.Companion.parse
 import ch.pontius.kiar.ingester.processors.ProcessingContext
 import org.apache.solr.common.SolrInputDocument
 import org.w3c.dom.Node
+import org.w3c.dom.NodeList
 import java.io.InputStream
 import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.StandardOpenOption
 import javax.xml.parsers.DocumentBuilder
 import javax.xml.parsers.DocumentBuilderFactory
+import javax.xml.xpath.XPathConstants
 import javax.xml.xpath.XPathExpression
 import javax.xml.xpath.XPathFactory
 
@@ -19,7 +20,7 @@ import javax.xml.xpath.XPathFactory
  * A parser for parsing simple XML [Node]s and documents into [SolrInputDocument]s using an [EntityMapping].
  *
  * @author Ralph Gasser
- * @version 1.2.1
+ * @version 1.3.0
  */
 class XmlDocumentParser(config: EntityMapping, private val context: ProcessingContext) {
     /** The [DocumentBuilder] instance used by this [XmlDocumentParser]. */
@@ -40,7 +41,7 @@ class XmlDocumentParser(config: EntityMapping, private val context: ProcessingCo
      * @return [SolrInputDocument]
      */
     fun parse(path: Path): SolrInputDocument = Files.newInputStream(path, StandardOpenOption.READ).use {
-        return parse(it)
+        return this.parse(it)
     }
 
     /**
@@ -51,6 +52,28 @@ class XmlDocumentParser(config: EntityMapping, private val context: ProcessingCo
      */
     fun parse(stream: InputStream): SolrInputDocument {
         val xmlDocument = this.documentBuilder.parse(stream)
-        return this.mappings.parse(xmlDocument, this.context)
+        return this.parse(xmlDocument, this.context)
+    }
+
+    /**
+     * Parses a XML [Node] into [SolrInputDocument].
+     *
+     * @param node The [Node] to parse.
+     * @return [SolrInputDocument]
+     */
+    fun parse(node: Node, context: ProcessingContext): SolrInputDocument {
+        val doc = SolrInputDocument()
+        for ((parser, expr) in this.mappings) {
+            val nl = expr.evaluate(node, XPathConstants.NODESET) as? NodeList
+            if (nl != null) {
+                for (i in 0 until nl.length) {
+                    val value = nl.item(i).nodeValue
+                    if (!value.isNullOrBlank()) {
+                        parser.parse(nl.item(i).nodeValue, doc, context)
+                    }
+                }
+            }
+        }
+        return doc
     }
 }
