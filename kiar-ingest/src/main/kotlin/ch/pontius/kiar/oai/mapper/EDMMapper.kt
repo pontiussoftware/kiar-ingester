@@ -200,10 +200,21 @@ object EDMMapper: OAIMapper {
 
                 /* Every resource is appended to the edm:ProvidedCHO as edm:WebResource. */
                 val resource = doc.createElement("edm:WebResource")
-                resource.appendChild(doc.createElement("rdf:about").apply {
-                    this.textContent = url
+                rdfElement.appendChild(resource)
+                rdfElement.setAttribute("rdf:about", url)
+
+                /* We always export images. */
+                resource.appendChild(doc.createElement("dc:type").apply {
+                    this.setAttribute("rdf:about", "https://schema.org/ImageObject")
                 })
 
+                /* We always export jpegs. */
+                resource.appendChild(doc.createElement("dc:format").apply {
+                    this.textContent = "image/jpeg"
+                })
+
+
+                /* Set creator and rights information. */
                 val artist = document.getAll<String>(Field.IMAGE_ARTISTS).getOrNull(index)
                 if (!artist.isNullOrBlank()) {
                     resource.appendChild(doc.createElement("dc:creator").apply {
@@ -217,8 +228,6 @@ object EDMMapper: OAIMapper {
                         this.textContent = copyright
                     })
                 }
-
-                rdfElement.appendChild(resource)
                 index++
             }
         } else {
