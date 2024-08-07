@@ -23,13 +23,12 @@ object EDMMapper: OAIMapper {
      */
     override fun map(appendTo: Node, document: SolrDocument) {
         val rights = document.get<String>(Field.RIGHTS_STATEMENT_URL) ?: return
-        val rdfElement = this.emptyEdm(appendTo)
+        val rdfElement = this.emptyRdf(appendTo)
         val doc = appendTo.ownerDocument
 
         /* Set RDF about attribute. */
         val identifier = "#kimnet:cho:${document.get<String>(Field.UUID)}"
         val objectUrl = "https://www.kimnet.ch/objects/${document.get<String>(Field.UUID)}"
-        rdfElement.setAttribute("rdf:about", identifier)
 
         /* Append ore:Aggregation element. */
         val oreAggregation = doc.createElement("ore:Aggregation")
@@ -49,8 +48,9 @@ object EDMMapper: OAIMapper {
         })
 
         /* Create and append edm:ProvidedCHO element. */
-        val providedCHO = doc.createElement("edm:ProvidedCHO ")
+        val providedCHO = doc.createElement("edm:ProvidedCHO")
         rdfElement.appendChild(providedCHO)
+        providedCHO.setAttribute("rdf:about", identifier)
 
         /* Rights statement URL. */
         providedCHO.appendChild(doc.createElement("edm:right").apply {
@@ -279,7 +279,7 @@ object EDMMapper: OAIMapper {
      * @param appendTo [Node] to which the EDM element should be appended.
      * @return [Element] representing the EDM element.
      */
-    private fun emptyEdm(appendTo: Node): Element {
+    private fun emptyRdf(appendTo: Node): Element {
         val doc = appendTo.ownerDocument
 
         /* Create RDF element. */
