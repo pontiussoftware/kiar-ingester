@@ -109,7 +109,7 @@ enum class Field(val solr: String, val required: Boolean = false, val multiValue
     MATERIAL("material", false),
 
     /** */
-    TECHNIQUE("material", false),
+    TECHNIQUE("technik", false),
 
     /* Dating (description, from, to). */
 
