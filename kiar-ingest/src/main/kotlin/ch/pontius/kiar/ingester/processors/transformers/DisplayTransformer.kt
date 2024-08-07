@@ -32,13 +32,13 @@ class DisplayTransformer(override val input: Source<SolrInputDocument>): Transfo
 
             /* Generate _display_list_ field. */
             val list = when (type) {
-                ObjectType.ARCHAEOLOGIE -> listOfNotNull(doc.get<String>(Field.POLITISCHER_FUNDORT))
-                ObjectType.BIBLIOGRAPHISCHES_OBJEKT -> listOfNotNull(doc.get<String>(Field.TITEL), doc.get<String>(Field.AUTHOR), doc.get<String>(Field.ERSCHEINUNGSORT))
-                ObjectType.BIOLOGIE -> listOfNotNull(doc.get<String>(Field.POLITISCHER_FUNDORT))
-                ObjectType.ETHNOLOGIE ->listOfNotNull(doc.get<String>(Field.CREATOR), doc.get<String>(Field.HERSTELLUNGSORT))
-                ObjectType.FOTOGRAFIE -> listOfNotNull(doc.get<String>(Field.TITEL), doc.get<String>(Field.PHOTOGRAPHER), doc.get<String>(Field.HERSTELLUNGSORT))
-                ObjectType.GEOLOGIE -> listOfNotNull(doc.get<String>(Field.POLITISCHER_FUNDORT))
-                ObjectType.KUNST -> listOfNotNull(doc.get<String>(Field.TITEL), doc.get<String>(Field.ARTIST), doc.get<String>(Field.HERSTELLUNGSORT))
+                ObjectType.ARCHAEOLOGIE -> listOfNotNull(doc.get<String>(Field.PLACE_FINDING))
+                ObjectType.BIBLIOGRAPHISCHES_OBJEKT -> listOfNotNull(doc.get<String>(Field.TITEL), doc.get<String>(Field.AUTHOR), doc.get<String>(Field.PLACE_PUBLICATION))
+                ObjectType.BIOLOGIE -> listOfNotNull(doc.get<String>(Field.PLACE_FINDING))
+                ObjectType.ETHNOLOGIE ->listOfNotNull(doc.get<String>(Field.CREATOR), doc.get<String>(Field.PLACE_CREATION))
+                ObjectType.FOTOGRAFIE -> listOfNotNull(doc.get<String>(Field.TITEL), doc.get<String>(Field.PHOTOGRAPHER), doc.get<String>(Field.PLACE_CREATION))
+                ObjectType.GEOLOGIE -> listOfNotNull(doc.get<String>(Field.PLACE_FINDING))
+                ObjectType.KUNST -> listOfNotNull(doc.get<String>(Field.TITEL), doc.get<String>(Field.ARTIST), doc.get<String>(Field.PLACE_CREATION))
             }
             list.forEach { doc.addField(Field.DISPLAY_LIST, it) }
         }

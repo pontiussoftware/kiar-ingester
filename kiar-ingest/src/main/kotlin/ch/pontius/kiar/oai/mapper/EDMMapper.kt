@@ -79,16 +79,34 @@ object EDMMapper: OAIMapper {
             this.textContent = document.get<String>(Field.INSTITUTION)
         })
 
-        /* Map source title. */
-        element.appendChild(doc.createElement("dc:title").apply {
-            this.textContent = document.get<String>(Field.DISPLAY)
-        })
-
         /* Map source collection. */
         element.appendChild(doc.createElement("dcterms:isPartOf").apply {
             val string = document.get<String>(Field.COLLECTION) ?: "Sammlung unbekannt"
             this.textContent = if (string.contains("Sammlung")) string else "Sammlung: $string"
         })
+
+        /* Map source title. */
+        element.appendChild(doc.createElement("dc:title").apply {
+            this.textContent = document.get<String>(Field.DISPLAY)
+        })
+
+        /* Append publisher. */
+        if (document.has(Field.PUBLISHER)) {
+            document.getAll<String>(Field.PUBLISHER).forEach { publisher ->
+                element.appendChild(doc.createElement("dc:publisher").apply {
+                    this.textContent = publisher
+                })
+            }
+        }
+
+        /* Append publisher. */
+        if (document.has(Field.OWNER)) {
+            document.getAll<String>(Field.OWNER).forEach { owner ->
+                element.appendChild(doc.createElement("dc:rights").apply {
+                    this.textContent = owner
+                })
+            }
+        }
 
         /* Map description. */
         if (document.has(Field.DESCRIPTION)) {
@@ -102,15 +120,6 @@ object EDMMapper: OAIMapper {
             element.appendChild(doc.createElement("dcterms:alternative").apply {
                 this.textContent = document.get<String>(Field.ALTERNATIVE_DESIGNATION)
             })
-        }
-
-        /* Append publisher. */
-        if (document.has(Field.PUBLISHER)) {
-            document.getAll<String>(Field.PUBLISHER).forEach { publisher ->
-                element.appendChild(doc.createElement("dc:publisher").apply {
-                    this.textContent = publisher
-                })
-            }
         }
 
         /* Append creators. */
@@ -146,6 +155,24 @@ object EDMMapper: OAIMapper {
                     this.textContent = subject
                 })
             }
+        }
+
+        /* Append places. */
+        listOf(Field.PLACE_CREATION, Field.PLACE_SHOWN, Field.PLACE_FINDING, Field.PLACE_PUBLICATION).forEach { field ->
+            document.getAll<String>(field).forEach { subject ->
+                element.appendChild(doc.createElement("dcterms:spatial").apply {
+                    this.setAttribute("xml:lang", "de")
+                    this.textContent = subject
+                })
+            }
+        }
+
+        /* Append dating information. */
+        val dating = appendSpan(document, element)
+        if (dating != null) {
+            element.appendChild(doc.createElement("dcterms:created").apply {
+                this.setAttribute("rdf:resource", dating)
+            })
         }
 
         /* Append images (& associated metadata). */
@@ -197,6 +224,51 @@ object EDMMapper: OAIMapper {
             element.appendChild(doc.createElement("edm:type").apply {
                 this.textContent = "TEXT"
             })
+        }
+    }
+
+    /**
+     * Extracts and appends dating information to the provided [Node].
+     *
+     * @param document The [SolrDocument] to extract information from.
+     * @param appendTo The [Node] to append information to.
+     * @return The 'rdf:about' identifier of the dating information.
+     */
+    private fun appendSpan(document: SolrDocument, appendTo: Node): String? {
+        val datingDescription = document.get<String>(Field.DATING)
+        val datingFrom = document.get<Double>(Field.DATING_FROM)
+        val datingTo = document.get<Double>(Field.DATING_TO)
+        if (datingDescription != null || datingFrom != null || datingTo != null) {
+            val doc = appendTo.ownerDocument
+            val identifier = "#kimnet:timespan:${document.get<String>(Field.UUID)}"
+            appendTo.appendChild(doc.createElement("edm:TimeSpan").apply {
+                this.appendChild(doc.createElement("skos:prefLabel").apply {
+                    if (datingDescription != null) {
+                        this.textContent = datingDescription
+                    } else if (datingFrom != null && datingTo != null) {
+                        this.textContent = "$datingFrom - $datingTo"
+                    } else if (datingFrom != null) {
+                        this.textContent = datingFrom.toString()
+                    } else if (datingTo != null) {
+                        this.textContent = datingTo.toString()
+                    }
+                    this.setAttribute("xml:lang", "de")
+                })
+                if (datingFrom != null) {
+                    this.appendChild(doc.createElement("edm:begin").apply {
+                        this.textContent = datingFrom.toString()
+                    })
+                }
+                if (datingTo != null) {
+                    this.appendChild(doc.createElement("edm:end").apply {
+                        this.textContent = datingTo.toString()
+                    })
+                }
+                this.setAttribute("rdf:about", identifier)
+            })
+            return identifier
+        } else {
+            return null
         }
     }
 

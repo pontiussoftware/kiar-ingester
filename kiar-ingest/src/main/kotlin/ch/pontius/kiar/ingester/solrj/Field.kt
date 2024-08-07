@@ -97,15 +97,27 @@ enum class Field(val solr: String, val required: Boolean = false, val multiValue
     /** */
     TECHNIQUE("material", false),
 
+    /* Dating (description, from, to). */
+
+    /** */
+    DATING("datierung_beschreibung", false),
+
+    /** */
+    DATING_FROM("datierung_von", false),
+
+    /** */
+    DATING_TO("datierung_bis", false),
 
     /* Classifications. */
 
+    /** */
     ICONOGRAPHY("klassifikation_ikonographie", false),
 
+    /** */
     SUBJECT("klassifikation_ikonographie", false),
 
+    /** */
     TYPOLOGY("klassifikation_typologie", false),
-
 
     /* Persons */
 
@@ -124,15 +136,17 @@ enum class Field(val solr: String, val required: Boolean = false, val multiValue
     /** Field containing producer information (person). */
     CREATOR("person_name_hersteller", false),
 
-
     /* Orte */
 
     /** Field containing location of manufacture information . */
-    HERSTELLUNGSORT("ort_herstellung", false),
+    PLACE_CREATION("ort_herstellung", false),
 
     /** Field containing location of finding information. */
-    POLITISCHER_FUNDORT("ort_fund", false),
+    PLACE_FINDING("ort_fund", false),
 
     /** Field containing location of publication information. */
-    ERSCHEINUNGSORT("ort_erscheinung", false);
+    PLACE_PUBLICATION("ort_erscheinung", false),
+
+    /** Field containing location of shown place. */
+    PLACE_SHOWN("ort_dargestellt", false);
 }
