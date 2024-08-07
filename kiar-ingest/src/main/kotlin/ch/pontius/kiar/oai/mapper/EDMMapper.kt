@@ -99,7 +99,7 @@ object EDMMapper: OAIMapper {
             }
         }
 
-        /* Append publisher. */
+        /* Append owner. */
         if (document.has(Field.OWNER)) {
             document.getAll<String>(Field.OWNER).forEach { owner ->
                 element.appendChild(doc.createElement("dc:rights").apply {
