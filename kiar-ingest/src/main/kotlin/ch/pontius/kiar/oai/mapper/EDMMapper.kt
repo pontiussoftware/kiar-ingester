@@ -29,7 +29,7 @@ object EDMMapper: OAIMapper {
         val doc = element.ownerDocument
 
         /* Set RDF about attribute. */
-        val identifier = "#kimnet:${document.get<String>(Field.UUID)}"
+        val identifier = "#kimnet:cho:${document.get<String>(Field.UUID)}"
         val objectUrl = "https://www.kimnet.ch/objects/${document.get<String>(Field.UUID)}"
         element.setAttribute("rdf:about", identifier)
 
