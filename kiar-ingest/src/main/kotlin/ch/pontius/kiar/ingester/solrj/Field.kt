@@ -89,6 +89,20 @@ enum class Field(val solr: String, val required: Boolean = false, val multiValue
     /** The language of an object. */
     LANGUAGE("sprache", false),
 
+    /* Extent. */
+
+    /* Width of the object. */
+    WIDTH("dimension_objekt_breite", false),
+
+    /* Height of the object. */
+    HEIGHT("dimension_objekt_hoehe", false),
+
+    /* Depth of the object. */
+    DEPTH("dimension_objekt_tiefe", false),
+
+    /* Depth of the object. */
+    WEIGHT("gewicht_objekt", false),
+
     /* Material & technique. */
 
     /** */
@@ -110,13 +124,13 @@ enum class Field(val solr: String, val required: Boolean = false, val multiValue
 
     /* Classifications. */
 
-    /** */
+    /** Iconography classification. */
     ICONOGRAPHY("klassifikation_ikonographie", false),
 
-    /** */
-    SUBJECT("klassifikation_ikonographie", false),
+    /** Subject classification. */
+    SUBJECT("klassifikation_sachgruppe", false),
 
-    /** */
+    /** Typology classification */
     TYPOLOGY("klassifikation_typologie", false),
 
     /* Persons */
@@ -136,7 +150,7 @@ enum class Field(val solr: String, val required: Boolean = false, val multiValue
     /** Field containing producer information (person). */
     CREATOR("person_name_hersteller", false),
 
-    /* Orte */
+    /* Places */
 
     /** Field containing location of manufacture information . */
     PLACE_CREATION("ort_herstellung", false),
