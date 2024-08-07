@@ -22,19 +22,18 @@ object EDMMapper: OAIMapper {
      * @param document The [SolrDocument] to map.
      */
     override fun map(appendTo: Node, document: SolrDocument) {
-
         val rights = document.get<String>(Field.RIGHTS_STATEMENT_URL) ?: return
-
-        val element = this.emptyEdm(appendTo)
-        val doc = element.ownerDocument
+        val rdfElement = this.emptyEdm(appendTo)
+        val doc = appendTo.ownerDocument
 
         /* Set RDF about attribute. */
         val identifier = "#kimnet:cho:${document.get<String>(Field.UUID)}"
         val objectUrl = "https://www.kimnet.ch/objects/${document.get<String>(Field.UUID)}"
-        element.setAttribute("rdf:about", identifier)
+        rdfElement.setAttribute("rdf:about", identifier)
 
         /* Append ore:Aggregation element. */
         val oreAggregation = doc.createElement("ore:Aggregation")
+        rdfElement.appendChild(oreAggregation)
         oreAggregation.setAttribute("rdf:about", identifier)
         oreAggregation.appendChild(doc.createElement("edm:aggregatedCHO").apply {
             this.setAttribute("rdf:resource", identifier)
@@ -49,51 +48,53 @@ object EDMMapper: OAIMapper {
             this.setAttribute("rdf:resource", rights)
         })
 
-        element.appendChild(oreAggregation)
+        /* Create and append edm:ProvidedCHO element. */
+        val providedCHO = doc.createElement("edm:ProvidedCHO ")
+        rdfElement.appendChild(providedCHO)
 
         /* Rights statement URL. */
-        element.appendChild(doc.createElement("edm:right").apply {
+        providedCHO.appendChild(doc.createElement("edm:right").apply {
             this.setAttribute("rdf:resource", rights)
         })
 
         /* Map inventory number(s)* */
-        element.appendChild(doc.createElement("dc:identifier").apply {
+        providedCHO.appendChild(doc.createElement("dc:identifier").apply {
             this.textContent = document.get<String>(Field.INVENTORY_NUMBER)
         })
 
         /* Map ISBN. */
         if (document.has(Field.ISBN)) {
-            element.appendChild(doc.createElement("dc:identifier").apply {
+            rdfElement.appendChild(doc.createElement("dc:identifier").apply {
                 this.textContent = document.get<String>(Field.ISBN)
             })
         }
 
         /* Map source language. */
-        element.appendChild(doc.createElement("dc:language").apply {
+        providedCHO.appendChild(doc.createElement("dc:language").apply {
             val language = document.get<String>(Field.LANGUAGE) ?: "Deutsch"
             this.textContent = language
         })
 
         /* Map source institution. */
-        element.appendChild(doc.createElement("dc:source").apply {
+        providedCHO.appendChild(doc.createElement("dc:source").apply {
             this.textContent = document.get<String>(Field.INSTITUTION)
         })
 
         /* Map source collection. */
-        element.appendChild(doc.createElement("dcterms:isPartOf").apply {
+        providedCHO.appendChild(doc.createElement("dcterms:isPartOf").apply {
             val string = document.get<String>(Field.COLLECTION) ?: "Sammlung unbekannt"
             this.textContent = if (string.contains("Sammlung")) string else "Sammlung: $string"
         })
 
         /* Map source title. */
-        element.appendChild(doc.createElement("dc:title").apply {
+        providedCHO.appendChild(doc.createElement("dc:title").apply {
             this.textContent = document.get<String>(Field.DISPLAY)
         })
 
         /* Append publisher. */
         if (document.has(Field.PUBLISHER)) {
             document.getAll<String>(Field.PUBLISHER).forEach { publisher ->
-                element.appendChild(doc.createElement("dc:publisher").apply {
+                providedCHO.appendChild(doc.createElement("dc:publisher").apply {
                     this.textContent = publisher
                 })
             }
@@ -102,7 +103,7 @@ object EDMMapper: OAIMapper {
         /* Append owner. */
         if (document.has(Field.OWNER)) {
             document.getAll<String>(Field.OWNER).forEach { owner ->
-                element.appendChild(doc.createElement("dc:rights").apply {
+                providedCHO.appendChild(doc.createElement("dc:rights").apply {
                     this.textContent = owner
                 })
             }
@@ -110,14 +111,14 @@ object EDMMapper: OAIMapper {
 
         /* Map description. */
         if (document.has(Field.DESCRIPTION)) {
-            element.appendChild(doc.createElement("dc:description").apply {
+            providedCHO.appendChild(doc.createElement("dc:description").apply {
                 this.textContent = document.get<String>(Field.DESCRIPTION)
             })
         }
 
         /* Map alternative designation. */
         if (document.has(Field.ALTERNATIVE_DESIGNATION)) {
-            element.appendChild(doc.createElement("dcterms:alternative").apply {
+            providedCHO.appendChild(doc.createElement("dcterms:alternative").apply {
                 this.textContent = document.get<String>(Field.ALTERNATIVE_DESIGNATION)
             })
         }
@@ -125,7 +126,7 @@ object EDMMapper: OAIMapper {
         /* Append creators. */
         listOf(Field.ARTIST, Field.PHOTOGRAPHER, Field.AUTHOR, Field.CREATOR).forEach { field ->
             document.getAll<String>(field).forEach { creator ->
-                element.appendChild(doc.createElement("dc:creator").apply {
+                providedCHO.appendChild(doc.createElement("dc:creator").apply {
                     this.textContent = creator
                 })
             }
@@ -133,7 +134,7 @@ object EDMMapper: OAIMapper {
 
         /* Append material information */
         document.getAll<String>(Field.MATERIAL).forEach { material ->
-            element.appendChild(doc.createElement("dcterms:medium").apply {
+            providedCHO.appendChild(doc.createElement("dcterms:medium").apply {
                 this.setAttribute("xml:lang", "de")
                 this.textContent = material
             })
@@ -141,7 +142,7 @@ object EDMMapper: OAIMapper {
 
         /* Append technique information */
         document.getAll<String>(Field.TECHNIQUE).forEach { technique ->
-            element.appendChild(doc.createElement("dc:type").apply {
+            providedCHO.appendChild(doc.createElement("dc:type").apply {
                 this.setAttribute("xml:lang", "de")
                 this.textContent = technique
             })
@@ -150,7 +151,7 @@ object EDMMapper: OAIMapper {
         /* Append subjects. */
         listOf(Field.ICONOGRAPHY, Field.SUBJECT, Field.TYPOLOGY).forEach { field ->
             document.getAll<String>(field).forEach { subject ->
-                element.appendChild(doc.createElement("dc:subject").apply {
+                providedCHO.appendChild(doc.createElement("dc:subject").apply {
                     this.setAttribute("xml:lang", "de")
                     this.textContent = subject
                 })
@@ -160,7 +161,7 @@ object EDMMapper: OAIMapper {
         /* Append places. */
         listOf(Field.PLACE_CREATION, Field.PLACE_SHOWN, Field.PLACE_FINDING, Field.PLACE_PUBLICATION).forEach { field ->
             document.getAll<String>(field).forEach { subject ->
-                element.appendChild(doc.createElement("dcterms:spatial").apply {
+                providedCHO.appendChild(doc.createElement("dcterms:spatial").apply {
                     this.setAttribute("xml:lang", "de")
                     this.textContent = subject
                 })
@@ -168,9 +169,9 @@ object EDMMapper: OAIMapper {
         }
 
         /* Append dating information. */
-        val dating = appendSpan(document, element)
+        val dating = appendSpan(document, rdfElement)
         if (dating != null) {
-            element.appendChild(doc.createElement("dcterms:created").apply {
+            providedCHO.appendChild(doc.createElement("dcterms:created").apply {
                 this.setAttribute("rdf:resource", dating)
             })
         }
@@ -178,7 +179,7 @@ object EDMMapper: OAIMapper {
         /* Append images (& associated metadata). */
         var index = 0
         if (document.has(Field.PREVIEW)) {
-            element.appendChild(doc.createElement("edm:type").apply {
+            providedCHO.appendChild(doc.createElement("edm:type").apply {
                 this.textContent = "IMAGE"
             })
 
@@ -217,11 +218,11 @@ object EDMMapper: OAIMapper {
                     })
                 }
 
-                element.appendChild(resource)
+                rdfElement.appendChild(resource)
                 index++
             }
         } else {
-            element.appendChild(doc.createElement("edm:type").apply {
+            providedCHO.appendChild(doc.createElement("edm:type").apply {
                 this.textContent = "TEXT"
             })
         }
@@ -296,11 +297,7 @@ object EDMMapper: OAIMapper {
         rdfElement.setAttributeNS("http://www.w3.org/2000/xmlns/", "xmlns:ore", "http://www.openarchives.org/ore/terms/")
         appendTo.appendChild(rdfElement)
 
-        /* Create EDM element. */
-        val edmElement = doc.createElement("edm:ProvidedCHO")
-        rdfElement.appendChild(edmElement)
-
         /* Return. */
-        return edmElement
+        return rdfElement
     }
 }
