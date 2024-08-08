@@ -42,20 +42,25 @@ object EDMMapper: OAIMapper {
             this.setAttribute("rdf:resource", objectUrl)
         })
 
-        /* Set rights statement. */
+        /* Set rights statement URL. */
         oreAggregation.appendChild(doc.createElement("edm:rights").apply {
             this.setAttribute("rdf:resource", rights)
+        })
+
+        /* Set data provider. */
+        oreAggregation.appendChild(doc.createElement("edm:dataProvider").apply {
+            this.textContent = document.get<String>(Field.INSTITUTION)
+        })
+
+        /* Set intermediate data provider. */
+        oreAggregation.appendChild(doc.createElement("edm:intermediateProvider").apply {
+            this.textContent = "Kulturerbe Informationsmanagement Schweiz (KIMnet)"
         })
 
         /* Create and append edm:ProvidedCHO element. */
         val providedCHO = doc.createElement("edm:ProvidedCHO")
         rdfElement.appendChild(providedCHO)
         providedCHO.setAttribute("rdf:about", identifier)
-
-        /* Rights statement URL. */
-        providedCHO.appendChild(doc.createElement("edm:right").apply {
-            this.setAttribute("rdf:resource", rights)
-        })
 
         /* Map inventory number(s)* */
         providedCHO.appendChild(doc.createElement("dc:identifier").apply {
@@ -81,10 +86,12 @@ object EDMMapper: OAIMapper {
         })
 
         /* Map source collection. */
-        providedCHO.appendChild(doc.createElement("dcterms:isPartOf").apply {
-            val string = document.get<String>(Field.COLLECTION) ?: "Sammlung unbekannt"
-            this.textContent = if (string.contains("Sammlung")) string else "Sammlung: $string"
-        })
+        val collection = document.get<String>(Field.COLLECTION)
+        if (collection != null) {
+            providedCHO.appendChild(doc.createElement("dcterms:isPartOf").apply {
+                this.textContent = if (collection.contains("Sammlung")) collection else "Sammlung: $collection"
+            })
+        }
 
         /* Map source title. */
         providedCHO.appendChild(doc.createElement("dc:title").apply {
@@ -199,17 +206,17 @@ object EDMMapper: OAIMapper {
                 }
 
                 /* Every resource is appended to the edm:ProvidedCHO as edm:WebResource. */
-                val resource = doc.createElement("edm:WebResource")
-                rdfElement.appendChild(resource)
-                rdfElement.setAttribute("rdf:about", url)
+                val webResourceElement = doc.createElement("edm:WebResource")
+                webResourceElement.setAttribute("rdf:about", url)
+                rdfElement.appendChild(webResourceElement)
 
                 /* We always export images. */
-                resource.appendChild(doc.createElement("dc:type").apply {
-                    this.setAttribute("rdf:about", "https://schema.org/ImageObject")
+                webResourceElement.appendChild(doc.createElement("dc:type").apply {
+                    this.textContent = "image"
                 })
 
                 /* We always export jpegs. */
-                resource.appendChild(doc.createElement("dc:format").apply {
+                webResourceElement.appendChild(doc.createElement("dc:format").apply {
                     this.textContent = "image/jpeg"
                 })
 
@@ -217,14 +224,14 @@ object EDMMapper: OAIMapper {
                 /* Set creator and rights information. */
                 val artist = document.getAll<String>(Field.IMAGE_ARTISTS).getOrNull(index)
                 if (!artist.isNullOrBlank()) {
-                    resource.appendChild(doc.createElement("dc:creator").apply {
+                    webResourceElement.appendChild(doc.createElement("dc:creator").apply {
                         this.textContent = artist
                     })
                 }
 
                 val copyright = document.getAll<String>(Field.IMAGE_COPYRIGHT).getOrNull(index)
                 if (!copyright.isNullOrBlank()) {
-                    resource.appendChild(doc.createElement("dc:rights").apply {
+                    webResourceElement.appendChild(doc.createElement("dc:rights").apply {
                         this.textContent = copyright
                     })
                 }
