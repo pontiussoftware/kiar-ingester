@@ -192,7 +192,7 @@ object EDMMapper: OAIMapper {
 
                 /* We always export jpegs. */
                 webResourceElement.appendChild(doc.createElement("dc:type").apply {
-                    this.setAttribute("rdf:about", "https://schema.org/ImageObject")
+                    this.textContent = "image"
                 })
 
                 /* We always export jpegs. */
