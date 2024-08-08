@@ -229,6 +229,11 @@ object EDMMapper: OAIMapper {
         })
 
         /* Set data provider. */
+        oreAggregation.appendChild(doc.createElement("edm:provider").apply {
+            this.textContent = "CARARE"
+        })
+
+        /* Set data provider. */
         oreAggregation.appendChild(doc.createElement("edm:dataProvider").apply {
             this.textContent = document.get<String>(Field.INSTITUTION)
         })
