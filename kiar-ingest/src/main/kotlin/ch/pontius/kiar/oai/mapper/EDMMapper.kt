@@ -42,11 +42,6 @@ object EDMMapper: OAIMapper {
             this.setAttribute("rdf:resource", objectUrl)
         })
 
-        /* Set rights statement URL. */
-        oreAggregation.appendChild(doc.createElement("edm:rights").apply {
-            this.setAttribute("rdf:resource", rights.replace("https://", "http://"))
-        })
-
         /* Set data provider. */
         oreAggregation.appendChild(doc.createElement("edm:dataProvider").apply {
             this.textContent = document.get<String>(Field.INSTITUTION)
@@ -210,11 +205,6 @@ object EDMMapper: OAIMapper {
                 webResourceElement.setAttribute("rdf:about", url)
                 rdfElement.appendChild(webResourceElement)
 
-                /* We always export images. */
-                webResourceElement.appendChild(doc.createElement("dc:type").apply {
-                    this.textContent = "image"
-                })
-
                 /* We always export jpegs. */
                 webResourceElement.appendChild(doc.createElement("dc:format").apply {
                     this.textContent = "image/jpeg"
@@ -237,6 +227,11 @@ object EDMMapper: OAIMapper {
                 }
                 index++
             }
+
+            /* Set rights statement URL. */
+            oreAggregation.appendChild(doc.createElement("edm:rights").apply {
+                this.setAttribute("rdf:resource", rights.replace("https://", "http://"))
+            })
         } else {
             providedCHO.appendChild(doc.createElement("edm:type").apply {
                 this.textContent = "TEXT"
