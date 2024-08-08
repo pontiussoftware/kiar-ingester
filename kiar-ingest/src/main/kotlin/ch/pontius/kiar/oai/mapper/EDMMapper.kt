@@ -191,12 +191,7 @@ object EDMMapper: OAIMapper {
                 }
 
                 /* We always export jpegs. */
-                webResourceElement.appendChild(doc.createElement("dc:type").apply {
-                    this.textContent = "image"
-                })
-
-                /* We always export jpegs. */
-                if (index > 1) {
+                if (index > 0) {
                     webResourceElement.appendChild(doc.createElement("edm:isNextInSequence").apply {
                         this.textContent = previews[index - 1]
                     })
