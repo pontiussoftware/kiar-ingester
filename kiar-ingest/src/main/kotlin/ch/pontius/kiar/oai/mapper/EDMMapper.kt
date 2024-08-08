@@ -30,18 +30,6 @@ object EDMMapper: OAIMapper {
         val identifier = "#kimnet:cho:${document.get<String>(Field.UUID)}"
         val objectUrl = "https://www.kimnet.ch/objects/${document.get<String>(Field.UUID)}"
 
-        /* Append ore:Aggregation element. */
-        val oreAggregation = doc.createElement("ore:Aggregation")
-        rdfElement.appendChild(oreAggregation)
-        oreAggregation.setAttribute("rdf:about", identifier)
-        oreAggregation.appendChild(doc.createElement("edm:aggregatedCHO").apply {
-            this.setAttribute("rdf:resource", identifier)
-        })
-
-        oreAggregation.appendChild(doc.createElement("edm:isShownAt").apply {
-            this.setAttribute("rdf:resource", objectUrl)
-        })
-
         /* Create and append edm:ProvidedCHO element. */
         val providedCHO = doc.createElement("edm:ProvidedCHO")
         rdfElement.appendChild(providedCHO)
@@ -168,38 +156,19 @@ object EDMMapper: OAIMapper {
             })
         }
 
-        /* Append images (& associated metadata). */
+        /* Append images (& associated metadata) as edm:WebResource. */
         var index = 0
-        if (document.has(Field.PREVIEW)) {
+        val previews = document.getAll<String>(Field.PREVIEW)
+        if (previews.isNotEmpty()) {
             providedCHO.appendChild(doc.createElement("edm:type").apply {
                 this.textContent = "IMAGE"
             })
 
             document.getAll<String>(Field.PREVIEW).forEach { url ->
-                /* First image is appended to ore:Aggregation element as edm:isShownBy others as edm:hasView. */
-                if (index == 0) {
-                    oreAggregation.appendChild(doc.createElement("edm:isShownBy").apply {
-                        this.setAttribute("rdf:resource", url)
-                    })
-                    oreAggregation.appendChild(doc.createElement("edm:object").apply {
-                        this.setAttribute("rdf:resource", url)
-                    })
-                } else {
-                    oreAggregation.appendChild(doc.createElement("edm:hasView").apply {
-                        this.setAttribute("rdf:resource", url)
-                    })
-                }
-
                 /* Every resource is appended to the edm:ProvidedCHO as edm:WebResource. */
                 val webResourceElement = doc.createElement("edm:WebResource")
                 webResourceElement.setAttribute("rdf:about", url)
                 rdfElement.appendChild(webResourceElement)
-
-                /* We always export jpegs. */
-                webResourceElement.appendChild(doc.createElement("dc:format").apply {
-                    this.textContent = "image/jpeg"
-                })
-
 
                 /* Set creator and rights information. */
                 val artist = document.getAll<String>(Field.IMAGE_ARTISTS).getOrNull(index)
@@ -209,12 +178,30 @@ object EDMMapper: OAIMapper {
                     })
                 }
 
+                /* We always export jpegs. */
+                webResourceElement.appendChild(doc.createElement("dc:format").apply {
+                    this.textContent = "image/jpeg"
+                })
+
                 val copyright = document.getAll<String>(Field.IMAGE_COPYRIGHT).getOrNull(index)
                 if (!copyright.isNullOrBlank()) {
                     webResourceElement.appendChild(doc.createElement("dc:rights").apply {
                         this.textContent = copyright
                     })
                 }
+
+                /* We always export jpegs. */
+                webResourceElement.appendChild(doc.createElement("dc:type").apply {
+                    this.setAttribute("rdf:about", "https://schema.org/ImageObject")
+                })
+
+                /* We always export jpegs. */
+                if (index > 1) {
+                    webResourceElement.appendChild(doc.createElement("edm:isNextInSequence").apply {
+                        this.textContent = previews[index - 1]
+                    })
+                }
+
                 index++
             }
         } else {
@@ -223,19 +210,52 @@ object EDMMapper: OAIMapper {
             })
         }
 
-        /* Set rights statement URL. */
-        oreAggregation.appendChild(doc.createElement("edm:rights").apply {
-            this.setAttribute("rdf:resource", rights.replace("https://", "http://"))
+        /* Append ore:Aggregation element (IMPORTANT: Order of elements is relevant). */
+        val oreAggregation = doc.createElement("ore:Aggregation")
+        rdfElement.appendChild(oreAggregation)
+        oreAggregation.setAttribute("rdf:about", identifier)
+        oreAggregation.appendChild(doc.createElement("edm:aggregatedCHO").apply {
+            this.setAttribute("rdf:resource", identifier)
         })
+
+        /* Set data provider. */
+        oreAggregation.appendChild(doc.createElement("edm:dataProvider").apply {
+            this.textContent = document.get<String>(Field.INSTITUTION)
+        })
+
+        /* Append edm:hasView elements for every preview except the first. */
+        if (previews.size > 1) {
+            for (i in 1 until previews.size) {
+                oreAggregation.appendChild(doc.createElement("edm:hasView").apply {
+                    this.setAttribute("rdf:resource", previews[i])
+                })
+            }
+        }
+
+        /* Append edm:isShownAt elements. */
+        oreAggregation.appendChild(doc.createElement("edm:isShownAt").apply {
+            this.setAttribute("rdf:resource", objectUrl)
+        })
+
+        /* Append edm:isShownBy and edm:object element for first preview. */
+        if (previews.isNotEmpty()) {
+            oreAggregation.appendChild(doc.createElement("edm:isShownBy").apply {
+                this.setAttribute("rdf:resource", previews.first())
+            })
+
+            oreAggregation.appendChild(doc.createElement("edm:object").apply {
+                this.setAttribute("rdf:resource", previews.first())
+            })
+        }
 
         /* Set data provider. */
         oreAggregation.appendChild(doc.createElement("edm:provider").apply {
             this.textContent = "CARARE"
         })
 
-        /* Set data provider. */
-        oreAggregation.appendChild(doc.createElement("edm:dataProvider").apply {
-            this.textContent = document.get<String>(Field.INSTITUTION)
+        /* Set rights statement URL. */
+        oreAggregation.appendChild(doc.createElement("edm:rights").apply {
+            this.setAttribute("rdf:resource", rights.replace("https://", "http://"))
         })
 
         /* Set intermediate data provider. */
