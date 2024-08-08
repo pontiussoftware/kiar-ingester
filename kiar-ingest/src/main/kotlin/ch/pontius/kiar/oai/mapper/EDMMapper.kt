@@ -193,7 +193,7 @@ object EDMMapper: OAIMapper {
                 /* We always export jpegs. */
                 if (index > 0) {
                     webResourceElement.appendChild(doc.createElement("edm:isNextInSequence").apply {
-                        this.textContent = previews[index - 1]
+                        this.setAttribute("rdf:resource", previews[index - 1])
                     })
                 }
 
