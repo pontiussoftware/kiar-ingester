@@ -44,7 +44,7 @@ object EDMMapper: OAIMapper {
 
         /* Set rights statement URL. */
         oreAggregation.appendChild(doc.createElement("edm:rights").apply {
-            this.setAttribute("rdf:resource", rights)
+            this.setAttribute("rdf:resource", rights.replace("https://", "http://"))
         })
 
         /* Set data provider. */
