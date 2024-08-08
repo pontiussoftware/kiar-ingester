@@ -42,16 +42,6 @@ object EDMMapper: OAIMapper {
             this.setAttribute("rdf:resource", objectUrl)
         })
 
-        /* Set data provider. */
-        oreAggregation.appendChild(doc.createElement("edm:dataProvider").apply {
-            this.textContent = document.get<String>(Field.INSTITUTION)
-        })
-
-        /* Set intermediate data provider. */
-        oreAggregation.appendChild(doc.createElement("edm:intermediateProvider").apply {
-            this.textContent = "Kulturerbe Informationsmanagement Schweiz (KIMnet)"
-        })
-
         /* Create and append edm:ProvidedCHO element. */
         val providedCHO = doc.createElement("edm:ProvidedCHO")
         rdfElement.appendChild(providedCHO)
@@ -227,16 +217,26 @@ object EDMMapper: OAIMapper {
                 }
                 index++
             }
-
-            /* Set rights statement URL. */
-            oreAggregation.appendChild(doc.createElement("edm:rights").apply {
-                this.setAttribute("rdf:resource", rights.replace("https://", "http://"))
-            })
         } else {
             providedCHO.appendChild(doc.createElement("edm:type").apply {
                 this.textContent = "TEXT"
             })
         }
+
+        /* Set rights statement URL. */
+        oreAggregation.appendChild(doc.createElement("edm:rights").apply {
+            this.setAttribute("rdf:resource", rights.replace("https://", "http://"))
+        })
+
+        /* Set data provider. */
+        oreAggregation.appendChild(doc.createElement("edm:dataProvider").apply {
+            this.textContent = document.get<String>(Field.INSTITUTION)
+        })
+
+        /* Set intermediate data provider. */
+        oreAggregation.appendChild(doc.createElement("edm:intermediateProvider").apply {
+            this.textContent = "Kulturerbe Informationsmanagement Schweiz (KIMnet)"
+        })
     }
 
     /**
