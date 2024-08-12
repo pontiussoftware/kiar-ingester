@@ -89,7 +89,6 @@ class ApacheSolrSink(override val input: Source<SolrInputDocument>, private val 
                                 val response = client.add(collection, validated)
                                 if (response.status == 0) {
                                     LOGGER.info("Ingested document (jobId = {}, collection = {}, docId = {}).", context.jobId, collection, uuid)
-                                    context.processed()
                                 } else {
                                     LOGGER.error("Failed to ingest document (jobId = ${context.jobId}, docId = $uuid).")
                                     context.log(JobLog(null, uuid, collection, JobLogContext.SYSTEM, JobLogLevel.ERROR, "Failed to ingest document due to an Apache Solr error (status = ${response.status})."))
@@ -99,6 +98,9 @@ class ApacheSolrSink(override val input: Source<SolrInputDocument>, private val 
                             context.log(JobLog(null, uuid, collection, JobLogContext.SYSTEM, JobLogLevel.SEVERE, "Failed to ingest document due to exception: ${e.message}."))
                         }
                     }
+
+                    /* Increment counter. */
+                    context.processed()
                 } else {
                     context.log(JobLog(null, null, null, JobLogContext.SYSTEM, JobLogLevel.SEVERE, "Failed to ingest document, because UUID is missing."))
                 }
