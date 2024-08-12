@@ -12,7 +12,6 @@ import kotlinx.coroutines.flow.filter
 import kotlinx.dnq.query.asSequence
 import org.apache.logging.log4j.LogManager
 import org.apache.solr.common.SolrInputDocument
-import java.util.*
 
 /**
  * A [Transformer] that enriches incoming [SolrInputDocument]s with rights information.
@@ -50,7 +49,7 @@ class RightsTransformer(override val input: Source<SolrInputDocument>): Transfor
      */
     override fun toFlow(context: ProcessingContext): Flow<SolrInputDocument> = this.input.toFlow(context).filter { doc ->
         /* Fetch UUID field from document. */
-        val uuid = doc.get<UUID>(Field.UUID)
+        val uuid = doc.get<String>(Field.UUID)
         if (uuid == null) {
             LOGGER.error("Failed to verify document: Field 'uuid' is missing (jobId = {}, participantId = {}, docId = {}).", context.jobId, context.participant, uuid)
             context.log(JobLog(null, null, null, JobLogContext.METADATA, JobLogLevel.VALIDATION, "Document skipped: Field 'uuid' is missing."))

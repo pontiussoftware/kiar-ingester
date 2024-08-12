@@ -2,7 +2,6 @@ package ch.pontius.kiar.ingester.solrj
 
 import org.apache.solr.common.SolrDocument
 import org.apache.solr.common.SolrInputDocument
-import java.util.UUID
 
 
 /**
@@ -10,14 +9,14 @@ import java.util.UUID
  *
  * @return True if [Field] is contained in [SolrInputDocument], false otherwise.
  */
-fun SolrDocument.uuid(): UUID = this.get<UUID>(Field.UUID) ?: throw IllegalArgumentException("Field 'uuid' is missing. This is a programmer's error, since such entries should be filtered at the source.")
+fun SolrDocument.uuid(): String = this.get<String>(Field.UUID) ?: throw IllegalArgumentException("Field 'uuid' is missing. This is a programmer's error, since such entries should be filtered at the source.")
 
 /**
  * Checks if the [SolrInputDocument] has the specified [Field].
  *
  * @return True if [Field] is contained in [SolrInputDocument], false otherwise.
  */
-fun SolrInputDocument.uuid(): UUID = this.get<UUID>(Field.UUID) ?: throw IllegalArgumentException("Field 'uuid' is missing. This is a programmer's error, since such entries should be filtered at the source.")
+fun SolrInputDocument.uuid(): String = this.get<String>(Field.UUID) ?: throw IllegalArgumentException("Field 'uuid' is missing. This is a programmer's error, since such entries should be filtered at the source.")
 
 /**
  * Checks if the [SolrDocument] has the specified [Field].
@@ -95,10 +94,3 @@ fun SolrInputDocument.addField(field: Field, value: Any) {
     require(field.multiValued) { "The field '${field.solr}' is not a multi-valued field. This is a programmer's error." }
     this.addField(field.solr, value)
 }
-
-/**
- * Removes a [Field] from this [SolrInputDocument].
- *
- * @param field The [Field] to remove.
- */
-fun SolrInputDocument.removeField(field: Field): Boolean = this.removeField(field.solr) != null

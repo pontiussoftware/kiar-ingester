@@ -23,9 +23,9 @@ class UuidValueParser(override val mapping: AttributeMapping): ValueParser<UUID>
      */
     override fun parse(value: String, into: SolrInputDocument, context: ProcessingContext) {
         val uuid = try {
-            UUID.fromString(value)
+            UUID.fromString(value).toString()
         } catch (e: IllegalArgumentException) {
-            UUID.randomUUID()
+            UUID.randomUUID().toString()
         }
         if (this.mapping.multiValued) {
             into.addField(this.mapping.destination, uuid)

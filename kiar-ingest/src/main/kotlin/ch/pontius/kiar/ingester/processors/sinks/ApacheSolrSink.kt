@@ -74,7 +74,7 @@ class ApacheSolrSink(override val input: Source<SolrInputDocument>, private val 
 
             /* Start collection of incoming flow. */
             this@ApacheSolrSink.input.toFlow(context).collect() { doc ->
-                val uuid = doc.get<UUID>(Field.UUID)
+                val uuid = doc.get<String>(Field.UUID)
                 if (uuid != null) {
                     /* Set last change field. */
                     if (!doc.has(Field.LASTCHANGE)) {
@@ -144,11 +144,11 @@ class ApacheSolrSink(override val input: Source<SolrInputDocument>, private val 
      * Validates the provided [SolrInputDocument]
      *
      * @param collection The name of the collection to validate the [SolrInputDocument] for.
-     * @param uuid The [UUID] of the [SolrInputDocument]
+     * @param uuid The [UUID] of the [SolrInputDocument] as [String]
      * @param doc The [SolrInputDocument] to validate.
      * @return True on successful validation, false otherwise.
      */
-    private fun validate(collection: String, uuid: UUID, doc: SolrInputDocument, context: ProcessingContext): SolrInputDocument? {
+    private fun validate(collection: String, uuid: String, doc: SolrInputDocument, context: ProcessingContext): SolrInputDocument? {
         /* Validated document (empty at first). */
         val validated = SolrInputDocument()
 
