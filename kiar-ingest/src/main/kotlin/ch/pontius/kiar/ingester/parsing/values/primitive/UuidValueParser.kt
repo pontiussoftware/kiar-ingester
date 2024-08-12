@@ -13,9 +13,9 @@ import java.util.UUID
  * @author Ralph Gasser
  * @version 2.1.0
  */
-class UuidValueParser(override val mapping: AttributeMapping): ValueParser<String> {
+class UuidValueParser(override val mapping: AttributeMapping): ValueParser<UUID> {
     /**
-     * Parses the given [String] into the provided [SolrInputDocument].
+     * Parses the given [String] as an [UUID] into the provided [SolrInputDocument].
      *
      * @param value The [String] value to parse.
      * @param into The [SolrInputDocument] to append the value to.
@@ -23,9 +23,9 @@ class UuidValueParser(override val mapping: AttributeMapping): ValueParser<Strin
      */
     override fun parse(value: String, into: SolrInputDocument, context: ProcessingContext) {
         val uuid = try {
-            UUID.fromString(value).toString()
+            UUID.fromString(value)
         } catch (e: IllegalArgumentException) {
-            UUID.randomUUID().toString()
+            UUID.randomUUID()
         }
         if (this.mapping.multiValued) {
             into.addField(this.mapping.destination, uuid)
