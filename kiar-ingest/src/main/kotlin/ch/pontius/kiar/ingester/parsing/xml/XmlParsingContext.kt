@@ -46,7 +46,7 @@ class XmlParsingContext(config: EntityMapping, private val context: ProcessingCo
     private val documentBuilder: DocumentBuilder = DocumentBuilderFactory.newInstance().newDocumentBuilder()
 
     /** The [XmlDocumentParser] to use for parsing individual documents. */
-    private val parser = XmlDocumentParser(config, this.context)
+    private val parser: XmlDocumentParser
 
     /** The currently active XML [Node] (to which new [Element]s will be appended). */
     private var appendTo: Node = this.documentBuilder.newDocument()
@@ -62,6 +62,9 @@ class XmlParsingContext(config: EntityMapping, private val context: ProcessingCo
         }
         val prefixArray = commonPrefix.split('/')
         this.newDocumentOn = prefixArray.subList(0, prefixArray.size - 2).joinToString("/")
+
+        /* Copy parser and adjust attributes source parameter. */
+        this.parser = XmlDocumentParser(config.copy(attributes = config.attributes.map { it.copy( source = "/${it.source.replace(this.newDocumentOn, "")}") }), this.context)
     }
 
     /**
