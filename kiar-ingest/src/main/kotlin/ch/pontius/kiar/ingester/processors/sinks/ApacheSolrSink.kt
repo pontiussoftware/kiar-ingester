@@ -17,7 +17,6 @@ import ch.pontius.kiar.ingester.solrj.setField
 import kotlinx.coroutines.flow.*
 import kotlinx.dnq.query.asSequence
 import kotlinx.dnq.query.filter
-import kotlinx.dnq.query.size
 import org.apache.logging.log4j.LogManager
 import org.apache.solr.client.solrj.SolrServerException
 import org.apache.solr.client.solrj.impl.Http2SolrClient
@@ -26,6 +25,7 @@ import org.apache.solr.common.SolrInputDocument
 import java.io.IOException
 import java.lang.IllegalStateException
 import java.util.Date
+import java.util.UUID
 
 /**
  * A [Sink] that processes [SolrInputDocument]s and ingests them into Apache Solr.
@@ -74,7 +74,7 @@ class ApacheSolrSink(override val input: Source<SolrInputDocument>, private val 
 
             /* Start collection of incoming flow. */
             this@ApacheSolrSink.input.toFlow(context).collect() { doc ->
-                val uuid = doc.get<String>(Field.UUID)
+                val uuid = doc.get<UUID>(Field.UUID)
                 if (uuid != null) {
                     /* Set last change field. */
                     if (!doc.has(Field.LASTCHANGE)) {
@@ -100,7 +100,7 @@ class ApacheSolrSink(override val input: Source<SolrInputDocument>, private val 
                         }
                     }
                 } else {
-                    context.log(JobLog(null, "<undefined>", null, JobLogContext.SYSTEM, JobLogLevel.SEVERE, "Failed to ingest document, because UUID is missing."))
+                    context.log(JobLog(null, null, null, JobLogContext.SYSTEM, JobLogLevel.SEVERE, "Failed to ingest document, because UUID is missing."))
                 }
             }
 
@@ -144,11 +144,11 @@ class ApacheSolrSink(override val input: Source<SolrInputDocument>, private val 
      * Validates the provided [SolrInputDocument]
      *
      * @param collection The name of the collection to validate the [SolrInputDocument] for.
-     * @param uuid The UUID of the [SolrInputDocument]
+     * @param uuid The [UUID] of the [SolrInputDocument]
      * @param doc The [SolrInputDocument] to validate.
      * @return True on successful validation, false otherwise.
      */
-    private fun validate(collection: String, uuid: String, doc: SolrInputDocument, context: ProcessingContext): SolrInputDocument? {
+    private fun validate(collection: String, uuid: UUID, doc: SolrInputDocument, context: ProcessingContext): SolrInputDocument? {
         /* Validated document (empty at first). */
         val validated = SolrInputDocument()
 

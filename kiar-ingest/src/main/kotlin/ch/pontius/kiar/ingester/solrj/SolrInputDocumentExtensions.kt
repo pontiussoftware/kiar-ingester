@@ -2,6 +2,7 @@ package ch.pontius.kiar.ingester.solrj
 
 import org.apache.solr.common.SolrDocument
 import org.apache.solr.common.SolrInputDocument
+import java.util.UUID
 
 
 /**
@@ -9,14 +10,14 @@ import org.apache.solr.common.SolrInputDocument
  *
  * @return True if [Field] is contained in [SolrInputDocument], false otherwise.
  */
-fun SolrDocument.uuid(): String = this.get<String>(Field.UUID) ?: throw IllegalArgumentException("Field 'uuid' is missing. This is a programmer's error, since such entries should be filtered at the source.")
+fun SolrDocument.uuid(): UUID = this.get<UUID>(Field.UUID) ?: throw IllegalArgumentException("Field 'uuid' is missing. This is a programmer's error, since such entries should be filtered at the source.")
 
 /**
  * Checks if the [SolrInputDocument] has the specified [Field].
  *
  * @return True if [Field] is contained in [SolrInputDocument], false otherwise.
  */
-fun SolrInputDocument.uuid(): String = this.get<String>(Field.UUID) ?:  throw IllegalArgumentException("Field 'uuid' is missing. This is a programmer's error, since such entries should be filtered at the source.")
+fun SolrInputDocument.uuid(): UUID = this.get<UUID>(Field.UUID) ?: throw IllegalArgumentException("Field 'uuid' is missing. This is a programmer's error, since such entries should be filtered at the source.")
 
 /**
  * Checks if the [SolrDocument] has the specified [Field].

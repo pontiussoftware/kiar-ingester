@@ -6,15 +6,13 @@ import ch.pontius.kiar.api.model.job.JobLogLevel
 import ch.pontius.kiar.database.masterdata.DbRightStatement
 import ch.pontius.kiar.ingester.processors.ProcessingContext
 import ch.pontius.kiar.ingester.processors.sources.Source
-import ch.pontius.kiar.ingester.solrj.Field
-import ch.pontius.kiar.ingester.solrj.asString
-import ch.pontius.kiar.ingester.solrj.has
-import ch.pontius.kiar.ingester.solrj.setField
+import ch.pontius.kiar.ingester.solrj.*
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.filter
 import kotlinx.dnq.query.asSequence
 import org.apache.logging.log4j.LogManager
 import org.apache.solr.common.SolrInputDocument
+import java.util.*
 
 /**
  * A [Transformer] that enriches incoming [SolrInputDocument]s with rights information.
@@ -52,10 +50,10 @@ class RightsTransformer(override val input: Source<SolrInputDocument>): Transfor
      */
     override fun toFlow(context: ProcessingContext): Flow<SolrInputDocument> = this.input.toFlow(context).filter { doc ->
         /* Fetch UUID field from document. */
-        val uuid = doc.asString(Field.UUID)
+        val uuid = doc.get<UUID>(Field.UUID)
         if (uuid == null) {
             LOGGER.error("Failed to verify document: Field 'uuid' is missing (jobId = {}, participantId = {}, docId = {}).", context.jobId, context.participant, uuid)
-            context.log(JobLog(null, "<undefined>", null, JobLogContext.METADATA, JobLogLevel.VALIDATION, "Document skipped: Field 'uuid' is missing."))
+            context.log(JobLog(null, null, null, JobLogContext.METADATA, JobLogLevel.VALIDATION, "Document skipped: Field 'uuid' is missing."))
             return@filter false
         }
 

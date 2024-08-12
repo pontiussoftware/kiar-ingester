@@ -14,6 +14,7 @@ import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.Paths
 import java.nio.file.StandardOpenOption
+import java.util.UUID
 
 /**
  * A [ValueParser] that converts a [String] (path) to a [ImmutableImage]. Involves reading the image from the file system.
@@ -56,7 +57,7 @@ class FileImageValueParser(override val mapping: AttributeMapping): ValueParser<
     /**
      * A [MediaProvider.Image] for the images addressed by a [Path].
      */
-    private data class FileImageProvider(private val uuid: String, private val path: Path, private val context: ProcessingContext): MediaProvider.Image {
+    private data class FileImageProvider(private val uuid: UUID, private val path: Path, private val context: ProcessingContext): MediaProvider.Image {
         override fun open(): ImmutableImage? = try {
             Files.newInputStream(this.path, StandardOpenOption.READ).use { ImmutableImage.loader().fromStream(it) }
         } catch (e: Throwable) {

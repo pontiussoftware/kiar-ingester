@@ -13,13 +13,14 @@ import kotlinx.dnq.query.asSequence
 import kotlinx.dnq.query.filter
 import org.apache.logging.log4j.LogManager
 import org.apache.solr.common.SolrInputDocument
+import java.util.*
 
 /**
  * A [Transformer] that a) validates incoming [SolrInputDocument]s with respect to required fields, b) checks and correct the association of the document
  * with a present [DbInstitution] and participant and c) enriches verified documents with meta information that can be derived from the [DbInstitution].
  *
  * @author Ralph Gasser
- * @version 1.1.0
+ * @version 1.1.1
  */
 class InstitutionTransformer(override val input: Source<SolrInputDocument>): Transformer<SolrInputDocument, SolrInputDocument> {
 
@@ -39,10 +40,10 @@ class InstitutionTransformer(override val input: Source<SolrInputDocument>): Tra
     override fun toFlow(context: ProcessingContext): Flow<SolrInputDocument> {
         return this.input.toFlow(context).filter { doc ->
             /* Fetch institution field from document. */
-            val uuid = doc.asString(Field.UUID)
+            val uuid = doc.get<UUID>(Field.UUID)
             if (uuid == null) {
                 LOGGER.error("Failed to verify document: Field 'uuid' is missing (jobId = {}, participantId = {}, docId = {}).", context.jobId, context.participant, uuid)
-                context.log(JobLog(null, "<undefined>", null, JobLogContext.METADATA, JobLogLevel.VALIDATION, "Field 'uuid' is missing."))
+                context.log(JobLog(null, null, null, JobLogContext.METADATA, JobLogLevel.VALIDATION, "Field 'uuid' is missing."))
                 return@filter false
             }
 

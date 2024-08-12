@@ -64,7 +64,7 @@ class MuseumplusImageParser(override val mapping: AttributeMapping): ValueParser
     /**
      * A [MediaProvider.Image] for the images addressed by a [Path].
      */
-    private inner class MuseumplusImageProvider(private val uuid: String, private val url: URL, private val context: ProcessingContext): MediaProvider.Image {
+    private inner class MuseumplusImageProvider(private val uuid: UUID, private val url: URL, private val context: ProcessingContext): MediaProvider.Image {
 
         /**
          * Downloads the [ImmutableImage] for the provided [URL].

@@ -1,6 +1,8 @@
 package ch.pontius.kiar.api.model.job
 
+import ch.pontius.kiar.utilities.serialization.UUIDSerializer
 import kotlinx.serialization.Serializable
+import java.util.*
 
 /**
  * A [JobLog] entry. Usually [JobLog]s describe events that occured during the processing of a particular [Job].
@@ -11,7 +13,8 @@ import kotlinx.serialization.Serializable
 @Serializable
 data class JobLog(
     val jobId: String? = null,
-    val documentId: String,
+    @Serializable(with = UUIDSerializer::class)
+    val documentId: UUID? = null,
     val collectionId: String? = null,
     val context: JobLogContext,
     val level: JobLogLevel,
