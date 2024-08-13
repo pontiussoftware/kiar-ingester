@@ -11,7 +11,7 @@ import kotlinx.serialization.Serializable
 @Serializable
 data class JobLog(
     val jobId: String? = null,
-    val documentId: String,
+    val documentId: String? = null,
     val collectionId: String? = null,
     val context: JobLogContext,
     val level: JobLogLevel,

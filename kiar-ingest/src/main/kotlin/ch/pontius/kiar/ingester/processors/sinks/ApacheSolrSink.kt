@@ -17,7 +17,6 @@ import ch.pontius.kiar.ingester.solrj.setField
 import kotlinx.coroutines.flow.*
 import kotlinx.dnq.query.asSequence
 import kotlinx.dnq.query.filter
-import kotlinx.dnq.query.size
 import org.apache.logging.log4j.LogManager
 import org.apache.solr.client.solrj.SolrServerException
 import org.apache.solr.client.solrj.impl.Http2SolrClient
@@ -26,6 +25,7 @@ import org.apache.solr.common.SolrInputDocument
 import java.io.IOException
 import java.lang.IllegalStateException
 import java.util.Date
+import java.util.UUID
 
 /**
  * A [Sink] that processes [SolrInputDocument]s and ingests them into Apache Solr.
@@ -89,7 +89,6 @@ class ApacheSolrSink(override val input: Source<SolrInputDocument>, private val 
                                 val response = client.add(collection, validated)
                                 if (response.status == 0) {
                                     LOGGER.info("Ingested document (jobId = {}, collection = {}, docId = {}).", context.jobId, collection, uuid)
-                                    context.processed()
                                 } else {
                                     LOGGER.error("Failed to ingest document (jobId = ${context.jobId}, docId = $uuid).")
                                     context.log(JobLog(null, uuid, collection, JobLogContext.SYSTEM, JobLogLevel.ERROR, "Failed to ingest document due to an Apache Solr error (status = ${response.status})."))
@@ -99,8 +98,11 @@ class ApacheSolrSink(override val input: Source<SolrInputDocument>, private val 
                             context.log(JobLog(null, uuid, collection, JobLogContext.SYSTEM, JobLogLevel.SEVERE, "Failed to ingest document due to exception: ${e.message}."))
                         }
                     }
+
+                    /* Increment counter. */
+                    context.processed()
                 } else {
-                    context.log(JobLog(null, "<undefined>", null, JobLogContext.SYSTEM, JobLogLevel.SEVERE, "Failed to ingest document, because UUID is missing."))
+                    context.log(JobLog(null, null, null, JobLogContext.SYSTEM, JobLogLevel.SEVERE, "Failed to ingest document, because UUID is missing."))
                 }
             }
 
@@ -144,7 +146,7 @@ class ApacheSolrSink(override val input: Source<SolrInputDocument>, private val 
      * Validates the provided [SolrInputDocument]
      *
      * @param collection The name of the collection to validate the [SolrInputDocument] for.
-     * @param uuid The UUID of the [SolrInputDocument]
+     * @param uuid The [UUID] of the [SolrInputDocument] as [String]
      * @param doc The [SolrInputDocument] to validate.
      * @return True on successful validation, false otherwise.
      */

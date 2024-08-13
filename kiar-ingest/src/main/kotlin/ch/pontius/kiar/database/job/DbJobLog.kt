@@ -22,7 +22,7 @@ class DbJobLog(entity: Entity) : XdEntity(entity) {
     /** The collection ID this [DbJobLogLevel] concerns. */
     var collectionId by xdStringProp()
 
-    /** The [DbJobLogContext]  ofthis [DbJobLog]. */
+    /** The [DbJobLogContext]  of this [DbJobLog]. */
     var context by xdLink1(DbJobLogContext)
 
     /** The [DbJobLogLevel] of this [DbJobLog]. */

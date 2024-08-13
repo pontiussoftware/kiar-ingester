@@ -208,7 +208,7 @@ class OaiServer(private val store: TransientEntityStore): Closeable {
 
         /* Create header element. */
         val headerElement = doc.createElement("header")
-        headerElement.appendChild(doc.createElement("identifier").apply { textContent = response.uuid() })
+        headerElement.appendChild(doc.createElement("identifier").apply { textContent = response.uuid().toString() })
         headerElement.appendChild(doc.createElement("datestamp").apply { textContent = "2024-01-01" })
         recordElement.appendChild(headerElement)
 
@@ -283,7 +283,7 @@ class OaiServer(private val store: TransientEntityStore): Closeable {
             recordElement.appendChild(headerElement)
 
             /* Create header element. */
-            headerElement.appendChild(doc.createElement("identifier").apply { textContent = document.uuid()})
+            headerElement.appendChild(doc.createElement("identifier").apply { textContent = document.uuid().toString() })
             headerElement.appendChild(doc.createElement("datestamp").apply { textContent = "2024-01-01" })
             recordElement.appendChild(headerElement)
 
@@ -381,7 +381,7 @@ class OaiServer(private val store: TransientEntityStore): Closeable {
 
             val identifierElement = doc.createElement("identifier")
             headerElement.appendChild(identifierElement)
-            identifierElement.appendChild(doc.createTextNode(document.uuid()))
+            identifierElement.appendChild(doc.createTextNode(document.uuid().toString()))
         }
 
         /* If there are more documents to return, include a resumptionToken. */

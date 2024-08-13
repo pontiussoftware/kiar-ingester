@@ -100,7 +100,7 @@ class ProcessingContext(
             val job = DbJob.findById(this@ProcessingContext.jobId)
             this.buffer.removeIf { log ->
                 job.log.add(DbJobLog.new {
-                    this.documentId = log.documentId
+                    this.documentId = log.documentId.toString()
                     this.context = log.context.toDb()
                     this.level = log.level.toDb()
                     this.description = log.description
