@@ -62,7 +62,7 @@ object EDMMapper: OAIMapper {
         val collection = document.get<String>(Field.COLLECTION)
         if (collection != null) {
             providedCHO.appendChild(doc.createElement("dcterms:isPartOf").apply {
-                this.textContent = if (collection.contains("Sammlung")) collection else "Sammlung: $collection"
+                this.textContent = if (collection.contains("sammlung", ignoreCase = true)) collection else "Sammlung: $collection"
             })
         }
 
