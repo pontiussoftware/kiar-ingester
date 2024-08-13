@@ -53,7 +53,7 @@ enum class Field(val solr: String, val required: Boolean = false, val multiValue
     ALTERNATIVE_DESIGNATION("alternative_objektbezeichnung", false),
 
     /** Field containing an object's description. */
-    DESCRIPTION("description", false),
+    DESCRIPTION("beschreibung", false),
 
     /** Field containing an object's type. */
     OBJECTTYPE("objekttyp", true),
