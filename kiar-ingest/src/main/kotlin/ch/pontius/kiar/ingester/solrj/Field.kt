@@ -64,6 +64,9 @@ enum class Field(val solr: String, val required: Boolean = false, val multiValue
     /** Field containing the name of the institution the object belongs to. */
     INSTITUTION("institution", true),
 
+    /** Field containing the email of the institution the object belongs to. */
+    INSTITUTION_EMAIL("institution_contact_email", true),
+
     /** Field containing title information. */
     TITEL("titel", false),
 

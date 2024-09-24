@@ -19,7 +19,7 @@ import org.apache.solr.common.SolrInputDocument
  * with a present [DbInstitution] and participant and c) enriches verified documents with meta information that can be derived from the [DbInstitution].
  *
  * @author Ralph Gasser
- * @version 1.1.1
+ * @version 1.1.2
  */
 class InstitutionTransformer(override val input: Source<SolrInputDocument>): Transformer<SolrInputDocument, SolrInputDocument> {
 
@@ -50,7 +50,7 @@ class InstitutionTransformer(override val input: Source<SolrInputDocument>): Tra
             var institutionName = doc.asString(Field.INSTITUTION)
             if (institutionName == null) {
                 /* We can now try to derive the institution from the participant. */
-                val institution = institutions.values.singleOrNull { it.participantName == context.participant }
+                val institution = this.institutions.values.singleOrNull { it.participantName == context.participant }
                 if (institution == null) {
                     LOGGER.warn("Failed to verify document: Field institution could not be derived from participant (jobId = {}, participantId = {}, docId = {}).", context.jobId, context.participant, uuid)
                     context.log(JobLog(null, uuid, null, JobLogContext.METADATA, JobLogLevel.VALIDATION, "Field 'institution' could not be derived from '_participant_'."))
@@ -69,8 +69,8 @@ class InstitutionTransformer(override val input: Source<SolrInputDocument>): Tra
             }
 
             /* Check presence of collection name. */
-            val collectionNam = doc.asString(Field.COLLECTION)
-            if (collectionNam == null) {
+            val collectionName = doc.asString(Field.COLLECTION)
+            if (collectionName == null) {
                 doc.setField(Field.COLLECTION, institutionName)
                 LOGGER.warn("Collection name not specified; using institution name instead (jobId = {}, participantId = {}, docId = {}).", context.jobId, context.participant, uuid)
                 context.log(JobLog(null, uuid, null, JobLogContext.METADATA, JobLogLevel.WARNING, "Collection not specified; using institution name instead."))
@@ -83,10 +83,13 @@ class InstitutionTransformer(override val input: Source<SolrInputDocument>): Tra
             if (!doc.has(Field.CANTON)) {
                 doc.setField(Field.CANTON, entry.canton)
             }
+            if (!doc.has(Field.INSTITUTION_EMAIL)) {
+                doc.setField(Field.INSTITUTION_EMAIL, entry.email)
+            }
             if (!doc.has(Field.COPYRIGHT) && !entry.defaultCopyright.isNullOrBlank()) {
                 doc.setField(Field.COPYRIGHT, entry.defaultCopyright)
             }
-            if (!doc.has(Field.RIGHTS_STATEMENT) && entry.defaultRightStatement != null) {
+            if (!doc.has(Field.RIGHTS_STATEMENT) && !entry.defaultRightStatement.isNullOrBlank()) {
                 doc.setField(Field.RIGHTS_STATEMENT, entry.defaultRightStatement)
             }
 
