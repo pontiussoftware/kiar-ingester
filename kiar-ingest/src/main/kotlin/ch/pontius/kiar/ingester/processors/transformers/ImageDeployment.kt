@@ -14,10 +14,7 @@ import com.sksamuel.scrimage.nio.ImageWriter
 import com.sksamuel.scrimage.nio.JpegWriter
 import com.sksamuel.scrimage.nio.PngWriter
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.flowOn
-import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.flow.onCompletion
+import kotlinx.coroutines.flow.*
 import org.apache.logging.log4j.LogManager
 import org.apache.solr.common.SolrInputDocument
 import java.io.IOException
@@ -31,7 +28,7 @@ import kotlin.Comparator
  * The [SolrInputDocument] is updated to contain the path to the new file.
  *
  * @author Ralph Gasser
- * @version 1.4.0
+ * @version 1.4.1
  */
 class ImageDeployment(override val input: Source<SolrInputDocument>, private val deployments: List<ImageDeployment>, val test: Boolean = false): Transformer<SolrInputDocument, SolrInputDocument> {
 
@@ -65,7 +62,7 @@ class ImageDeployment(override val input: Source<SolrInputDocument>, private val
         }
 
         /* Return flow for image deployment. */
-        return this.input.toFlow(context).map {
+        return this.input.toFlow(context).onEach {
             if (it.has(Field.RAW)) {
                 val providers = LinkedList(it.getAll<MediaProvider.Image>(Field.RAW))
                 var counter = 1
@@ -112,7 +109,6 @@ class ImageDeployment(override val input: Source<SolrInputDocument>, private val
             } else {
                 it.setField(Field.IMAGECOUNT, 0)
             }
-            it
         }.onCompletion {e ->
             for (deployment in this@ImageDeployment.deployments) {
                 val dst = Paths.get(deployment.path).resolve(context.participant).resolve(deployment.name)
