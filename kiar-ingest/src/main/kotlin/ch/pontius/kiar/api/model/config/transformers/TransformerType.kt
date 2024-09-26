@@ -6,12 +6,13 @@ import ch.pontius.kiar.database.config.transformers.DbTransformerType
  * Enumeration of [TransformerConfig]s supported by the KIAR tools
  *
  * @author Ralph Gasser
- * @version 1.0.0
+ * @version 1.1.0
  */
 enum class TransformerType {
     DISPLAY,
     SYSTEM,
-    RIGHTS;
+    RIGHTS,
+    UUID;
 
     /**
      * Converts this [TransformerType] into a [DbTransformerType]. Requires an ongoing transaction.
@@ -22,5 +23,6 @@ enum class TransformerType {
         DISPLAY -> DbTransformerType.DISPLAY
         SYSTEM -> DbTransformerType.SYSTEM
         RIGHTS -> DbTransformerType.RIGHTS
+        UUID -> DbTransformerType.UUID
     }
 }

@@ -141,7 +141,7 @@ export class JobTemplateComponent implements AfterViewInit {
   public addTransformer() {
     this.transformers.push(new FormGroup({
       type: new FormControl('', [Validators.required]),
-      attributes: new FormArray([])
+      parameters: new FormArray([])
     }))
   }
 

@@ -10,13 +10,14 @@ import kotlinx.dnq.xdRequiredStringProp
  * Enumeration of the types of data transformers.
  *
  * @author Ralph Gasser
- * @version 1.0.0
+ * @version 1.1.0
  */
 class DbTransformerType(entity: Entity): XdEnumEntity(entity) {
     companion object : XdEnumEntityType<DbTransformerType>() {
         val DISPLAY by DbTransformerType.enumField { description = "DISPLAY" }
         val SYSTEM by DbTransformerType.enumField { description = "SYSTEM" }
         val RIGHTS by DbTransformerType.enumField { description = "RIGHTS" }
+        val UUID by DbTransformerType.enumField { description = "UUID" }
     }
 
     /** The name of this [DbTransformerType]. */

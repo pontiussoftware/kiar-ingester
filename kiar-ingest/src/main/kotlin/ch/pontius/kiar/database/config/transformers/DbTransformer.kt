@@ -50,6 +50,7 @@ class DbTransformer(entity: Entity) : XdEntity(entity) {
             "DISPLAY" -> DisplayTransformer(input)
             "SYSTEM" -> InstitutionTransformer(input)
             "RIGHTS" -> RightsTransformer(input)
+            "UUID" -> HashUuidGenerator(input, parameters)
             else -> throw IllegalStateException("Unsupported transformer type '${this.type.description}'. This is a programmer's error!")
         }
     }
