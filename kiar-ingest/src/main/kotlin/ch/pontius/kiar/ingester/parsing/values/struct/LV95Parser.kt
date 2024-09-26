@@ -9,7 +9,7 @@ import org.apache.solr.common.SolrInputDocument
  * [ValueParser] to convert a [String] into a LV95 coordinate pair.
  *
  * @author Ralph Gasser
- * @version 2.0.0
+ * @version 2.1.0
  */
 class LV95Parser(override val mapping: AttributeMapping): ValueParser<Double> {
 
@@ -22,7 +22,8 @@ class LV95Parser(override val mapping: AttributeMapping): ValueParser<Double> {
      * @param value The [String] value to parse.
      * @param into The [SolrInputDocument] to append the value to.
      */
-    override fun parse(value: String, into: SolrInputDocument, context: ProcessingContext) {
+    override fun parse(value: String?, into: SolrInputDocument, context: ProcessingContext) {
+        if (value == null) return
         val coordinates = value.split(this.separator).mapNotNull { it.trim().toDoubleOrNull() }.toTypedArray()
         if (coordinates.size == 2) {
             into.setField(this.mapping.destination, "${coordinates[0]},${coordinates[1]}")

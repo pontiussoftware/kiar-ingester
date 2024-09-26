@@ -9,7 +9,7 @@ import org.apache.solr.common.SolrInputDocument
  * [ValueParser] to convert a [String] into a WGS84 coordinate pair.
  *
  * @author Ralph Gasser
- * @version 2.0.0
+ * @version 2.1.0
  */
 class WGS84Parser(override val mapping: AttributeMapping): ValueParser<Double> {
 
@@ -19,10 +19,11 @@ class WGS84Parser(override val mapping: AttributeMapping): ValueParser<Double> {
     /**
      * Parses the given [String] into the provided [SolrInputDocument].
      *
-     * @param value The [String] value to parse.
+     * @param value The [String] value to parse or null.
      * @param into The [SolrInputDocument] to append the value to.
      */
-    override fun parse(value: String, into: SolrInputDocument, context: ProcessingContext) {
+    override fun parse(value: String?, into: SolrInputDocument, context: ProcessingContext) {
+        if (value == null) return
         val coordinates = value.split(this.separator).mapNotNull { it.trim().toDoubleOrNull() }
         if (coordinates.size == 2) {
             into.setField(this.mapping.destination, "${coordinates[0]},${coordinates[1]}")

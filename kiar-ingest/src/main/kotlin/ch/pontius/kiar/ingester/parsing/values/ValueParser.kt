@@ -9,19 +9,18 @@ import org.apache.solr.common.SolrInputDocument
  * Interface implemented by a [ValueParser] used to convert a [String] value to type [T]. Used for XML parsing.
  *
  * @author Ralph Gasser
- * @version 2.1.0
+ * @version 2.2.0
  */
 interface ValueParser<T> {
-
     /** The [AttributeMapping] this [ValueParser] belongs to. */
     val mapping: AttributeMapping
 
     /**
      * Parses the given [String] and updates this [ValueParser]'s state.
      *
-     * @param value The [String] value to parse.
+     * @param value The [String] value to parse or null.
      * @param into The [SolrInputDocument] to append the value to.
      * @param context The [ProcessingContext]
      */
-    fun parse(value: String, into: SolrInputDocument, context: ProcessingContext)
+    fun parse(value: String?, into: SolrInputDocument, context: ProcessingContext)
 }

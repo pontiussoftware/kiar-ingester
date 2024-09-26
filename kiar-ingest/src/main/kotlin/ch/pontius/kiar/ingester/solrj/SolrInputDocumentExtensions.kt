@@ -19,6 +19,14 @@ fun SolrDocument.uuid(): String = this.get<String>(Field.UUID) ?: throw IllegalA
 fun SolrInputDocument.uuid(): String = this.get<String>(Field.UUID) ?: throw IllegalArgumentException("Field 'uuid' is missing. This is a programmer's error, since such entries should be filtered at the source.")
 
 /**
+ * Checks if the [SolrInputDocument] has the specified [Field].
+ *
+ * @return True if [Field] is contained in [SolrInputDocument], false otherwise.
+ */
+fun SolrInputDocument.uuidOrNull(): String? = this.get<String>(Field.UUID)
+
+
+/**
  * Checks if the [SolrDocument] has the specified [Field].
  *
  * @return True if [Field] is contained in [SolrInputDocument], false otherwise.

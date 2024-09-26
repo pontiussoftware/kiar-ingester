@@ -17,7 +17,7 @@ import java.nio.file.Path
  * A [Source] for a JSON file, as delivered by mainly smaller museums.
  *
  * @author Ralph Gasser
- * @version 1.0.0
+ * @version 1.0.1
  */
 class JsonFileSource(private val file: Path, private val config: EntityMapping): Source<SolrInputDocument> {
     override fun toFlow(context: ProcessingContext): Flow<SolrInputDocument> = flow {
@@ -25,7 +25,9 @@ class JsonFileSource(private val file: Path, private val config: EntityMapping):
         JsonReader(Files.newBufferedReader(this@JsonFileSource.file)).use { reader ->
             reader.beginArray()
             while (reader.hasNext()) {
-                emit(docParser.parse(JsonParser.parseReader(reader)))
+                val doc = SolrInputDocument()
+                docParser.parse(JsonParser.parseReader(reader), doc)
+                emit(doc)
             }
             reader.endArray()
         }

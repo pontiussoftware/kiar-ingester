@@ -48,7 +48,9 @@ class MuseumplusImageParser(override val mapping: AttributeMapping): ValueParser
      * @param into The [SolrInputDocument] to append the value to.
      * @param context The [ProcessingContext]
      */
-    override fun parse(value: String, into: SolrInputDocument, context: ProcessingContext) {
+    override fun parse(value: String?, into: SolrInputDocument, context: ProcessingContext) {
+        if (value == null) return
+
         /* Read IDs. */
         for (id in value.split(this.delimiter).mapNotNull { it.trim().toBigDecimalOrNull()?.toInt() }) {
             val url = URL("${this.host}/ria-ws/application/module/Multimedia/${id}/thumbnail?size=EXTRA_EXTRA_LARGE")

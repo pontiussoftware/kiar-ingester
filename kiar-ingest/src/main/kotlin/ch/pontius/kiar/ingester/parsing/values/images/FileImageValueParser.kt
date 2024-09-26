@@ -19,7 +19,7 @@ import java.nio.file.StandardOpenOption
  * A [ValueParser] that converts a [String] (path) to a [ImmutableImage]. Involves reading the image from the file system.
  *
  * @author Ralph Gasser
- * @version 2.0.0
+ * @version 2.1.0
  */
 class FileImageValueParser(override val mapping: AttributeMapping): ValueParser<List<ImmutableImage>> {
 
@@ -32,11 +32,13 @@ class FileImageValueParser(override val mapping: AttributeMapping): ValueParser<
     /**
      * Parses the given [String] and resolves it into a [FileImageProvider] the provided [SolrInputDocument].
      *
-     * @param value The [String] value to parse.
+     * @param value The [String] value to parse or null.
      * @param into The [SolrInputDocument] to append the value to.
      * @param context The [ProcessingContext]
      */
-    override fun parse(value: String, into: SolrInputDocument, context: ProcessingContext) {
+    override fun parse(value: String?, into: SolrInputDocument, context: ProcessingContext) {
+        if (value == null) return
+
         /* Read path - apply Regex search/replace if needed. */
         val actualPath = if (this.search != null && this.replace != null) {
             value.replace(this.search, this.replace)

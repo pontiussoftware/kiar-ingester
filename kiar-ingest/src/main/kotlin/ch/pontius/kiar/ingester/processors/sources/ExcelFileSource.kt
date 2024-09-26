@@ -7,7 +7,6 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOn
-import kotlinx.coroutines.flow.onCompletion
 import org.apache.poi.ss.usermodel.CellType
 import org.apache.poi.ss.usermodel.Sheet
 import org.apache.poi.ss.usermodel.Workbook
@@ -22,7 +21,7 @@ import java.nio.file.StandardOpenOption
  * A [Source] for a single Microsoft Excel file. This is, for example, used by museumPlus import.
  *
  * @author Ralph Gasser
- * @version 1.0.1
+ * @version 1.0.2
  */
 class ExcelFileSource(private val file: Path, private val config: EntityMapping): Source<SolrInputDocument> {
     override fun toFlow(context: ProcessingContext): Flow<SolrInputDocument> = flow {
@@ -52,10 +51,7 @@ class ExcelFileSource(private val file: Path, private val config: EntityMapping)
                             CellType.BOOLEAN -> cell.booleanCellValue.toString()
                             else -> null /* TODO: Can formulas be parsed? */
                         }?.trim()
-
-                        if (!value.isNullOrBlank()) {
-                            parser.parse(value, doc, context)
-                        }
+                        parser.parse(value, doc, context)
                     }
 
                     /* Emit document. */

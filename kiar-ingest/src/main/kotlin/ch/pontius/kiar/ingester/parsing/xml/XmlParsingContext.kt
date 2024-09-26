@@ -2,22 +2,17 @@ package ch.pontius.kiar.ingester.parsing.xml
 
 import ch.pontius.kiar.api.model.config.mappings.AttributeMapping
 import ch.pontius.kiar.api.model.config.mappings.EntityMapping
-import ch.pontius.kiar.ingester.parsing.values.ValueParser
 import ch.pontius.kiar.ingester.processors.ProcessingContext
 import org.apache.logging.log4j.LogManager
 import org.apache.solr.common.SolrInputDocument
 import org.w3c.dom.Document
 import org.w3c.dom.Element
 import org.w3c.dom.Node
-import org.w3c.dom.NodeList
 import org.xml.sax.Attributes
 import org.xml.sax.SAXParseException
 import org.xml.sax.helpers.DefaultHandler
 import javax.xml.parsers.DocumentBuilder
 import javax.xml.parsers.DocumentBuilderFactory
-import javax.xml.xpath.XPathConstants
-import javax.xml.xpath.XPathExpression
-import javax.xml.xpath.XPathFactory
 
 
 /**
@@ -26,7 +21,7 @@ import javax.xml.xpath.XPathFactory
  * Processing of the individual [SolrInputDocument] is provided by a callback method.
  *
  * @author Ralph Gasser
- * @version 1.2.1
+ * @version 1.2.2
  */
 class XmlParsingContext(config: EntityMapping, private val context: ProcessingContext, private val callback: (SolrInputDocument) -> Unit): DefaultHandler() {
     companion object {
@@ -92,8 +87,9 @@ class XmlParsingContext(config: EntityMapping, private val context: ProcessingCo
                 LOGGER.warn("Skipping document due to parse error.")
                 this.error = false /* Clear error flag when new document starts. */
             } else {
-                val solrDocument = this.parser.parse(this.appendTo.ownerDocument, this.context)
-                this.callback(solrDocument)
+                val doc = SolrInputDocument()
+                this.parser.parse(this.appendTo.ownerDocument, doc)
+                this.callback(doc)
             }
 
             /* Create new XML document. */

@@ -20,7 +20,7 @@ import javax.xml.xpath.XPathFactory
  * A parser for parsing simple XML [Node]s and documents into [SolrInputDocument]s using an [EntityMapping].
  *
  * @author Ralph Gasser
- * @version 1.3.0
+ * @version 1.4.0
  */
 class XmlDocumentParser(config: EntityMapping, private val context: ProcessingContext) {
     /** The [DocumentBuilder] instance used by this [XmlDocumentParser]. */
@@ -38,42 +38,37 @@ class XmlDocumentParser(config: EntityMapping, private val context: ProcessingCo
      * Parses a [Path] pointing to an XML document into [SolrInputDocument].
      *
      * @param path The [Path] of the file to parse.
-     * @return [SolrInputDocument]
+     * @param into The [SolrInputDocument] to append the value to.
      */
-    fun parse(path: Path): SolrInputDocument = Files.newInputStream(path, StandardOpenOption.READ).use {
-        return this.parse(it)
+    fun parse(path: Path, into: SolrInputDocument) = Files.newInputStream(path, StandardOpenOption.READ).use {
+        this.parse(it, into)
     }
 
     /**
      * Parses a simple [InputStream] representing an XML document into [SolrInputDocument].
      *
      * @param stream The [InputStream] to parse.
-     * @return [SolrInputDocument]
+     * @param into The [SolrInputDocument] to append the value to.
      */
-    fun parse(stream: InputStream): SolrInputDocument {
+    fun parse(stream: InputStream, into: SolrInputDocument) {
         val xmlDocument = this.documentBuilder.parse(stream)
-        return this.parse(xmlDocument, this.context)
+        this.parse(xmlDocument, into)
     }
 
     /**
      * Parses a XML [Node] into [SolrInputDocument].
      *
      * @param node The [Node] to parse.
-     * @return [SolrInputDocument]
+     * @param into The [SolrInputDocument] to append the value to.
      */
-    fun parse(node: Node, context: ProcessingContext): SolrInputDocument {
-        val doc = SolrInputDocument()
+    fun parse(node: Node, into: SolrInputDocument) {
         for ((parser, expr) in this.mappings) {
             val nl = expr.evaluate(node, XPathConstants.NODESET) as? NodeList
             if (nl != null) {
                 for (i in 0 until nl.length) {
-                    val value = nl.item(i).nodeValue
-                    if (!value.isNullOrBlank()) {
-                        parser.parse(nl.item(i).nodeValue, doc, context)
-                    }
+                    parser.parse(nl.item(i).nodeValue, into, context)
                 }
             }
         }
-        return doc
     }
 }

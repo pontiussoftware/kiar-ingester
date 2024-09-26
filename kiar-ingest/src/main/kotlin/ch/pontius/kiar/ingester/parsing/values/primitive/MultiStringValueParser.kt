@@ -9,7 +9,7 @@ import org.apache.solr.common.SolrInputDocument
  * A (rather) trivial [ValueParser] implementation that returns an array of [String]s.
  *
  * @author Ralph Gasser
- * @version 2.1.0
+ * @version 2.2.0
  */
 class MultiStringValueParser(override val mapping: AttributeMapping): ValueParser<List<String>> {
 
@@ -19,11 +19,12 @@ class MultiStringValueParser(override val mapping: AttributeMapping): ValueParse
     /**
      * Parses the given [String] into the provided [SolrInputDocument].
      *
-     * @param value The [String] value to parse.
+     * @param value The [String] value to parse or null.
      * @param into The [SolrInputDocument] to append the value to.
      * @param context The [ProcessingContext]
      */
-    override fun parse(value: String, into: SolrInputDocument, context: ProcessingContext) {
+    override fun parse(value: String?, into: SolrInputDocument, context: ProcessingContext) {
+        if (value == null) return
         val split = value.split(this.separator)
         if (split.isNotEmpty()) {
             for (s in split) {

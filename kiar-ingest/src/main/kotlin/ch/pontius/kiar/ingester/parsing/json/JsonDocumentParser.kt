@@ -18,18 +18,16 @@ import java.nio.file.Path
 import java.util.*
 import javax.xml.xpath.XPathExpression
 
-
 /**
  * A parser for parsing [JsonElement] using JsonPath.
  *
  * @author Ralph Gasser
- * @version 1.0.0
+ * @version 1.1.0
  */
 class JsonDocumentParser(private val config: EntityMapping, private val context: ProcessingContext) {
 
     /** A [Map] of all [XPathExpression]s used for document parsing. */
     private val mappings: List<Pair<ValueParser<*>, String>>
-
 
     init {
         Configuration.setDefaults(object : Configuration.Defaults {
@@ -48,58 +46,43 @@ class JsonDocumentParser(private val config: EntityMapping, private val context:
                 return EnumSet.noneOf(Option::class.java)
             }
         })
-        this.mappings = config.attributes.map { it.newParser() to it.source }
+        this.mappings = this.config.attributes.map { it.newParser() to it.source }
     }
 
     /**
      * Parses a [Path] pointing to an JSON document into [SolrInputDocument].
      *
      * @param path The [Path] of the file to parse.
-     * @return [SolrInputDocument]
+     * @param into The [SolrInputDocument] to append the value to.
      */
-    fun parse(path: Path): SolrInputDocument = Files.newBufferedReader(path).use {
-        return this.parse(JsonParser.parseReader(it))
+    fun parse(path: Path, into: SolrInputDocument) = Files.newBufferedReader(path).use {
+        this.parse(JsonParser.parseReader(it), into)
     }
 
     /**
      * Parses a [JsonElement] into [SolrInputDocument].
      *
      * @param document The [JsonElement] to parse.
-     * @return [SolrInputDocument]
+     * @param into The [SolrInputDocument] to append the value to.
      */
-    fun parse(document: JsonElement): SolrInputDocument {
-        val doc = SolrInputDocument()
-        for (attr in this.config.attributes) {
+    fun parse(document: JsonElement, into: SolrInputDocument) {
+        for ((parser, source) in this.mappings) {
             try {
-                when (val value = JsonPath.read<Any>(document, attr.source)) {
+                when (val value = JsonPath.read<Any>(document, source)) {
                     is JsonArray -> {
                         for (element in value) {
                             if (element is JsonPrimitive) {
-                                val v = element.asString.trim()
-                                if (v.isNotBlank()) {
-                                    attr.newParser().parse(v, doc, this.context)
-                                }
+                                parser.parse(element.asString.trim(), into, this.context)
                             }
                         }
                     }
-
-                    is JsonPrimitive -> {
-                        val v = value.asString.trim()
-                        if (v.isNotBlank()) {
-                            attr.newParser().parse(v, doc, this.context)
-                        }
-                    }
-
-                    is JsonNull -> {
-                        /* No op. */
-                    }
-
+                    is JsonPrimitive -> parser.parse(value.asString.trim(), into, this.context)
+                    is JsonNull -> parser.parse(null, into, this.context)
                     else -> throw IllegalArgumentException("Unsupported JSON type: ${value.javaClass}")
                 }
             } catch (e: PathNotFoundException) {
-                /* No op: This is okay and may happen. */
+                parser.parse(null, into, this.context)
             }
         }
-        return doc
     }
 }
