@@ -23,7 +23,7 @@ import java.util.*
  * See [museumPlus API Documentation](http://docs.zetcom.com/framework-public/ws/ws-api-module.html#get-the-thumbnail-of-a-module-item-attachment)
  *
  * @author Ralph Gasser
- * @version 2.1.0
+ * @version 2.2.0
  */
 class MuseumplusImageParser(override val mapping: AttributeMapping): ValueParser<List<ImmutableImage>> {
     companion object {
@@ -41,6 +41,11 @@ class MuseumplusImageParser(override val mapping: AttributeMapping): ValueParser
     /** Reads the replacement pattern from the parameters map.*/
     private val password: String = this.mapping.parameters["password"] ?: throw IllegalStateException("Password required but missing.")
 
+    /** Reads the replacement pattern from the parameters map.*/
+    private val mode: Mode = this.mapping.parameters["mode"]?.let {
+        Mode.valueOf(it.uppercase())
+    } ?: Mode.ID
+
     /**
      * Parses the given [String] and resolves it into a [MuseumplusImageProvider] the provided [SolrInputDocument].
      *
@@ -51,9 +56,14 @@ class MuseumplusImageParser(override val mapping: AttributeMapping): ValueParser
     override fun parse(value: String?, into: SolrInputDocument, context: ProcessingContext) {
         if (value == null) return
 
-        /* Read IDs. */
-        for (id in value.split(this.delimiter).mapNotNull { it.trim().toBigDecimalOrNull()?.toInt() }) {
-            val url = URL("${this.host}/ria-ws/application/module/Multimedia/${id}/thumbnail?size=EXTRA_EXTRA_LARGE")
+        /* Read values. */
+        val urls = when (this.mode) {
+            Mode.ID -> this.urlFromId(value)
+            Mode.PATH -> this.urlFromPath(value)
+        }
+
+        /* Process URls. */
+        for (url in urls) {
             val provider = MuseumplusImageProvider(into.uuid(), url, context)
             if (this.mapping.multiValued) {
                 into.addField(this.mapping.destination, provider)
@@ -61,6 +71,31 @@ class MuseumplusImageParser(override val mapping: AttributeMapping): ValueParser
                 into.setField(this.mapping.destination, provider)
             }
         }
+    }
+
+    /**
+     * Parses the given [String] and resolves it into a [URL] the provided [SolrInputDocument].
+     *
+     * @param value The [String] value to parse.
+     * @return [List] of [URL]s.
+     */
+    private fun urlFromId(value: String) = value.split(this.delimiter).mapNotNull {
+        it.trim().toBigDecimalOrNull()?.toInt()
+    }.map { id -> URL("${this.host}/ria-ws/application/module/Multimedia/${id}/thumbnail?size=EXTRA_EXTRA_LARGE") }
+
+    /**
+     * Parses the given [String] and resolves it into a [URL] the provided [SolrInputDocument].
+     *
+     * @param value The [String] value to parse.
+     * @return [List] of [URL]s.
+     */
+    private fun urlFromPath(value: String) = value.split(this.delimiter).map { URL("${this.host}/${it.trim()}") }
+
+    /**
+     * Returns the [Mode] for the provided [String].
+     */
+    private enum class Mode {
+        ID, PATH
     }
 
     /**
