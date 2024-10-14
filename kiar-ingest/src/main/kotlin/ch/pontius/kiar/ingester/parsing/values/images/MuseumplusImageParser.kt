@@ -7,7 +7,7 @@ import ch.pontius.kiar.api.model.job.JobLogLevel
 import ch.pontius.kiar.ingester.media.MediaProvider
 import ch.pontius.kiar.ingester.parsing.values.ValueParser
 import ch.pontius.kiar.ingester.processors.ProcessingContext
-import ch.pontius.kiar.ingester.solrj.uuid
+import ch.pontius.kiar.ingester.solrj.uuidOrNull
 import com.sksamuel.scrimage.ImmutableImage
 import org.apache.logging.log4j.LogManager
 import org.apache.solr.common.SolrInputDocument
@@ -64,7 +64,7 @@ class MuseumplusImageParser(override val mapping: AttributeMapping): ValueParser
 
         /* Process URls. */
         for (url in urls) {
-            val provider = MuseumplusImageProvider(into.uuid(), url, context)
+            val provider = MuseumplusImageProvider(into.uuidOrNull(), url, context)
             if (this.mapping.multiValued) {
                 into.addField(this.mapping.destination, provider)
             } else {
@@ -101,7 +101,7 @@ class MuseumplusImageParser(override val mapping: AttributeMapping): ValueParser
     /**
      * A [MediaProvider.Image] for the images addressed by a [Path].
      */
-    private inner class MuseumplusImageProvider(private val uuid: String, private val url: URL, private val context: ProcessingContext): MediaProvider.Image {
+    private inner class MuseumplusImageProvider(private val uuid: String?, private val url: URL, private val context: ProcessingContext): MediaProvider.Image {
 
         /**
          * Downloads the [ImmutableImage] for the provided [URL].
