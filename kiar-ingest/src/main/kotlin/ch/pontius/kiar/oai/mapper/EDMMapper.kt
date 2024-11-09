@@ -1,9 +1,12 @@
 package ch.pontius.kiar.oai.mapper
 
+import ch.pontius.kiar.api.model.institution.Institution
+import ch.pontius.kiar.database.institution.DbInstitution
 import ch.pontius.kiar.ingester.solrj.Field
 import ch.pontius.kiar.ingester.solrj.get
 import ch.pontius.kiar.ingester.solrj.getAll
 import ch.pontius.kiar.ingester.solrj.has
+import kotlinx.dnq.query.asSequence
 import org.apache.solr.common.SolrDocument
 import org.w3c.dom.Element
 import org.w3c.dom.Node
@@ -14,7 +17,32 @@ import org.w3c.dom.Node
  * @author Ralph Gasser
  * @version 1.0.0
  */
-object EDMMapper: OAIMapper {
+class EDMMapper: OAIMapper {
+
+    companion object {
+
+        /** Regular expression to match URL patterns. */
+        private val URL_PATTERN_REGEX = "\\$\\{(\\w+)}".toRegex()
+
+        /**
+         * Replaces a URL pattern in the provided template with the actual values from the provided [SolrDocument].
+         *
+         * @param template The [String] template.
+         * @param document The [SolrDocument] to extract values from.
+         * @return Final URL
+         */
+        private fun replaceUrlPatterns(template: String, document: SolrDocument): String {
+            return URL_PATTERN_REGEX.replace(template) { matchResult ->
+                val fieldName = matchResult.groupValues[1]
+                document.get(fieldName)?.toString() ?: throw IllegalStateException("Field '$fieldName' not found in document.")
+            }
+        }
+    }
+
+
+    /** A map of all institutions. */
+    private val institutions: Map<String, Institution> = DbInstitution.all().asSequence().map { it.name to it.toApi() }.toMap()
+
     /**
      * Maps the provided [SolrDocument] to an EDM element.
      *
@@ -22,13 +50,23 @@ object EDMMapper: OAIMapper {
      * @param document The [SolrDocument] to map.
      */
     override fun map(appendTo: Node, document: SolrDocument) {
+        /* Extract necessary information units. */
         val rights = document.get<String>(Field.RIGHTS_STATEMENT_URL) ?: return
+        val institutionName = document.get<String>(Field.INSTITUTION) ?: return
+        val institution: Institution = this.institutions[institutionName] ?: return
+        val urlPattern = institution.defaultObjectUrl ?: "https://www.kimnet.ch/objects/\${uuid}"
+
+        /* Extract necessary XML elements. */
         val rdfElement = this.emptyRdf(appendTo)
         val doc = appendTo.ownerDocument
 
-        /* Set RDF about attribute. */
+        /* Prepare object identifier and object URL. */
         val identifier = "#kimnet:cho:${document.get<String>(Field.UUID)}"
-        val objectUrl = "https://www.kimnet.ch/objects/${document.get<String>(Field.UUID)}"
+        val objectUrl = try {
+            replaceUrlPatterns(urlPattern, document)
+        } catch (_: IllegalStateException) {
+            return
+        }
 
         /* Create and append edm:ProvidedCHO element. */
         val providedCHO = doc.createElement("edm:ProvidedCHO")
@@ -68,6 +106,7 @@ object EDMMapper: OAIMapper {
 
         /* Map source title. */
         providedCHO.appendChild(doc.createElement("dc:title").apply {
+            this.setAttribute("xml:lang", "de")
             this.textContent = document.get<String>(Field.DISPLAY)
         })
 
@@ -92,6 +131,7 @@ object EDMMapper: OAIMapper {
         /* Map description. */
         if (document.has(Field.DESCRIPTION)) {
             providedCHO.appendChild(doc.createElement("dc:description").apply {
+                this.setAttribute("xml:lang", "de")
                 this.textContent = document.get<String>(Field.DESCRIPTION)
             })
         }
@@ -99,6 +139,7 @@ object EDMMapper: OAIMapper {
         /* Map alternative designation. */
         if (document.has(Field.ALTERNATIVE_DESIGNATION)) {
             providedCHO.appendChild(doc.createElement("dcterms:alternative").apply {
+                this.setAttribute("xml:lang", "de")
                 this.textContent = document.get<String>(Field.ALTERNATIVE_DESIGNATION)
             })
         }
@@ -139,7 +180,7 @@ object EDMMapper: OAIMapper {
         }
 
         /* Append places. */
-        listOf(Field.PLACE_CREATION, Field.PLACE_SHOWN, Field.PLACE_FINDING, Field.PLACE_PUBLICATION).forEach { field ->
+        listOf(Field.PLACE_CREATION, Field.PLACE_SHOWN, Field.PLACE_PUBLICATION).forEach { field ->
             document.getAll<String>(field).forEach { subject ->
                 providedCHO.appendChild(doc.createElement("dcterms:spatial").apply {
                     this.setAttribute("xml:lang", "de")
@@ -148,8 +189,24 @@ object EDMMapper: OAIMapper {
             }
         }
 
+        /* Append finding location (if available). */
+        val findingLocation = appendFindingLocation(document, rdfElement)
+        if (findingLocation != null) {
+            providedCHO.appendChild(doc.createElement("dcterms:spatial").apply {
+                this.setAttribute("rdf:resource", findingLocation)
+            })
+        }
+
+        /* Append current location (if available). */
+        val currentLocation = appendCurrentLocation(institution, document, rdfElement)
+        if (currentLocation != null) {
+            providedCHO.appendChild(doc.createElement("dcterms:spatial").apply {
+                this.setAttribute("rdf:resource", currentLocation)
+            })
+        }
+
         /* Append dating information. */
-        val dating = appendSpan(document, rdfElement)
+        val dating = appendCreationDate(document, rdfElement)
         if (dating != null) {
             providedCHO.appendChild(doc.createElement("dcterms:created").apply {
                 this.setAttribute("rdf:resource", dating)
@@ -196,7 +253,6 @@ object EDMMapper: OAIMapper {
                         this.setAttribute("rdf:resource", previews[index - 1])
                     })
                 }
-
                 index++
             }
         } else {
@@ -260,19 +316,85 @@ object EDMMapper: OAIMapper {
     }
 
     /**
+     * Extracts and appends location information of the holding [Institution] to the provided [Node].
+     *
+     * @param institution The [Institution] to extract information from.
+     * @param document The [SolrDocument] to extract information from.
+     * @param appendTo The [Node] to append information to.
+     * @return The 'rdf:about' identifier of the dating information.
+     */
+    private fun appendCurrentLocation(institution: Institution, document: SolrDocument, appendTo: Node): String? {
+        if (institution.longitude != null && institution.latitude != null) {
+            val institutionIdentifier = "#kimnet:current-loc:${document.get<String>(Field.UUID)}"
+            val doc = appendTo.ownerDocument
+            appendTo.appendChild(doc.createElement("edm:Place").apply {
+                this.setAttribute("rdf:about", institutionIdentifier)
+                this.appendChild(doc.createElement("skos:prefLabel").apply {
+                    this.setAttribute("xml:lang", "de")
+                    this.textContent = institution.city
+                })
+                this.appendChild(doc.createElement("wgs84_pos:lat").apply {
+                    this.textContent = institution.latitude.toString()
+                })
+                this.appendChild(doc.createElement("wgs84_pos:long").apply {
+                    this.textContent = institution.longitude.toString()
+                })
+            })
+            return institutionIdentifier
+        } else {
+            return null
+        }
+    }
+
+    /**
      * Extracts and appends dating information to the provided [Node].
      *
      * @param document The [SolrDocument] to extract information from.
      * @param appendTo The [Node] to append information to.
      * @return The 'rdf:about' identifier of the dating information.
      */
-    private fun appendSpan(document: SolrDocument, appendTo: Node): String? {
+    private fun appendFindingLocation(document: SolrDocument, appendTo: Node): String? {
+        if (document.has(Field.PLACE_FINDING)) {
+            val findingLocation = document.get<String>(Field.PLACE_FINDING)
+            val doc = appendTo.ownerDocument
+            val identifier = "#kimnet:finding-location:${document.get<String>(Field.UUID)}"
+            appendTo.appendChild(doc.createElement("edm:Place").apply {
+                this.setAttribute("rdf:about", identifier)
+                this.appendChild(doc.createElement("skos:prefLabel").apply {
+                    this.setAttribute("xml:lang", "de")
+                    this.textContent = findingLocation
+                })
+
+                val coordinates = document.get<DoubleArray>(Field.COORDINATES)
+                if (coordinates != null) {
+                    this.appendChild(doc.createElement("wgs84_pos:lat").apply {
+                        this.textContent = coordinates[0].toString()
+                    })
+                    this.appendChild(doc.createElement("wgs84_pos:long").apply {
+                        this.textContent = coordinates[1].toString()
+                    })
+                }
+            })
+            return identifier
+        } else {
+            return null
+        }
+    }
+
+    /**
+     * Extracts and appends dating information to the provided [Node].
+     *
+     * @param document The [SolrDocument] to extract information from.
+     * @param appendTo The [Node] to append information to.
+     * @return The 'rdf:about' identifier of the dating information.
+     */
+    private fun appendCreationDate(document: SolrDocument, appendTo: Node): String? {
         val datingDescription = document.get<String>(Field.DATING)
         val datingFrom = document.get<Double>(Field.DATING_FROM)
         val datingTo = document.get<Double>(Field.DATING_TO)
         if (datingDescription != null || datingFrom != null || datingTo != null) {
             val doc = appendTo.ownerDocument
-            val identifier = "#kimnet:timespan:${document.get<String>(Field.UUID)}"
+            val identifier = "#kimnet:created:${document.get<String>(Field.UUID)}"
             appendTo.appendChild(doc.createElement("edm:TimeSpan").apply {
                 this.appendChild(doc.createElement("skos:prefLabel").apply {
                     if (datingDescription != null) {

@@ -10,7 +10,17 @@ import ch.pontius.kiar.oai.mapper.OAIMapper
  * @author Ralph Gasser
  * @version 1.0.0
  */
-enum class Formats(val prefix: String, val schema: String, val namespace: String, val mapper: OAIMapper) {
-    OAI_DC("oai_dc", "http://www.openarchives.org/OAI/2.0/oai_dc.xsd", "http://www.openarchives.org/OAI/2.0/oai_dc/", OAIDCMapper),
-    EDM("edm", "https://www.europeana.eu/schemas/edm/EDM.xsd", "http://www.europeana.eu/schemas/edm/", EDMMapper),
+enum class Formats(val prefix: String, val schema: String, val namespace: String) {
+    OAI_DC("oai_dc", "http://www.openarchives.org/OAI/2.0/oai_dc.xsd", "http://www.openarchives.org/OAI/2.0/oai_dc/"),
+    EDM("edm", "https://www.europeana.eu/schemas/edm/EDM.xsd", "http://www.europeana.eu/schemas/edm/");
+
+    /**
+     * Generates a new [OAIMapper] for this [Formats].
+     *
+     * @return [OAIMapper]
+     */
+    fun toMapper(): OAIMapper = when (this) {
+        OAI_DC -> OAIDCMapper
+        EDM -> EDMMapper()
+    }
 }

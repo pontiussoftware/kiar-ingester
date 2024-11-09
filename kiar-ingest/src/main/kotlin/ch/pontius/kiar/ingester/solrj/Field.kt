@@ -165,5 +165,8 @@ enum class Field(val solr: String, val required: Boolean = false, val multiValue
     PLACE_PUBLICATION("ort_erscheinung", false),
 
     /** Field containing location of shown place. */
-    PLACE_SHOWN("ort_dargestellt", false);
+    PLACE_SHOWN("ort_dargestellt", false),
+
+    /* Coordinates */
+    COORDINATES("koordinaten_wgs84", false);
 }
