@@ -71,6 +71,9 @@ class DbInstitution(entity: Entity) : XdEntity(entity) {
     /** The default value to use in the [Field.COPYRIGHT] in case nothing was entered. */
     var defaultCopyright by xdStringProp(trimmed = true)
 
+    /** The default value used to construct a direct URL to the object. */
+    var defaultObjectUrl by xdStringProp(trimmed = true)
+
     /** The date and time this [DbInstitution] was created. */
     var createdAt by xdDateTimeProp()
 
@@ -113,6 +116,7 @@ class DbInstitution(entity: Entity) : XdEntity(entity) {
         selectedCollections = this.selectedCollections.asSequence().map { it.name  }.toList(),
         defaultRightStatement = this.defaultRightStatement?.short,
         defaultCopyright = this.defaultCopyright,
+        defaultObjectUrl = this.defaultObjectUrl,
         imageName = this.imageName,
         createdAt = this.createdAt?.millis,
         changedAt = this.createdAt?.millis
