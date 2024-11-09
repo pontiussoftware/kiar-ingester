@@ -1954,188 +1954,6 @@
         "security" : [ ]
       }
     },
-    "/api/oai-pmh" : {
-      "get" : {
-        "tags" : [ "OAI" ],
-        "summary" : "Attempts a login using the credentials provided in the request body.",
-        "operationId" : "oaiPmh",
-        "parameters" : [ {
-          "name" : "collection",
-          "in" : "path",
-          "description" : "The collection that should be harvested.",
-          "required" : true,
-          "deprecated" : false,
-          "allowEmptyValue" : false,
-          "schema" : {
-            "type" : "string"
-          }
-        }, {
-          "name" : "verb",
-          "in" : "query",
-          "description" : "The OAI-PMH verb.",
-          "required" : true,
-          "deprecated" : false,
-          "allowEmptyValue" : false,
-          "schema" : {
-            "type" : "string"
-          }
-        }, {
-          "name" : "set",
-          "in" : "query",
-          "description" : "The OAI-PMH set to harvest (used for ListIdentifiers and ListRecords).",
-          "required" : false,
-          "deprecated" : false,
-          "allowEmptyValue" : false,
-          "schema" : {
-            "type" : "string"
-          }
-        }, {
-          "name" : "resumptionToken",
-          "in" : "query",
-          "description" : "The OAI-PMH resumption token (used for ListIdentifiers and ListRecords).",
-          "required" : false,
-          "deprecated" : false,
-          "allowEmptyValue" : false,
-          "schema" : {
-            "type" : "string"
-          }
-        } ],
-        "responses" : {
-          "200" : {
-            "description" : "OK",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/SuccessStatus"
-                }
-              }
-            }
-          },
-          "400" : {
-            "description" : "Bad Request",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorStatus"
-                }
-              }
-            }
-          },
-          "401" : {
-            "description" : "Unauthorized",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorStatus"
-                }
-              }
-            }
-          },
-          "500" : {
-            "description" : "Server Error",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorStatus"
-                }
-              }
-            }
-          }
-        },
-        "deprecated" : false,
-        "security" : [ ]
-      },
-      "post" : {
-        "tags" : [ "OAI" ],
-        "summary" : "Attempts a login using the credentials provided in the request body.",
-        "operationId" : "oaiPmh",
-        "parameters" : [ {
-          "name" : "collection",
-          "in" : "path",
-          "description" : "The collection that should be harvested.",
-          "required" : true,
-          "deprecated" : false,
-          "allowEmptyValue" : false,
-          "schema" : {
-            "type" : "string"
-          }
-        }, {
-          "name" : "verb",
-          "in" : "query",
-          "description" : "The OAI-PMH verb.",
-          "required" : true,
-          "deprecated" : false,
-          "allowEmptyValue" : false,
-          "schema" : {
-            "type" : "string"
-          }
-        }, {
-          "name" : "set",
-          "in" : "query",
-          "description" : "The OAI-PMH set to harvest (used for ListIdentifiers and ListRecords).",
-          "required" : false,
-          "deprecated" : false,
-          "allowEmptyValue" : false,
-          "schema" : {
-            "type" : "string"
-          }
-        }, {
-          "name" : "resumptionToken",
-          "in" : "query",
-          "description" : "The OAI-PMH resumption token (used for ListIdentifiers and ListRecords).",
-          "required" : false,
-          "deprecated" : false,
-          "allowEmptyValue" : false,
-          "schema" : {
-            "type" : "string"
-          }
-        } ],
-        "responses" : {
-          "200" : {
-            "description" : "OK",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/SuccessStatus"
-                }
-              }
-            }
-          },
-          "400" : {
-            "description" : "Bad Request",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorStatus"
-                }
-              }
-            }
-          },
-          "401" : {
-            "description" : "Unauthorized",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorStatus"
-                }
-              }
-            }
-          },
-          "500" : {
-            "description" : "Server Error",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorStatus"
-                }
-              }
-            }
-          }
-        },
-        "deprecated" : false,
-        "security" : [ ]
-      }
-    },
     "/api/participants" : {
       "get" : {
         "tags" : [ "Config", "Participant" ],
@@ -3762,6 +3580,125 @@
         "deprecated" : false,
         "security" : [ ]
       }
+    },
+    "/api/{collection}/oai-pmh" : {
+      "get" : {
+        "tags" : [ "OAI" ],
+        "summary" : "An endpoint that provides OAI-PMH harvesting for the specified collection.",
+        "operationId" : "getOaiPmh",
+        "parameters" : [ {
+          "name" : "collection",
+          "in" : "path",
+          "description" : "The collection to harvest.",
+          "required" : true,
+          "deprecated" : false,
+          "allowEmptyValue" : false,
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "name" : "verb",
+          "in" : "query",
+          "description" : "The OAI-PMH verb.",
+          "required" : true,
+          "deprecated" : false,
+          "allowEmptyValue" : false,
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "name" : "identifier",
+          "in" : "query",
+          "description" : "The identifier to harvest (used for GetRecord ).",
+          "required" : false,
+          "deprecated" : false,
+          "allowEmptyValue" : false,
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "name" : "resumptionToken",
+          "in" : "query",
+          "description" : "The OAI-PMH resumption token (used for ListIdentifiers and ListRecords).",
+          "required" : false,
+          "deprecated" : false,
+          "allowEmptyValue" : false,
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "name" : "metadataPrefix",
+          "in" : "query",
+          "description" : "The OAI-PMH metadata prefix (used for GetRecord, ListIdentifiers and ListRecords).",
+          "required" : false,
+          "deprecated" : false,
+          "allowEmptyValue" : false,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "text/xml" : { }
+            }
+          }
+        },
+        "deprecated" : false,
+        "security" : [ ]
+      },
+      "post" : {
+        "tags" : [ "OAI" ],
+        "summary" : "An endpoint that provides OAI-PMH harvesting for the specified collection.",
+        "operationId" : "postOaiPmh",
+        "parameters" : [ {
+          "name" : "collection",
+          "in" : "path",
+          "description" : "The collection to harvest.",
+          "required" : true,
+          "deprecated" : false,
+          "allowEmptyValue" : false,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "requestBody" : {
+          "description" : "Multipart form data containing the form fields to upload.",
+          "content" : {
+            "application/x-www-form-urlencoded" : {
+              "schema" : {
+                "type" : "object",
+                "properties" : {
+                  "verb" : {
+                    "type" : "string"
+                  },
+                  "identifier" : {
+                    "type" : "string"
+                  },
+                  "resumptionToken" : {
+                    "type" : "string"
+                  },
+                  "metadataPrefix" : {
+                    "type" : "string"
+                  }
+                }
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "text/xml" : { }
+            }
+          }
+        },
+        "deprecated" : false,
+        "security" : [ ]
+      }
     }
   },
   "components" : {
@@ -3783,7 +3720,8 @@
             "type" : "string"
           },
           "server" : {
-            "type" : "string"
+            "type" : "string",
+            "nullable" : true
           },
           "maxSize" : {
             "type" : "integer",
@@ -3829,24 +3767,28 @@
         "additionalProperties" : false,
         "properties" : {
           "id" : {
-            "type" : "string"
+            "type" : "string",
+            "nullable" : true
           },
           "name" : {
             "type" : "string"
           },
           "description" : {
-            "type" : "string"
+            "type" : "string",
+            "nullable" : true
           },
           "type" : {
             "$ref" : "#/components/schemas/MappingFormat"
           },
           "createdAt" : {
             "type" : "integer",
-            "format" : "int64"
+            "format" : "int64",
+            "nullable" : true
           },
           "changedAt" : {
             "type" : "integer",
-            "format" : "int64"
+            "format" : "int64",
+            "nullable" : true
           },
           "attributes" : {
             "type" : "array",
@@ -3873,13 +3815,15 @@
             "type" : "string"
           },
           "displayName" : {
-            "type" : "string"
+            "type" : "string",
+            "nullable" : true
           },
           "type" : {
             "$ref" : "#/components/schemas/CollectionType"
           },
           "selector" : {
-            "type" : "string"
+            "type" : "string",
+            "nullable" : true
           },
           "oai" : {
             "type" : "boolean"
@@ -3898,33 +3842,40 @@
         "additionalProperties" : false,
         "properties" : {
           "id" : {
-            "type" : "string"
+            "type" : "string",
+            "nullable" : true
           },
           "name" : {
             "type" : "string"
           },
           "description" : {
-            "type" : "string"
+            "type" : "string",
+            "nullable" : true
           },
           "server" : {
             "type" : "string"
           },
           "publicServer" : {
-            "type" : "string"
+            "type" : "string",
+            "nullable" : true
           },
           "username" : {
-            "type" : "string"
+            "type" : "string",
+            "nullable" : true
           },
           "password" : {
-            "type" : "string"
+            "type" : "string",
+            "nullable" : true
           },
           "createdAt" : {
             "type" : "integer",
-            "format" : "int64"
+            "format" : "int64",
+            "nullable" : true
           },
           "changedAt" : {
             "type" : "integer",
-            "format" : "int64"
+            "format" : "int64",
+            "nullable" : true
           },
           "collections" : {
             "type" : "array",
@@ -3950,13 +3901,15 @@
         "additionalProperties" : false,
         "properties" : {
           "id" : {
-            "type" : "string"
+            "type" : "string",
+            "nullable" : true
           },
           "name" : {
             "type" : "string"
           },
           "description" : {
-            "type" : "string"
+            "type" : "string",
+            "nullable" : true
           },
           "type" : {
             "$ref" : "#/components/schemas/JobType"
@@ -3975,11 +3928,13 @@
           },
           "createdAt" : {
             "type" : "integer",
-            "format" : "int64"
+            "format" : "int64",
+            "nullable" : true
           },
           "changedAt" : {
             "type" : "integer",
-            "format" : "int64"
+            "format" : "int64",
+            "nullable" : true
           },
           "transformers" : {
             "type" : "array",
@@ -4012,14 +3967,15 @@
       },
       "TransformerType" : {
         "type" : "string",
-        "enum" : [ "DISPLAY", "SYSTEM", "RIGHTS" ]
+        "enum" : [ "DISPLAY", "SYSTEM", "RIGHTS", "UUID" ]
       },
       "Institution" : {
         "type" : "object",
         "additionalProperties" : false,
         "properties" : {
           "id" : {
-            "type" : "string"
+            "type" : "string",
+            "nullable" : true
           },
           "name" : {
             "type" : "string"
@@ -4031,13 +3987,16 @@
             "type" : "string"
           },
           "description" : {
-            "type" : "string"
+            "type" : "string",
+            "nullable" : true
           },
           "isil" : {
-            "type" : "string"
+            "type" : "string",
+            "nullable" : true
           },
           "street" : {
-            "type" : "string"
+            "type" : "string",
+            "nullable" : true
           },
           "zip" : {
             "type" : "integer",
@@ -4051,17 +4010,20 @@
           },
           "longitude" : {
             "type" : "number",
-            "format" : "float"
+            "format" : "float",
+            "nullable" : true
           },
           "latitude" : {
             "type" : "number",
-            "format" : "float"
+            "format" : "float",
+            "nullable" : true
           },
           "email" : {
             "type" : "string"
           },
           "homepage" : {
-            "type" : "string"
+            "type" : "string",
+            "nullable" : true
           },
           "publish" : {
             "type" : "boolean"
@@ -4079,21 +4041,30 @@
             }
           },
           "defaultRightStatement" : {
-            "type" : "string"
+            "type" : "string",
+            "nullable" : true
           },
           "defaultCopyright" : {
-            "type" : "string"
+            "type" : "string",
+            "nullable" : true
+          },
+          "defaultObjectUrl" : {
+            "type" : "string",
+            "nullable" : true
           },
           "imageName" : {
-            "type" : "string"
+            "type" : "string",
+            "nullable" : true
           },
           "createdAt" : {
             "type" : "integer",
-            "format" : "int64"
+            "format" : "int64",
+            "nullable" : true
           },
           "changedAt" : {
             "type" : "integer",
-            "format" : "int64"
+            "format" : "int64",
+            "nullable" : true
           }
         },
         "required" : [ "name", "displayName", "participantName", "zip", "city", "canton", "email", "publish", "availableCollections", "selectedCollections" ]
@@ -4131,7 +4102,8 @@
             "type" : "string"
           },
           "jobName" : {
-            "type" : "string"
+            "type" : "string",
+            "nullable" : true
           }
         },
         "required" : [ "templateId" ]
@@ -4141,7 +4113,8 @@
         "additionalProperties" : false,
         "properties" : {
           "id" : {
-            "type" : "string"
+            "type" : "string",
+            "nullable" : true
           },
           "name" : {
             "type" : "string"
@@ -4153,7 +4126,8 @@
             "$ref" : "#/components/schemas/JobSource"
           },
           "template" : {
-            "$ref" : "#/components/schemas/JobTemplate"
+            "$ref" : "#/components/schemas/JobTemplate",
+            "nullable" : true
           },
           "processed" : {
             "type" : "integer",
@@ -4177,7 +4151,8 @@
           },
           "changedAt" : {
             "type" : "integer",
-            "format" : "int64"
+            "format" : "int64",
+            "nullable" : true
           },
           "createdBy" : {
             "type" : "string"
@@ -4190,13 +4165,16 @@
         "additionalProperties" : false,
         "properties" : {
           "jobId" : {
-            "type" : "string"
+            "type" : "string",
+            "nullable" : true
           },
           "documentId" : {
-            "type" : "string"
+            "type" : "string",
+            "nullable" : true
           },
           "collectionId" : {
-            "type" : "string"
+            "type" : "string",
+            "nullable" : true
           },
           "context" : {
             "$ref" : "#/components/schemas/JobLogContext"
@@ -4208,7 +4186,7 @@
             "type" : "string"
           }
         },
-        "required" : [ "documentId", "context", "level", "description" ]
+        "required" : [ "context", "level", "description" ]
       },
       "JobLogContext" : {
         "type" : "string",
@@ -4389,16 +4367,19 @@
         "additionalProperties" : false,
         "properties" : {
           "id" : {
-            "type" : "string"
+            "type" : "string",
+            "nullable" : true
           },
           "username" : {
             "type" : "string"
           },
           "password" : {
-            "type" : "string"
+            "type" : "string",
+            "nullable" : true
           },
           "email" : {
-            "type" : "string"
+            "type" : "string",
+            "nullable" : true
           },
           "active" : {
             "type" : "boolean"
@@ -4407,15 +4388,18 @@
             "$ref" : "#/components/schemas/Role"
           },
           "institution" : {
-            "type" : "string"
+            "type" : "string",
+            "nullable" : true
           },
           "createdAt" : {
             "type" : "integer",
-            "format" : "int64"
+            "format" : "int64",
+            "nullable" : true
           },
           "changedAt" : {
             "type" : "integer",
-            "format" : "int64"
+            "format" : "int64",
+            "nullable" : true
           }
         },
         "required" : [ "username", "active", "role" ]
