@@ -13,15 +13,15 @@ import { Role } from './role';
 
 
 export interface User { 
-    id?: string;
+    id?: string | null;
     username: string;
-    password?: string;
-    email?: string;
+    password?: string | null;
+    email?: string | null;
     active: boolean;
     role: Role;
-    institution?: string;
-    createdAt?: number;
-    changedAt?: number;
+    institution?: string | null;
+    createdAt?: number | null;
+    changedAt?: number | null;
 }
 export namespace User {
 }

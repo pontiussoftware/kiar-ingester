@@ -15,7 +15,7 @@ import { JobTemplate } from './jobTemplate';
 
 
 export interface Job { 
-    id?: string;
+    id?: string | null;
     name: string;
     status: JobStatus;
     source: JobSource;
@@ -25,7 +25,7 @@ export interface Job {
     error: number;
     logEntries: number;
     createdAt: number;
-    changedAt?: number;
+    changedAt?: number | null;
     createdBy: string;
 }
 export namespace Job {

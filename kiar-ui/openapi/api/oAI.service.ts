@@ -18,10 +18,6 @@ import { HttpClient, HttpHeaders, HttpParams,
 import { CustomHttpParameterCodec }                          from '../encoder';
 import { Observable }                                        from 'rxjs';
 
-// @ts-ignore
-import { ErrorStatus } from '../model/errorStatus';
-// @ts-ignore
-import { SuccessStatus } from '../model/successStatus';
 
 // @ts-ignore
 import { BASE_PATH, COLLECTION_FORMATS }                     from '../variables';
@@ -56,6 +52,19 @@ export class OAIService {
         this.encoder = this.configuration.encoder || new CustomHttpParameterCodec();
     }
 
+    /**
+     * @param consumes string[] mime-types
+     * @return true: consumes contains 'multipart/form-data', false: otherwise
+     */
+    private canConsumeForm(consumes: string[]): boolean {
+        const form = 'multipart/form-data';
+        for (const consume of consumes) {
+            if (form === consume) {
+                return true;
+            }
+        }
+        return false;
+    }
 
     // @ts-ignore
     private addToHttpParams(httpParams: HttpParams, value: any, key?: string): HttpParams {
@@ -94,23 +103,24 @@ export class OAIService {
     }
 
     /**
-     * Attempts a login using the credentials provided in the request body.
-     * @param collection The collection that should be harvested.
+     * An endpoint that provides OAI-PMH harvesting for the specified collection.
+     * @param collection The collection to harvest.
      * @param verb The OAI-PMH verb.
-     * @param set The OAI-PMH set to harvest (used for ListIdentifiers and ListRecords).
+     * @param identifier The identifier to harvest (used for GetRecord ).
      * @param resumptionToken The OAI-PMH resumption token (used for ListIdentifiers and ListRecords).
+     * @param metadataPrefix The OAI-PMH metadata prefix (used for GetRecord, ListIdentifiers and ListRecords).
      * @param observe set whether or not to return the data Observable as the body, response or events. defaults to returning the body.
      * @param reportProgress flag to report request and response progress.
      */
-    public oaiPmh(collection: string, verb: string, set?: string, resumptionToken?: string, observe?: 'body', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext}): Observable<SuccessStatus>;
-    public oaiPmh(collection: string, verb: string, set?: string, resumptionToken?: string, observe?: 'response', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext}): Observable<HttpResponse<SuccessStatus>>;
-    public oaiPmh(collection: string, verb: string, set?: string, resumptionToken?: string, observe?: 'events', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext}): Observable<HttpEvent<SuccessStatus>>;
-    public oaiPmh(collection: string, verb: string, set?: string, resumptionToken?: string, observe: any = 'body', reportProgress: boolean = false, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext}): Observable<any> {
+    public getOaiPmh(collection: string, verb: string, identifier?: string, resumptionToken?: string, metadataPrefix?: string, observe?: 'body', reportProgress?: boolean, options?: {httpHeaderAccept?: 'text/xml', context?: HttpContext}): Observable<any>;
+    public getOaiPmh(collection: string, verb: string, identifier?: string, resumptionToken?: string, metadataPrefix?: string, observe?: 'response', reportProgress?: boolean, options?: {httpHeaderAccept?: 'text/xml', context?: HttpContext}): Observable<HttpResponse<any>>;
+    public getOaiPmh(collection: string, verb: string, identifier?: string, resumptionToken?: string, metadataPrefix?: string, observe?: 'events', reportProgress?: boolean, options?: {httpHeaderAccept?: 'text/xml', context?: HttpContext}): Observable<HttpEvent<any>>;
+    public getOaiPmh(collection: string, verb: string, identifier?: string, resumptionToken?: string, metadataPrefix?: string, observe: any = 'body', reportProgress: boolean = false, options?: {httpHeaderAccept?: 'text/xml', context?: HttpContext}): Observable<any> {
         if (collection === null || collection === undefined) {
-            throw new Error('Required parameter collection was null or undefined when calling oaiPmh.');
+            throw new Error('Required parameter collection was null or undefined when calling getOaiPmh.');
         }
         if (verb === null || verb === undefined) {
-            throw new Error('Required parameter verb was null or undefined when calling oaiPmh.');
+            throw new Error('Required parameter verb was null or undefined when calling getOaiPmh.');
         }
 
         let localVarQueryParameters = new HttpParams({encoder: this.encoder});
@@ -118,13 +128,17 @@ export class OAIService {
           localVarQueryParameters = this.addToHttpParams(localVarQueryParameters,
             <any>verb, 'verb');
         }
-        if (set !== undefined && set !== null) {
+        if (identifier !== undefined && identifier !== null) {
           localVarQueryParameters = this.addToHttpParams(localVarQueryParameters,
-            <any>set, 'set');
+            <any>identifier, 'identifier');
         }
         if (resumptionToken !== undefined && resumptionToken !== null) {
           localVarQueryParameters = this.addToHttpParams(localVarQueryParameters,
             <any>resumptionToken, 'resumptionToken');
+        }
+        if (metadataPrefix !== undefined && metadataPrefix !== null) {
+          localVarQueryParameters = this.addToHttpParams(localVarQueryParameters,
+            <any>metadataPrefix, 'metadataPrefix');
         }
 
         let localVarHeaders = this.defaultHeaders;
@@ -133,7 +147,7 @@ export class OAIService {
         if (localVarHttpHeaderAcceptSelected === undefined) {
             // to determine the Accept header
             const httpHeaderAccepts: string[] = [
-                'application/json'
+                'text/xml'
             ];
             localVarHttpHeaderAcceptSelected = this.configuration.selectHeaderAccept(httpHeaderAccepts);
         }
@@ -158,8 +172,8 @@ export class OAIService {
             }
         }
 
-        let localVarPath = `/api/oai-pmh`;
-        return this.httpClient.request<SuccessStatus>('get', `${this.configuration.basePath}${localVarPath}`,
+        let localVarPath = `/api/${this.configuration.encodeParam({name: "collection", value: collection, in: "path", style: "simple", explode: false, dataType: "string", dataFormat: undefined})}/oai-pmh`;
+        return this.httpClient.request<any>('get', `${this.configuration.basePath}${localVarPath}`,
             {
                 context: localVarHttpContext,
                 params: localVarQueryParameters,
@@ -173,37 +187,21 @@ export class OAIService {
     }
 
     /**
-     * Attempts a login using the credentials provided in the request body.
-     * @param collection The collection that should be harvested.
-     * @param verb The OAI-PMH verb.
-     * @param set The OAI-PMH set to harvest (used for ListIdentifiers and ListRecords).
-     * @param resumptionToken The OAI-PMH resumption token (used for ListIdentifiers and ListRecords).
+     * An endpoint that provides OAI-PMH harvesting for the specified collection.
+     * @param collection The collection to harvest.
+     * @param verb 
+     * @param identifier 
+     * @param resumptionToken 
+     * @param metadataPrefix 
      * @param observe set whether or not to return the data Observable as the body, response or events. defaults to returning the body.
      * @param reportProgress flag to report request and response progress.
      */
-    public oaiPmh_1(collection: string, verb: string, set?: string, resumptionToken?: string, observe?: 'body', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext}): Observable<SuccessStatus>;
-    public oaiPmh_1(collection: string, verb: string, set?: string, resumptionToken?: string, observe?: 'response', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext}): Observable<HttpResponse<SuccessStatus>>;
-    public oaiPmh_1(collection: string, verb: string, set?: string, resumptionToken?: string, observe?: 'events', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext}): Observable<HttpEvent<SuccessStatus>>;
-    public oaiPmh_1(collection: string, verb: string, set?: string, resumptionToken?: string, observe: any = 'body', reportProgress: boolean = false, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext}): Observable<any> {
+    public postOaiPmh(collection: string, verb?: string, identifier?: string, resumptionToken?: string, metadataPrefix?: string, observe?: 'body', reportProgress?: boolean, options?: {httpHeaderAccept?: 'text/xml', context?: HttpContext}): Observable<any>;
+    public postOaiPmh(collection: string, verb?: string, identifier?: string, resumptionToken?: string, metadataPrefix?: string, observe?: 'response', reportProgress?: boolean, options?: {httpHeaderAccept?: 'text/xml', context?: HttpContext}): Observable<HttpResponse<any>>;
+    public postOaiPmh(collection: string, verb?: string, identifier?: string, resumptionToken?: string, metadataPrefix?: string, observe?: 'events', reportProgress?: boolean, options?: {httpHeaderAccept?: 'text/xml', context?: HttpContext}): Observable<HttpEvent<any>>;
+    public postOaiPmh(collection: string, verb?: string, identifier?: string, resumptionToken?: string, metadataPrefix?: string, observe: any = 'body', reportProgress: boolean = false, options?: {httpHeaderAccept?: 'text/xml', context?: HttpContext}): Observable<any> {
         if (collection === null || collection === undefined) {
-            throw new Error('Required parameter collection was null or undefined when calling oaiPmh_1.');
-        }
-        if (verb === null || verb === undefined) {
-            throw new Error('Required parameter verb was null or undefined when calling oaiPmh_1.');
-        }
-
-        let localVarQueryParameters = new HttpParams({encoder: this.encoder});
-        if (verb !== undefined && verb !== null) {
-          localVarQueryParameters = this.addToHttpParams(localVarQueryParameters,
-            <any>verb, 'verb');
-        }
-        if (set !== undefined && set !== null) {
-          localVarQueryParameters = this.addToHttpParams(localVarQueryParameters,
-            <any>set, 'set');
-        }
-        if (resumptionToken !== undefined && resumptionToken !== null) {
-          localVarQueryParameters = this.addToHttpParams(localVarQueryParameters,
-            <any>resumptionToken, 'resumptionToken');
+            throw new Error('Required parameter collection was null or undefined when calling postOaiPmh.');
         }
 
         let localVarHeaders = this.defaultHeaders;
@@ -212,7 +210,7 @@ export class OAIService {
         if (localVarHttpHeaderAcceptSelected === undefined) {
             // to determine the Accept header
             const httpHeaderAccepts: string[] = [
-                'application/json'
+                'text/xml'
             ];
             localVarHttpHeaderAcceptSelected = this.configuration.selectHeaderAccept(httpHeaderAccepts);
         }
@@ -225,6 +223,34 @@ export class OAIService {
             localVarHttpContext = new HttpContext();
         }
 
+        // to determine the Content-Type header
+        const consumes: string[] = [
+            'application/x-www-form-urlencoded'
+        ];
+
+        const canConsumeForm = this.canConsumeForm(consumes);
+
+        let localVarFormParams: { append(param: string, value: any): any; };
+        let localVarUseForm = false;
+        let localVarConvertFormParamsToString = false;
+        if (localVarUseForm) {
+            localVarFormParams = new FormData();
+        } else {
+            localVarFormParams = new HttpParams({encoder: this.encoder});
+        }
+
+        if (verb !== undefined) {
+            localVarFormParams = localVarFormParams.append('verb', <any>verb) as any || localVarFormParams;
+        }
+        if (identifier !== undefined) {
+            localVarFormParams = localVarFormParams.append('identifier', <any>identifier) as any || localVarFormParams;
+        }
+        if (resumptionToken !== undefined) {
+            localVarFormParams = localVarFormParams.append('resumptionToken', <any>resumptionToken) as any || localVarFormParams;
+        }
+        if (metadataPrefix !== undefined) {
+            localVarFormParams = localVarFormParams.append('metadataPrefix', <any>metadataPrefix) as any || localVarFormParams;
+        }
 
         let responseType_: 'text' | 'json' | 'blob' = 'json';
         if (localVarHttpHeaderAcceptSelected) {
@@ -237,11 +263,11 @@ export class OAIService {
             }
         }
 
-        let localVarPath = `/api/oai-pmh`;
-        return this.httpClient.request<SuccessStatus>('post', `${this.configuration.basePath}${localVarPath}`,
+        let localVarPath = `/api/${this.configuration.encodeParam({name: "collection", value: collection, in: "path", style: "simple", explode: false, dataType: "string", dataFormat: undefined})}/oai-pmh`;
+        return this.httpClient.request<any>('post', `${this.configuration.basePath}${localVarPath}`,
             {
                 context: localVarHttpContext,
-                params: localVarQueryParameters,
+                body: localVarConvertFormParamsToString ? localVarFormParams.toString() : localVarFormParams,
                 responseType: <any>responseType_,
                 withCredentials: this.configuration.withCredentials,
                 headers: localVarHeaders,

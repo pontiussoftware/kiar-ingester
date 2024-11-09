@@ -14,9 +14,9 @@ import { CollectionType } from './collectionType';
 
 export interface ApacheSolrCollection { 
     name: string;
-    displayName?: string;
+    displayName?: string | null;
     type: CollectionType;
-    selector?: string;
+    selector?: string | null;
     oai: boolean;
     deleteBeforeImport: boolean;
     acceptEmptyFilter: boolean;

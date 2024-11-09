@@ -14,9 +14,9 @@ import { JobLogContext } from './jobLogContext';
 
 
 export interface JobLog { 
-    jobId?: string;
-    documentId: string;
-    collectionId?: string;
+    jobId?: string | null;
+    documentId?: string | null;
+    collectionId?: string | null;
     context: JobLogContext;
     level: JobLogLevel;
     description: string;

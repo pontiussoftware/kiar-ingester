@@ -238,6 +238,7 @@ fun putUpdateInstitution(ctx: Context, store: TransientEntityStore) {
         institution.homepage = request.homepage
         institution.defaultCopyright = request.defaultCopyright
         institution.defaultRightStatement = DbRightStatement.filter { it.short eq request.defaultRightStatement }.singleOrNull()
+        institution.defaultObjectUrl = request.defaultObjectUrl
         institution.changedAt = DateTime.now()
 
         /* Applies longitude and latitude, depending on what is available. */

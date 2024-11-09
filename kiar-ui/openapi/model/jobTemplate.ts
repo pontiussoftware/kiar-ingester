@@ -14,16 +14,16 @@ import { TransformerConfig } from './transformerConfig';
 
 
 export interface JobTemplate { 
-    id?: string;
+    id?: string | null;
     name: string;
-    description?: string;
+    description?: string | null;
     type: JobType;
     startAutomatically: boolean;
     participantName: string;
     solrConfigName: string;
     entityMappingName: string;
-    createdAt?: number;
-    changedAt?: number;
+    createdAt?: number | null;
+    changedAt?: number | null;
     transformers: Array<TransformerConfig>;
 }
 export namespace JobTemplate {

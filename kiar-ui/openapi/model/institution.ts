@@ -12,27 +12,28 @@
 
 
 export interface Institution { 
-    id?: string;
+    id?: string | null;
     name: string;
     displayName: string;
     participantName: string;
-    description?: string;
-    isil?: string;
-    street?: string;
+    description?: string | null;
+    isil?: string | null;
+    street?: string | null;
     zip: number;
     city: string;
     canton: string;
-    longitude?: number;
-    latitude?: number;
+    longitude?: number | null;
+    latitude?: number | null;
     email: string;
-    homepage?: string;
+    homepage?: string | null;
     publish: boolean;
     availableCollections: Array<string>;
     selectedCollections: Array<string>;
-    defaultRightStatement?: string;
-    defaultCopyright?: string;
-    imageName?: string;
-    createdAt?: number;
-    changedAt?: number;
+    defaultRightStatement?: string | null;
+    defaultCopyright?: string | null;
+    defaultObjectUrl?: string | null;
+    imageName?: string | null;
+    createdAt?: number | null;
+    changedAt?: number | null;
 }
 

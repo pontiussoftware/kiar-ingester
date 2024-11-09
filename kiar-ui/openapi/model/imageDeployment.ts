@@ -17,7 +17,7 @@ export interface ImageDeployment {
     format: ImageFormat;
     source: string;
     path: string;
-    server?: string;
+    server?: string | null;
     maxSize: number;
 }
 export namespace ImageDeployment {

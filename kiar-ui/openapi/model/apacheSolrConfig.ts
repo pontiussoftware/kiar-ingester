@@ -14,15 +14,15 @@ import { ApacheSolrCollection } from './apacheSolrCollection';
 
 
 export interface ApacheSolrConfig { 
-    id?: string;
+    id?: string | null;
     name: string;
-    description?: string;
+    description?: string | null;
     server: string;
-    publicServer?: string;
-    username?: string;
-    password?: string;
-    createdAt?: number;
-    changedAt?: number;
+    publicServer?: string | null;
+    username?: string | null;
+    password?: string | null;
+    createdAt?: number | null;
+    changedAt?: number | null;
     collections: Array<ApacheSolrCollection>;
     deployments: Array<ImageDeployment>;
 }

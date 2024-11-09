@@ -14,12 +14,12 @@ import { AttributeMapping } from './attributeMapping';
 
 
 export interface EntityMapping { 
-    id?: string;
+    id?: string | null;
     name: string;
-    description?: string;
+    description?: string | null;
     type: MappingFormat;
-    createdAt?: number;
-    changedAt?: number;
+    createdAt?: number | null;
+    changedAt?: number | null;
     attributes: Array<AttributeMapping>;
 }
 export namespace EntityMapping {

@@ -13,6 +13,6 @@
 
 export interface CreateJobRequest { 
     templateId: string;
-    jobName?: string;
+    jobName?: string | null;
 }
 

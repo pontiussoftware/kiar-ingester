@@ -65,6 +65,7 @@ export class InstitutionDialogComponent {
       publish: new FormControl(true, [Validators.required]),
       defaultRightStatement: new FormControl(null),
       defaultCopyright: new FormControl(null),
+      defaultObjectUrl: new FormControl(null),
       availableCollections: new FormArray(this.availableCollectionsForms),
       selectedCollections: new FormArray(this.selectedCollectionsForms)
     })
@@ -125,6 +126,7 @@ export class InstitutionDialogComponent {
         publish: this.formControl.get('publish')?.value,
         defaultRightStatement: this.formControl.get('defaultRightStatement')?.value,
         defaultCopyright: this.formControl.get('defaultCopyright')?.value,
+        defaultObjectUrl: this.formControl.get('defaultObjectUrl')?.value,
         availableCollections: availableCollections,
         selectedCollections: selectedCollections,
       } as Institution
@@ -201,6 +203,7 @@ export class InstitutionDialogComponent {
         this.formControl.get('publish')?.setValue(institution.publish)
         this.formControl.get('defaultRightStatement')?.setValue(institution.defaultRightStatement)
         this.formControl.get('defaultCopyright')?.setValue(institution.defaultCopyright)
+        this.formControl.get('defaultObjectUrl')?.setValue(institution.defaultObjectUrl)
 
         /* Assign collections. */
         this.allCollections.length = 0
