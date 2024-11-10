@@ -174,7 +174,11 @@ export class ApacheSolrComponent implements AfterViewInit{
     let server = this.formControl.controls['publicServer'].value || this.formControl.controls['server'].value
     let collection = this.collections[index]?.get('name')?.value
     if (server != null && collection != null) {
-      window.open(`${server}/${collection}/select?q=*:*`, "_blank");
+      if (server.endsWith('/')) {
+        window.open(`${server}${collection}/select?q=*:*`, "_blank");
+      } else {
+        window.open(`${server}/${collection}/select?q=*:*`, "_blank");
+      }
     }
   }
 
@@ -184,33 +188,33 @@ export class ApacheSolrComponent implements AfterViewInit{
    * @param solr The {@link ApacheSolrConfig} to apply.
    */
   private updateForm(solr: ApacheSolrConfig | null) {
-    this.formControl.controls['name'].setValue(solr?.name || '');
-    this.formControl.controls['description'].setValue(solr?.description || '');
-    this.formControl.controls['server'].setValue(solr?.server || '');
-    this.formControl.controls['publicServer'].setValue(solr?.publicServer || '');
-    this.formControl.controls['username'].setValue(solr?.username || '');
-    this.formControl.controls['password'].setValue(solr?.password || '');
+    this.formControl.controls['name'].setValue(solr?.name ?? '');
+    this.formControl.controls['description'].setValue(solr?.description ?? '');
+    this.formControl.controls['server'].setValue(solr?.server ?? '');
+    this.formControl.controls['publicServer'].setValue(solr?.publicServer ?? '');
+    this.formControl.controls['username'].setValue(solr?.username ?? '');
+    this.formControl.controls['password'].setValue(solr?.password ?? '');
 
     this.collections.length = 0
     for (let collection of (solr?.collections || [])) {
       this.collections.push(new FormGroup({
-        displayName: new FormControl(collection.displayName || '', [Validators.required]),
-        name: new FormControl(collection.name || '', [Validators.required]),
-        type: new FormControl(collection.type || '', [Validators.required]),
-        selector: new FormControl(collection.selector || ''),
-        oai: new FormControl(collection.oai || false)
+        displayName: new FormControl(collection.displayName ?? '', [Validators.required]),
+        name: new FormControl(collection.name ?? '', [Validators.required]),
+        type: new FormControl(collection.type ?? '', [Validators.required]),
+        selector: new FormControl(collection.selector ?? ''),
+        oai: new FormControl(collection.oai ?? false)
       }))
     }
 
     this.deployments.length = 0
     for (let deployment of (solr?.deployments || [])) {
       this.deployments.push(new FormGroup({
-        name: new FormControl(deployment.name || '', [Validators.required]),
-        format: new FormControl(deployment.format || '', [Validators.required]),
-        source: new FormControl(deployment.source || '', [Validators.required]),
-        server: new FormControl(deployment.server || ''),
-        path: new FormControl(deployment.path || '', [Validators.required]),
-        maxSize: new FormControl(deployment.maxSize || 100, [Validators.required, Validators.min(100)])
+        name: new FormControl(deployment.name ?? '', [Validators.required]),
+        format: new FormControl(deployment.format ?? '', [Validators.required]),
+        source: new FormControl(deployment.source ?? '', [Validators.required]),
+        server: new FormControl(deployment.server ?? ''),
+        path: new FormControl(deployment.path ?? '', [Validators.required]),
+        maxSize: new FormControl(deployment.maxSize ?? 100, [Validators.required, Validators.min(100)])
       }))
     }
   }

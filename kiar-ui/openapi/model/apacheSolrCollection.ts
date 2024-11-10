@@ -18,8 +18,7 @@ export interface ApacheSolrCollection {
     type: CollectionType;
     selector?: string | null;
     oai: boolean;
-    deleteBeforeImport: boolean;
-    acceptEmptyFilter: boolean;
+    deleteBeforeIngest: boolean;
 }
 export namespace ApacheSolrCollection {
 }

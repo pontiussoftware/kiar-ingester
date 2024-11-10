@@ -40,5 +40,12 @@ class DbCollection(entity: Entity) : XdEntity(entity) {
      *
      * @return [CollectionConfig]
      */
-    fun toApi() = ApacheSolrCollection(this.name, this.displayName, this.type.toApi(), this.selector, this.deleteBeforeIngest)
+    fun toApi() = ApacheSolrCollection(
+        name = this.name,
+        displayName = this.displayName,
+        type = this.type.toApi(),
+        selector = this.selector,
+        oai = this.oai,
+        deleteBeforeIngest = this.deleteBeforeIngest
+    )
 }

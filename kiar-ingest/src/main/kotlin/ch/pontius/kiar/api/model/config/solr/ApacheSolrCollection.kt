@@ -25,9 +25,6 @@ data class ApacheSolrCollection(
     /** Flag indicating, that collection can be harvested via OAI-PMH. */
     val oai: Boolean = true,
 
-    /** Flag indicating, that  collection should be purged before starting an import. */
-    val deleteBeforeImport: Boolean = true,
-
-    /** A list of keywords that maps incoming objects to a [ApacheSolrConfig] based on the content of the _output_ field. */
-    val acceptEmptyFilter: Boolean = false
+    /** Flag indicating, that collection should be purged before starting an import. */
+    val deleteBeforeIngest: Boolean = true,
 )

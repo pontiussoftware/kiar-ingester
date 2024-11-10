@@ -1,4 +1,4 @@
-## @kiar-openapi/api@1.0.0-SNAPSHOT.202411090938
+## @kiar-openapi/api@1.0.0-SNAPSHOT.202411101004
 
 ### Building
 
@@ -19,7 +19,7 @@ Navigate to the folder of your consuming project and run one of next commands.
 _published:_
 
 ```
-npm install @kiar-openapi/api@1.0.0-SNAPSHOT.202411090938 --save
+npm install @kiar-openapi/api@1.0.0-SNAPSHOT.202411101004 --save
 ```
 
 _without publishing (not recommended):_

@@ -3828,14 +3828,11 @@
           "oai" : {
             "type" : "boolean"
           },
-          "deleteBeforeImport" : {
-            "type" : "boolean"
-          },
-          "acceptEmptyFilter" : {
+          "deleteBeforeIngest" : {
             "type" : "boolean"
           }
         },
-        "required" : [ "name", "type", "oai", "deleteBeforeImport", "acceptEmptyFilter" ]
+        "required" : [ "name", "type", "oai", "deleteBeforeIngest" ]
       },
       "ApacheSolrConfig" : {
         "type" : "object",
