@@ -368,8 +368,8 @@ class EDMMapper(store: TransientEntityStore): OAIMapper {
                     this.textContent = findingLocation
                 })
 
-                val coordinates = document.getAll<Double>(Field.COORDINATES)
-                if (coordinates.size == 2) {
+                val coordinates = document.get<String>(Field.COORDINATES)?.split(",")?.mapNotNull { it.toDoubleOrNull() }
+                if (coordinates?.size == 2) {
                     this.appendChild(doc.createElement("wgs84_pos:lat").apply {
                         this.textContent = coordinates[0].toString()
                     })
