@@ -176,7 +176,7 @@
       </td>
 
       <td>
-        <mat-checkbox type="text" formControlName="oai"/>
+        <mat-checkbox type="text" formControlName="oai" [disabled]="e.get('type')?.value != 'OBJECT'"/>
       </td>
     </tr>
   </table>
