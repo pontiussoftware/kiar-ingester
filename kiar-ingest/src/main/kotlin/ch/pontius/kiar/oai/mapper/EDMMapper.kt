@@ -358,7 +358,7 @@ class EDMMapper(store: TransientEntityStore): OAIMapper {
      */
     private fun appendFindingLocation(document: SolrDocument, appendTo: Node): String? {
         if (document.has(Field.PLACE_FINDING)) {
-            val findingLocation = document.get<String>(Field.PLACE_FINDING)
+            val findingLocation = document.getAll<String>(Field.PLACE_FINDING).first()
             val doc = appendTo.ownerDocument
             val identifier = "#kimnet:finding-location:${document.get<String>(Field.UUID)}"
             appendTo.appendChild(doc.createElement("edm:Place").apply {
@@ -368,8 +368,8 @@ class EDMMapper(store: TransientEntityStore): OAIMapper {
                     this.textContent = findingLocation
                 })
 
-                val coordinates = document.get<DoubleArray>(Field.COORDINATES)
-                if (coordinates != null) {
+                val coordinates = document.getAll<Double>(Field.COORDINATES)
+                if (coordinates.size == 2) {
                     this.appendChild(doc.createElement("wgs84_pos:lat").apply {
                         this.textContent = coordinates[0].toString()
                     })
