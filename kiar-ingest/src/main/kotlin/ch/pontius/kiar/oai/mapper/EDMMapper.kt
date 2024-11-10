@@ -393,8 +393,8 @@ class EDMMapper(store: TransientEntityStore): OAIMapper {
      */
     private fun appendCreationDate(document: SolrDocument, appendTo: Node): String? {
         val datingDescription = document.get<String>(Field.DATING)
-        val datingFrom = document.get<Double>(Field.DATING_FROM)
-        val datingTo = document.get<Double>(Field.DATING_TO)
+        val datingFrom = document.get<Float>(Field.DATING_FROM)
+        val datingTo = document.get<Float>(Field.DATING_TO)
         if (datingDescription != null || datingFrom != null || datingTo != null) {
             val doc = appendTo.ownerDocument
             val identifier = "#kimnet:created:${document.get<String>(Field.UUID)}"
