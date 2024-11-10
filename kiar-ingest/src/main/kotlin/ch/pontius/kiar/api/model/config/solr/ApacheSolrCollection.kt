@@ -23,8 +23,8 @@ data class ApacheSolrCollection(
     val selector: String?,
 
     /** Flag indicating, that collection can be harvested via OAI-PMH. */
-    val oai: Boolean = true,
+    val oai: Boolean = false,
 
     /** Flag indicating, that collection should be purged before starting an import. */
-    val deleteBeforeIngest: Boolean = true,
+    val deleteBeforeIngest: Boolean = true
 )
