@@ -189,7 +189,7 @@ class OaiServer(private val store: TransientEntityStore): Closeable {
     private fun handleGetRecord(collection: String, parameters: Map<String,String>): Document {
         val identifier = parameters["identifier"] ?: return handleError("badArgument", "Missing identifier.")
         val prefix = parameters["metadataPrefix"] ?: return handleError("badArgument", "Missing metadata prefix.")
-        val mapper = Formats.entries.find { it.prefix == prefix }?.toMapper() ?: return handleError("cannotDisseminateFormat", "Unsupported metadata prefix '$prefix'.")
+        val mapper = Formats.entries.find { it.prefix == prefix }?.toMapper(this.store) ?: return handleError("cannotDisseminateFormat", "Unsupported metadata prefix '$prefix'.")
 
         /* Obtain client and query for entry. */
         val client = getOrLoadClient(collection)
@@ -249,7 +249,7 @@ class OaiServer(private val store: TransientEntityStore): Closeable {
             this.tokens[token] ?: return handleError("badResumptionToken", "Invalid resumption token.")
         } else {
             val prefix = parameters["metadataPrefix"] ?: return handleError("badArgument", "Missing metadata prefix.")
-            val mapper = Formats.entries.find { it.prefix == prefix }?.toMapper() ?: return handleError("cannotDisseminateFormat", "Unsupported metadata prefix '$prefix'.")
+            val mapper = Formats.entries.find { it.prefix == prefix }?.toMapper(this.store) ?: return handleError("cannotDisseminateFormat", "Unsupported metadata prefix '$prefix'.")
             0 to mapper
         }
 
@@ -327,7 +327,7 @@ class OaiServer(private val store: TransientEntityStore): Closeable {
             this.tokens[token] ?: return handleError("badResumptionToken", "Invalid resumption token.")
         } else {
             val prefix = parameters["metadataPrefix"] ?: return handleError("badArgument", "Missing metadata prefix.")
-            val mapper = Formats.entries.find { it.prefix == prefix }?.toMapper() ?: return handleError("cannotDisseminateFormat", "Unsupported metadata prefix '$prefix'.")
+            val mapper = Formats.entries.find { it.prefix == prefix }?.toMapper(this.store) ?: return handleError("cannotDisseminateFormat", "Unsupported metadata prefix '$prefix'.")
             0 to mapper
         }
 

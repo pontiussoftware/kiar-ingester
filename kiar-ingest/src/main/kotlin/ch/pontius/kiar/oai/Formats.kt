@@ -3,6 +3,7 @@ package ch.pontius.kiar.oai
 import ch.pontius.kiar.oai.mapper.OAIDCMapper
 import ch.pontius.kiar.oai.mapper.EDMMapper
 import ch.pontius.kiar.oai.mapper.OAIMapper
+import jetbrains.exodus.database.TransientEntityStore
 
 /**
  * Formats supported by the [OaiServer].
@@ -17,10 +18,11 @@ enum class Formats(val prefix: String, val schema: String, val namespace: String
     /**
      * Generates a new [OAIMapper] for this [Formats].
      *
+     * @param store [TransientEntityStore] to use.
      * @return [OAIMapper]
      */
-    fun toMapper(): OAIMapper = when (this) {
+    fun toMapper(store: TransientEntityStore): OAIMapper = when (this) {
         OAI_DC -> OAIDCMapper
-        EDM -> EDMMapper()
+        EDM -> EDMMapper(store)
     }
 }

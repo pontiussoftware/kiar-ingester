@@ -6,6 +6,7 @@ import ch.pontius.kiar.ingester.solrj.Field
 import ch.pontius.kiar.ingester.solrj.get
 import ch.pontius.kiar.ingester.solrj.getAll
 import ch.pontius.kiar.ingester.solrj.has
+import jetbrains.exodus.database.TransientEntityStore
 import kotlinx.dnq.query.asSequence
 import org.apache.solr.common.SolrDocument
 import org.w3c.dom.Element
@@ -17,7 +18,7 @@ import org.w3c.dom.Node
  * @author Ralph Gasser
  * @version 1.0.0
  */
-class EDMMapper: OAIMapper {
+class EDMMapper(store: TransientEntityStore): OAIMapper {
 
     companion object {
 
@@ -41,7 +42,9 @@ class EDMMapper: OAIMapper {
 
 
     /** A map of all institutions. */
-    private val institutions: Map<String, Institution> = DbInstitution.all().asSequence().map { it.name to it.toApi() }.toMap()
+    private val institutions: Map<String, Institution> = store.transactional(true) {
+        DbInstitution.all().asSequence().map { it.name to it.toApi() }.toMap()
+    }
 
     /**
      * Maps the provided [SolrDocument] to an EDM element.
