@@ -469,18 +469,16 @@ class EDMMapper(store: TransientEntityStore): OAIMapper {
         var fractionalPart = decimalDate - year
 
         /* Extract month. */
-        val month = if (fractionalPart > 0f) {
-            (fractionalPart * 100).toInt()
-        } else {
-            0
+        var month = 0
+        if (fractionalPart > 0f) {
+            month = (fractionalPart * 100f).toInt()
+            fractionalPart = fractionalPart - (month / 100f)
         }
-        fractionalPart -= fractionalPart - (month / 100f)
 
         /* Extract day. */
-        val day = if (fractionalPart > 0f) {
-            (fractionalPart * 10000).toInt()
-        } else {
-            0
+        var day = 0
+        if (fractionalPart > 0f) {
+            day = (fractionalPart * 10000f).toInt()
         }
 
         return when {
