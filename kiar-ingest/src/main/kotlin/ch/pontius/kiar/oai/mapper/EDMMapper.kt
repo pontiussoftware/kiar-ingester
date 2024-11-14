@@ -11,6 +11,8 @@ import kotlinx.dnq.query.asSequence
 import org.apache.solr.common.SolrDocument
 import org.w3c.dom.Element
 import org.w3c.dom.Node
+import java.time.LocalDate
+import java.time.format.DateTimeFormatter
 
 /**
  * [OAIMapper] implementation that maps to the Europeana Data Model (EDM).
@@ -413,12 +415,12 @@ class EDMMapper(store: TransientEntityStore): OAIMapper {
                 })
                 if (datingFrom != null) {
                     this.appendChild(doc.createElement("edm:begin").apply {
-                        this.textContent = datingFrom.toString()
+                        this.textContent = decimalToEDTF(datingFrom).toString()
                     })
                 }
                 if (datingTo != null) {
                     this.appendChild(doc.createElement("edm:end").apply {
-                        this.textContent = datingTo.toString()
+                        this.textContent = decimalToEDTF(datingTo).toString()
                     })
                 }
                 this.setAttribute("rdf:about", identifier)
@@ -455,5 +457,30 @@ class EDMMapper(store: TransientEntityStore): OAIMapper {
 
         /* Return. */
         return rdfElement
+    }
+
+    /**
+     * Converts a decimal date to a [LocalDate].
+     *
+     * @param decimalDate The decimal date to convert.
+     * @return [LocalDate]
+     */
+    private fun decimalToEDTF(decimalDate: Float): String {
+        val year = decimalDate.toInt()
+        val fractionalPart = decimalDate - year
+        return when {
+            fractionalPart == 0f -> year.toString() // Only year is provided
+            fractionalPart < 1f -> {
+                val month = (fractionalPart * 100).toInt()
+                String.format("%04d-%02d", year, month) // Year and month are provided
+            }
+            else -> {
+                val dayOfYear = (fractionalPart * 10000).toInt()
+                val dateString = "$year${String.format("%04d", dayOfYear)}"
+                val formatter = DateTimeFormatter.ofPattern("yyyyDDD")
+                val date = LocalDate.parse(dateString, formatter)
+                date.format(DateTimeFormatter.ISO_LOCAL_DATE) // Full date is provided
+            }
+        }
     }
 }
