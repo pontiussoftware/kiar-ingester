@@ -110,6 +110,7 @@ class EDMMapper(store: TransientEntityStore): OAIMapper {
 
         /* Map source title. */
         providedCHO.appendChild(doc.createElement("dc:title").apply {
+            this.setAttribute("xml:lang", "de")
             this.textContent = document.get<String>(Field.DISPLAY)
         })
 
