@@ -110,7 +110,6 @@ class EDMMapper(store: TransientEntityStore): OAIMapper {
 
         /* Map source title. */
         providedCHO.appendChild(doc.createElement("dc:title").apply {
-            this.setAttribute("xml:lang", "de")
             this.textContent = document.get<String>(Field.DISPLAY)
         })
 
@@ -204,7 +203,7 @@ class EDMMapper(store: TransientEntityStore): OAIMapper {
         /* Append current location (if available). */
         val currentLocation = appendCurrentLocation(institution, document, rdfElement)
         if (currentLocation != null) {
-            providedCHO.appendChild(doc.createElement("dcterms:spatial").apply {
+            providedCHO.appendChild(doc.createElement("edm:currentLocation").apply {
                 this.setAttribute("rdf:resource", currentLocation)
             })
         }
@@ -333,15 +332,15 @@ class EDMMapper(store: TransientEntityStore): OAIMapper {
             val doc = appendTo.ownerDocument
             appendTo.appendChild(doc.createElement("edm:Place").apply {
                 this.setAttribute("rdf:about", institutionIdentifier)
-                this.appendChild(doc.createElement("skos:prefLabel").apply {
-                    this.setAttribute("xml:lang", "de")
-                    this.textContent = institution.city
-                })
                 this.appendChild(doc.createElement("wgs84_pos:lat").apply {
                     this.textContent = institution.latitude.toString()
                 })
                 this.appendChild(doc.createElement("wgs84_pos:long").apply {
                     this.textContent = institution.longitude.toString()
+                })
+                this.appendChild(doc.createElement("skos:prefLabel").apply {
+                    this.setAttribute("xml:lang", "de")
+                    this.textContent = institution.city
                 })
             })
             return institutionIdentifier
@@ -364,11 +363,6 @@ class EDMMapper(store: TransientEntityStore): OAIMapper {
             val identifier = "#kimnet:finding-location:${document.get<String>(Field.UUID)}"
             appendTo.appendChild(doc.createElement("edm:Place").apply {
                 this.setAttribute("rdf:about", identifier)
-                this.appendChild(doc.createElement("skos:prefLabel").apply {
-                    this.setAttribute("xml:lang", "de")
-                    this.textContent = findingLocation
-                })
-
                 val coordinates = document.get<String>(Field.COORDINATES)?.split(",")?.mapNotNull { it.toDoubleOrNull() }
                 if (coordinates?.size == 2) {
                     this.appendChild(doc.createElement("wgs84_pos:lat").apply {
@@ -376,6 +370,10 @@ class EDMMapper(store: TransientEntityStore): OAIMapper {
                     })
                     this.appendChild(doc.createElement("wgs84_pos:long").apply {
                         this.textContent = coordinates[1].toString()
+                    })
+                    this.appendChild(doc.createElement("skos:prefLabel").apply {
+                        this.setAttribute("xml:lang", "de")
+                        this.textContent = findingLocation
                     })
                 }
             })
