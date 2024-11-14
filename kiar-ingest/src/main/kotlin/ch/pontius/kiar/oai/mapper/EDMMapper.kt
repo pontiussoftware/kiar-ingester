@@ -482,8 +482,8 @@ class EDMMapper(store: TransientEntityStore): OAIMapper {
         }
 
         return when {
-            day > 0 -> "$year-$month-$day"
-            month > 0 -> "$year-$month"
+            day > 0 -> String.format("%04d-%02d-%02d", year, month, day)
+            month > 0 -> String.format("%04d-%02d", year, month)
             else -> year.toString()
         }
     }
