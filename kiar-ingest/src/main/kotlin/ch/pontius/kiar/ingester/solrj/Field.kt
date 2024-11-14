@@ -34,6 +34,9 @@ enum class Field(val solr: String, val required: Boolean = false, val multiValue
     /** Field containing an object's display designation. */
     DISPLAY("_display_", true),
 
+    /** A field listing the (data-)collections an object should be published to. */
+    PUBLISH_TO("_publish_to_", false, true, true),
+
     /** Field containing an object's display designation. */
     DISPLAY_LIST("_display_list_", true, true),
 
@@ -43,7 +46,7 @@ enum class Field(val solr: String, val required: Boolean = false, val multiValue
     /** Field containing the object's inventory number. */
     INVENTORY_NUMBER("inventarnummer", true),
 
-    /** Field containing the object's ISBN number. */
+    /** Field containing the object's ISBN-number. */
     ISBN("isbn", false),
 
     /** Field containing an object's designation. */

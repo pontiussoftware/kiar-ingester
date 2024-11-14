@@ -84,15 +84,25 @@ class ApacheSolrSink(override val input: Source<SolrInputDocument>, private val 
                     /* Ingest into collections. */
                     for (collection in this@ApacheSolrSink.collections) {
                         try {
-                            if (this@ApacheSolrSink.institutions[doc.get<String>(Field.INSTITUTION)]?.contains(collection) == true) {
-                                val validated = this@ApacheSolrSink.validate(collection, uuid, doc, context) ?: continue
-                                val response = client.add(collection, validated)
-                                if (response.status == 0) {
-                                    LOGGER.info("Ingested document (jobId = {}, collection = {}, docId = {}).", context.jobId, collection, uuid)
-                                } else {
-                                    LOGGER.error("Failed to ingest document (jobId = ${context.jobId}, docId = $uuid).")
-                                    context.log(JobLog(null, uuid, collection, JobLogContext.SYSTEM, JobLogLevel.ERROR, "Failed to ingest document due to an Apache Solr error (status = ${response.status})."))
+                            /* Apply per-institution collection filter. */
+                            if (this@ApacheSolrSink.institutions[doc.get<String>(Field.INSTITUTION)]?.contains(collection) != true) continue
+
+                            /* Apply per-object collection filter. */
+                            if (doc.has(Field.PUBLISH_TO)) {
+                                val collections = doc.get<List<String>>(Field.PUBLISH_TO)
+                                if (collections != null && collections.isNotEmpty() && !collections.contains(collection)) {
+                                    continue
                                 }
+                            }
+
+                            /* Ingest object. */
+                            val validated = this@ApacheSolrSink.validate(collection, uuid, doc, context) ?: continue
+                            val response = client.add(collection, validated)
+                            if (response.status == 0) {
+                                LOGGER.info("Ingested document (jobId = {}, collection = {}, docId = {}).", context.jobId, collection, uuid)
+                            } else {
+                                LOGGER.error("Failed to ingest document (jobId = ${context.jobId}, docId = $uuid).")
+                                context.log(JobLog(null, uuid, collection, JobLogContext.SYSTEM, JobLogLevel.ERROR, "Failed to ingest document due to an Apache Solr error (status = ${response.status})."))
                             }
                         } catch (e: Throwable) {
                             context.log(JobLog(null, uuid, collection, JobLogContext.SYSTEM, JobLogLevel.SEVERE, "Failed to ingest document due to exception: ${e.message}."))
