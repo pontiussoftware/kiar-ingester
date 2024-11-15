@@ -170,10 +170,18 @@ class EDMMapper(store: TransientEntityStore): OAIMapper {
             })
         }
 
+        /* Append technique information */
+        document.getAll<String>(Field.TECHNIQUE).forEach { technique ->
+            providedCHO.appendChild(doc.createElement("dc:type").apply {
+                this.setAttribute("xml:lang", "de")
+                this.textContent = technique
+            })
+        }
+
         /* Append subjects. */
-        listOf(Field.ICONOGRAPHY, Field.SUBJECT, Field.TYPOLOGY, Field.TECHNIQUE).forEach { field ->
+        listOf(Field.ICONOGRAPHY, Field.SUBJECT, Field.TYPOLOGY).forEach { field ->
             document.getAll<String>(field).forEach { subject ->
-                providedCHO.appendChild(doc.createElement("dc:type").apply {
+                providedCHO.appendChild(doc.createElement("dc:subject").apply {
                     this.setAttribute("xml:lang", "de")
                     this.textContent = subject
                 })
