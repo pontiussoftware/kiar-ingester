@@ -12,6 +12,7 @@ import ch.pontius.kiar.ingester.solrj.Constants.FIELD_NAME_PARTICIPANT
 import ch.pontius.kiar.ingester.solrj.Constants.SYSTEM_FIELDS
 import ch.pontius.kiar.ingester.solrj.Field
 import ch.pontius.kiar.ingester.solrj.get
+import ch.pontius.kiar.ingester.solrj.getAll
 import ch.pontius.kiar.ingester.solrj.has
 import ch.pontius.kiar.ingester.solrj.setField
 import kotlinx.coroutines.flow.*
@@ -23,7 +24,6 @@ import org.apache.solr.client.solrj.impl.Http2SolrClient
 import org.apache.solr.client.solrj.request.schema.SchemaRequest
 import org.apache.solr.common.SolrInputDocument
 import java.io.IOException
-import java.lang.IllegalStateException
 import java.util.Date
 import java.util.UUID
 
@@ -89,8 +89,8 @@ class ApacheSolrSink(override val input: Source<SolrInputDocument>, private val 
 
                             /* Apply per-object collection filter. */
                             if (doc.has(Field.PUBLISH_TO)) {
-                                val collections = doc.get<List<String>>(Field.PUBLISH_TO)
-                                if (collections != null && collections.isNotEmpty() && !collections.contains(collection)) {
+                                val collections = doc.getAll<String>(Field.PUBLISH_TO)
+                                if (!collections.contains(collection)) {
                                     continue
                                 }
                             }
