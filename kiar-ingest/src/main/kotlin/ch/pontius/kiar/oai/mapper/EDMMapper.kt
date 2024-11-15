@@ -82,6 +82,11 @@ class EDMMapper(store: TransientEntityStore): OAIMapper {
             this.textContent = document.get<String>(Field.INVENTORY_NUMBER)
         })
 
+        /* Map object type */
+        providedCHO.appendChild(doc.createElement("dc:subject").apply {
+            this.textContent = document.get<String>(Field.OBJECTTYPE)
+        })
+
         /* Map ISBN. */
         if (document.has(Field.ISBN)) {
             rdfElement.appendChild(doc.createElement("dc:identifier").apply {
@@ -165,18 +170,10 @@ class EDMMapper(store: TransientEntityStore): OAIMapper {
             })
         }
 
-        /* Append technique information */
-        document.getAll<String>(Field.TECHNIQUE).forEach { technique ->
-            providedCHO.appendChild(doc.createElement("dc:type").apply {
-                this.setAttribute("xml:lang", "de")
-                this.textContent = technique
-            })
-        }
-
         /* Append subjects. */
-        listOf(Field.ICONOGRAPHY, Field.SUBJECT, Field.TYPOLOGY).forEach { field ->
+        listOf(Field.ICONOGRAPHY, Field.SUBJECT, Field.TYPOLOGY, Field.TECHNIQUE).forEach { field ->
             document.getAll<String>(field).forEach { subject ->
-                providedCHO.appendChild(doc.createElement("dc:subject").apply {
+                providedCHO.appendChild(doc.createElement("dc:type").apply {
                     this.setAttribute("xml:lang", "de")
                     this.textContent = subject
                 })
