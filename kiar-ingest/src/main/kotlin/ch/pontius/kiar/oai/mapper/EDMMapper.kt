@@ -11,6 +11,7 @@ import kotlinx.dnq.query.asSequence
 import org.apache.solr.common.SolrDocument
 import org.w3c.dom.Element
 import org.w3c.dom.Node
+import java.time.LocalDate
 
 /**
  * [OAIMapper] implementation that maps to the Europeana Data Model (EDM).
@@ -79,6 +80,11 @@ class EDMMapper(store: TransientEntityStore): OAIMapper {
         /* Map inventory number(s)* */
         providedCHO.appendChild(doc.createElement("dc:identifier").apply {
             this.textContent = document.get<String>(Field.INVENTORY_NUMBER)
+        })
+
+        /* Map object type */
+        providedCHO.appendChild(doc.createElement("dc:subject").apply {
+            this.textContent = document.get<String>(Field.OBJECTTYPE)
         })
 
         /* Map ISBN. */
@@ -203,7 +209,7 @@ class EDMMapper(store: TransientEntityStore): OAIMapper {
         /* Append current location (if available). */
         val currentLocation = appendCurrentLocation(institution, document, rdfElement)
         if (currentLocation != null) {
-            providedCHO.appendChild(doc.createElement("dcterms:spatial").apply {
+            providedCHO.appendChild(doc.createElement("edm:currentLocation").apply {
                 this.setAttribute("rdf:resource", currentLocation)
             })
         }
@@ -332,15 +338,15 @@ class EDMMapper(store: TransientEntityStore): OAIMapper {
             val doc = appendTo.ownerDocument
             appendTo.appendChild(doc.createElement("edm:Place").apply {
                 this.setAttribute("rdf:about", institutionIdentifier)
-                this.appendChild(doc.createElement("skos:prefLabel").apply {
-                    this.setAttribute("xml:lang", "de")
-                    this.textContent = institution.city
-                })
                 this.appendChild(doc.createElement("wgs84_pos:lat").apply {
                     this.textContent = institution.latitude.toString()
                 })
                 this.appendChild(doc.createElement("wgs84_pos:long").apply {
                     this.textContent = institution.longitude.toString()
+                })
+                this.appendChild(doc.createElement("skos:prefLabel").apply {
+                    this.setAttribute("xml:lang", "de")
+                    this.textContent = institution.city
                 })
             })
             return institutionIdentifier
@@ -363,11 +369,6 @@ class EDMMapper(store: TransientEntityStore): OAIMapper {
             val identifier = "#kimnet:finding-location:${document.get<String>(Field.UUID)}"
             appendTo.appendChild(doc.createElement("edm:Place").apply {
                 this.setAttribute("rdf:about", identifier)
-                this.appendChild(doc.createElement("skos:prefLabel").apply {
-                    this.setAttribute("xml:lang", "de")
-                    this.textContent = findingLocation
-                })
-
                 val coordinates = document.get<String>(Field.COORDINATES)?.split(",")?.mapNotNull { it.toDoubleOrNull() }
                 if (coordinates?.size == 2) {
                     this.appendChild(doc.createElement("wgs84_pos:lat").apply {
@@ -375,6 +376,10 @@ class EDMMapper(store: TransientEntityStore): OAIMapper {
                     })
                     this.appendChild(doc.createElement("wgs84_pos:long").apply {
                         this.textContent = coordinates[1].toString()
+                    })
+                    this.appendChild(doc.createElement("skos:prefLabel").apply {
+                        this.setAttribute("xml:lang", "de")
+                        this.textContent = findingLocation
                     })
                 }
             })
@@ -413,12 +418,12 @@ class EDMMapper(store: TransientEntityStore): OAIMapper {
                 })
                 if (datingFrom != null) {
                     this.appendChild(doc.createElement("edm:begin").apply {
-                        this.textContent = datingFrom.toString()
+                        this.textContent = decimalToEDTF(datingFrom).toString()
                     })
                 }
                 if (datingTo != null) {
                     this.appendChild(doc.createElement("edm:end").apply {
-                        this.textContent = datingTo.toString()
+                        this.textContent = decimalToEDTF(datingTo).toString()
                     })
                 }
                 this.setAttribute("rdf:about", identifier)
@@ -455,5 +460,35 @@ class EDMMapper(store: TransientEntityStore): OAIMapper {
 
         /* Return. */
         return rdfElement
+    }
+
+    /**
+     * Converts a decimal date to a [LocalDate].
+     *
+     * @param decimalDate The decimal date to convert.
+     * @return [LocalDate]
+     */
+    private fun decimalToEDTF(decimalDate: Float): String {
+        val year = decimalDate.toInt()
+        var fractionalPart = decimalDate - year
+
+        /* Extract month. */
+        var month = 0
+        if (fractionalPart > 0f) {
+            month = (fractionalPart * 100f).toInt()
+            fractionalPart = fractionalPart - (month / 100f)
+        }
+
+        /* Extract day. */
+        var day = 0
+        if (fractionalPart > 0f) {
+            day = (fractionalPart * 10000f).toInt()
+        }
+
+        return when {
+            day > 0 -> String.format("%04d-%02d-%02d", year, month, day)
+            month > 0 -> String.format("%04d-%02d", year, month)
+            else -> year.toString()
+        }
     }
 }
