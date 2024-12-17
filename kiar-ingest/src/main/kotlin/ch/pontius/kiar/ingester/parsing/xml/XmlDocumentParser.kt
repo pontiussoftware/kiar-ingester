@@ -64,7 +64,7 @@ class XmlDocumentParser(config: EntityMapping, private val context: ProcessingCo
     fun parse(node: Node, into: SolrInputDocument) {
         for ((parser, expr) in this.mappings) {
             val nl = expr.evaluate(node, XPathConstants.NODESET) as? NodeList
-            if (nl != null) {
+            if (nl != null && nl.length > 0) {
                 for (i in 0 until nl.length) {
                     parser.parse(nl.item(i).nodeValue, into, context)
                 }
