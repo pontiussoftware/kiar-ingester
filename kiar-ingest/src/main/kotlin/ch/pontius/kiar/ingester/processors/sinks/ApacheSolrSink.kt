@@ -186,8 +186,9 @@ class ApacheSolrSink(override val input: Source<SolrInputDocument>, private val 
         /* Now make sure that all required fields that don't have a default value, are accounted for. */
         for (validator in validators) {
             if (validator.required && !validator.hasDefault && validator is FieldValidator.Regular) {
-                val field = validated[validator.name]
-                if (field == null || field.valueCount == 0) {
+                val values = validated[validator.name]
+                if (values == null || values.valueCount == 0) {
+                    context.log(JobLog(null, uuid, collection, JobLogContext.METADATA, JobLogLevel.VALIDATION, "Skipped document, because required field '${validator.name}' is missing."))
                     return null /* Required field is missing. */
                 }
             }
@@ -233,7 +234,7 @@ class ApacheSolrSink(override val input: Source<SolrInputDocument>, private val 
                 } else {
                     LOGGER.warn("Failed to commit data ingest (name = ${this@ApacheSolrSink.config.name}, collection = $c).")
                 }
-            } catch (e: SolrServerException) {
+            } catch (_: SolrServerException) {
                 client.rollback(c)
                 LOGGER.error("Failed to commit data ingest due to server error (name = ${this@ApacheSolrSink.config.name}, collection = $c. Rolling back...")
             } catch (e: IOException) {
