@@ -47,13 +47,13 @@ subprojects {
     tasks {
         compileKotlin {
             kotlinOptions {
-                jvmTarget = "17"
+                jvmTarget = "21"
             }
         }
 
         compileTestKotlin {
             kotlinOptions {
-                jvmTarget = "17"
+                jvmTarget = "21"
             }
         }
 

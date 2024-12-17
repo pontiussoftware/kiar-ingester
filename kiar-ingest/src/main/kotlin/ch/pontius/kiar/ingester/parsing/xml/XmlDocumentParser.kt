@@ -68,6 +68,8 @@ class XmlDocumentParser(config: EntityMapping, private val context: ProcessingCo
                 for (i in 0 until nl.length) {
                     parser.parse(nl.item(i).nodeValue, into, context)
                 }
+            } else {
+                parser.parse(null, into, context)
             }
         }
     }
