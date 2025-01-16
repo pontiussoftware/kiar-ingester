@@ -85,6 +85,7 @@ fun configureApiRoutes(store: TransientEntityStore, server: IngesterServer, conf
             post("{id}", { ctx -> postUploadImageForCollection(ctx, store) }, Role.ADMINISTRATOR, Role.MANAGER)
             path("{id}") {
                 get("{name}", { ctx -> getImageForCollection(ctx, store) }, Role.ADMINISTRATOR, Role.MANAGER, Role.VIEWER)
+                delete("{name}", { ctx -> deleteImageForCollection(ctx, store) }, Role.ADMINISTRATOR, Role.MANAGER, Role.VIEWER)
             }
         }
 

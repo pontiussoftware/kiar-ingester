@@ -192,7 +192,7 @@ fun putUpdateCollection(ctx: Context, store: TransientEntityStore) {
 @OpenApi(
     path = "/api/collections/{id}/{name}",
     methods = [HttpMethod.GET],
-    summary = "Gets the preview image for the provided institution.",
+    summary = "Gets the preview image for the provided collection.",
     operationId = "getImage",
     tags = ["Collection"],
     pathParams = [
@@ -240,6 +240,61 @@ fun getImageForCollection(ctx: Context, store: TransientEntityStore) {
         }
         ctx.result(Files.newInputStream(path, StandardOpenOption.READ))
     }
+}
+
+@OpenApi(
+    path = "/api/collections/{id}/{name}",
+    methods = [HttpMethod.DELETE],
+    summary = "Deletes the preview image for the provided collection.",
+    operationId = "deleteImage",
+    tags = ["Collection"],
+    pathParams = [
+        OpenApiParam(name = "id", description = "The ID of the collection the image should be deleted for.", required = true),
+        OpenApiParam(name = "name", description = "The name of the image to delete.", required = true)
+    ],
+    responses = [
+        OpenApiResponse("200", [OpenApiContent(SuccessStatus::class)]),
+        OpenApiResponse("401", [OpenApiContent(ErrorStatus::class)]),
+        OpenApiResponse("403", [OpenApiContent(ErrorStatus::class)]),
+        OpenApiResponse("404", [OpenApiContent(ErrorStatus::class)]),
+        OpenApiResponse("500", [OpenApiContent(ErrorStatus::class)])
+    ]
+)
+fun deleteImageForCollection(ctx: Context, store: TransientEntityStore) {
+    /* Obtain parameters. */
+    val collectionId = ctx.pathParam("id")
+    val imageName = ctx.pathParam("name")
+
+    /* Start transaction and update ecollection. */
+    val paths = store.transactional {
+        val collection = try {
+            DbObjectCollection.findById(collectionId)
+        } catch (e: Throwable) {
+            throw ErrorStatusException(404, "Collection with ID $collectionId could not be found.")
+        }
+
+        /* Update collection object. */
+        if (collection.images.contains(imageName)) {
+            collection.images -= imageName
+
+            /* Obtain deployment path. */
+            collection.institution.availableCollections.mapDistinct { it.solr }.flatMapDistinct { it.deployments }.asSequence().map {
+                Paths.get(it.path).resolve("collections").resolve(it.name).resolve(imageName)
+            }.toList()
+        } else {
+            emptyList()
+        }
+    }
+
+    /* Delete physical files. */
+    for (path in paths) {
+        if (Files.exists(path)) {
+            Files.delete(path)
+        }
+    }
+
+    /* Set status. */
+    ctx.json(SuccessStatus("Image '$imageName' (id: $collectionId) deleted successfully."))
 }
 
 @OpenApi(
