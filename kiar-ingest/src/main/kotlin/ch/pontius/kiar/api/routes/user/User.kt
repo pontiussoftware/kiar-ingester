@@ -53,10 +53,9 @@ fun getListUsers(ctx: Context, store: TransientEntityStore) {
             "email" -> DbUser.all().sortedBy(DbUser::email, orderDir == "asc")
             "inactive" -> DbUser.all().sortedBy(DbUser::inactive, orderDir == "asc")
             else -> DbUser.all().sortedBy(DbUser::name, orderDir == "asc")
-        }.drop(page * pageSize).take(pageSize).mapToArray { it.toApi() }
+        }.drop(page * pageSize).take(pageSize).asSequence().map { it.toApi() }.toList()
         val total = DbUser.all().size()
         total to users
-
     }
     ctx.json(PaginatedUserResult(result.first, page, pageSize, result.second))
 }

@@ -61,7 +61,7 @@ fun getActiveJobs(ctx: Context, store: TransientEntityStore, server: IngesterSer
             else -> DbJob.emptyQuery()
         }.sortedBy(DbJob::changedAt, false)
 
-        baseQuery.size() to baseQuery.drop(page * pageSize).take(pageSize).mapToArray {
+        baseQuery.size() to baseQuery.drop(page * pageSize).take(pageSize).asSequence().map {
             val job = it.toApi()
             val context = server.getContext(job.id!!)
             if (context != null) {
@@ -70,7 +70,7 @@ fun getActiveJobs(ctx: Context, store: TransientEntityStore, server: IngesterSer
                 job.error = context.error
             }
             job
-        }
+        }.toList()
     }
 
     ctx.json(PaginatedJobResult(results.first, page, pageSize, results.second))
@@ -114,7 +114,7 @@ fun getInactiveJobs(ctx: Context, store: TransientEntityStore) {
             else -> DbJob.emptyQuery()
         }.sortedBy(DbJob::changedAt, false)
 
-        baseQuery.size() to baseQuery.drop(page * pageSize).take(pageSize).mapToArray { it.toApi() }
+        baseQuery.size() to baseQuery.drop(page * pageSize).take(pageSize).asSequence().map { it.toApi() }.toList()
     }
     ctx.json(PaginatedJobResult(results.first, page, pageSize, results.second))
 
@@ -161,7 +161,7 @@ fun getJobLogs(ctx: Context, store: TransientEntityStore) {
         }
 
         /* Materialize logs that match query. */
-        val logs = logsQuery.drop(page * pageSize).take(pageSize).mapToArray { it.toApi() }
+        val logs = logsQuery.drop(page * pageSize).take(pageSize).asSequence().map { it.toApi() }.toList()
         val total = logsQuery.size()
         total to logs
     }

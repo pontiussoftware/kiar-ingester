@@ -14,5 +14,5 @@ data class PaginatedJobLogResult (
     override val total: Int,
     override val page: Int,
     override val pageSize: Int,
-    override val results: Array<JobLog>
+    override val results: List<JobLog>
 ): PaginatedResult<JobLog>
