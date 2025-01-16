@@ -44,6 +44,7 @@ class DbObjectCollection(entity: Entity) : XdEntity(entity) {
         id = this.xdId,
         name = this.name,
         displayName = this.displayName,
+        publish = this.publish,
         institutionName = this.institution.name,
         description = this.description,
         images = this.images.toList()

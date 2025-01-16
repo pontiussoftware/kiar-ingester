@@ -1,0 +1,41 @@
+<h1 mat-dialog-title i18n="@@HeadingCreateInstitution">Create Institution </h1>
+<div mat-dialog-content>
+  <form [formGroup]="formControl">
+    <mat-form-field appearance="fill" [style.width]="'50%'">
+      <mat-label i18n="@@LabelName">Name</mat-label>
+      <input matInput type="text" formControlName="name">
+      <mat-error *ngIf="formControl.get('name')?.hasError('minlength')">Minimum length is 10.</mat-error>
+    </mat-form-field>
+
+  <mat-form-field appearance="fill" [style.width]="'40%'">
+      <mat-label i18n="@@LabelInstitution">Institution</mat-label>
+      <mat-select formControlName="institutionName">
+          <mat-option *ngFor="let institution of (institutionNames | async)" [value]="institution">
+              {{institution}}
+          </mat-option>
+      </mat-select>
+  </mat-form-field>
+
+    <mat-checkbox formControlName="publish" i18n="@@LabelPublish">
+      Publish
+    </mat-checkbox>
+
+    <mat-form-field appearance="fill" [style.width]="'100%'">
+      <mat-label i18n="@@LabelDisplayName">Display Name</mat-label>
+      <input matInput type="text" formControlName="displayName">
+      <mat-error *ngIf="formControl.get('displayName')?.hasError('minlength')">Minimum length is 10.</mat-error>
+    </mat-form-field>
+
+    <mat-form-field appearance="fill" [style.width]="'100%'">
+      <mat-label i18n="@@LabelDescription">Description</mat-label>
+      <textarea matInput formControlName="description"></textarea>
+    </mat-form-field>
+
+    <mat-tab-group>
+
+    </mat-tab-group>
+  </form>
+</div>
+<div mat-dialog-actions>
+  <button mat-button color="primary" (click)="save()">Save</button>
+</div>

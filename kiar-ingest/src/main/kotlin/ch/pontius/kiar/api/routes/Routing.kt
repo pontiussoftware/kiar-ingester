@@ -18,6 +18,7 @@ import createEntityMapping
 import deleteEntityMapping
 import deleteInstitution
 import getEntityMapping
+import getImageForInstitution
 import getInstitution
 import getListInstitutionNames
 import getListInstitutions
@@ -68,7 +69,7 @@ fun configureApiRoutes(store: TransientEntityStore, server: IngesterServer, conf
             put("{id}",  { ctx -> putUpdateInstitution(ctx, store) }, Role.ADMINISTRATOR, Role.MANAGER)
             delete("{id}",  { ctx -> deleteInstitution(ctx, store) }, Role.ADMINISTRATOR )
             path("{id}") {
-                get("image", { ctx -> getImage(ctx, store) }, Role.ADMINISTRATOR, Role.MANAGER, Role.VIEWER)
+                get("image", { ctx -> getImageForInstitution(ctx, store) }, Role.ADMINISTRATOR, Role.MANAGER, Role.VIEWER)
                 post("image", { ctx -> postUploadImageForInstitution(ctx, store) }, Role.ADMINISTRATOR, Role.MANAGER)
             }
         }
@@ -83,7 +84,7 @@ fun configureApiRoutes(store: TransientEntityStore, server: IngesterServer, conf
             delete("{id}",  { ctx -> deleteCollection(ctx, store) }, Role.ADMINISTRATOR )
             post("{id}", { ctx -> postUploadImageForCollection(ctx, store) }, Role.ADMINISTRATOR, Role.MANAGER)
             path("{id}") {
-                get("{name}", { ctx -> getImage(ctx, store) }, Role.ADMINISTRATOR, Role.MANAGER, Role.VIEWER)
+                get("{name}", { ctx -> getImageForCollection(ctx, store) }, Role.ADMINISTRATOR, Role.MANAGER, Role.VIEWER)
             }
         }
 

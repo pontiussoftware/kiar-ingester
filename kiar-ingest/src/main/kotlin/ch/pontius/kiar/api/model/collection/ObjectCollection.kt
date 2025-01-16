@@ -13,6 +13,7 @@ data class ObjectCollection(
     val id: String? = null,
     val name: String,
     val displayName: String,
+    val publish: Boolean,
     val institutionName: String,
     val description: String,
     val images: List<String> = emptyList()

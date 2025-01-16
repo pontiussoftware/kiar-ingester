@@ -12,6 +12,7 @@ import {JobTemplateComponent} from "./components/admin/template/job-template.com
 import {InstitutionListComponent} from "./components/institution/institution-list.component";
 import {JobLogComponent} from "./components/dashboard/logs/job-log.component";
 import {UserListComponent} from "./components/user/user-list.component";
+import {CollectionListComponent} from "./components/collection/collection-list.component";
 
 const routes: Routes = [
 
@@ -24,6 +25,9 @@ const routes: Routes = [
 
   /* Some pages can be activated by everybody that is logged in. */
   { path: 'institutions', component: InstitutionListComponent, canActivate: [canActivateAdministrator] },
+
+  /* Some pages can be activated by everybody that is logged in. */
+  { path: 'collections', component: CollectionListComponent, canActivate: [canActivateAdministrator] },
 
   /* Some pages can be activated by everybody that is logged in. */
   { path: 'users', component: UserListComponent, canActivate: [canActivateAdministrator] },

@@ -1,13 +1,14 @@
+import de.undercouch.gradle.tasks.download.Download
 
 plugins {
     /* Kotlin JVM version. */
-    kotlin("jvm") version "1.9.24"
+    kotlin("jvm") version "2.1.0"
 
     /* Kotlinx serialization plugin. */
-    id("org.jetbrains.kotlin.plugin.serialization") version "1.9.24"
+    id("org.jetbrains.kotlin.plugin.serialization") version "2.1.0"
 
     /* OpenAPI Generator for Frontend internal API generation */
-    id ("org.openapi.generator") version "7.6.0"
+    id ("org.openapi.generator") version "7.10.0"
 
     id ("de.undercouch.download") version "5.6.0"
 
@@ -73,7 +74,7 @@ tasks.register("generateOpenApi") {
         val configOptions = mapOf(
             "npmName" to "@kiar-openapi/api",
             "ngVersion" to "16.0.2",
-            "snapshot" to "true", /// I suggest to remove this, as soon as we automate this,
+            "snapshot" to "true",
             "enumPropertyNaming" to "original"
         )
 
@@ -97,7 +98,7 @@ tasks.register("generateOpenApi") {
     }
 }
 
-val generateOAS by tasks.registering(org.jetbrains.kotlin.de.undercouch.gradle.tasks.download.Download::class) {
+val generateOAS by tasks.registering(Download::class) {
     /* Requires DRES running on default port */
     val f = project.file(oasFile)
     src(fullOAS)

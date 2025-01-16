@@ -1,41 +1,50 @@
 <header id="header">
-  <mat-toolbar>
-    <img src="./assets/KIMnet_Logo_pos_RGB.png" [style.height]="'50px'" alt="KIM.ch Logo"/>
+    <mat-toolbar>
+        <img src="./assets/KIMnet_Logo_pos_RGB.png" [style.height]="'50px'" alt="KIM.ch Logo"/>
 
-    <span class="space-flexible"></span>
+        <span class="space-flexible"></span>
 
-    <button mat-icon-button *ngIf="(isViewer | async)" [routerLink]="['/manager/dashboard']" i18n-matTooltip="@@TooltipGoToDashboard" matTooltip="Go to job dashboard.">
-      <mat-icon>dashboard</mat-icon>
-    </button>
+        <button mat-icon-button *ngIf="(isViewer | async)" [routerLink]="['/manager/dashboard']"
+                i18n-matTooltip="@@TooltipGoToDashboard" matTooltip="Go to job dashboard.">
+            <mat-icon>dashboard</mat-icon>
+        </button>
 
-    <button mat-icon-button *ngIf="(isAdmin | async)" [routerLink]="['/admin/dashboard']" i18n-matTooltip="@@TooltipGoToAdmim" matTooltip="Go to administrator dashboard.">
-      <mat-icon>admin_panel_settings</mat-icon>
-    </button>
+        <button mat-icon-button *ngIf="(isAdmin | async)" [routerLink]="['/admin/dashboard']"
+                i18n-matTooltip="@@TooltipGoToAdmim" matTooltip="Go to administrator dashboard.">
+            <mat-icon>admin_panel_settings</mat-icon>
+        </button>
 
-    <button mat-icon-button *ngIf="(isAdmin | async)" [routerLink]="['/institutions']" i18n-matTooltip="@@TooltipGoToInstitutionManagement" matTooltip="Go to institution management.">
-      <mat-icon>account_balance</mat-icon>
-    </button>
+        <button mat-icon-button *ngIf="(isAdmin | async)" [routerLink]="['/institutions']"
+                i18n-matTooltip="@@TooltipGoToInstitutionManagement" matTooltip="Go to institution management.">
+            <mat-icon>account_balance</mat-icon>
+        </button>
 
-    <button mat-icon-button *ngIf="(isAdmin | async)" [routerLink]="['/users']" i18n-matTooltip="@@TooltipGoToUserManagement" matTooltip="Go to user management.">
-      <mat-icon>person</mat-icon>
-    </button>
+        <button mat-icon-button *ngIf="(isAdmin | async)" [routerLink]="['/collections']"
+                i18n-matTooltip="@@TooltipGoToCollectionManagement" matTooltip="Go to collection management.">
+            <mat-icon>account_balance</mat-icon>
+        </button>
 
-    <span class="space-flexible"></span>
+        <button mat-icon-button *ngIf="(isAdmin | async)" [routerLink]="['/users']"
+                i18n-matTooltip="@@TooltipGoToUserManagement" matTooltip="Go to user management.">
+            <mat-icon>person</mat-icon>
+        </button>
 
-    <button *ngIf="isLoggedIn | async" mat-button [matMenuTriggerFor]="userMenu">{{(username | async)}}</button>
+        <span class="space-flexible"></span>
 
-    <mat-menu #userMenu="matMenu">
-      <button mat-menu-item (click)="userProfile()">
-        <mat-icon>person</mat-icon>
-        <span i18n="@@LabelManageUserProfile">Manager User Profile</span>
-      </button>
+        <button *ngIf="isLoggedIn | async" mat-button [matMenuTriggerFor]="userMenu">{{ (username | async) }}</button>
 
-      <button mat-menu-item (click)="logout()">
-        <mat-icon>logout</mat-icon>
-        <span i18n="@@LabelLogout">Logout</span>
-      </button>
-    </mat-menu>
-  </mat-toolbar>
+        <mat-menu #userMenu="matMenu">
+            <button mat-menu-item (click)="userProfile()">
+                <mat-icon>person</mat-icon>
+                <span i18n="@@LabelManageUserProfile">Manager User Profile</span>
+            </button>
+
+            <button mat-menu-item (click)="logout()">
+                <mat-icon>logout</mat-icon>
+                <span i18n="@@LabelLogout">Logout</span>
+            </button>
+        </mat-menu>
+    </mat-toolbar>
 </header>
 
 <article id="content">

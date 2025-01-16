@@ -93,6 +93,86 @@
         },
         "deprecated" : false,
         "security" : [ ]
+      },
+      "post" : {
+        "tags" : [ "Collection" ],
+        "summary" : "Creates a new collection.",
+        "operationId" : "postCreateCollection",
+        "parameters" : [ ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/ObjectCollection"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/SuccessStatus"
+                }
+              }
+            }
+          },
+          "400" : {
+            "description" : "Bad Request",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorStatus"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorStatus"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Forbidden",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorStatus"
+                }
+              }
+            }
+          },
+          "404" : {
+            "description" : "Not Found",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorStatus"
+                }
+              }
+            }
+          },
+          "500" : {
+            "description" : "Server Error",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorStatus"
+                }
+              }
+            }
+          }
+        },
+        "deprecated" : false,
+        "security" : [ ]
       }
     },
     "/api/collections/{id}" : {
@@ -117,7 +197,7 @@
             "content" : {
               "application/json" : {
                 "schema" : {
-                  "$ref" : "#/components/schemas/Institution"
+                  "$ref" : "#/components/schemas/ObjectCollection"
                 }
               }
             }
@@ -177,7 +257,7 @@
         "security" : [ ]
       },
       "put" : {
-        "tags" : [ "Institution" ],
+        "tags" : [ "Collection" ],
         "summary" : "Updates an existing collection.",
         "operationId" : "putUpdateCollection",
         "parameters" : [ {
@@ -337,39 +417,36 @@
         "security" : [ ]
       }
     },
-    "/api/institutions" : {
-      "post" : {
-        "tags" : [ "Institution" ],
-        "summary" : "Creates a new institution.",
-        "operationId" : "postCreateInstitution",
-        "parameters" : [ ],
-        "requestBody" : {
-          "content" : {
-            "application/json" : {
-              "schema" : {
-                "$ref" : "#/components/schemas/Institution"
-              }
-            }
-          },
-          "required" : true
-        },
+    "/api/collections/{id}/{name}" : {
+      "get" : {
+        "tags" : [ "Collection" ],
+        "summary" : "Gets the preview image for the provided institution.",
+        "operationId" : "getImage",
+        "parameters" : [ {
+          "name" : "id",
+          "in" : "path",
+          "description" : "The ID of the institution the image should be retrieved for.",
+          "required" : true,
+          "deprecated" : false,
+          "allowEmptyValue" : false,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
         "responses" : {
           "200" : {
             "description" : "OK",
             "content" : {
-              "application/json" : {
+              "image/jpeg" : {
                 "schema" : {
-                  "$ref" : "#/components/schemas/SuccessStatus"
+                  "type" : "string",
+                  "format" : "binary"
                 }
-              }
-            }
-          },
-          "400" : {
-            "description" : "Bad Request",
-            "content" : {
-              "application/json" : {
+              },
+              "image/png" : {
                 "schema" : {
-                  "$ref" : "#/components/schemas/ErrorStatus"
+                  "type" : "string",
+                  "format" : "binary"
                 }
               }
             }
@@ -417,7 +494,9 @@
         },
         "deprecated" : false,
         "security" : [ ]
-      },
+      }
+    },
+    "/api/institutions" : {
       "get" : {
         "tags" : [ "Institution" ],
         "summary" : "Retrieves all institutions registered in the database.",
@@ -498,6 +577,86 @@
           },
           "403" : {
             "description" : "Forbidden",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorStatus"
+                }
+              }
+            }
+          },
+          "500" : {
+            "description" : "Server Error",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorStatus"
+                }
+              }
+            }
+          }
+        },
+        "deprecated" : false,
+        "security" : [ ]
+      },
+      "post" : {
+        "tags" : [ "Institution" ],
+        "summary" : "Creates a new institution.",
+        "operationId" : "postCreateInstitution",
+        "parameters" : [ ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/Institution"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/SuccessStatus"
+                }
+              }
+            }
+          },
+          "400" : {
+            "description" : "Bad Request",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorStatus"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorStatus"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Forbidden",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorStatus"
+                }
+              }
+            }
+          },
+          "404" : {
+            "description" : "Not Found",
             "content" : {
               "application/json" : {
                 "schema" : {
@@ -1104,85 +1263,6 @@
               "application/json" : {
                 "schema" : {
                   "$ref" : "#/components/schemas/SuccessStatus"
-                }
-              }
-            }
-          },
-          "401" : {
-            "description" : "Unauthorized",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorStatus"
-                }
-              }
-            }
-          },
-          "403" : {
-            "description" : "Forbidden",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorStatus"
-                }
-              }
-            }
-          },
-          "404" : {
-            "description" : "Not Found",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorStatus"
-                }
-              }
-            }
-          },
-          "500" : {
-            "description" : "Server Error",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorStatus"
-                }
-              }
-            }
-          }
-        },
-        "deprecated" : false,
-        "security" : [ ]
-      }
-    },
-    "/api/institutions/{id}/{name}" : {
-      "get" : {
-        "tags" : [ "Institution" ],
-        "summary" : "Gets the preview image for the provided institution.",
-        "operationId" : "getImage",
-        "parameters" : [ {
-          "name" : "id",
-          "in" : "path",
-          "description" : "The ID of the institution the image should be retrieved for.",
-          "required" : true,
-          "deprecated" : false,
-          "allowEmptyValue" : false,
-          "schema" : {
-            "type" : "string"
-          }
-        } ],
-        "responses" : {
-          "200" : {
-            "description" : "OK",
-            "content" : {
-              "image/jpeg" : {
-                "schema" : {
-                  "type" : "string",
-                  "format" : "binary"
-                }
-              },
-              "image/png" : {
-                "schema" : {
-                  "type" : "string",
-                  "format" : "binary"
                 }
               }
             }
@@ -4219,6 +4299,9 @@
           "displayName" : {
             "type" : "string"
           },
+          "publish" : {
+            "type" : "boolean"
+          },
           "institutionName" : {
             "type" : "string"
           },
@@ -4232,7 +4315,7 @@
             }
           }
         },
-        "required" : [ "name", "displayName", "institutionName", "description", "images" ]
+        "required" : [ "name", "displayName", "publish", "institutionName", "description", "images" ]
       },
       "PaginatedObjectCollectionResult" : {
         "type" : "object",

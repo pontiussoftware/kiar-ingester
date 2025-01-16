@@ -309,7 +309,7 @@ fun putUpdateInstitution(ctx: Context, store: TransientEntityStore) {
         OpenApiResponse("500", [OpenApiContent(ErrorStatus::class)])
     ]
 )
-fun getImage(ctx: Context, store: TransientEntityStore) {
+fun getImageForInstitution(ctx: Context, store: TransientEntityStore) {
     /* Obtain parameters. */
     val institutionId = ctx.pathParam("id")
 

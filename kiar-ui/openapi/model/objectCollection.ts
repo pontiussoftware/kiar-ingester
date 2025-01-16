@@ -15,6 +15,7 @@ export interface ObjectCollection {
     id?: string | null;
     name: string;
     displayName: string;
+    publish: boolean;
     institutionName: string;
     description: string;
     images: Array<string>;

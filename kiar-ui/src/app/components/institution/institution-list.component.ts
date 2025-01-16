@@ -30,9 +30,9 @@ export class InstitutionListComponent implements AfterViewInit  {
   /** Reference to the {@link MatSort}*/
   @ViewChild(MatSort) sort: MatSort;
 
-  constructor(private institution: InstitutionService, private config: ConfigService, private dialog: MatDialog, private snackBar: MatSnackBar) {
-    this.dataSource = new InstitutionDatasource(this.institution)
-    this.collections = this.config.getListSolrConfiguration().pipe(
+  constructor(private institutionService: InstitutionService, private configService: ConfigService, private dialog: MatDialog, private snackBar: MatSnackBar) {
+    this.dataSource = new InstitutionDatasource(this.institutionService)
+    this.collections = this.configService.getListSolrConfiguration().pipe(
         map((configs) => {
           return configs.map(config => config.collections.filter(c => c.type === "MUSEUM").flatMap(collection => [config.name, collection.name]))
         }),
@@ -77,7 +77,7 @@ export class InstitutionListComponent implements AfterViewInit  {
    */
   public delete(institution: Institution) {
     if (confirm(`Are you sure that you want to delete institution '${institution.id}'?\nAfter deletion, it can no longer be retrieved.`)) {
-      this.institution.deleteInstitution(institution.id!!).subscribe({
+      this.institutionService.deleteInstitution(institution.id!!).subscribe({
         next: (value) => {
           this.snackBar.open(value.description, "Dismiss", { duration: 2000 } as MatSnackBarConfig);
           this.dataSource.load(this.paginator.pageIndex, this.paginator.pageSize, this.sort.active, this.sort.direction);
@@ -108,7 +108,7 @@ export class InstitutionListComponent implements AfterViewInit  {
    * @param collection The name of the collection to use.
    */
   public synchronize(config: string, collection: string) {
-    this.institution.postSynchronizeInstitutions(config, collection).subscribe({
+    this.institutionService.postSynchronizeInstitutions(config, collection).subscribe({
       next: (value) =>  this.snackBar.open(`Successfully synchronised institutions with Apache Solr backend (${collection} (${config}).`, "Dismiss", { duration: 2000 } as MatSnackBarConfig),
       error: (err) => this.snackBar.open(`Error occurred while synchronising institutions with Apache Solr backend (${collection} (${config}): ${err?.error?.description}.`, "Dismiss", { duration: 2000 } as MatSnackBarConfig),
     })

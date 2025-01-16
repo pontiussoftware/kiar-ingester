@@ -58,7 +58,7 @@ fun getListCollections(ctx: Context, store: TransientEntityStore) {
 }
 
 @OpenApi(
-    path = "/api/institutions",
+    path = "/api/collections",
     methods = [HttpMethod.POST],
     summary = "Creates a new collection.",
     operationId = "postCreateCollection",
@@ -105,7 +105,7 @@ fun postCreateCollection(ctx: Context, store: TransientEntityStore) {
         OpenApiParam(name = "id", description = "The ID of the collection that should be fetched.", required = true)
     ],
     responses = [
-        OpenApiResponse("200", [OpenApiContent(Institution::class)]),
+        OpenApiResponse("200", [OpenApiContent(ObjectCollection::class)]),
         OpenApiResponse("400", [OpenApiContent(ErrorStatus::class)]),
         OpenApiResponse("401", [OpenApiContent(ErrorStatus::class)]),
         OpenApiResponse("403", [OpenApiContent(ErrorStatus::class)]),
@@ -135,7 +135,7 @@ fun getCollection(ctx: Context, store: TransientEntityStore) {
     methods = [HttpMethod.PUT],
     summary = "Updates an existing collection.",
     operationId = "putUpdateCollection",
-    tags = ["Institution"],
+    tags = ["Collection"],
     requestBody = OpenApiRequestBody([OpenApiContent(ObjectCollection::class)], required = true),
     pathParams = [
         OpenApiParam(name = "id", description = "The ID of the collection that should be updated.", required = true)
@@ -165,7 +165,7 @@ fun putUpdateCollection(ctx: Context, store: TransientEntityStore) {
             throw ErrorStatusException(404, "Collection with ID $collectionId could not be found.")
         }
 
-        /* Make sure, that the current user can actually edit this institution. */
+        /* Make sure, that the current user can actually edit this collection. */
         val currentUser = ctx.currentUser()
         if (currentUser.role != DbRole.ADMINISTRATOR && currentUser.institution != collection.institution) {
             throw ErrorStatusException(403, "Collection with ID $collectionId cannot be edited by current user.")
@@ -189,11 +189,11 @@ fun putUpdateCollection(ctx: Context, store: TransientEntityStore) {
 }
 
 @OpenApi(
-    path = "/api/institutions/{id}/{name}",
+    path = "/api/collections/{id}/{name}",
     methods = [HttpMethod.GET],
     summary = "Gets the preview image for the provided institution.",
     operationId = "getImage",
-    tags = ["Institution"],
+    tags = ["Collection"],
     pathParams = [
         OpenApiParam(name = "id", description = "The ID of the institution the image should be retrieved for.", required = true)
     ],
@@ -208,7 +208,7 @@ fun putUpdateCollection(ctx: Context, store: TransientEntityStore) {
         OpenApiResponse("500", [OpenApiContent(ErrorStatus::class)])
     ]
 )
-fun getImage(ctx: Context, store: TransientEntityStore) {
+fun getImageForCollection(ctx: Context, store: TransientEntityStore) {
     /* Obtain parameters. */
     val collectionId = ctx.pathParam("id")
     val imageName = ctx.pathParam("name")

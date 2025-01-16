@@ -17,6 +17,7 @@ import {AdminModule} from "./components/admin/admin.module";
 import {InstitutionModule} from "./components/institution/institution.module";
 import {MatTooltipModule} from "@angular/material/tooltip";
 import {UserModule} from "./components/user/user.module";
+import {CollectionModule} from "./components/collection/collection.module";
 
 /**
  * Provides the {@link AppConfig} reference.
@@ -24,7 +25,7 @@ import {UserModule} from "./components/user/user.module";
  * @param appConfig Reference (provided by DI).
  */
 export function initializeApiConfig() {
-  return new Configuration({ basePath: window.location.origin, withCredentials: true }); /* TODO: Change. */
+  return new Configuration({ basePath: 'http://localhost:7070', withCredentials: true }); /* TODO: Change. */
 }
 
 @NgModule({
@@ -47,6 +48,7 @@ export function initializeApiConfig() {
     /* Own modules. */
     AdminModule,
     InstitutionModule,
+    CollectionModule,
     UserModule,
     DashboardModule,
     SessionModule,

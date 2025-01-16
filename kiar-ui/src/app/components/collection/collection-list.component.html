@@ -1,11 +1,11 @@
 <div [style.display]="'flex'">
-    <h1 i18n="@@HeadingInstitutions">
-        Institutions
+    <h1 i18n="@@HeadingCollections">
+        Collections
     </h1>
 
     <div class="space-flexible"></div>
 
-    <button mat-mini-fab color="primary" (click)="add()" i18n-matTooltip="@@TooltipAddNewInstitutions" matTooltip="Add a new institution.">
+    <button mat-mini-fab color="primary" (click)="add()" i18n-matTooltip="@@TooltipAddNewCollection" matTooltip="Add a new collection.">
         <mat-icon>add</mat-icon>
     </button>
     &nbsp;
@@ -13,25 +13,23 @@
         <mat-icon>sync</mat-icon>
     </button>
     <mat-menu #menu="matMenu" class=".collection-menu">
-        <button *ngFor="let collection of (collections|async)" mat-menu-item (click)="synchronize(collection[0], collection[1])">{{collection[1]}} ({{collection[0]}})</button>
+        <button *ngFor="let collection of ( solrCollections | async)" mat-menu-item (click)="synchronize(collection[0], collection[1])">{{collection[1]}} ({{collection[0]}})</button>
     </mat-menu>
 
     <div class="space-flexible"></div>
 
     <mat-form-field>
         <mat-label>Filter</mat-label>
-        <input matInput placeholder="Filter" (input)="onFilterChange($event)">
+        <input #filterField matInput placeholder="Filter" (input)="onFilterChange()">
     </mat-form-field>
 </div>
 
 
 <table mat-table [dataSource]="dataSource" class="mat-elevation-z8" matSort>
-
   <!-- Image Column -->
   <ng-container matColumnDef="image" i18n="@@Image">
     <th mat-header-cell *matHeaderCellDef> Image </th>
     <td mat-cell *matCellDef="let element">
-      <app-institution-image [institutionId]="element.id"></app-institution-image>
     </td>
   </ng-container>
 
@@ -45,42 +43,6 @@
   <ng-container matColumnDef="displayName" i18n="@@LabelDisplayName" >
     <th mat-header-cell *matHeaderCellDef > Display Name </th>
     <td mat-cell *matCellDef="let element"> {{element.displayName}} </td>
-  </ng-container>
-
-  <!-- Weight Column -->
-  <ng-container matColumnDef="participant" i18n="@@LabelParticipant">
-    <th mat-header-cell *matHeaderCellDef> Participant </th>
-    <td mat-cell *matCellDef="let element"> {{element.participantName}} </td>
-  </ng-container>
-
-  <!-- Street Column -->
-  <ng-container matColumnDef="street" i18n="@@LabelStreet">
-    <th mat-header-cell *matHeaderCellDef > Street </th>
-    <td mat-cell *matCellDef="let element"> {{element.street}} </td>
-  </ng-container>
-
-  <!-- City Column -->
-  <ng-container matColumnDef="city" i18n="@@LabelCity">
-    <th mat-header-cell *matHeaderCellDef> City </th>
-    <td mat-cell *matCellDef="let element"> {{element.city}} </td>
-  </ng-container>
-
-  <!-- Zip Column -->
-  <ng-container matColumnDef="zip" i18n="@@LabelZip">
-    <th mat-header-cell *matHeaderCellDef mat-sort-header sortActionDescription="Sort by zip."> City </th>
-    <td mat-cell *matCellDef="let element"> {{element.zip}} </td>
-  </ng-container>
-
-  <!-- Canton Column -->
-  <ng-container matColumnDef="canton" i18n="@@LabelCanton">
-    <th mat-header-cell *matHeaderCellDef mat-sort-header sortActionDescription="Sort by canton."> Canton </th>
-    <td mat-cell *matCellDef="let element"> {{element.canton}} </td>
-  </ng-container>
-
-  <!-- E-Mail Column -->
-  <ng-container matColumnDef="email">
-    <th mat-header-cell *matHeaderCellDef i18n="@@LabelEmail"> E-Mail </th>
-    <td mat-cell *matCellDef="let element"> <a href="{{element.email}}">{{element.email}}</a> </td>
   </ng-container>
 
   <!-- Publish Column -->
