@@ -8,6 +8,7 @@ import io.javalin.http.Context
 import io.javalin.openapi.*
 import jetbrains.exodus.database.TransientEntityStore
 import kotlinx.dnq.query.asSequence
+import kotlinx.dnq.query.sortedBy
 import kotlinx.dnq.util.findById
 
 
@@ -27,7 +28,7 @@ import kotlinx.dnq.util.findById
 )
 fun listParticipants(ctx: Context, store: TransientEntityStore) {
     store.transactional (true) {
-        ctx.json(DbParticipant.all().asSequence().map { it.name }.toList().toTypedArray())
+        ctx.json(DbParticipant.all().sortedBy(DbParticipant::name).asSequence().map { it.name }.toList().toTypedArray())
     }
 }
 

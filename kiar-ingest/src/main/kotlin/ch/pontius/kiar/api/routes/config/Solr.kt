@@ -23,6 +23,7 @@ import jetbrains.exodus.database.TransientEntityStore
 import kotlinx.dnq.query.asSequence
 import kotlinx.dnq.query.filter
 import kotlinx.dnq.query.firstOrNull
+import kotlinx.dnq.query.sortedBy
 import kotlinx.dnq.util.findById
 import org.joda.time.DateTime
 
@@ -42,7 +43,7 @@ import org.joda.time.DateTime
 )
 fun listSolrConfigurations(ctx: Context, store: TransientEntityStore) {
     store.transactional (true) {
-        ctx.json(DbSolr.all().mapToArray { it.toApi() })
+        ctx.json(DbSolr.all().sortedBy(DbSolr::name).mapToArray { it.toApi() })
     }
 }
 

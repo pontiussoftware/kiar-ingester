@@ -49,7 +49,7 @@ fun listJobTemplates(ctx: Context, store: TransientEntityStore) {
         } else {
             DbJobTemplate.emptyQuery()
         }
-        ctx.json(templates.mapToArray { it.toApi() })
+        ctx.json(templates.sortedBy(DbJobTemplate::name).mapToArray { it.toApi() })
     }
 }
 

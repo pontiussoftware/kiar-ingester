@@ -13,6 +13,7 @@ import io.javalin.openapi.*
 import jetbrains.exodus.database.TransientEntityStore
 import kotlinx.dnq.query.asSequence
 import kotlinx.dnq.query.filter
+import kotlinx.dnq.query.sortedBy
 import kotlinx.dnq.util.findById
 import org.joda.time.DateTime
 
@@ -32,7 +33,7 @@ import org.joda.time.DateTime
 )
 fun listEntityMappings(ctx: Context, store: TransientEntityStore) {
     store.transactional (true) {
-        val mappings = DbEntityMapping.all()
+        val mappings = DbEntityMapping.all().sortedBy(DbEntityMapping::name)
         ctx.json(mappings.mapToArray { it.toApiNoAttributes() })
     }
 }
