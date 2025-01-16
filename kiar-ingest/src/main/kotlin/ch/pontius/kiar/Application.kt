@@ -7,6 +7,7 @@ import ch.pontius.kiar.api.routes.configureApiRoutes
 import ch.pontius.kiar.api.routes.session.SALT
 import ch.pontius.kiar.cli.Cli
 import ch.pontius.kiar.config.Config
+import ch.pontius.kiar.database.collection.DbObjectCollection
 import ch.pontius.kiar.database.config.jobs.DbJobTemplate
 import ch.pontius.kiar.database.config.jobs.DbJobType
 import ch.pontius.kiar.database.config.mapping.*
@@ -140,7 +141,7 @@ private fun initializeDatabase(config: Config): TransientEntityStore {
         DbJobLogContext,
         DbJobStatus,
         DbInstitution,
-        DbCollection,
+        DbObjectCollection,
         DbRole,
         DbUser
     )
