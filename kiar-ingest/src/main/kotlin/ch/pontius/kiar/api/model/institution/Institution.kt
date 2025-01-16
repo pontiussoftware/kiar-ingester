@@ -3,7 +3,7 @@ package ch.pontius.kiar.api.model.institution
 import kotlinx.serialization.Serializable
 
 /**
- * An API representation of a {@link DbInstitution}.
+ * An API representation of a [DbInstitution].
  *
  * @author Ralph Gasser
  * @version 1.0.0

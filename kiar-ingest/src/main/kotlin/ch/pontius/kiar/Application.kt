@@ -140,6 +140,7 @@ private fun initializeDatabase(config: Config): TransientEntityStore {
         DbJobLogContext,
         DbJobStatus,
         DbInstitution,
+        DbCollection,
         DbRole,
         DbUser
     )
