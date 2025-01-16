@@ -1,7 +1,5 @@
 package ch.pontius.kiar.api.model.config.solr
 
-import ch.pontius.kiar.api.model.config.templates.JobType
-import ch.pontius.kiar.database.config.jobs.DbJobType
 import ch.pontius.kiar.database.config.solr.DbCollectionType
 
 /**
@@ -13,7 +11,8 @@ import ch.pontius.kiar.database.config.solr.DbCollectionType
 enum class CollectionType {
     OBJECT,
     PERSON,
-    MUSEUM;
+    MUSEUM,
+    COLLECTION;
 
     /**
      * Convenience method to convert this [CollectionType] to a [DbCollectionType]. Requires an ongoing transaction!
@@ -24,5 +23,6 @@ enum class CollectionType {
         OBJECT -> DbCollectionType.OBJECT
         PERSON-> DbCollectionType.PERSON
         MUSEUM -> DbCollectionType.MUSEUM
+        COLLECTION -> DbCollectionType.COLLECTION
     }
 }

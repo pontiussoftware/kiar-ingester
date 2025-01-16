@@ -175,6 +175,88 @@
         "security" : [ ]
       }
     },
+    "/api/collections/synchronize" : {
+      "post" : {
+        "tags" : [ "Collection" ],
+        "summary" : "Synchronizes object collections with an Apache Solr backend.",
+        "operationId" : "postSynchronizeInstitutions",
+        "parameters" : [ {
+          "name" : "solr",
+          "in" : "query",
+          "description" : "Name of the Apache Solr configuration to use.",
+          "required" : true,
+          "deprecated" : false,
+          "allowEmptyValue" : false,
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "name" : "collection",
+          "in" : "query",
+          "description" : "The name of the collection to synchronize with.",
+          "required" : true,
+          "deprecated" : false,
+          "allowEmptyValue" : false,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/SuccessStatus"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorStatus"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Forbidden",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorStatus"
+                }
+              }
+            }
+          },
+          "404" : {
+            "description" : "Not Found",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorStatus"
+                }
+              }
+            }
+          },
+          "500" : {
+            "description" : "Server Error",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorStatus"
+                }
+              }
+            }
+          }
+        },
+        "deprecated" : false,
+        "security" : [ ]
+      }
+    },
     "/api/collections/{id}" : {
       "get" : {
         "tags" : [ "Collection" ],
@@ -4540,7 +4622,7 @@
       },
       "CollectionType" : {
         "type" : "string",
-        "enum" : [ "OBJECT", "PERSON", "MUSEUM" ]
+        "enum" : [ "OBJECT", "PERSON", "MUSEUM", "COLLECTION" ]
       },
       "JobTemplate" : {
         "type" : "object",

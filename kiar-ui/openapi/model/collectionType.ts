@@ -11,11 +11,12 @@
  */
 
 
-export type CollectionType = 'OBJECT' | 'PERSON' | 'MUSEUM';
+export type CollectionType = 'OBJECT' | 'PERSON' | 'MUSEUM' | 'COLLECTION';
 
 export const CollectionType = {
     OBJECT: 'OBJECT' as CollectionType,
     PERSON: 'PERSON' as CollectionType,
-    MUSEUM: 'MUSEUM' as CollectionType
+    MUSEUM: 'MUSEUM' as CollectionType,
+    COLLECTION: 'COLLECTION' as CollectionType
 };
 

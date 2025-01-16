@@ -19,6 +19,7 @@ class DbCollectionType(entity: Entity): XdEnumEntity(entity) {
         val OBJECT by enumField { description = "OBJECT" }
         val PERSON by enumField { description = "PERSON" }
         val MUSEUM by enumField { description = "MUSEUM" }
+        val COLLECTION by enumField { description = "COLLECTION" }
     }
 
     /** The name of this [DbCollectionType]. */

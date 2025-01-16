@@ -15,8 +15,8 @@
         <mat-icon>sync</mat-icon>
     </button>
     <mat-menu #menu="matMenu" class=".collection-menu">
-        <button *ngFor="let collection of ( solrCollections | async)" mat-menu-item
-                (click)="synchronize(collection[0], collection[1])">{{ collection[1] }} ({{ collection[0] }})
+        <button *ngFor="let collection of ( solrCollections | async)  ?? []" mat-menu-item
+                (click)="synchronize(collection[0], collection[1])">{{ collection[0] }} > {{ collection[1] }}
         </button>
     </mat-menu>
 

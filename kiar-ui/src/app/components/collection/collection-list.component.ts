@@ -34,7 +34,7 @@ export class CollectionListComponent implements AfterViewInit  {
     this.dataSource = new CollectionDatasource(this.collection)
     this.solrCollections = this.config.getListSolrConfiguration().pipe(
         map((configs) => {
-          return configs.map(config => config.collections.filter(c => c.type === "MUSEUM").flatMap(collection => [config.name, collection.name]))
+          return configs.map(config => config.collections.filter(c => c.type === "COLLECTION").flatMap(collection => [config.name, collection.name]))
         }),
         shareReplay(1)
     )
