@@ -10,5 +10,5 @@ interface PaginatedResult<T> {
     val total: Int
     val page: Int
     val pageSize: Int
-    val results: Array<T>
+    val results: List<T>
 }

@@ -1,6 +1,7 @@
 package ch.pontius.kiar.api.routes
 
 import ch.pontius.kiar.api.model.user.Role
+import ch.pontius.kiar.api.routes.collection.*
 import ch.pontius.kiar.api.routes.config.*
 import ch.pontius.kiar.api.routes.institution.postSyncInstitutions
 import ch.pontius.kiar.api.routes.job.*
@@ -14,20 +15,20 @@ import ch.pontius.kiar.config.Config
 import ch.pontius.kiar.ingester.IngesterServer
 import ch.pontius.kiar.oai.OaiServer
 import createEntityMapping
-import postCreateInstitution
 import deleteEntityMapping
 import deleteInstitution
 import getEntityMapping
-import getImage
 import getInstitution
 import getListInstitutionNames
 import getListInstitutions
+
 import io.javalin.apibuilder.ApiBuilder.*
 import jetbrains.exodus.database.TransientEntityStore
 import listEntityMappings
 import listMappingFormats
 import listParsers
-import postUploadImage
+import postCreateInstitution
+import postUploadImageForInstitution
 import putUpdateInstitution
 import updateEntityMapping
 
@@ -68,9 +69,24 @@ fun configureApiRoutes(store: TransientEntityStore, server: IngesterServer, conf
             delete("{id}",  { ctx -> deleteInstitution(ctx, store) }, Role.ADMINISTRATOR )
             path("{id}") {
                 get("image", { ctx -> getImage(ctx, store) }, Role.ADMINISTRATOR, Role.MANAGER, Role.VIEWER)
-                post("image", { ctx -> postUploadImage(ctx, store) }, Role.ADMINISTRATOR, Role.MANAGER)
+                post("image", { ctx -> postUploadImageForInstitution(ctx, store) }, Role.ADMINISTRATOR, Role.MANAGER)
             }
         }
+
+        /* Endpoints related to collections. */
+        get("collections", { ctx -> getListCollections(ctx, store) }, Role.ADMINISTRATOR )
+        post("collections", { ctx -> postCreateCollection(ctx, store) }, Role.ADMINISTRATOR )
+        path("collections") {
+            post("synchronize", { ctx -> postSyncInstitutions(ctx, store) }, Role.ADMINISTRATOR )
+            get("{id}",  { ctx -> getCollection(ctx, store) }, Role.ADMINISTRATOR, Role.MANAGER )
+            put("{id}",  { ctx -> putUpdateCollection(ctx, store) }, Role.ADMINISTRATOR, Role.MANAGER)
+            delete("{id}",  { ctx -> deleteCollection(ctx, store) }, Role.ADMINISTRATOR )
+            post("{id}", { ctx -> postUploadImageForCollection(ctx, store) }, Role.ADMINISTRATOR, Role.MANAGER)
+            path("{id}") {
+                get("{name}", { ctx -> getImage(ctx, store) }, Role.ADMINISTRATOR, Role.MANAGER, Role.VIEWER)
+            }
+        }
+
 
         /* Endpoints related to master data. */
         path("masterdata") {

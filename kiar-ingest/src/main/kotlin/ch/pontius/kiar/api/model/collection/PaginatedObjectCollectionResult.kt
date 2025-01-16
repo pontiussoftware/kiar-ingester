@@ -1,6 +1,7 @@
-package ch.pontius.kiar.api.model.institution
+package ch.pontius.kiar.api.model.collection
 
 import ch.pontius.kiar.api.model.PaginatedResult
+import ch.pontius.kiar.api.model.institution.Institution
 import kotlinx.serialization.Serializable
 
 /**
@@ -10,9 +11,9 @@ import kotlinx.serialization.Serializable
  * @version 1.0.0
  */
 @Serializable
-data class PaginatedInstitutionResult(
+class PaginatedObjectCollectionResult(
     override val total: Int,
     override val page: Int,
     override val pageSize: Int,
-    override val results: List<Institution>
-): PaginatedResult<Institution>
+    override val results: List<ObjectCollection>
+): PaginatedResult<ObjectCollection>

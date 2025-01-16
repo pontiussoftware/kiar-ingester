@@ -53,19 +53,19 @@ fun getListInstitutions(ctx: Context, store: TransientEntityStore) {
     val pageSize = ctx.queryParam("pageSize")?.toIntOrNull() ?: 50
     val order = ctx.queryParam("order")?.lowercase() ?: "name"
     val orderDir = ctx.queryParam("orderDir")?.lowercase() ?: "asc"
-    val result = store.transactional(true) {
+    val (total, results) = store.transactional(true) {
         val institutions = when(order) {
             "city" -> DbInstitution.all().sortedBy(DbInstitution::city, orderDir == "asc")
             "zip" -> DbInstitution.all().sortedBy(DbInstitution::zip, orderDir == "asc")
             "canton" -> DbInstitution.all().sortedBy(DbInstitution::canton, orderDir == "asc")
             "publish" -> DbInstitution.all().sortedBy(DbInstitution::publish, orderDir == "asc")
             else -> DbInstitution.all().sortedBy(DbInstitution::name, orderDir == "asc")
-        }.drop(page * pageSize).take(pageSize).mapToArray { it.toApi() }
+        }.drop(page * pageSize).take(pageSize).asSequence().map { it.toApi() }.toList()
         val total = DbInstitution.all().size()
         total to institutions
 
     }
-    ctx.json(PaginatedInstitutionResult(result.first, page, pageSize, result.second))
+    ctx.json(PaginatedInstitutionResult(total, page, pageSize, results))
 }
 
 @OpenApi(
@@ -353,7 +353,7 @@ fun getImage(ctx: Context, store: TransientEntityStore) {
         OpenApiResponse("500", [OpenApiContent(ErrorStatus::class)])
     ]
 )
-fun postUploadImage(ctx: Context, store: TransientEntityStore) {
+fun postUploadImageForInstitution(ctx: Context, store: TransientEntityStore) {
     /* Obtain parameters. */
     val institutionId = ctx.pathParam("id")
     val files = ctx.uploadedFiles()
