@@ -95,7 +95,7 @@ fun getListInstitutions(ctx: Context, store: TransientEntityStore) {
 )
 fun getListInstitutionNames(ctx: Context, store: TransientEntityStore) {
     val list = store.transactional(true) {
-        DbInstitution.all().mapToArray { it.name }
+        DbInstitution.all().sortedBy(DbInstitution::name).mapToArray { it.name }
     }
     ctx.json(list)
 }
