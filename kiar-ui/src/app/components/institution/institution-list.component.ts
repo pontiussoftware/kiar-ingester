@@ -1,4 +1,4 @@
-import {AfterViewInit, Component, ViewChild} from "@angular/core";
+import {AfterViewInit, Component, ElementRef, ViewChild} from "@angular/core";
 import {ConfigService, Institution, InstitutionService} from "../../../../openapi";
 import {map, Observable, shareReplay, tap} from "rxjs";
 import {MatPaginator} from "@angular/material/paginator";
@@ -30,6 +30,9 @@ export class InstitutionListComponent implements AfterViewInit  {
   /** Reference to the {@link MatSort}*/
   @ViewChild(MatSort) sort: MatSort;
 
+  /** Reference to the filter field. */
+  @ViewChild('filterField') filterField: ElementRef;
+
   constructor(private institutionService: InstitutionService, private configService: ConfigService, private dialog: MatDialog, private snackBar: MatSnackBar) {
     this.dataSource = new InstitutionDatasource(this.institutionService)
     this.collections = this.configService.getListSolrConfiguration().pipe(
@@ -46,8 +49,8 @@ export class InstitutionListComponent implements AfterViewInit  {
   public ngAfterViewInit() {
     this.sort.direction = 'asc'
     this.dataSource.load(0, 15, this.sort.active, this.sort.direction);
-    this.paginator.page.pipe(tap(() => this.dataSource.load(this.paginator.pageIndex, this.paginator.pageSize, this.sort.active, this.sort.direction))).subscribe();
-    this.sort.sortChange.pipe(tap(() => this.dataSource.load(this.paginator.pageIndex, this.paginator.pageSize, this.sort.active, this.sort.direction))).subscribe();
+    this.paginator.page.pipe(tap(() => this.dataSource.load(this.paginator.pageIndex, this.paginator.pageSize, this.sort.active, this.sort.direction, this.filterField.nativeElement.value))).subscribe();
+    this.sort.sortChange.pipe(tap(() => this.dataSource.load(this.paginator.pageIndex, this.paginator.pageSize, this.sort.active, this.sort.direction, this.filterField.nativeElement.value))).subscribe();
   }
 
   /**
@@ -56,7 +59,7 @@ export class InstitutionListComponent implements AfterViewInit  {
   public add() {
     this.dialog.open(InstitutionDialogComponent).afterClosed().subscribe(ret => {
       if (ret != null) {
-        this.dataSource.load(this.paginator.pageIndex, this.paginator.pageSize, this.sort.active, this.sort.direction);
+        this.dataSource.load(this.paginator.pageIndex, this.paginator.pageSize, this.sort.active, this.sort.direction, this.filterField.nativeElement.value);
       }
     })
   }
@@ -67,7 +70,7 @@ export class InstitutionListComponent implements AfterViewInit  {
   public edit(institution: Institution) {
     this.dialog.open(InstitutionDialogComponent, {data: institution.id}).afterClosed().subscribe(ret => {
       if (ret != null) {
-        this.dataSource.load(this.paginator.pageIndex, this.paginator.pageSize, this.sort.active, this.sort.direction);
+        this.dataSource.load(this.paginator.pageIndex, this.paginator.pageSize, this.sort.active, this.sort.direction, this.filterField.nativeElement.value);
       }
     })
   }
@@ -80,7 +83,7 @@ export class InstitutionListComponent implements AfterViewInit  {
       this.institutionService.deleteInstitution(institution.id!!).subscribe({
         next: (value) => {
           this.snackBar.open(value.description, "Dismiss", { duration: 2000 } as MatSnackBarConfig);
-          this.dataSource.load(this.paginator.pageIndex, this.paginator.pageSize, this.sort.active, this.sort.direction);
+          this.dataSource.load(this.paginator.pageIndex, this.paginator.pageSize, this.sort.active, this.sort.direction, this.filterField.nativeElement.value);
         },
         error: (err) => this.snackBar.open(`Error occurred while trying to delete institution '${institution.name}': ${err?.error?.description}.`, "Dismiss", { duration: 2000 } as MatSnackBarConfig),
       })
@@ -89,16 +92,9 @@ export class InstitutionListComponent implements AfterViewInit  {
 
   /**
    * Filters the data table based on the user input.
-   *
-   * @param event The event that triggered the filter change.
    */
-  public onFilterChange(event: Event) {
-    const inputElement = event.target as HTMLInputElement;
-    if (inputElement.value === null) {
-      this.dataSource.load(this.paginator.pageIndex, this.paginator.pageSize, this.sort.active, this.sort.direction)
-    } else {
-      this.dataSource.load(this.paginator.pageIndex, this.paginator.pageSize, this.sort.active, this.sort.direction, inputElement.value)
-    }
+  public onFilterChange() {
+    this.dataSource.load(this.paginator.pageIndex, this.paginator.pageSize, this.sort.active, this.sort.direction, this.filterField.nativeElement.value)
   }
 
   /**

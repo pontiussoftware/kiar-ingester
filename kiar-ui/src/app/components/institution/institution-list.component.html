@@ -20,7 +20,7 @@
 
     <mat-form-field>
         <mat-label>Filter</mat-label>
-        <input matInput placeholder="Filter" (input)="onFilterChange($event)">
+        <input #filterField matInput placeholder="Filter" (input)="onFilterChange()">
     </mat-form-field>
 </div>
 
