@@ -45,7 +45,7 @@ export class InstitutionDialogComponent {
       private institution: InstitutionService,
       private dialogRef: MatDialogRef<InstitutionDialogComponent>,
       private snackBar: MatSnackBar,
-      @Inject(MAT_DIALOG_DATA) private institutionId: string | null
+      @Inject(MAT_DIALOG_DATA) protected institutionId: string | null
   ) {
     /* Prepare empty form. */
     this.formControl = new FormGroup({
