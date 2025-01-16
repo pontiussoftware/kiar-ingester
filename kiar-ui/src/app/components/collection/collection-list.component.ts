@@ -21,7 +21,7 @@ export class CollectionListComponent implements AfterViewInit  {
   public readonly solrCollections: Observable<Array<string[]>>
 
   /** The columns that should be displayed in the data table. */
-  public readonly displayedColumns: string[] = ['image', 'name', 'displayName', 'publish', 'action'];
+  public readonly displayedColumns: string[] = ['image', 'name', 'displayName', 'institutionName', 'publish', 'action'];
 
   /** Reference to the {@link MatPaginator}*/
   @ViewChild(MatPaginator) paginator: MatPaginator;

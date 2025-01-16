@@ -5,15 +5,19 @@
 
     <div class="space-flexible"></div>
 
-    <button mat-mini-fab color="primary" (click)="add()" i18n-matTooltip="@@TooltipAddNewCollection" matTooltip="Add a new collection.">
+    <button mat-mini-fab color="primary" (click)="add()" i18n-matTooltip="@@TooltipAddNewCollection"
+            matTooltip="Add a new collection.">
         <mat-icon>add</mat-icon>
     </button>
     &nbsp;
-    <button mat-mini-fab [matMenuTriggerFor]="menu" i18n-matTooltip="@@TooltipSyncWithSolr" matTooltip="Synchronize with Apache Solr.">
+    <button mat-mini-fab [matMenuTriggerFor]="menu" i18n-matTooltip="@@TooltipSyncWithSolr"
+            matTooltip="Synchronize with Apache Solr.">
         <mat-icon>sync</mat-icon>
     </button>
     <mat-menu #menu="matMenu" class=".collection-menu">
-        <button *ngFor="let collection of ( solrCollections | async)" mat-menu-item (click)="synchronize(collection[0], collection[1])">{{collection[1]}} ({{collection[0]}})</button>
+        <button *ngFor="let collection of ( solrCollections | async)" mat-menu-item
+                (click)="synchronize(collection[0], collection[1])">{{ collection[1] }} ({{ collection[0] }})
+        </button>
     </mat-menu>
 
     <div class="space-flexible"></div>
@@ -26,42 +30,55 @@
 
 
 <table mat-table [dataSource]="dataSource" class="mat-elevation-z8" matSort>
-  <!-- Image Column -->
-  <ng-container matColumnDef="image" i18n="@@Image">
-    <th mat-header-cell *matHeaderCellDef> Image </th>
-    <td mat-cell *matCellDef="let element">
-    </td>
-  </ng-container>
+    <!-- Image Column -->
+    <ng-container matColumnDef="image" i18n="@@Image">
+        <th mat-header-cell *matHeaderCellDef> Image</th>
+        <td mat-cell *matCellDef="let element">
+        </td>
+    </ng-container>
 
-  <!-- Name Column -->
-  <ng-container matColumnDef="name" i18n="@@LabelName">
-    <th mat-header-cell *matHeaderCellDef mat-sort-header sortActionDescription="Sort by name."> Name </th>
-    <td mat-cell *matCellDef="let element"> {{element.name}} </td>
-  </ng-container>
+    <!-- Name Column -->
+    <ng-container matColumnDef="name" i18n="@@LabelName">
+        <th mat-header-cell *matHeaderCellDef mat-sort-header sortActionDescription="Sort by name."> Name</th>
+        <td mat-cell *matCellDef="let element"> {{ element.name }}</td>
+    </ng-container>
 
-  <!-- Display Name Column -->
-  <ng-container matColumnDef="displayName" i18n="@@LabelDisplayName" >
-    <th mat-header-cell *matHeaderCellDef > Display Name </th>
-    <td mat-cell *matCellDef="let element"> {{element.displayName}} </td>
-  </ng-container>
+    <!-- Display Name Column -->
+    <ng-container matColumnDef="displayName" i18n="@@LabelDisplayName">
+        <th mat-header-cell *matHeaderCellDef> Display Name</th>
+        <td mat-cell *matCellDef="let element"> {{ element.displayName }}</td>
+    </ng-container>
 
-  <!-- Publish Column -->
-  <ng-container matColumnDef="publish">
-    <th mat-header-cell *matHeaderCellDef i18n="@@LabelPublish"> Publish </th>
-    <td mat-cell *matCellDef="let element">{{element.publish}}</td>
-  </ng-container>
 
-  <!-- Symbol Column -->
-  <ng-container matColumnDef="action">
-    <th mat-header-cell *matHeaderCellDef i18n="@@LabelEmail"> Action </th>
-    <td mat-cell *matCellDef="let element">
-      <button mat-icon-button color="primary" (click)="edit(element)" matTooltip="Edit institution {{element.id}}."><mat-icon>edit</mat-icon></button>
-      <button mat-icon-button color="warn" (click)="delete(element)" matTooltip="Delete institution {{element.id}}."><mat-icon>delete</mat-icon></button>
-    </td>
-  </ng-container>
+    <!-- Institution Column -->
+    <ng-container matColumnDef="institutionName" i18n="@@LabelInstitution">
+        <th mat-header-cell *matHeaderCellDef> Institution</th>
+        <td mat-cell *matCellDef="let element"> {{ element.institutionName }}</td>
+    </ng-container>
 
-  <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
-  <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
+    <!-- Publish Column -->
+    <ng-container matColumnDef="publish">
+        <th mat-header-cell *matHeaderCellDef i18n="@@LabelPublish"> Publish</th>
+        <td mat-cell *matCellDef="let element">{{ element.publish }}</td>
+    </ng-container>
+
+    <!-- Symbol Column -->
+    <ng-container matColumnDef="action">
+        <th mat-header-cell *matHeaderCellDef i18n="@@LabelEmail"> Action</th>
+        <td mat-cell *matCellDef="let element">
+            <button mat-icon-button color="primary" (click)="edit(element)"
+                    matTooltip="Edit institution {{element.id}}.">
+                <mat-icon>edit</mat-icon>
+            </button>
+            <button mat-icon-button color="warn" (click)="delete(element)"
+                    matTooltip="Delete institution {{element.id}}.">
+                <mat-icon>delete</mat-icon>
+            </button>
+        </td>
+    </ng-container>
+
+    <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+    <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
 </table>
 
 <mat-paginator [length]="dataSource.totalSize" [pageSize]="15" [pageSizeOptions]="[15, 25, 50, 100]"></mat-paginator>
