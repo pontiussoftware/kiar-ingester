@@ -196,7 +196,8 @@ fun putUpdateCollection(ctx: Context, store: TransientEntityStore) {
     operationId = "getImage",
     tags = ["Collection"],
     pathParams = [
-        OpenApiParam(name = "id", description = "The ID of the institution the image should be retrieved for.", required = true)
+        OpenApiParam(name = "id", description = "The ID of the collection the image should be retrieved for.", required = true),
+        OpenApiParam(name = "name", description = "The name of the image.", required = true)
     ],
     responses = [
         OpenApiResponse("200", [
@@ -242,13 +243,13 @@ fun getImageForCollection(ctx: Context, store: TransientEntityStore) {
 }
 
 @OpenApi(
-    path = "/api/institutions/{id}",
+    path = "/api/collections/{id}",
     methods = [HttpMethod.POST],
-    summary = "Posts a new image for the provided institution.",
+    summary = "Posts a new image for the provided collection.",
     operationId = "postUploadImage",
-    tags = ["Institution"],
+    tags = ["Collection"],
     pathParams = [
-        OpenApiParam(name = "id", description = "The ID of the institution the image should be added to.", required = true)
+        OpenApiParam(name = "id", description = "The ID of the collection the image should be added to.", required = true)
     ],
     requestBody = OpenApiRequestBody(content = [
         OpenApiContent(mimeType = ContentType.FORM_DATA_MULTIPART, properties = [OpenApiContentProperty(name = "image", type = "string", format = "binary")])

@@ -1,17 +1,12 @@
-import {Component, Inject} from "@angular/core";
-import {FormArray, FormControl, FormGroup, Validators} from "@angular/forms";
+import {Component, ElementRef, Inject, ViewChild} from "@angular/core";
+import {FormControl, FormGroup, Validators} from "@angular/forms";
 import {
-  ApacheSolrCollection,
-  Canton,
   CollectionService,
-  ConfigService,
-  Institution,
   InstitutionService,
-  MasterdataService, ObjectCollection,
-  RightStatement
+  ObjectCollection,
 } from "../../../../openapi";
 import {MAT_DIALOG_DATA, MatDialogRef} from "@angular/material/dialog";
-import {combineLatestWith, map, Observable, shareReplay} from "rxjs";
+import {Observable, shareReplay} from "rxjs";
 import {MatSnackBar, MatSnackBarConfig} from "@angular/material/snack-bar";
 
 @Component({
@@ -27,12 +22,20 @@ export class CollectionDialogComponent {
   /** An {@link Observable} of available participants. */
   public readonly institutionNames: Observable<Array<String>>
 
+  /** List of images that should be displayed. */
+  public images: Array<string> = []
+
+  /** Reference to the file input. */
+  @ViewChild('fileInput')
+  fileInput: ElementRef<HTMLInputElement>;
+
+
   constructor(
       private institutionService: InstitutionService,
       private collectionService: CollectionService,
       private dialogRef: MatDialogRef<CollectionDialogComponent>,
       private snackBar: MatSnackBar,
-      @Inject(MAT_DIALOG_DATA) private collectionId: string | null
+      @Inject(MAT_DIALOG_DATA) protected collectionId: string | null
   ) {
     /* Prepare empty form. */
     this.formControl = new FormGroup({
@@ -40,8 +43,7 @@ export class CollectionDialogComponent {
       displayName: new FormControl(null, [Validators.required, Validators.minLength(5)]),
       description: new FormControl(null, [Validators.required]),
       institutionName: new FormControl(null, [Validators.required]),
-      publish: new FormControl(true, [Validators.required]),
-      images: new FormArray([])
+      publish: new FormControl(true, [Validators.required])
     })
 
     /* Get list of available participants. */
@@ -101,9 +103,9 @@ export class CollectionDialogComponent {
         const target = event.target as HTMLInputElement;
         const file: File | null = target.files?.[0] || null;
         if (file) {
-          this.institutionService.postUploadImage(this.collectionId!!, file).subscribe({
+          this.collectionService.postUploadImage(this.collectionId!!, file).subscribe({
             next: () => {
-              this.snackBar.open("Successfully uploaded institution image.", "Dismiss", {duration: 2000} as MatSnackBarConfig)
+              this.snackBar.open("Successfully uploaded collection image.", "Dismiss", {duration: 2000} as MatSnackBarConfig)
               this.reload(this.collectionId!!)
             },
             error: (err) => this.snackBar.open(`Error occurred while trying to upload image: ${err?.error?.description}.`, "Dismiss", {duration: 2000} as MatSnackBarConfig)
@@ -115,8 +117,9 @@ export class CollectionDialogComponent {
   }
 
   /**
+   * Reloads the current collection.
    *
-   * @private
+   * @param id The ID of the collection to reload.
    */
   private reload(id: string) {
     this.collectionService.getCollection(id).subscribe({
@@ -125,8 +128,11 @@ export class CollectionDialogComponent {
         this.formControl.get('name')?.setValue(collection.name)
         this.formControl.get('displayName')?.setValue(collection.displayName)
         this.formControl.get('description')?.setValue(collection.description)
-        this.formControl.get('participantName')?.setValue(collection.institutionName)
+        this.formControl.get('institutionName')?.setValue(collection.institutionName)
         this.formControl.get('publish')?.setValue(collection.publish)
+
+        /* Update images. */
+        this.images = collection.images
       },
       error: (err) => this.snackBar.open(`Error occurred while trying to create institution: ${err?.error?.description}.`, "Dismiss", {duration: 2000} as MatSnackBarConfig)
     })
