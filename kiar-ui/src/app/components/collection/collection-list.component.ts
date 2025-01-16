@@ -30,9 +30,9 @@ export class CollectionListComponent implements AfterViewInit  {
   @ViewChild('filterField') filterField: ElementRef;
 
 
-  constructor(private collection: CollectionService, private config: ConfigService, private dialog: MatDialog, private snackBar: MatSnackBar) {
-    this.dataSource = new CollectionDatasource(this.collection)
-    this.solrCollections = this.config.getListSolrConfiguration().pipe(
+  constructor(private collectionService: CollectionService, private configService: ConfigService, private dialog: MatDialog, private snackBar: MatSnackBar) {
+    this.dataSource = new CollectionDatasource(this.collectionService)
+    this.solrCollections = this.configService.getListSolrConfiguration().pipe(
         map((configs) => {
           return configs.map(config => config.collections.filter(c => c.type === "COLLECTION").flatMap(collection => [config.name, collection.name]))
         }),
@@ -75,7 +75,7 @@ export class CollectionListComponent implements AfterViewInit  {
    */
   public delete(collection: ObjectCollection) {
     if (confirm(`Are you sure that you want to delete institution '${collection.id}'?\nAfter deletion, it can no longer be retrieved.`)) {
-      this.collection.deleteCollection(collection.id!!).subscribe({
+      this.collectionService.deleteCollection(collection.id!!).subscribe({
         next: (value) => {
           this.snackBar.open(value.description, "Dismiss", { duration: 2000 } as MatSnackBarConfig);
           this.dataSource.load(this.paginator.pageIndex, this.paginator.pageSize, this.filterField.nativeElement.value);
@@ -99,6 +99,9 @@ export class CollectionListComponent implements AfterViewInit  {
    * @param collection The name of the collection to use.
    */
   public synchronize(config: string, collection: string) {
-
+    this.collectionService.postSynchronizeCollections(config, collection).subscribe({
+      next: (value) =>  this.snackBar.open(`Successfully synchronised collections with Apache Solr backend (${collection} (${config}).`, "Dismiss", { duration: 2000 } as MatSnackBarConfig),
+      error: (err) => this.snackBar.open(`Error occurred while synchronising collections with Apache Solr backend (${collection} (${config}): ${err?.error?.description}.`, "Dismiss", { duration: 2000 } as MatSnackBarConfig),
+    })
   }
 }

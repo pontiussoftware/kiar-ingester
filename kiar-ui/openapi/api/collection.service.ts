@@ -420,6 +420,79 @@ export class CollectionService {
     }
 
     /**
+     * Synchronizes object collections with an Apache Solr backend.
+     * @param solr Name of the Apache Solr configuration to use.
+     * @param collection The name of the collection to synchronize with.
+     * @param observe set whether or not to return the data Observable as the body, response or events. defaults to returning the body.
+     * @param reportProgress flag to report request and response progress.
+     */
+    public postSynchronizeCollections(solr: string, collection: string, observe?: 'body', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext}): Observable<SuccessStatus>;
+    public postSynchronizeCollections(solr: string, collection: string, observe?: 'response', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext}): Observable<HttpResponse<SuccessStatus>>;
+    public postSynchronizeCollections(solr: string, collection: string, observe?: 'events', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext}): Observable<HttpEvent<SuccessStatus>>;
+    public postSynchronizeCollections(solr: string, collection: string, observe: any = 'body', reportProgress: boolean = false, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext}): Observable<any> {
+        if (solr === null || solr === undefined) {
+            throw new Error('Required parameter solr was null or undefined when calling postSynchronizeCollections.');
+        }
+        if (collection === null || collection === undefined) {
+            throw new Error('Required parameter collection was null or undefined when calling postSynchronizeCollections.');
+        }
+
+        let localVarQueryParameters = new HttpParams({encoder: this.encoder});
+        if (solr !== undefined && solr !== null) {
+          localVarQueryParameters = this.addToHttpParams(localVarQueryParameters,
+            <any>solr, 'solr');
+        }
+        if (collection !== undefined && collection !== null) {
+          localVarQueryParameters = this.addToHttpParams(localVarQueryParameters,
+            <any>collection, 'collection');
+        }
+
+        let localVarHeaders = this.defaultHeaders;
+
+        let localVarHttpHeaderAcceptSelected: string | undefined = options && options.httpHeaderAccept;
+        if (localVarHttpHeaderAcceptSelected === undefined) {
+            // to determine the Accept header
+            const httpHeaderAccepts: string[] = [
+                'application/json'
+            ];
+            localVarHttpHeaderAcceptSelected = this.configuration.selectHeaderAccept(httpHeaderAccepts);
+        }
+        if (localVarHttpHeaderAcceptSelected !== undefined) {
+            localVarHeaders = localVarHeaders.set('Accept', localVarHttpHeaderAcceptSelected);
+        }
+
+        let localVarHttpContext: HttpContext | undefined = options && options.context;
+        if (localVarHttpContext === undefined) {
+            localVarHttpContext = new HttpContext();
+        }
+
+
+        let responseType_: 'text' | 'json' | 'blob' = 'json';
+        if (localVarHttpHeaderAcceptSelected) {
+            if (localVarHttpHeaderAcceptSelected.startsWith('text')) {
+                responseType_ = 'text';
+            } else if (this.configuration.isJsonMime(localVarHttpHeaderAcceptSelected)) {
+                responseType_ = 'json';
+            } else {
+                responseType_ = 'blob';
+            }
+        }
+
+        let localVarPath = `/api/collections/synchronize`;
+        return this.httpClient.request<SuccessStatus>('post', `${this.configuration.basePath}${localVarPath}`,
+            {
+                context: localVarHttpContext,
+                params: localVarQueryParameters,
+                responseType: <any>responseType_,
+                withCredentials: this.configuration.withCredentials,
+                headers: localVarHeaders,
+                observe: observe,
+                reportProgress: reportProgress
+            }
+        );
+    }
+
+    /**
      * Posts a new image for the provided collection.
      * @param id The ID of the collection the image should be added to.
      * @param image 

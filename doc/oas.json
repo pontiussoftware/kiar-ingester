@@ -179,7 +179,7 @@
       "post" : {
         "tags" : [ "Collection" ],
         "summary" : "Synchronizes object collections with an Apache Solr backend.",
-        "operationId" : "postSynchronizeInstitutions",
+        "operationId" : "postSynchronizeCollections",
         "parameters" : [ {
           "name" : "solr",
           "in" : "query",

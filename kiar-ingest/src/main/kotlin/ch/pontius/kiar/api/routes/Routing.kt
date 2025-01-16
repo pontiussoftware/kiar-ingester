@@ -78,7 +78,7 @@ fun configureApiRoutes(store: TransientEntityStore, server: IngesterServer, conf
         get("collections", { ctx -> getListCollections(ctx, store) }, Role.ADMINISTRATOR )
         post("collections", { ctx -> postCreateCollection(ctx, store) }, Role.ADMINISTRATOR )
         path("collections") {
-            post("synchronize", { ctx -> postSyncInstitutions(ctx, store) }, Role.ADMINISTRATOR )
+            post("synchronize", { ctx -> postSyncCollections(ctx, store) }, Role.ADMINISTRATOR )
             get("{id}",  { ctx -> getCollection(ctx, store) }, Role.ADMINISTRATOR, Role.MANAGER )
             put("{id}",  { ctx -> putUpdateCollection(ctx, store) }, Role.ADMINISTRATOR, Role.MANAGER)
             delete("{id}",  { ctx -> deleteCollection(ctx, store) }, Role.ADMINISTRATOR )
