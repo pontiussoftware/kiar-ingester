@@ -1,15 +1,29 @@
-<h1 i18n="@@HeadingInstitutions">Institutions
-  <button mat-mini-fab color="primary" (click)="add()" i18n-matTooltip="@@TooltipAddNewInstitutions" matTooltip="Add a new institution.">
-    <mat-icon>add</mat-icon>
-  </button>
-  &nbsp;
-  <button mat-mini-fab [matMenuTriggerFor]="menu" i18n-matTooltip="@@TooltipSyncWithSolr" matTooltip="Synchronize with Apache Solr.">
-    <mat-icon>sync</mat-icon>
-  </button>
-  <mat-menu #menu="matMenu" class=".collection-menu">
-    <button *ngFor="let collection of (collections|async)" mat-menu-item (click)="synchronize(collection[0], collection[1])">{{collection[1]}} ({{collection[0]}})</button>
-  </mat-menu>
-</h1>
+<div [style.display]="'flex'">
+    <h1 i18n="@@HeadingInstitutions">
+        Institutions
+    </h1>
+
+    <div class="space-flexible"></div>
+
+    <button mat-mini-fab color="primary" (click)="add()" i18n-matTooltip="@@TooltipAddNewInstitutions" matTooltip="Add a new institution.">
+        <mat-icon>add</mat-icon>
+    </button>
+    &nbsp;
+    <button mat-mini-fab [matMenuTriggerFor]="menu" i18n-matTooltip="@@TooltipSyncWithSolr" matTooltip="Synchronize with Apache Solr.">
+        <mat-icon>sync</mat-icon>
+    </button>
+    <mat-menu #menu="matMenu" class=".collection-menu">
+        <button *ngFor="let collection of (collections|async)" mat-menu-item (click)="synchronize(collection[0], collection[1])">{{collection[1]}} ({{collection[0]}})</button>
+    </mat-menu>
+
+    <div class="space-flexible"></div>
+
+    <mat-form-field>
+        <mat-label>Filter</mat-label>
+        <input matInput placeholder="Filter" (input)="onFilterChange($event)">
+    </mat-form-field>
+</div>
+
 
 <table mat-table [dataSource]="dataSource" class="mat-elevation-z8" matSort>
 

@@ -88,6 +88,20 @@ export class InstitutionListComponent implements AfterViewInit  {
   }
 
   /**
+   * Filters the data table based on the user input.
+   *
+   * @param event The event that triggered the filter change.
+   */
+  public onFilterChange(event: Event) {
+    const inputElement = event.target as HTMLInputElement;
+    if (inputElement.value === null) {
+      this.dataSource.load(this.paginator.pageIndex, this.paginator.pageSize, this.sort.active, this.sort.direction)
+    } else {
+      this.dataSource.load(this.paginator.pageIndex, this.paginator.pageSize, this.sort.active, this.sort.direction, inputElement.value)
+    }
+  }
+
+  /**
    * Uses the API to trigger synchronisation of institution master data with the Apache Solt backend.
    *
    * @param config The name of the Apache Solr configuration to use.

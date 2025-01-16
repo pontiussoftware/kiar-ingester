@@ -48,9 +48,10 @@ export class InstitutionDatasource implements DataSource<Institution> {
    * @param pageSize The requested page size.
    * @param order The field / attribute to order by.
    * @param orderDir The sort order direction.
+   * @param filter The filter to apply.
    */
-  public load(page: number, pageSize: number, order: string, orderDir: string = 'asc') {
-    this.service.getInstitutions(page, pageSize, order, orderDir).subscribe(
+  public load(page: number, pageSize: number, order: string, orderDir: string = 'asc', filter: string | undefined = undefined) {
+    this.service.getInstitutions(page, pageSize, order, orderDir, filter).subscribe(
         (next) => {
           this.total.next(next.total)
           this.data.next(next.results)

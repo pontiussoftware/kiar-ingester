@@ -39,8 +39,9 @@ import java.nio.file.StandardOpenOption
         OpenApiParam(name = "page", type = Int::class, description = "The page index (zero-based) for pagination.", required = false),
         OpenApiParam(name = "pageSize", type = Int::class, description = "The page size for pagination.", required = false),
         OpenApiParam(name = "order", type = String::class, description = "The attribute to order by. Possible values are 'name', 'city', 'zip', 'canton' and 'publish'.", required = false),
-        OpenApiParam(name = "orderDir", type = String::class, description = "The sort order. Possible values are 'asc' and 'desc'.", required = false)
-    ],
+        OpenApiParam(name = "orderDir", type = String::class, description = "The sort order. Possible values are 'asc' and 'desc'.", required = false),
+        OpenApiParam(name = "filter", type = String::class, description = "A user-defined filter to search for institutions.", required = false)
+   ],
     responses = [
         OpenApiResponse("200", [OpenApiContent(PaginatedInstitutionResult::class)]),
         OpenApiResponse("401", [OpenApiContent(ErrorStatus::class)]),
@@ -53,17 +54,26 @@ fun getListInstitutions(ctx: Context, store: TransientEntityStore) {
     val pageSize = ctx.queryParam("pageSize")?.toIntOrNull() ?: 50
     val order = ctx.queryParam("order")?.lowercase() ?: "name"
     val orderDir = ctx.queryParam("orderDir")?.lowercase() ?: "asc"
+    val filter = ctx.queryParam("filter")
     val (total, results) = store.transactional(true) {
-        val institutions = when(order) {
-            "city" -> DbInstitution.all().sortedBy(DbInstitution::city, orderDir == "asc")
-            "zip" -> DbInstitution.all().sortedBy(DbInstitution::zip, orderDir == "asc")
-            "canton" -> DbInstitution.all().sortedBy(DbInstitution::canton, orderDir == "asc")
-            "publish" -> DbInstitution.all().sortedBy(DbInstitution::publish, orderDir == "asc")
-            else -> DbInstitution.all().sortedBy(DbInstitution::name, orderDir == "asc")
-        }.drop(page * pageSize).take(pageSize).asSequence().map { it.toApi() }.toList()
-        val total = DbInstitution.all().size()
-        total to institutions
+        /* Prepare query based on presence of filter. */
+        var query = if (filter == null) {
+            DbInstitution.all()
+        } else {
+            DbInstitution.filter { ((it.name startsWith filter) or (it.displayName startsWith filter) or (it.city startsWith filter)) }
+        }
 
+        /* Parse sort order. */
+        query = when(order) {
+            "city" -> query.sortedBy(DbInstitution::city, orderDir == "asc")
+            "zip" -> query.sortedBy(DbInstitution::zip, orderDir == "asc")
+            "canton" -> query.sortedBy(DbInstitution::canton, orderDir == "asc")
+            "publish" -> query.sortedBy(DbInstitution::publish, orderDir == "asc")
+            else -> query.sortedBy(DbInstitution::name, orderDir == "asc")
+        }
+
+        /* Execute query and return paginated result. */
+        query.size() to query.drop(page * pageSize).take(pageSize).asSequence().map { it.toApi() }.toList()
     }
     ctx.json(PaginatedInstitutionResult(total, page, pageSize, results))
 }
