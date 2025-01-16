@@ -3,7 +3,6 @@ package ch.pontius.kiar.api.routes.collection
 import ch.pontius.kiar.api.model.collection.ObjectCollection
 import ch.pontius.kiar.api.model.collection.PaginatedObjectCollectionResult
 import ch.pontius.kiar.api.model.config.image.ImageFormat
-import ch.pontius.kiar.api.model.institution.Institution
 import ch.pontius.kiar.api.model.status.ErrorStatus
 import ch.pontius.kiar.api.model.status.ErrorStatusException
 import ch.pontius.kiar.api.model.status.SuccessStatus
@@ -88,6 +87,7 @@ fun postCreateCollection(ctx: Context, store: TransientEntityStore) {
             this.name = request.name
             this.displayName = request.displayName
             this.description = request.description
+            this.publish = request.publish
             this.institution = institution
         }.toApi()
     }
@@ -174,6 +174,7 @@ fun putUpdateCollection(ctx: Context, store: TransientEntityStore) {
         /* Update institution. */
         collection.displayName = request.displayName
         collection.description = request.description
+        collection.publish = request.publish
 
         /* Some data can only be edited by an administrator. */
         if (currentUser.role == DbRole.ADMINISTRATOR) {
