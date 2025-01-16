@@ -361,10 +361,11 @@ fun deleteCollection(ctx: Context, store: TransientEntityStore) {
 
         /* Obtain deployment path. */
         val deployments = collection.institution.availableCollections.mapDistinct { it.solr }.flatMapDistinct { it.deployments }.asSequence().map { it.toApi() }.toList()
-        collection.delete()
 
         /* Return name and images. */
-        name to collection.images.flatMap { i -> deployments.map { d -> Paths.get(d.path).resolve("collections").resolve(d.name).resolve(i) } }
+        val ret = name to collection.images.flatMap { i -> deployments.map { d -> Paths.get(d.path).resolve("collections").resolve(d.name).resolve(i) } }
+        collection.delete()
+        ret
     }
 
     /* Try to delete associated images. */
