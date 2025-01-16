@@ -9,6 +9,7 @@ import ch.pontius.kiar.database.collection.DbObjectCollection
 import ch.pontius.kiar.database.config.solr.DbCollectionType
 import ch.pontius.kiar.database.config.solr.DbSolr
 import ch.pontius.kiar.ingester.solrj.Constants
+import ch.pontius.kiar.ingester.solrj.addField
 import io.javalin.http.Context
 import io.javalin.openapi.*
 import jetbrains.exodus.database.TransientEntityStore
@@ -97,9 +98,9 @@ private fun synchronise(config: ApacheSolrConfig, collection: String, collection
                 for (deployment in config.deployments) {
                     for (image in collection.images) {
                         if (deployment.server == null) {
-                            doc.setField(deployment.name, "/collections/${deployment.name}/$image")
+                            doc.addField(deployment.name, "/collections/${deployment.name}/$image")
                         } else {
-                            doc.setField(deployment.name, "${deployment.server}collections/${deployment.name}/$image")
+                            doc.addField(deployment.name, "${deployment.server}collections/${deployment.name}/$image")
                         }
                     }
                 }
