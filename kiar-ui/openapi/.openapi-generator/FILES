@@ -3,6 +3,7 @@ README.md
 api.module.ts
 api/apacheSolr.service.ts
 api/api.ts
+api/collection.service.ts
 api/config.service.ts
 api/entityMapping.service.ts
 api/institution.service.ts
@@ -40,9 +41,11 @@ model/jobType.ts
 model/loginRequest.ts
 model/mappingFormat.ts
 model/models.ts
+model/objectCollection.ts
 model/paginatedInstitutionResult.ts
 model/paginatedJobLogResult.ts
 model/paginatedJobResult.ts
+model/paginatedObjectCollectionResult.ts
 model/paginatedUserResult.ts
 model/rightStatement.ts
 model/role.ts

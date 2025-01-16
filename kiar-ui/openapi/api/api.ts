@@ -1,5 +1,7 @@
 export * from './apacheSolr.service';
 import { ApacheSolrService } from './apacheSolr.service';
+export * from './collection.service';
+import { CollectionService } from './collection.service';
 export * from './config.service';
 import { ConfigService } from './config.service';
 export * from './entityMapping.service';
@@ -22,4 +24,4 @@ export * from './transformer.service';
 import { TransformerService } from './transformer.service';
 export * from './user.service';
 import { UserService } from './user.service';
-export const APIS = [ApacheSolrService, ConfigService, EntityMappingService, InstitutionService, JobService, JobTemplateService, MasterdataService, OAIService, ParticipantService, SessionService, TransformerService, UserService];
+export const APIS = [ApacheSolrService, CollectionService, ConfigService, EntityMappingService, InstitutionService, JobService, JobTemplateService, MasterdataService, OAIService, ParticipantService, SessionService, TransformerService, UserService];
