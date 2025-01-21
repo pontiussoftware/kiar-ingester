@@ -293,7 +293,7 @@ fun putUpdateInstitution(ctx: Context, store: TransientEntityStore) {
     path = "/api/institutions/{id}/image",
     methods = [HttpMethod.GET],
     summary = "Gets the preview image for the provided institution.",
-    operationId = "getImage",
+    operationId = "getInstitutionImage",
     tags = ["Institution"],
     pathParams = [
         OpenApiParam(name = "id", description = "The ID of the institution the image should be retrieved for.", required = true)
@@ -347,7 +347,7 @@ fun getImageForInstitution(ctx: Context, store: TransientEntityStore) {
     path = "/api/institutions/{id}/image",
     methods = [HttpMethod.POST],
     summary = "Posts a new image for the provided institution.",
-    operationId = "postUploadImage",
+    operationId = "postInstitutionImage",
     tags = ["Institution"],
     pathParams = [
         OpenApiParam(name = "id", description = "The ID of the institution the image should be added to.", required = true)
