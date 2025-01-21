@@ -22,7 +22,7 @@ export class InstitutionImageComponent implements OnInit {
   constructor(private institutionService: InstitutionService) { }
 
   public ngOnInit() {
-    this.institutionService.getImage(this.institutionId).pipe(
+    this.institutionService.getInstitutionImage(this.institutionId).pipe(
         catchError(err => of(null))
     ).subscribe({
       next: (imageData) => {

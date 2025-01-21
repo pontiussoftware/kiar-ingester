@@ -431,7 +431,7 @@
       "post" : {
         "tags" : [ "Collection" ],
         "summary" : "Posts a new image for the provided collection.",
-        "operationId" : "postUploadImage",
+        "operationId" : "postCollectionImage",
         "parameters" : [ {
           "name" : "id",
           "in" : "path",
@@ -589,8 +589,8 @@
     "/api/collections/{id}/{name}" : {
       "get" : {
         "tags" : [ "Collection" ],
-        "summary" : "Gets the preview image for the provided institution.",
-        "operationId" : "getImage",
+        "summary" : "Gets the preview image for the provided collection.",
+        "operationId" : "getCollectionImage",
         "parameters" : [ {
           "name" : "id",
           "in" : "path",
@@ -626,6 +626,86 @@
                 "schema" : {
                   "type" : "string",
                   "format" : "binary"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorStatus"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Forbidden",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorStatus"
+                }
+              }
+            }
+          },
+          "404" : {
+            "description" : "Not Found",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorStatus"
+                }
+              }
+            }
+          },
+          "500" : {
+            "description" : "Server Error",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorStatus"
+                }
+              }
+            }
+          }
+        },
+        "deprecated" : false,
+        "security" : [ ]
+      },
+      "delete" : {
+        "tags" : [ "Collection" ],
+        "summary" : "Deletes the preview image for the provided collection.",
+        "operationId" : "deleteCollectionImage",
+        "parameters" : [ {
+          "name" : "id",
+          "in" : "path",
+          "description" : "The ID of the collection the image should be deleted for.",
+          "required" : true,
+          "deprecated" : false,
+          "allowEmptyValue" : false,
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "name" : "name",
+          "in" : "path",
+          "description" : "The name of the image to delete.",
+          "required" : true,
+          "deprecated" : false,
+          "allowEmptyValue" : false,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/SuccessStatus"
                 }
               }
             }
@@ -1242,7 +1322,7 @@
       "get" : {
         "tags" : [ "Institution" ],
         "summary" : "Gets the preview image for the provided institution.",
-        "operationId" : "getImage",
+        "operationId" : "getInstitutionImage",
         "parameters" : [ {
           "name" : "id",
           "in" : "path",
@@ -1319,7 +1399,7 @@
       "post" : {
         "tags" : [ "Institution" ],
         "summary" : "Posts a new image for the provided institution.",
-        "operationId" : "postUploadImage",
+        "operationId" : "postInstitutionImage",
         "parameters" : [ {
           "name" : "id",
           "in" : "path",
@@ -4400,6 +4480,12 @@
           "description" : {
             "type" : "string"
           },
+          "filters" : {
+            "type" : "array",
+            "items" : {
+              "type" : "string"
+            }
+          },
           "images" : {
             "type" : "array",
             "items" : {
@@ -4407,7 +4493,7 @@
             }
           }
         },
-        "required" : [ "name", "displayName", "publish", "institutionName", "description", "images" ]
+        "required" : [ "name", "displayName", "publish", "institutionName", "description", "filters", "images" ]
       },
       "PaginatedObjectCollectionResult" : {
         "type" : "object",

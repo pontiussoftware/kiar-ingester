@@ -163,7 +163,7 @@ export class InstitutionDialogComponent {
         const target = event.target as HTMLInputElement;
         const file: File | null = target.files?.[0] || null;
         if (file) {
-          this.institution.postUploadImage(this.institutionId!!, file).subscribe({
+          this.institution.postInstitutionImage(this.institutionId!!, file).subscribe({
             next: () => {
               this.snackBar.open("Successfully uploaded institution image.", "Dismiss", {duration: 2000} as MatSnackBarConfig)
               this.reload(this.institutionId!!)

@@ -25,7 +25,7 @@ export class CollectionImageComponent implements OnInit {
   constructor(private collectionService: CollectionService) { }
 
   public ngOnInit() {
-    this.collectionService.getImage(this.collectionId, this.name).pipe(
+    this.collectionService.getCollectionImage(this.collectionId, this.name).pipe(
         catchError(err => of(null))
     ).subscribe({
       next: (imageData) => {

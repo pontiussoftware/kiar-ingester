@@ -68,6 +68,7 @@ export class CollectionDialogComponent {
         description: this.formControl.get('description')?.value,
         institutionName: this.formControl.get('institutionName')?.value,
         publish: this.formControl.get('publish')?.value,
+        filters: [],
         images: [],
       } as ObjectCollection
 
@@ -103,7 +104,7 @@ export class CollectionDialogComponent {
         const target = event.target as HTMLInputElement;
         const file: File | null = target.files?.[0] || null;
         if (file) {
-          this.collectionService.postUploadImage(this.collectionId!!, file).subscribe({
+          this.collectionService.postCollectionImage(this.collectionId!!, file).subscribe({
             next: () => {
               this.snackBar.open("Successfully uploaded collection image.", "Dismiss", {duration: 2000} as MatSnackBarConfig)
               this.reload(this.collectionId!!)
