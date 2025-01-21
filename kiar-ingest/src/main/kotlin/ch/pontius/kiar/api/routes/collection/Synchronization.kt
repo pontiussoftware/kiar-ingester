@@ -92,6 +92,9 @@ private fun synchronise(config: ApacheSolrConfig, collection: String, collection
                 doc.setField(Constants.FIELD_NAME_DISPLAY, collection.displayName)
                 doc.setField("name", collection.name)
                 doc.setField("institution", collection.institution.name)
+                collection.filters.forEach {
+                    doc.addField("filters", it)
+                }
                 doc.setField("description", collection.description)
 
                 /* Add entries for institution image. */

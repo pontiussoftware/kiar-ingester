@@ -7,7 +7,7 @@
             <mat-error *ngIf="formControl.get('name')?.hasError('minlength')">Minimum length is 10.</mat-error>
         </mat-form-field>
 
-        <mat-form-field appearance="fill" [style.width]="'40%'">
+        <mat-form-field appearance="fill" [style.width]="'30%'">
             <mat-label i18n="@@LabelInstitution">Institution</mat-label>
             <mat-select formControlName="institutionName">
                 <mat-option *ngFor="let institution of (institutionNames | async)" [value]="institution">
@@ -25,6 +25,21 @@
             <input matInput type="text" formControlName="displayName">
             <mat-error *ngIf="formControl.get('displayName')?.hasError('minlength')">Minimum length is 10.</mat-error>
         </mat-form-field>
+
+        <div formArrayName="filters">
+            <div *ngFor="let filter of filters; let i = index" >
+                <mat-form-field appearance="fill" [style.width]="'85%'">
+                    <mat-label i18n="@@LabelFilter">Filter</mat-label>
+                    <input matInput type="text" [formControl]="filter">
+                </mat-form-field>
+                <button *ngIf="i == filters.length - 1" mat-icon-button (click)="addFilter()">
+                    <mat-icon>add</mat-icon>
+                </button>
+                <button *ngIf="filters.length > 1" mat-icon-button (click)="removeFilter(i)">
+                    <mat-icon>remove</mat-icon>
+                </button>
+            </div>
+        </div>
 
         <mat-form-field appearance="fill" [style.width]="'100%'">
             <mat-label i18n="@@LabelDescription">Description</mat-label>

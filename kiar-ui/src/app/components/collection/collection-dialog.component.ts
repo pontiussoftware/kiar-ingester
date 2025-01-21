@@ -1,5 +1,5 @@
 import {Component, ElementRef, Inject, ViewChild} from "@angular/core";
-import {FormControl, FormGroup, Validators} from "@angular/forms";
+import {FormArray, FormControl, FormGroup, Validators} from "@angular/forms";
 import {
   CollectionService,
   InstitutionService,
@@ -43,7 +43,10 @@ export class CollectionDialogComponent {
       displayName: new FormControl(null, [Validators.required, Validators.minLength(5)]),
       description: new FormControl(null, [Validators.required]),
       institutionName: new FormControl(null, [Validators.required]),
-      publish: new FormControl(true, [Validators.required])
+      publish: new FormControl(true, [Validators.required]),
+      filters: new FormArray([
+          new FormControl(null, [Validators.required]),
+      ], [Validators.minLength(1)]),
     })
 
     /* Get list of available participants. */
@@ -53,6 +56,29 @@ export class CollectionDialogComponent {
     if (this.collectionId) {
       this.reload(this.collectionId!!)
     }
+  }
+
+  /**
+   * Lists filter criteria in this form.
+   */
+  get filters(): Array<FormControl> {
+    return (this.formControl.get('filters') as FormArray<FormControl>).controls
+  }
+
+  /**
+   * Adds a new filter criterion to the form.
+   */
+  public addFilter() {
+    (this.formControl.get('filters') as FormArray<FormControl>).push(new FormControl(null, [Validators.required, Validators.minLength(5)]));
+  }
+
+  /**
+   * Removes the filter criterion at the given index.
+   *
+   * @param index Of the criterion to remove.
+   */
+  public removeFilter(index: number) {
+    (this.formControl.get('filters') as FormArray<FormControl>).removeAt(index);
   }
 
   /**
@@ -68,7 +94,7 @@ export class CollectionDialogComponent {
         description: this.formControl.get('description')?.value,
         institutionName: this.formControl.get('institutionName')?.value,
         publish: this.formControl.get('publish')?.value,
-        filters: [],
+        filters: this.filters.map(f => f.value),
         images: [],
       } as ObjectCollection
 
@@ -131,6 +157,13 @@ export class CollectionDialogComponent {
         this.formControl.get('description')?.setValue(collection.description)
         this.formControl.get('institutionName')?.setValue(collection.institutionName)
         this.formControl.get('publish')?.setValue(collection.publish)
+
+        /* Update filters. */
+        const filters = (this.formControl.get('filters') as FormArray<FormControl>)
+        filters.clear()
+        for (const filter of collection.filters) {
+          filters.push(new FormControl(filter, [Validators.required, Validators.minLength(5)]));
+        }
 
         /* Update images. */
         this.images = collection.images
