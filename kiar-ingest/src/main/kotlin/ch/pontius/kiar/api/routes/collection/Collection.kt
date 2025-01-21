@@ -88,6 +88,7 @@ fun postCreateCollection(ctx: Context, store: TransientEntityStore) {
             this.displayName = request.displayName
             this.description = request.description
             this.publish = request.publish
+            this.filters = request.filters.toSet()
             this.institution = institution
         }.toApi()
     }
@@ -175,6 +176,7 @@ fun putUpdateCollection(ctx: Context, store: TransientEntityStore) {
         collection.displayName = request.displayName
         collection.description = request.description
         collection.publish = request.publish
+        collection.filters = request.filters.toSet()
 
         /* Some data can only be edited by an administrator. */
         if (currentUser.role == DbRole.ADMINISTRATOR) {
@@ -193,7 +195,7 @@ fun putUpdateCollection(ctx: Context, store: TransientEntityStore) {
     path = "/api/collections/{id}/{name}",
     methods = [HttpMethod.GET],
     summary = "Gets the preview image for the provided collection.",
-    operationId = "getImage",
+    operationId = "getCollectionImage",
     tags = ["Collection"],
     pathParams = [
         OpenApiParam(name = "id", description = "The ID of the collection the image should be retrieved for.", required = true),
@@ -246,7 +248,7 @@ fun getImageForCollection(ctx: Context, store: TransientEntityStore) {
     path = "/api/collections/{id}/{name}",
     methods = [HttpMethod.DELETE],
     summary = "Deletes the preview image for the provided collection.",
-    operationId = "deleteImage",
+    operationId = "deleteCollectionImage",
     tags = ["Collection"],
     pathParams = [
         OpenApiParam(name = "id", description = "The ID of the collection the image should be deleted for.", required = true),
@@ -301,7 +303,7 @@ fun deleteImageForCollection(ctx: Context, store: TransientEntityStore) {
     path = "/api/collections/{id}",
     methods = [HttpMethod.POST],
     summary = "Posts a new image for the provided collection.",
-    operationId = "postUploadImage",
+    operationId = "postCollectionImage",
     tags = ["Collection"],
     pathParams = [
         OpenApiParam(name = "id", description = "The ID of the collection the image should be added to.", required = true)

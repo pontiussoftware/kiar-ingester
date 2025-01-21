@@ -16,5 +16,6 @@ data class ObjectCollection(
     val publish: Boolean,
     val institutionName: String,
     val description: String,
+    val filters: List<String> = emptyList(),
     val images: List<String> = emptyList()
 )

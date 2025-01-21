@@ -30,6 +30,9 @@ class DbObjectCollection(entity: Entity) : XdEntity(entity) {
     /** A brief description for this [DbObjectCollection]. */
     var description by xdRequiredStringProp(trimmed = true)
 
+    /** The filters associated with this [DbObjectCollection]. */
+    var filters by xdSetProp<DbObjectCollection, String>()
+
     /** The images associated with this [DbObjectCollection]. */
     var images by xdSetProp<DbObjectCollection, String>()
 
@@ -47,6 +50,7 @@ class DbObjectCollection(entity: Entity) : XdEntity(entity) {
         publish = this.publish,
         institutionName = this.institution.name,
         description = this.description,
+        filters = this.filters.toList(),
         images = this.images.toList()
     )
 }
