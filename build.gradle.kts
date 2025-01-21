@@ -8,7 +8,7 @@ plugins {
     id("org.jetbrains.kotlin.plugin.serialization") version "2.1.0"
 
     /* OpenAPI Generator for Frontend internal API generation */
-    id ("org.openapi.generator") version "7.10.0"
+    id ("org.openapi.generator") version "7.11.0"
 
     id ("de.undercouch.download") version "5.6.0"
 
@@ -67,35 +67,17 @@ subprojects {
 
 val fullOAS = "http://localhost:7070/swagger-docs"
 val oasFile = "${project.projectDir}/doc/oas.json"
-val outputDir = "${project.projectDir}/kiar-ui/openapi"
 
-tasks.register("generateOpenApi") {
-    doLast {
-        val configOptions = mapOf(
-            "npmName" to "@kiar-openapi/api",
-            "ngVersion" to "16.0.2",
-            "snapshot" to "true",
-            "enumPropertyNaming" to "original"
-        )
-
-        exec {
-            commandLine(
-                "openapi-generator-cli",
-                "generate",
-                "-g",
-                "typescript-angular",
-                "-i",
-                oasFile,
-                "-o",
-                outputDir,
-                "--skip-validate-spec",
-                "--additional-properties",
-                configOptions.entries.joinToString(",") { "${it.key}=${it.value}" }
-            )
-            standardOutput = System.out
-            errorOutput = System.err
-        }
-    }
+openApiGenerate {
+    generatorName.set("typescript-angular")
+    inputSpec.set(oasFile)
+    outputDir.set("${project.projectDir}/kiar-ui/openapi")
+    configOptions.set(mapOf(
+        "npmName" to "@kiar-openapi/api",
+        "ngVersion" to "16.0.2",
+        "snapshot" to "true",
+        "enumPropertyNaming" to "original"
+    ))
 }
 
 val generateOAS by tasks.registering(Download::class) {
