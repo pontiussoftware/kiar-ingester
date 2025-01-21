@@ -77,8 +77,16 @@ export class EntityMappingComponent implements AfterViewInit {
    */
   public moveAttributeMapping(index: number, newIndex: number): void {
     const entry = this.attributes.at(index)
-    this.attributes.removeAt(index)
-    this.attributes.insert(newIndex, entry)
+    if (newIndex < 0) {
+      this.attributes.removeAt(index)
+      this.attributes.push(entry)
+    } else if (newIndex > this.attributes.length - 1) {
+      this.attributes.removeAt(index)
+      this.attributes.insert(0, entry)
+    } else {
+      this.attributes.removeAt(index)
+      this.attributes.insert(newIndex, entry)
+    }
   }
 
   /**
