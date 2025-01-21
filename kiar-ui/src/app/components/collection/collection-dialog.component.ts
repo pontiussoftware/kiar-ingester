@@ -164,6 +164,9 @@ export class CollectionDialogComponent {
         for (const filter of collection.filters) {
           filters.push(new FormControl(filter, [Validators.required, Validators.minLength(5)]));
         }
+        if (filters.length == 0) {
+          filters.push(new FormControl(null, [Validators.required, Validators.minLength(5)]));
+        }
 
         /* Update images. */
         this.images = collection.images
