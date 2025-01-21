@@ -161,7 +161,7 @@ export class CollectionDialogComponent {
         /* Update filters. */
         const filters = (this.formControl.get('filters') as FormArray<FormControl>)
         filters.clear()
-        for (const filter of collection.filters) {
+        for (const filter of (collection.filters ?? [])) {
           filters.push(new FormControl(filter, [Validators.required, Validators.minLength(5)]));
         }
         if (filters.length == 0) {
