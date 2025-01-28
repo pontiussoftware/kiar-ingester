@@ -10,6 +10,8 @@ import ch.pontius.kiar.ingester.processors.ProcessingContext
 import ch.pontius.kiar.ingester.processors.sources.Source
 import ch.pontius.kiar.ingester.solrj.*
 import com.sksamuel.scrimage.ImmutableImage
+import com.sksamuel.scrimage.metadata.Directory
+import com.sksamuel.scrimage.metadata.ImageMetadata
 import com.sksamuel.scrimage.nio.ImageWriter
 import com.sksamuel.scrimage.nio.JpegWriter
 import com.sksamuel.scrimage.nio.PngWriter
@@ -28,12 +30,15 @@ import kotlin.Comparator
  * The [SolrInputDocument] is updated to contain the path to the new file.
  *
  * @author Ralph Gasser
- * @version 1.4.1
+ * @version 1.4.2
  */
 class ImageDeployment(override val input: Source<SolrInputDocument>, private val deployments: List<ImageDeployment>, val test: Boolean = false): Transformer<SolrInputDocument, SolrInputDocument> {
 
     companion object {
         private val LOGGER = LogManager.getLogger(ImageDeployment::class.java)
+
+        /* Set of EXIF tags that should be transferred. */
+        private val TRANSFERABLE_EXIF_TAG = setOf("XMLPacket", "Title", "Caption", "Artist", "Copyright")
     }
 
     /**
@@ -68,6 +73,7 @@ class ImageDeployment(override val input: Source<SolrInputDocument>, private val
                 var counter = 1
                 for (provider in providers) {
                     val original = provider.open() ?: continue
+                    val metadata = extractTransferableMetadata(original)
                     for (deployment in this@ImageDeployment.deployments) {
                         val imageName = "${it.uuid()}_%03d.jpg".format(counter)
                         val deployTo = Paths.get(deployment.path)
@@ -81,12 +87,12 @@ class ImageDeployment(override val input: Source<SolrInputDocument>, private val
                                 context.log(JobLog(null, it.uuid(), null, JobLogContext.RESOURCE, JobLogLevel.WARNING, "Image is smaller than specified maximum size (max = ${deployment.maxSize}, w = ${original.width}, h = ${original.height})."))
                                 original
                             }
-                            original.width > deployment.maxSize ->  original.scaleToWidth(deployment.maxSize)
+                            original.width > deployment.maxSize -> original.scaleToWidth(deployment.maxSize)
                             else ->  original.scaleToHeight(deployment.maxSize)
                         }
 
                         /* Perform conversion. */
-                        if (this@ImageDeployment.test || this.store(resized, writers[deployment]!!, tmp)) {
+                        if (this@ImageDeployment.test || this.store(resized, metadata, writers[deployment]!!, tmp)) {
                             if (deployment.server == null) {
                                 it.addField(deployment.name, deployTo.relativize(actual).toString())
                             } else {
@@ -101,9 +107,6 @@ class ImageDeployment(override val input: Source<SolrInputDocument>, private val
 
                     /* Increment counter. */
                     counter += 1
-
-                    /* Extract metadata from image. */
-                    this.extractMetadata(image = original, document = it)
                 }
                 it.setField(Field.IMAGECOUNT, counter - 1)
             } else {
@@ -135,11 +138,12 @@ class ImageDeployment(override val input: Source<SolrInputDocument>, private val
      * Stores the provided [ImmutableImage] under the provided [Path].
      *
      * @param image The [ImmutableImage] to store.
+     * @param metadata The [ImageMetadata] to write.
      * @param writer The [ImageWriter] to use.
      * @param path The [Path] to store the image under.
      */
-    private fun store(image: ImmutableImage, writer: ImageWriter, path: Path): Boolean = try {
-        image.output(writer, path)
+    private fun store(image: ImmutableImage, metadata: ImageMetadata, writer: ImageWriter, path: Path): Boolean = try {
+        Files.newOutputStream(path).use { writer.write(image, metadata, it) }
         true
     } catch (e: IOException) {
         LOGGER.error("Failed to save image $path due to IO exception: ${e.message}")
@@ -147,46 +151,17 @@ class ImageDeployment(override val input: Source<SolrInputDocument>, private val
     }
 
     /**
-     * Extracts metadata from the provided [ImmutableImage].
+     * Extracts relevant EXIF and IPTC metadata from [ImmutableImage].
      *
      * @param image The [ImmutableImage] to extract metadata from.
-     * @param document The [SolrInputDocument] to enrich with metadata.
+     * @return [ImageMetadata]
      */
-    private fun extractMetadata(image: ImmutableImage, document: SolrInputDocument) {
-        val metadata = image.metadata
-        var artist: String = ""
-        var copyright: String = ""
-
-        /* Extract EXIF & IPTC metadata for media file. */
-        for (directory in metadata.directories) {
-            when (directory.name) {
-                "Exif IFD0",
-                "Exif IFD1"-> {
-                    for (tag in directory.tags) {
-                        if (tag.name == "Artist") {
-                            artist = tag.value
-                        }
-                        if (tag.name == "Copyright") {
-                            copyright = tag.value
-                        }
-                    }
-                }
-                "IPTC" -> {
-                    for (tag in directory.tags) {
-                        if (tag.name == "By-line") {
-                            artist = tag.value
-                        }
-                        if (tag.name == "Copyright Notice") {
-                            copyright = tag.value
-                        }
-                    }
-                }
-                else -> continue
-            }
+    private fun extractTransferableMetadata(image: ImmutableImage) = ImageMetadata(image.metadata.directories.mapNotNull { directory ->
+        when (directory.name) {
+            "Exif IFD0",
+            "Exif IFD1"-> Directory(directory.name, directory.tags.filter { it.name in TRANSFERABLE_EXIF_TAG }.toTypedArray())
+            "IPTC" -> Directory(directory.name, directory.tags)
+            else -> null
         }
-
-        /* Add metadata to document. */
-        document.addField("_images_metadata_artist_", artist)
-        document.addField("_images_metadata_copyright_", copyright)
-    }
+    }.toTypedArray())
 }
