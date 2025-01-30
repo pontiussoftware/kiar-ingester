@@ -2,6 +2,7 @@ val appCompatVersion: String by project
 
 val bcryptVersion: String by project
 val cliktVersion: String by project
+val commonsImagingVersion: String by project
 val javalinVersion: String by project
 val jacksonVersion: String by project
 val jlineVersion: String by project
@@ -65,6 +66,9 @@ dependencies {
     /** Scrimage for image processing. */
     implementation("com.sksamuel.scrimage:scrimage-core:$scrimageVersion")
     implementation("com.sksamuel.scrimage:scrimage-formats-extra:$scrimageVersion")
+
+    /** Apache Commons imaging for metadata processing. */
+    implementation("org.apache.commons:commons-imaging:$commonsImagingVersion")
 
     /** Javalin + Open API. */
     implementation("io.javalin:javalin:$javalinVersion")
