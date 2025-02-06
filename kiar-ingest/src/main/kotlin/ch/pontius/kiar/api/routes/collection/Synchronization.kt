@@ -9,7 +9,7 @@ import ch.pontius.kiar.database.collection.DbObjectCollection
 import ch.pontius.kiar.database.config.solr.DbCollectionType
 import ch.pontius.kiar.database.config.solr.DbSolr
 import ch.pontius.kiar.ingester.solrj.Constants
-import ch.pontius.kiar.ingester.solrj.addField
+import com.sksamuel.scrimage.ImmutableImage
 import io.javalin.http.Context
 import io.javalin.openapi.*
 import jetbrains.exodus.database.TransientEntityStore
@@ -17,6 +17,7 @@ import kotlinx.dnq.query.*
 import org.apache.logging.log4j.LogManager
 import org.apache.solr.client.solrj.impl.Http2SolrClient
 import org.apache.solr.common.SolrInputDocument
+import java.nio.file.Paths
 
 private val LOGGER = LogManager.getLogger()
 
@@ -99,11 +100,19 @@ private fun synchronise(config: ApacheSolrConfig, collection: String, collection
 
                 /* Add entries for institution image. */
                 for (deployment in config.deployments) {
-                    for (image in collection.images) {
-                        if (deployment.server == null) {
-                            doc.addField(deployment.name, "/collections/${deployment.name}/$image")
-                        } else {
-                            doc.addField(deployment.name, "${deployment.server}collections/${deployment.name}/$image")
+                    for (imageName in collection.images) {
+                        val path = Paths.get(deployment.path).resolve(imageName)
+                        try {
+                            val image = ImmutableImage.loader().fromPath(path)
+                            if (deployment.server == null) {
+                                doc.addField(deployment.name, "/collections/${deployment.name}/$image")
+                            } else {
+                                doc.addField(deployment.name, "${deployment.server}collections/${deployment.name}/$image")
+                            }
+                            doc.addField("${deployment.name}height_", image.height)
+                            doc.addField("${deployment.name}width_", image.width)
+                        } catch (e: Throwable) {
+                            LOGGER.error("Failed to load image from path: $path")
                         }
                     }
                 }
