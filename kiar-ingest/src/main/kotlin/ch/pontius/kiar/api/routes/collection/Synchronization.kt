@@ -105,9 +105,9 @@ private fun synchronise(config: ApacheSolrConfig, collection: String, collection
                         try {
                             val image = ImmutableImage.loader().fromPath(path)
                             if (deployment.server == null) {
-                                doc.addField(deployment.name, "/collections/${deployment.name}/$image")
+                                doc.addField(deployment.name, "/collections/${deployment.name}/$imageName")
                             } else {
-                                doc.addField(deployment.name, "${deployment.server}collections/${deployment.name}/$image")
+                                doc.addField(deployment.name, "${deployment.server}collections/${deployment.name}/$imageName")
                             }
                             doc.addField("${deployment.name}height_", image.height)
                             doc.addField("${deployment.name}width_", image.width)
