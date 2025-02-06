@@ -101,7 +101,7 @@ private fun synchronise(config: ApacheSolrConfig, collection: String, collection
                 /* Add entries for institution image. */
                 for (deployment in config.deployments) {
                     for (imageName in collection.images) {
-                        val path = Paths.get(deployment.path).resolve("collections").resolve(imageName)
+                        val path = Paths.get(deployment.path).resolve("collections").resolve(deployment.name).resolve(imageName)
                         try {
                             val image = ImmutableImage.loader().fromPath(path)
                             if (deployment.server == null) {
