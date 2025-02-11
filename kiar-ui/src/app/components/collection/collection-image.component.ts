@@ -4,7 +4,8 @@ import { catchError, of } from "rxjs";
 
 @Component({
   selector: 'kiar-collection-image',
-  template: '<img *ngIf="imageUrl" [src]="imageUrl" [width]="width" [height]="height" [style.object-fit]="\'contain\'" />'
+  templateUrl: 'collection-image.component.html',
+  styleUrls: ['collection-image.component.scss']
 })
 export class CollectionImageComponent implements OnInit {
   /** The ID to fetch image for. */
@@ -22,11 +23,20 @@ export class CollectionImageComponent implements OnInit {
   /** The generate image URL. */
   public imageUrl: string | null = null;
 
+  /** The overlay state. */
+  public showOverlay: boolean = false;
+
   constructor(private collectionService: CollectionService) { }
 
+  /**
+   * Loads the image and displays it.
+   */
   public ngOnInit() {
     this.collectionService.getCollectionImage(this.collectionId, this.name).pipe(
-        catchError(err => of(null))
+        catchError(err => {
+          console.log('Failed to load image.', err)
+          return of(null)
+        })
     ).subscribe({
       next: (imageData) => {
         if (imageData) {
@@ -34,5 +44,21 @@ export class CollectionImageComponent implements OnInit {
         }
       }
     });
+  }
+
+  /**
+   * Deletes the image.
+   */
+  public delete() {
+    this.collectionService.deleteCollectionImage(this.collectionId, this.name).pipe(
+        catchError(err => {
+          console.log('Failed to delete image', err)
+          return of(null)
+        })
+    ).subscribe({
+      next: () => {
+        this.imageUrl = null;
+      }
+    })
   }
 }

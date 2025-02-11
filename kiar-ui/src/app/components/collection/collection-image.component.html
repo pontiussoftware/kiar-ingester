@@ -1,0 +1,6 @@
+<div *ngIf="imageUrl" class="image-container" (mouseenter)="showOverlay = true" (mouseleave)="showOverlay = false">
+    <img [src]="imageUrl" [width]="width" [height]="height" [style.object-fit]="'contain'" />
+    <div class="overlay" *ngIf="showOverlay" (click)="delete()">
+        <mat-icon>delete</mat-icon>
+    </div>
+</div>
