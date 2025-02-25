@@ -93,12 +93,20 @@ object ImageHandler {
                     val newRecords: MutableList<IptcRecord> = LinkedList()
                     for (tag in directory.tags) {
                         when (tag.name) {
-                            "Keywords" -> {
-                                val record = IptcRecord(IptcTypes.KEYWORDS, tag.value)
+                            "Object Name" -> {
+                                val record = IptcRecord(IptcTypes.OBJECT_NAME, tag.value)
                                 newRecords.add(record)
                             }
                             "Headline" -> {
                                 val record = IptcRecord(IptcTypes.HEADLINE, tag.value)
+                                newRecords.add(record)
+                            }
+                            "Caption/Abstract" -> {
+                                val record = IptcRecord(IptcTypes.CAPTION_ABSTRACT, tag.value)
+                                newRecords.add(record)
+                            }
+                            "Keywords" -> {
+                                val record = IptcRecord(IptcTypes.KEYWORDS, tag.value)
                                 newRecords.add(record)
                             }
                             "Byline",
