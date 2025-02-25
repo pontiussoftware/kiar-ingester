@@ -10,6 +10,7 @@ import ch.pontius.kiar.api.routes.session.currentUser
 import ch.pontius.kiar.database.collection.DbObjectCollection
 import ch.pontius.kiar.database.institution.DbInstitution
 import ch.pontius.kiar.database.institution.DbRole
+import ch.pontius.kiar.utilities.ImageHandler
 import com.sksamuel.scrimage.ImmutableImage
 import com.sksamuel.scrimage.nio.JpegWriter
 import io.javalin.http.BadRequestResponse
@@ -374,7 +375,7 @@ fun postUploadImageForCollection(ctx: Context, store: TransientEntityStore) {
                     }
 
                     /* Write image. */
-                    scaled.output(JpegWriter.Default, path)
+                    ImageHandler.store(scaled, image.metadata, JpegWriter.Default, path)
                 }  catch (e: IOException) {
                     throw ErrorStatusException(400, "Could not deploy image.")
                 }

@@ -12,6 +12,7 @@ import ch.pontius.kiar.database.institution.DbParticipant
 import ch.pontius.kiar.database.institution.DbRole
 import ch.pontius.kiar.database.masterdata.DbRightStatement
 import ch.pontius.kiar.utilities.Geocoding
+import ch.pontius.kiar.utilities.ImageHandler
 import ch.pontius.kiar.utilities.mapToArray
 import com.sksamuel.scrimage.ImmutableImage
 import com.sksamuel.scrimage.nio.JpegWriter
@@ -424,7 +425,7 @@ fun postUploadImageForInstitution(ctx: Context, store: TransientEntityStore) {
                     }
 
                     /* Write image. */
-                    scaled.output(JpegWriter.Default, path)
+                    ImageHandler.store(scaled, image.metadata, JpegWriter.Default, path)
                 }  catch (e: IOException) {
                     throw ErrorStatusException(400, "Could not deploy image.")
                 }
