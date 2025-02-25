@@ -49,7 +49,7 @@
         <hr *ngIf="images.length > 0"/>
 
         <div *ngIf="collectionId" class="image-gallery">
-            <kiar-collection-image *ngFor="let image of images" [collectionId]="collectionId" [name]="image"></kiar-collection-image>
+            <kiar-collection-image *ngFor="let image of images" [collectionId]="collectionId" [name]="image" [edit]="true"></kiar-collection-image>
         </div>
     </form>
 </div>

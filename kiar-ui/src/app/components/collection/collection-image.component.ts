@@ -14,6 +14,9 @@ export class CollectionImageComponent implements OnInit {
   /** The name of the image. */
   @Input() name: string;
 
+  /** The edit status of the image. */
+  @Input() edit: boolean = false;
+
   /** The width of th image. */
   @Input() width: number = 100;
 
