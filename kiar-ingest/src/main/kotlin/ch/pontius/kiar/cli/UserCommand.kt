@@ -8,6 +8,7 @@ import ch.pontius.kiar.database.institution.DbRole
 import ch.pontius.kiar.database.institution.DbUser
 import ch.pontius.kiar.utilities.validatePassword
 import com.github.ajalt.clikt.core.CliktCommand
+import com.github.ajalt.clikt.core.Context
 import com.github.ajalt.clikt.core.NoOpCliktCommand
 import com.github.ajalt.clikt.core.subcommands
 import com.github.ajalt.clikt.parameters.options.*
@@ -22,12 +23,16 @@ import org.mindrot.jbcrypt.BCrypt
  * A collection of [CliktCommand]s for [DbUser] management
  *
  * @author Ralph Gasser
- * @version 2.0.0
+ * @version 2.0.1
  */
-class UserCommand(store: TransientEntityStore) : NoOpCliktCommand(name = "user", help = "Commands surrounding the management of users.", printHelpOnEmptyArgs = true) {
+class UserCommand(store: TransientEntityStore) : NoOpCliktCommand(name = "user") {
     init {
         this.subcommands(Create(store), Delete(store), List(store), Roles(store) )
     }
+
+    override val printHelpOnEmptyArgs = true
+
+    override fun help(context: Context) = "Commands surrounding the management of users."
 
     override fun aliases() = mapOf(
         "ls" to listOf("list"),
@@ -40,7 +45,7 @@ class UserCommand(store: TransientEntityStore) : NoOpCliktCommand(name = "user",
     /**
      * [CliktCommand] to create a new [DbUser].
      */
-    inner class Create(private val store: TransientEntityStore) : CliktCommand(name = "create", help = "Creates a new user.", printHelpOnEmptyArgs = true) {
+    inner class Create(private val store: TransientEntityStore) : CliktCommand(name = "create") {
         /** The name of the newly created user. */
         private val username: String by option("-u", "--username", help = "Username of at least $MIN_LENGTH_USERNAME characters length. Must be unique!")
             .required()
@@ -53,6 +58,10 @@ class UserCommand(store: TransientEntityStore) : NoOpCliktCommand(name = "user",
 
         /** The desired [DbRole] of the newly created user. */
         private val role: Role by option("-r", "--role", help = "Role of the new user.").convert { Role.valueOf(it) }.required()
+
+        override val printHelpOnEmptyArgs = true
+
+        override fun help(context: Context) = "Creates a new user."
 
         override fun run() {
             val username = this.store.transactional {
@@ -76,8 +85,13 @@ class UserCommand(store: TransientEntityStore) : NoOpCliktCommand(name = "user",
     /**
      * [CliktCommand] to delete a [DbUser].
      */
-    inner class Delete(private val store: TransientEntityStore) : CliktCommand(name = "delete", help = "Deletes an existing user.", printHelpOnEmptyArgs = true) {
+    inner class Delete(private val store: TransientEntityStore) : CliktCommand(name = "delete") {
         private val username: String by option("-u", "--username", help = "Username of the user to be deleted.").required()
+
+        override val printHelpOnEmptyArgs = true
+
+        override fun help(context: Context) = "Deletes an existing user."
+
         override fun run() {
             this.store.transactional {
                 val user = DbUser.filter { it.name eq this@Delete.username }.firstOrNull()
@@ -95,7 +109,11 @@ class UserCommand(store: TransientEntityStore) : NoOpCliktCommand(name = "user",
     /**
      * [CliktCommand] to list all [DbUser]s.
      */
-    inner class List(private val store: TransientEntityStore): CliktCommand(name = "list", help = "Lists all Users") {
+    inner class List(private val store: TransientEntityStore): CliktCommand(name = "list") {
+        override val printHelpOnEmptyArgs = true
+
+        override fun help(context: Context) = "Lists all users."
+
         override fun run() = this.store.transactional(true) {
             val users = DbUser.filter { it.inactive eq false }.asSequence()
             println("Available users:")
@@ -122,9 +140,13 @@ class UserCommand(store: TransientEntityStore) : NoOpCliktCommand(name = "user",
     /**
      * [CliktCommand] to list all [DbRole]s.
      */
-    inner class Roles(private val store: TransientEntityStore): CliktCommand(name = "roles", help = "Lists all available roles.") {
+    inner class Roles(private val store: TransientEntityStore): CliktCommand(name = "roles") {
+        override val printHelpOnEmptyArgs = true
+
+        override fun help(context: Context) = "Lists all available roles."
+
         override fun run() = this.store.transactional(true) {
-            println("Available roles: ${Role.values().joinToString(", ")}")
+            println("Available roles: ${Role.entries.joinToString(", ")}")
         }
     }
 }

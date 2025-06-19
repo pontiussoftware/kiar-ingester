@@ -2,7 +2,10 @@ package ch.pontius.kiar.cli
 
 import ch.pontius.kiar.config.Config
 import ch.pontius.kiar.ingester.IngesterServer
+import com.github.ajalt.clikt.core.CliktCommand
+import com.github.ajalt.clikt.core.Context
 import com.github.ajalt.clikt.core.NoOpCliktCommand
+import com.github.ajalt.clikt.core.parse
 import com.github.ajalt.clikt.core.subcommands
 import jetbrains.exodus.database.TransientEntityStore
 import org.jline.reader.EndOfFileException
@@ -16,7 +19,7 @@ import java.util.regex.Pattern
  * The Cli main-class.
  *
  * @author Ralph Gasser
- * @version 1.0.0
+ * @version 1.0.1
  */
 class Cli(config: Config, server: IngesterServer, store: TransientEntityStore) {
 
@@ -29,15 +32,14 @@ class Cli(config: Config, server: IngesterServer, store: TransientEntityStore) {
     }
 
     /** Basic [NoOpCliktCommand] that contains all commands supported by this [Cli]. */
-    private val clikt = object : NoOpCliktCommand(name = "ingester", help = "The base command for all CLI commands.") {
+    private val clikt: CliktCommand = object : NoOpCliktCommand(name = "ingester") {
         init {
             subcommands(
                 UserCommand(store),
-                InstitutionCommand(store),
-                ExecuteCommand(server),
                 QuitCommand(server)
             )
         }
+        override fun help(context: Context): String = "The base command for all CLI commands."
     }
 
     /** Flag indicating whether [Cli] has been stopped. */
@@ -69,7 +71,7 @@ class Cli(config: Config, server: IngesterServer, store: TransientEntityStore) {
         val terminal = try {
             TerminalBuilder.builder().jna(true).build()
         } catch (e: IOException) {
-            System.err.println("Could not initialize terminal: ${e.message}. Ending C(arrot)LI...")
+            System.err.println("Could not initialize terminal: ${e.message}. Ending CLI...")
             return
         }
 
@@ -79,10 +81,10 @@ class Cli(config: Config, server: IngesterServer, store: TransientEntityStore) {
             /* Catch ^D end of file as exit method */
             val line = try {
                 lineReader.readLine(PROMPT).trim()
-            } catch (e: EndOfFileException) {
+            } catch (_: EndOfFileException) {
                 System.err.println("Could not read from terminal.")
                 break
-            } catch (e: UserInterruptException) {
+            } catch (_: UserInterruptException) {
                 System.err.println("Ingester was interrupted by the user (Ctrl-C).")
                 break
             }
