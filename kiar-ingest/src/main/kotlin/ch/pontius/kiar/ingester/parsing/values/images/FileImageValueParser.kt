@@ -37,7 +37,7 @@ class FileImageValueParser(override val mapping: AttributeMapping): ValueParser<
      * @param context The [ProcessingContext]
      */
     override fun parse(value: String?, into: SolrInputDocument, context: ProcessingContext) {
-        if (value == null) return
+        if (value.isNullOrEmpty()) return
 
         /* Read path - apply Regex search/replace if needed. */
         val actualPath = if (this.search != null && this.replace != null) {

@@ -23,7 +23,7 @@ class WGS84Parser(override val mapping: AttributeMapping): ValueParser<Double> {
      * @param into The [SolrInputDocument] to append the value to.
      */
     override fun parse(value: String?, into: SolrInputDocument, context: ProcessingContext) {
-        if (value == null) return
+        if (value.isNullOrEmpty()) return
         val coordinates = value.split(this.separator).mapNotNull { it.trim().toDoubleOrNull() }
         if (coordinates.size == 2) {
             into.setField(this.mapping.destination, "${coordinates[0]},${coordinates[1]}")

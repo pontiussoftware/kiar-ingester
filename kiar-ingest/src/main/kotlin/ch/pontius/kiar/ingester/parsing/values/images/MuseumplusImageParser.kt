@@ -54,7 +54,7 @@ class MuseumplusImageParser(override val mapping: AttributeMapping): ValueParser
      * @param context The [ProcessingContext]
      */
     override fun parse(value: String?, into: SolrInputDocument, context: ProcessingContext) {
-        if (value == null) return
+        if (value.isNullOrEmpty()) return
 
         /* Read values. */
         val urls = when (this.mode) {

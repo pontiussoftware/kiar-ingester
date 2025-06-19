@@ -14,7 +14,8 @@ import org.apache.solr.common.SolrInputDocument
  * @author Cristina Illi
  * @version 1.1.0
  */
-class DisplayTransformer(override val input: Source<SolrInputDocument>): Transformer<SolrInputDocument, SolrInputDocument> {
+class
+DisplayTransformer(override val input: Source<SolrInputDocument>): Transformer<SolrInputDocument, SolrInputDocument> {
 
     /**
      * Returns a [Flow] of this [ImageDeployment].

@@ -30,7 +30,7 @@ class IntegerValueParser(override val mapping: AttributeMapping): ValueParser<In
      */
     override fun parse(value: String?, into: SolrInputDocument, context: ProcessingContext) {
         /* Handle null value and set default. */
-        if (value == null) {
+        if (value.isNullOrEmpty()) {
             if (this.default != null) {
                 into.setField(this.mapping.destination, this.default)
             }

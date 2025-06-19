@@ -24,7 +24,7 @@ class MultiStringValueParser(override val mapping: AttributeMapping): ValueParse
      * @param context The [ProcessingContext]
      */
     override fun parse(value: String?, into: SolrInputDocument, context: ProcessingContext) {
-        if (value == null) return
+        if (value.isNullOrEmpty()) return
         val split = value.split(this.separator)
         if (split.isNotEmpty()) {
             for (s in split) {

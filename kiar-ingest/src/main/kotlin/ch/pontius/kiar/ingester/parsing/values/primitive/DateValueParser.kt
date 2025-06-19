@@ -16,7 +16,7 @@ import java.util.Date
  * [ValueParser] to convert a [String] to a [Date].
  *
  * @author Ralph Gasser
- * @version 2.2.0
+ * @version 2.2.1
  */
 class DateValueParser(override val mapping: AttributeMapping): ValueParser<Date> {
     /** The date/time format used for parsing the date. */
@@ -34,7 +34,7 @@ class DateValueParser(override val mapping: AttributeMapping): ValueParser<Date>
      */
     override fun parse(value: String?, into: SolrInputDocument, context: ProcessingContext) {
         /* Handle null value and set default. */
-        if (value == null) {
+        if (value.isNullOrEmpty()) {
             if (this.default != null) {
                 into.setField(this.mapping.destination, this.default)
             }
