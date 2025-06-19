@@ -115,13 +115,15 @@ class MuseumplusImageParser(override val mapping: AttributeMapping): ValueParser
                     connection.inputStream.use { ImmutableImage.loader().fromStream(it) }
                 } else {
                     LOGGER.error("Failed to download image from $url; service responded with HTTP status ${connection.responseCode}.")
+                    this.context.log(JobLog(context.jobId, this.uuid, null, JobLogContext.RESOURCE, JobLogLevel.WARNING, "Failed to download image from '${this.url}'. Service responded with HTTP status ${connection.responseCode}."))
                     null
                 }
             } finally {
                 connection.disconnect()
             }
         } catch (e: IOException) {
-            this.context.log(JobLog(context.jobId, this.uuid, null, JobLogContext.RESOURCE, JobLogLevel.WARNING, "Failed to download image from '${this.url}'. An exception occurred: ${e.message}"))
+            LOGGER.error("Failed to download image from $url; An exception occurred: ${e.message}")
+            this.context.log(JobLog(context.jobId, this.uuid, null, JobLogContext.RESOURCE, JobLogLevel.WARNING, "Failed to download image from '${this.url}'. An IO exception occurred: ${e.message}"))
             null
         }
     }
