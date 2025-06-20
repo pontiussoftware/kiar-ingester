@@ -1,14 +1,12 @@
 import {AfterViewInit, Component, OnDestroy, ViewChild} from "@angular/core";
 import {MatDialog} from "@angular/material/dialog";
 import {Job, JobService} from "../../../../openapi";
-import {firstValueFrom, flatMap, interval, Subscription, tap} from "rxjs";
+import {firstValueFrom, interval, Subscription} from "rxjs";
 import {CreateJobDialogComponent} from "./job/create-job-dialog.component";
 import {MatSnackBar, MatSnackBarConfig} from "@angular/material/snack-bar";
 import {MatPaginator} from "@angular/material/paginator";
 import {JobHistoryDatasource} from "./job-history-datasource";
 import {JobCurrentDatasource} from "./job-current-datasource";
-
-
 /**
  * Internal interface for a Job that is currently active.
  */
@@ -35,11 +33,19 @@ export class DashboardComponent implements AfterViewInit, OnDestroy {
   /**  A {@link Subscription} to a timer that updates list of active jobs at a regular invterval. */
   private timerSubscription: (Subscription | null) = null
 
-  /** Reference to the {@link MatPaginator}*/
-  @ViewChild('activeJobPaginator') activeJobPaginator: MatPaginator;
+  /**  A {@link Subscription} to a timer that updates list of active jobs at a regular invterval. */
+  private activeJobPaginatorSubscription: (Subscription | null) = null
+
+  /**  A {@link Subscription} to a timer that updates list of active jobs at a regular invterval. */
+  private jobHistoryPaginatorSubscription: (Subscription | null) = null
 
   /** Reference to the {@link MatPaginator}*/
-  @ViewChild('jobHistoryPaginator') jobHistoryPaginator: MatPaginator;
+  @ViewChild('activeJobPaginator')
+  private activeJobPaginator: MatPaginator;
+
+  /** Reference to the {@link MatPaginator}*/
+  @ViewChild('jobHistoryPaginator')
+  private jobHistoryPaginator: MatPaginator;
 
   constructor(private dialog: MatDialog, private snackBar: MatSnackBar, private service: JobService) {
     this.activeJobs = new JobCurrentDatasource(this.service)
@@ -50,17 +56,19 @@ export class DashboardComponent implements AfterViewInit, OnDestroy {
    */
   public ngAfterViewInit(): void {
     this.reload()
-    this.activeJobPaginator.page.pipe(tap(() => this.activeJobs.load(this.activeJobPaginator.pageIndex, this.activeJobPaginator.pageSize))).subscribe();
-    this.jobHistoryPaginator.page.pipe(tap(() => this.jobHistory.load(this.jobHistoryPaginator.pageIndex, this.jobHistoryPaginator.pageSize))).subscribe();
-    this.timerSubscription = interval(5000).pipe(
-        tap((t) => this.activeJobs.load(this.activeJobPaginator.pageIndex, this.activeJobPaginator.pageSize))
-    ).subscribe()
+    this.activeJobPaginatorSubscription = this.activeJobPaginator.page.subscribe((s) => this.activeJobs.load(s.pageIndex, s.pageSize));
+    this.jobHistoryPaginatorSubscription = this.jobHistoryPaginator.page.subscribe((s) => this.jobHistory.load(s.pageIndex, s.pageSize));
+    this.timerSubscription = interval(5000).subscribe(s => this.activeJobs.load(this.activeJobPaginator.pageIndex, this.activeJobPaginator.pageSize))
   }
 
   /**
    * Unsubscribes from timer.
    */
   public ngOnDestroy() {
+    this.activeJobPaginatorSubscription?.unsubscribe()
+    this.activeJobPaginatorSubscription = null
+    this.jobHistoryPaginatorSubscription?.unsubscribe()
+    this.jobHistoryPaginatorSubscription = null
     this.timerSubscription?.unsubscribe()
     this.timerSubscription = null
   }
