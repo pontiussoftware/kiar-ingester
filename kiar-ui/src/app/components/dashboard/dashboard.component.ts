@@ -1,7 +1,7 @@
 import {AfterViewInit, Component, OnDestroy, ViewChild} from "@angular/core";
 import {MatDialog} from "@angular/material/dialog";
 import {Job, JobService} from "../../../../openapi";
-import {firstValueFrom, interval, Subscription, tap} from "rxjs";
+import {firstValueFrom, flatMap, interval, Subscription, tap} from "rxjs";
 import {CreateJobDialogComponent} from "./job/create-job-dialog.component";
 import {MatSnackBar, MatSnackBarConfig} from "@angular/material/snack-bar";
 import {MatPaginator} from "@angular/material/paginator";
@@ -50,9 +50,11 @@ export class DashboardComponent implements AfterViewInit, OnDestroy {
    */
   public ngAfterViewInit(): void {
     this.reload()
-    this.timerSubscription = interval(5000).subscribe(t => this.activeJobPaginator.page.pipe(tap(() => this.jobHistory.load(this.activeJobPaginator.pageIndex, this.activeJobPaginator.pageSize))).subscribe())
-    this.activeJobPaginator.page.pipe(tap(() => this.jobHistory.load(this.activeJobPaginator.pageIndex, this.activeJobPaginator.pageSize))).subscribe();
+    this.activeJobPaginator.page.pipe(tap(() => this.activeJobs.load(this.activeJobPaginator.pageIndex, this.activeJobPaginator.pageSize))).subscribe();
     this.jobHistoryPaginator.page.pipe(tap(() => this.jobHistory.load(this.jobHistoryPaginator.pageIndex, this.jobHistoryPaginator.pageSize))).subscribe();
+    this.timerSubscription = interval(5000).pipe(
+        tap((t) => this.activeJobs.load(this.activeJobPaginator.pageIndex, this.activeJobPaginator.pageSize))
+    ).subscribe()
   }
 
   /**
