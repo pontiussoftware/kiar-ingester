@@ -28,7 +28,7 @@ import kotlin.Comparator
  * The [SolrInputDocument] is updated to contain the path to the new file.
  *
  * @author Ralph Gasser
- * @version 1.5.0
+ * @version 1.5.1
  */
 class ImageDeployment(override val input: Source<SolrInputDocument>, private val deployments: List<ImageDeployment>, private val test: Boolean = false): Transformer<SolrInputDocument, SolrInputDocument> {
 
@@ -96,7 +96,7 @@ class ImageDeployment(override val input: Source<SolrInputDocument>, private val
                             it.addField("${deployment.name}height_", resized.height)
                             it.addField("${deployment.name}width_", resized.width)
                         } else {
-                            context.log(JobLog(null, it.uuid(), null, JobLogContext.RESOURCE, JobLogLevel.WARNING, "Failed to create preview image for document."))
+                            context.log(JobLog(context.jobId, it.uuid(), null, JobLogContext.RESOURCE, JobLogLevel.WARNING, "Failed to create preview image for document."))
                         }
                     }
 
@@ -109,21 +109,27 @@ class ImageDeployment(override val input: Source<SolrInputDocument>, private val
             }
         }.onCompletion {e ->
             for (deployment in this@ImageDeployment.deployments) {
-                val dst = Paths.get(deployment.path).resolve(context.participant).resolve(deployment.name)
-                val tmp = Paths.get(deployment.path).resolve(context.participant).resolve("${deployment.name}~tmp")
-                val bak = Paths.get(deployment.path).resolve(context.participant).resolve("${deployment.name}~bak")
-                if (e != null) {
-                    /* Case 1: Cleanup after error. */
-                    Files.walk(tmp).sorted(Comparator.reverseOrder()).forEach { Files.deleteIfExists(it) }
-                } else {
-                    /* Case 2: Finalisation */
-                    if (Files.exists(dst)) {
-                        Files.move(dst, bak, StandardCopyOption.ATOMIC_MOVE)
-                        Files.move(tmp, dst, StandardCopyOption.ATOMIC_MOVE)
-                        Files.walk(bak).sorted(Comparator.reverseOrder()).forEach { Files.deleteIfExists(it) }
+                try {
+                    val dst = Paths.get(deployment.path).resolve(context.participant).resolve(deployment.name)
+                    val tmp = Paths.get(deployment.path).resolve(context.participant).resolve("${deployment.name}~tmp")
+                    val bak = Paths.get(deployment.path).resolve(context.participant).resolve("${deployment.name}~bak")
+                    if (e != null) {
+                        /* Case 1: Cleanup after error. */
+                        Files.walk(tmp).sorted(Comparator.reverseOrder()).forEach { Files.deleteIfExists(it) }
                     } else {
-                        Files.move(tmp, dst, StandardCopyOption.ATOMIC_MOVE)
+                        /* Case 2: Finalisation */
+                        if (Files.exists(dst)) {
+                            if (Files.exists(bak)) Files.walk(bak).sorted(Comparator.reverseOrder()).forEach { Files.deleteIfExists(it) }
+                            Files.move(dst, bak, StandardCopyOption.ATOMIC_MOVE)
+                            Files.move(tmp, dst, StandardCopyOption.ATOMIC_MOVE)
+                            Files.walk(bak).sorted(Comparator.reverseOrder()).forEach { Files.deleteIfExists(it) }
+                        } else {
+                            Files.move(tmp, dst, StandardCopyOption.ATOMIC_MOVE)
+                        }
                     }
+                } catch (e: Throwable) {
+                    context.log(JobLog(context.jobId, null, null, JobLogContext.RESOURCE, JobLogLevel.ERROR, "Failed to finalize image deployment due to error. Please contact the administrator."))
+                    LOGGER.error("Failed to finalize image deployment '${deployment.name}'.", e)
                 }
             }
         }.flowOn(Dispatchers.IO)
