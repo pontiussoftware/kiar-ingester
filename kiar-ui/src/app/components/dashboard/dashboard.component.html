@@ -83,8 +83,8 @@
             </button>
           </div>
 
-          <div *ngIf="element.harvesting">
-            <mat-progress-bar diameter="25" [value]="element.uploaded"></mat-progress-bar>
+          <div *ngIf="isUploading(element)">
+            <mat-progress-bar diameter="25" [value]="progressForJob(element)"></mat-progress-bar>
           </div>
         </td>
       </ng-container>

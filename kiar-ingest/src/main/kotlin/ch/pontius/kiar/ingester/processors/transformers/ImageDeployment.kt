@@ -51,7 +51,7 @@ class ImageDeployment(override val input: Source<SolrInputDocument>, private val
                 throw IllegalArgumentException("Directory $deployTo does not exist!")
             }
 
-            /* Create necessary directories. */
+            /* Create the necessary directories. */
             Files.createDirectories(deployTo.resolve(context.participant).resolve(deployment.name))
             Files.createDirectories(deployTo.resolve(context.participant).resolve("${deployment.name}~tmp"))
 

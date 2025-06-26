@@ -7,12 +7,6 @@ import {MatSnackBar, MatSnackBarConfig} from "@angular/material/snack-bar";
 import {MatPaginator} from "@angular/material/paginator";
 import {JobHistoryDatasource} from "./job-history-datasource";
 import {JobCurrentDatasource} from "./job-current-datasource";
-/**
- * Internal interface for a Job that is currently active.
- */
-interface ActiveJob extends Job {
-  harvesting: boolean
-}
 
 @Component({
   selector: 'kiar-dashboard',
@@ -46,6 +40,9 @@ export class DashboardComponent implements AfterViewInit, OnDestroy {
   /** Reference to the {@link MatPaginator}*/
   @ViewChild('jobHistoryPaginator')
   private jobHistoryPaginator: MatPaginator;
+
+  /** The upload progress for a specific job. */
+  private uploadProgress = new Map<string, number>()
 
   constructor(private dialog: MatDialog, private snackBar: MatSnackBar, private service: JobService) {
     this.activeJobs = new JobCurrentDatasource(this.service)
@@ -93,9 +90,9 @@ export class DashboardComponent implements AfterViewInit, OnDestroy {
   /**
    * Opens the 'file open' dialog and starts a KIAR file upload.
    *
-   * @param job {@link ActiveJob} to initiate KIAR file upload for.
+   * @param job {@link Job} to initiate KIAR file upload for.
    */
-  public upload(job: ActiveJob) {
+  public upload(job: Job) {
       const fileInput: HTMLInputElement = document.createElement('input');
       fileInput.type = 'file';
       fileInput.addEventListener('change', async (event: Event) => {
@@ -103,9 +100,9 @@ export class DashboardComponent implements AfterViewInit, OnDestroy {
         const file: File | null = target.files?.[0] || null;
         if (file) {
           const formData: FormData = new FormData();
+          if (job.id == null) throw new Error("Undefined job ID.")
           formData.append('file', file);
-          job.harvesting = true;
-          (job as any)['uploaded'] = 0
+          this.uploadProgress.set(job.id, 0);
 
           /* Slice file and upload it. */
           const sliceSize = 1e8
@@ -114,7 +111,7 @@ export class DashboardComponent implements AfterViewInit, OnDestroy {
             const slice = file.slice(i * sliceSize, Math.min((i + 1) * sliceSize, file.size), file.type)
             try {
               await firstValueFrom(this.service.putUpload(job.id!!, i == 0, i == (slices - 1), slice, 'body'));
-              (job as any)['uploaded'] = (i / slices) * 100
+              this.uploadProgress.set(job.id, (i / slices) * 100)
             } catch (err) {
               this.snackBar.open(`Error while uploading ${job.template?.type} file for job ${job.id}.`, "Dismiss", { duration: 2000 } as MatSnackBarConfig)
               break
@@ -122,20 +119,19 @@ export class DashboardComponent implements AfterViewInit, OnDestroy {
           }
 
           this.snackBar.open(`${job.template?.type} uploaded successfully. Ready for harvesting!`, "Dismiss", { duration: 2000 } as MatSnackBarConfig)
-          job.harvesting = false
-          this.reload()
+          this.uploadProgress.delete(job.id);
         }
       });
       fileInput.click();
   }
 
   /**
-   * Starts the data ingest for the selected {@link ActiveJob}.
+   * Starts the data ingest for the selected {@link Job}.
    *
-   * @param job {@link ActiveJob} to start data ingest for.
+   * @param job {@link Job} to start data ingest for.
    * @param test Whether to run the ingest in test mode.
    */
-  public startIngest(job: ActiveJob, test: boolean) {
+  public startIngest(job: Job, test: boolean) {
     this.service.putScheduleJob(job.id!!, test).subscribe({
       next: (next) => {
         this.snackBar.open(`Successfully scheduled job ${job.id}.`, "Dismiss", { duration: 2000 } as MatSnackBarConfig)
@@ -146,11 +142,11 @@ export class DashboardComponent implements AfterViewInit, OnDestroy {
   }
 
   /**
-   * The {@link ActiveJob} to abort.
+   * The {@link Job} to abort.
    *
    * @param job
    */
-  public abortJob(job: ActiveJob) {
+  public abortJob(job: Job) {
     this.service.deleteAbortJob(job.id!!).subscribe({
         next: (next) => {
           this.snackBar.open(`Successfully aborted job ${job.id}.`, "Dismiss", { duration: 2000 } as MatSnackBarConfig)
@@ -161,7 +157,7 @@ export class DashboardComponent implements AfterViewInit, OnDestroy {
   }
 
   /**
-   * Purges the {@link ActiveJob} log.
+   * Purges the {@link Job} log.
    *
    * @param job
    */
@@ -173,5 +169,23 @@ export class DashboardComponent implements AfterViewInit, OnDestroy {
       },
       error: (err) => this.snackBar.open(`Error occurred while purging job ${job.id} log: ${err?.error?.description}.`, "Dismiss", { duration: 2000 } as MatSnackBarConfig)
     })
+  }
+
+  /**
+   * Checks if @{link Job} is uploading.
+   *
+   * @param job The @{link Job} to check for.
+   */
+  public isUploading(job: Job): boolean {
+    return this.uploadProgress.has(job.id || "");
+  }
+
+  /**
+   * Checks if @{link Job} uploading.
+   *
+   * @param job The @{link Job} to check for.
+   */
+  public progressForJob(job: Job): number {
+    return this.uploadProgress.get(job.id || "") || 0;
   }
 }
