@@ -61,7 +61,7 @@
       <ng-container matColumnDef="action">
         <th mat-header-cell *matHeaderCellDef i18n="@@ColHeaderAction"> Action </th>
         <td mat-cell *matCellDef="let element">
-          <div *ngIf="!element.harvesting">
+          <div *ngIf="!isUploading(element)">
             <button mat-icon-button aria-label="View logs." matTooltip="View logs." [routerLink]="['/manager/logs', element.id]">
               <mat-icon>list_alt</mat-icon>
             </button>
