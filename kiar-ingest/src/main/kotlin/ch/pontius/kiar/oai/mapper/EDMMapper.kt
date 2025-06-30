@@ -128,8 +128,14 @@ class EDMMapper(store: TransientEntityStore): OAIMapper {
             }
         }
 
-        /* Append owner. */
-        if (document.has(Field.OWNER)) {
+        /* Append copyright OR owner. */
+        if (document.has(Field.COPYRIGHT)) {
+            document.getAll<String>(Field.COPYRIGHT).forEach { copyright ->
+                providedCHO.appendChild(doc.createElement("dc:rights").apply {
+                    this.textContent = copyright
+                })
+            }
+        } else if (document.has(Field.OWNER)) {
             document.getAll<String>(Field.OWNER).forEach { owner ->
                 providedCHO.appendChild(doc.createElement("dc:rights").apply {
                     this.textContent = owner
@@ -418,12 +424,12 @@ class EDMMapper(store: TransientEntityStore): OAIMapper {
                 })
                 if (datingFrom != null) {
                     this.appendChild(doc.createElement("edm:begin").apply {
-                        this.textContent = decimalToEDTF(datingFrom).toString()
+                        this.textContent = decimalToEDTF(datingFrom)
                     })
                 }
                 if (datingTo != null) {
                     this.appendChild(doc.createElement("edm:end").apply {
-                        this.textContent = decimalToEDTF(datingTo).toString()
+                        this.textContent = decimalToEDTF(datingTo)
                     })
                 }
                 this.setAttribute("rdf:about", identifier)
