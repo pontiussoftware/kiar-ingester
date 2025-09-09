@@ -1,6 +1,6 @@
 import {CollectionViewer, DataSource} from "@angular/cdk/collections";
 import {Job, JobService} from "../../../../openapi";
-import {BehaviorSubject, Observable} from "rxjs";
+import {BehaviorSubject, first, Observable} from "rxjs";
 
 /**
  * A {@link DataSource} for {@link Job} object loaded through the backend API.
@@ -38,7 +38,7 @@ export class JobCurrentDatasource implements DataSource<Job> {
    * @param pageSize The requested page size.
    */
   public load(page: number, pageSize: number) {
-    this.service.getActiveJobs(page, pageSize).subscribe(
+    this.service.getActiveJobs(page, pageSize).pipe(first()).subscribe(
         (next) => {
           this.total.next(next.total)
           this.data.next(next.results)
