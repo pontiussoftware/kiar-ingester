@@ -12,10 +12,10 @@ import jetbrains.exodus.database.TransientEntityStore
  * @author Ralph Gasser
  * @version 1.0.0
  */
-enum class Formats(val prefix: String? = null, val schema: String? = null, val namespace: String? = null) {
+enum class Formats(val prefix: String, val schema: String? = null, val namespace: String? = null) {
     OAI_DC("oai_dc", "http://www.openarchives.org/OAI/2.0/oai_dc.xsd", "http://www.openarchives.org/OAI/2.0/oai_dc/"),
     EDM("edm", "https://www.europeana.eu/schemas/edm/EDM.xsd", "http://www.europeana.eu/schemas/edm/"),
-    SOLR(null, null, null);
+    SOLR("solr", null, null);
 
     /**
      * Generates a new [OAIMapper] for this [Formats].
