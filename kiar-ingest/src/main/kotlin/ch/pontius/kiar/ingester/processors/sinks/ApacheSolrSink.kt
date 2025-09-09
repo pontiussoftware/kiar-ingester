@@ -15,6 +15,8 @@ import ch.pontius.kiar.ingester.solrj.get
 import ch.pontius.kiar.ingester.solrj.getAll
 import ch.pontius.kiar.ingester.solrj.has
 import ch.pontius.kiar.ingester.solrj.setField
+import com.jayway.jsonpath.JsonPath
+import com.jayway.jsonpath.PathNotFoundException
 import kotlinx.coroutines.flow.*
 import kotlinx.dnq.query.asSequence
 import kotlinx.dnq.query.filter
@@ -24,6 +26,7 @@ import org.apache.solr.client.solrj.impl.Http2SolrClient
 import org.apache.solr.client.solrj.request.schema.SchemaRequest
 import org.apache.solr.common.SolrInputDocument
 import java.io.IOException
+import java.nio.file.InvalidPathException
 import java.util.Date
 import java.util.UUID
 
@@ -31,7 +34,7 @@ import java.util.UUID
  * A [Sink] that processes [SolrInputDocument]s and ingests them into Apache Solr.
  *
  * @author Ralph Gasser
- * @version 1.2.1
+ * @version 1.2.2
  */
 class ApacheSolrSink(override val input: Source<SolrInputDocument>, private val config: ApacheSolrConfig): Sink<SolrInputDocument> {
 
@@ -43,7 +46,7 @@ class ApacheSolrSink(override val input: Source<SolrInputDocument>, private val 
     private val validators = HashMap<String,List<FieldValidator>>()
 
     /** List of collections this [ApacheSolrSink] processes. */
-    private val collections = this.config.collections.filter { it.type == CollectionType.OBJECT }.map { it.name }
+    private val collections = this.config.collections.filter { it.type == CollectionType.OBJECT }.map { it.name to it.selector }
 
     /** A [Map] of [DbInstitution] name to selected collections. */
     private val institutions = DbInstitution.filter { (it.selectedCollections.isNotEmpty() ) }.asSequence().associate {
@@ -82,7 +85,7 @@ class ApacheSolrSink(override val input: Source<SolrInputDocument>, private val 
                     }
 
                     /* Ingest into collections. */
-                    for (collection in this@ApacheSolrSink.collections) {
+                    for ((collection, selector) in this@ApacheSolrSink.collections) {
                         try {
                             /* Apply per-institution collection filter. */
                             if (this@ApacheSolrSink.institutions[doc.get<String>(Field.INSTITUTION)]?.contains(collection) != true) continue
@@ -90,7 +93,22 @@ class ApacheSolrSink(override val input: Source<SolrInputDocument>, private val 
                             /* Apply per-object collection filter. */
                             if (doc.has(Field.PUBLISH_TO)) {
                                 val collections = doc.getAll<String>(Field.PUBLISH_TO)
-                                if (!collections.contains(collection)) {
+                                if (!collections.contains(collection))  continue
+                            }
+
+                            /* Apply selector if defined. */
+                            if (selector != null) {
+                                val map = doc.fieldNames.associateWith { doc.getFieldValue(it) }
+                                try {
+                                    if (JsonPath.parse(listOf(map)).read<List<*>>("$[?($selector)])").isEmpty()) {
+                                        LOGGER.info("Skipping document due to selector; no match (jobId = {}, collection = {}, docId = {}).", context.jobId, collection, uuid)
+                                        continue
+                                    }
+                                } catch (_: PathNotFoundException) {
+                                    LOGGER.warn("Skipping document due to selector; path not found (jobId = {}, collection = {}, docId = {}).", context.jobId, collection, uuid)
+                                    continue
+                                }  catch (_: InvalidPathException) {
+                                    LOGGER.warn("Skipping document due to selector; invalid path (jobId = {}, collection = {}, docId = {}).", context.jobId, collection, uuid)
                                     continue
                                 }
                             }
@@ -129,7 +147,7 @@ class ApacheSolrSink(override val input: Source<SolrInputDocument>, private val 
      * Initializes the [FieldValidator]s for the different collections.
      */
     private fun initializeValidators(client: Http2SolrClient) {
-        for (c in this.collections) {
+        for ((c, _) in this.collections) {
             /* Prepare HTTP client builder. */
             val copyFields = SchemaRequest.CopyFields().process(client, c).copyFields.map { it["dest"] }.toSet()
             //TODO (Type-based validation): val types = SchemaRequest.FieldTypes().process(client, c.key).fieldTypes
@@ -206,7 +224,7 @@ class ApacheSolrSink(override val input: Source<SolrInputDocument>, private val 
      */
     private fun prepareIngest(client: Http2SolrClient, context: ProcessingContext) {
         /* Purge all collections that were configured. */
-        for (c in this.collections) {
+        for ((c, _) in this.collections) {
             LOGGER.info("Purging collection (name = ${context.participant}, collection = $c).")
             val response = client.deleteByQuery(c, "$FIELD_NAME_PARTICIPANT:${context.participant}")
             if (response.status != 0) {
@@ -225,7 +243,7 @@ class ApacheSolrSink(override val input: Source<SolrInputDocument>, private val 
      */
     private fun finalizeIngest(client: Http2SolrClient, context: ProcessingContext) {
         /* Purge all collections that were configured. */
-        for (c in this.collections) {
+        for ((c, _) in this.collections) {
             LOGGER.info("Data ingest (name = ${context.jobId}, collection = $c) completed; committing...")
             try {
                 val response = client.commit(c)
@@ -237,7 +255,7 @@ class ApacheSolrSink(override val input: Source<SolrInputDocument>, private val 
             } catch (_: SolrServerException) {
                 client.rollback(c)
                 LOGGER.error("Failed to commit data ingest due to server error (name = ${this@ApacheSolrSink.config.name}, collection = $c. Rolling back...")
-            } catch (e: IOException) {
+            } catch (_: IOException) {
                 LOGGER.error("Failed to commit data ingest due to IO error (name = ${this@ApacheSolrSink.config.name}, collection = $c).")
             }
         }
