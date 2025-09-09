@@ -13,6 +13,7 @@ import org.apache.logging.log4j.LogManager
 import org.apache.solr.common.SolrInputDocument
 import java.io.IOException
 import java.net.HttpURLConnection
+import java.net.URI
 import java.net.URL
 import java.nio.file.Path
 import java.util.*
@@ -23,7 +24,7 @@ import java.util.*
  * See [museumPlus API Documentation](http://docs.zetcom.com/framework-public/ws/ws-api-module.html#get-the-thumbnail-of-a-module-item-attachment)
  *
  * @author Ralph Gasser
- * @version 2.2.0
+ * @version 2.2.1
  */
 class MuseumplusImageParser(override val mapping: AttributeMapping): ValueParser<List<ImmutableImage>> {
     companion object {
@@ -33,7 +34,7 @@ class MuseumplusImageParser(override val mapping: AttributeMapping): ValueParser
     private val delimiter: String = this.mapping.parameters["delimiter"] ?: ","
 
     /** Reads the search pattern from the parameters map.*/
-    private val host: URL = this.mapping.parameters["host"]?.let { URL(it) }  ?: throw IllegalStateException("Host required but missing.")
+    private val host: String = this.mapping.parameters["host"] ?: throw IllegalStateException("Host required but missing.")
 
     /** Reads the replacement pattern from the parameters map.*/
     private val username: String = this.mapping.parameters["username"]  ?: throw IllegalStateException("Username required but missing.")
@@ -81,7 +82,7 @@ class MuseumplusImageParser(override val mapping: AttributeMapping): ValueParser
      */
     private fun urlFromId(value: String) = value.split(this.delimiter).mapNotNull {
         it.trim().toBigDecimalOrNull()?.toInt()
-    }.map { id -> URL("${this.host}/ria-ws/application/module/Multimedia/${id}/thumbnail?size=EXTRA_EXTRA_LARGE") }
+    }.map { id -> URI("${this.host}/ria-ws/application/module/Multimedia/$id/thumbnail?size=EXTRA_EXTRA_LARGE").toURL() }
 
     /**
      * Parses the given [String] and resolves it into a [URL] the provided [SolrInputDocument].
@@ -89,7 +90,9 @@ class MuseumplusImageParser(override val mapping: AttributeMapping): ValueParser
      * @param value The [String] value to parse.
      * @return [List] of [URL]s.
      */
-    private fun urlFromPath(value: String) = value.split(this.delimiter).map { URL("${this.host}/${it.trim()}") }
+    private fun urlFromPath(value: String) = value.split(this.delimiter).map {
+        URI(this.host + (if (this.host.endsWith("/") || it.startsWith("/")) "" else "/") + it.trim()).toURL()
+    }
 
     /**
      * Returns the [Mode] for the provided [String].
