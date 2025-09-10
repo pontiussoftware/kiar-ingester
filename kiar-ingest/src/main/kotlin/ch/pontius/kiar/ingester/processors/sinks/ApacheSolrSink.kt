@@ -15,6 +15,7 @@ import ch.pontius.kiar.ingester.solrj.get
 import ch.pontius.kiar.ingester.solrj.getAll
 import ch.pontius.kiar.ingester.solrj.has
 import ch.pontius.kiar.ingester.solrj.setField
+import com.jayway.jsonpath.InvalidPathException
 import com.jayway.jsonpath.JsonPath
 import com.jayway.jsonpath.PathNotFoundException
 import kotlinx.coroutines.flow.*
@@ -26,7 +27,6 @@ import org.apache.solr.client.solrj.impl.Http2SolrClient
 import org.apache.solr.client.solrj.request.schema.SchemaRequest
 import org.apache.solr.common.SolrInputDocument
 import java.io.IOException
-import java.nio.file.InvalidPathException
 import java.util.Date
 import java.util.UUID
 
@@ -88,12 +88,18 @@ class ApacheSolrSink(override val input: Source<SolrInputDocument>, private val 
                     for ((collection, selector) in this@ApacheSolrSink.collections) {
                         try {
                             /* Apply per-institution collection filter. */
-                            if (this@ApacheSolrSink.institutions[doc.get<String>(Field.INSTITUTION)]?.contains(collection) != true) continue
+                            if (this@ApacheSolrSink.institutions[doc.get<String>(Field.INSTITUTION)]?.contains(collection) != true) {
+                                LOGGER.debug("Skipping document due to institution not publishing to per-institution filter (jobId = {}, collection = {}, docId = {}).", context.jobId, collection, uuid)
+                                continue
+                            }
 
                             /* Apply per-object collection filter. */
                             if (doc.has(Field.PUBLISH_TO)) {
                                 val collections = doc.getAll<String>(Field.PUBLISH_TO)
-                                if (!collections.contains(collection))  continue
+                                if (!collections.contains(collection)) {
+                                    LOGGER.debug("Skipping document due to institution not publishing to per-object filter (jobId = {}, collection = {}, docId = {}).", context.jobId, collection, uuid)
+                                    continue
+                                }
                             }
 
                             /* Apply selector if defined. */
@@ -101,7 +107,7 @@ class ApacheSolrSink(override val input: Source<SolrInputDocument>, private val 
                                 val map = doc.fieldNames.associateWith { doc.getFieldValue(it) }
                                 try {
                                     if (JsonPath.parse(listOf(map)).read<List<*>>("$[?($selector)])").isEmpty()) {
-                                        LOGGER.info("Skipping document due to selector; no match (jobId = {}, collection = {}, docId = {}).", context.jobId, collection, uuid)
+                                        LOGGER.debug("Skipping document due to selector; no match (jobId = {}, collection = {}, docId = {}).", context.jobId, collection, uuid)
                                         continue
                                     }
                                 } catch (_: PathNotFoundException) {
