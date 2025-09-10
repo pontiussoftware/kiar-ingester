@@ -12,7 +12,7 @@ import org.apache.solr.common.SolrInputDocument
  *
  * @author Ralph Gasser
  * @author Cristina Illi
- * @version 1.1.0
+ * @version 1.1.1
  */
 class
 DisplayTransformer(override val input: Source<SolrInputDocument>): Transformer<SolrInputDocument, SolrInputDocument> {
@@ -34,6 +34,7 @@ DisplayTransformer(override val input: Source<SolrInputDocument>): Transformer<S
             /* Generate _display_list_ field. */
             val list = when (type) {
                 ObjectType.ARCHAEOLOGIE -> listOfNotNull(doc.get<String>(Field.PLACE_FINDING))
+                ObjectType.AUDIOVISUELLES_OBJEKT -> listOfNotNull(doc.get<String>(Field.TITEL), doc.get<String>(Field.CREATOR))
                 ObjectType.BIBLIOGRAPHISCHES_OBJEKT -> listOfNotNull(doc.get<String>(Field.TITEL), doc.get<String>(Field.AUTHOR), doc.get<String>(Field.PLACE_PUBLICATION))
                 ObjectType.BIOLOGIE -> listOfNotNull(doc.get<String>(Field.PLACE_FINDING))
                 ObjectType.ETHNOLOGIE ->listOfNotNull(doc.get<String>(Field.CREATOR), doc.get<String>(Field.PLACE_CREATION))
