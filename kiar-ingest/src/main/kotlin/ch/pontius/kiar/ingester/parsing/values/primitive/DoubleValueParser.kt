@@ -13,7 +13,7 @@ import org.apache.solr.common.SolrInputDocument
  * [ValueParser] to convert a [String] to a [Double].
  *
  * @author Ralph Gasser
- * @version 2.2.0
+ * @version 2.2.1
  */
 class DoubleValueParser(override val mapping: AttributeMapping): ValueParser<Double> {
     /** Default value that should be used if source value has not been specified. */
@@ -37,8 +37,8 @@ class DoubleValueParser(override val mapping: AttributeMapping): ValueParser<Dou
 
         /* Parse value. */
         val parsedValue = try {
-            value.toDouble()
-        }  catch (e: NumberFormatException) {
+            value.toBigDecimal().toDouble()
+        }  catch (_: NumberFormatException) {
             context.log(JobLog(context.jobId, into.uuidOrNull(), null, JobLogContext.METADATA, JobLogLevel.WARNING, "Failed to parse double '$value' for field ${this.mapping.destination}."))
             return
         }

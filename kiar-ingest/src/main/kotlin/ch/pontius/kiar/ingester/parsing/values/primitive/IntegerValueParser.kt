@@ -13,7 +13,7 @@ import org.apache.solr.common.SolrInputDocument
  * [ValueParser] to convert a [String] to a [Int].
  *
  * @author Ralph Gasser
- * @version 2.2.0
+ * @version 2.2.1
  */
 class IntegerValueParser(override val mapping: AttributeMapping): ValueParser<Int> {
 
@@ -39,13 +39,13 @@ class IntegerValueParser(override val mapping: AttributeMapping): ValueParser<In
 
         /* Parse value. */
         try {
-            val parsedValue = value.toInt()
+            val parsedValue = value.toBigDecimal().toInt()
             if (this.mapping.multiValued) {
                 into.addField(this.mapping.destination, parsedValue)
             } else {
                 into.setField(this.mapping.destination, parsedValue)
             }
-        } catch (e: NumberFormatException) {
+        } catch (_: NumberFormatException) {
             context.log(JobLog(context.jobId, into.uuidOrNull(), null, JobLogContext.METADATA, JobLogLevel.WARNING, "Failed to parse integer '$value' for field ${this.mapping.destination}."))
             return
         }
