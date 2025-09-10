@@ -1,7 +1,7 @@
 package ch.pontius.kiar.ingester.solrj
 
 /**
- * The [ObjectTypes] supported by KIM.ch Data Ingest platform.
+ * The [ObjectType]s supported by KIM.ch Data Ingest platform.
  *
  * @author Ralph Gasser
  * @version 1.0.1
