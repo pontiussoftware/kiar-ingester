@@ -97,7 +97,7 @@ class ApacheSolrSink(override val input: Source<SolrInputDocument>, private val 
                             }
 
                             /* Apply selector if defined. */
-                            if (selector != null) {
+                            if (!selector.isNullOrEmpty()) {
                                 val map = doc.fieldNames.associateWith { doc.getFieldValue(it) }
                                 try {
                                     if (JsonPath.parse(listOf(map)).read<List<*>>("$[?($selector)])").isEmpty()) {
