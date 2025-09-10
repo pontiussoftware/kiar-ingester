@@ -27,7 +27,7 @@ DisplayTransformer(override val input: Source<SolrInputDocument>): Transformer<S
             when (type) {
                 ObjectType.BIBLIOGRAPHISCHES_OBJEKT -> doc.setField(Field.DISPLAY, listOfNotNull(doc.get<String>(Field.DESIGNATION), doc.get<String>(Field.TITEL)).joinToString(", "))
                 ObjectType.FOTOGRAFIE -> doc.setField(Field.DISPLAY, listOfNotNull(doc.asString(Field.DESIGNATION), doc.get<String>(Field.TITEL)).joinToString(", "))
-                ObjectType.KUNST -> doc.setField(Field.DISPLAY, listOfNotNull(doc.get<String>(Field.ARTIST), listOfNotNull(doc.get<String>(Field.DESIGNATION), doc.get<String>(Field.TITEL)).joinToString(", ")).joinToString(" - "))
+                ObjectType.KUNST -> doc.setField(Field.DISPLAY, listOfNotNull(doc.get<String>(Field.ARTIST).let { if (it == "unbekannt") { null } else { it } }, listOfNotNull(doc.get<String>(Field.DESIGNATION), doc.get<String>(Field.TITEL)).joinToString(", ")).joinToString(" - "))
                 else -> doc.setField(Field.DISPLAY, doc.get<String>(Field.DESIGNATION) ?: "")
             }
 
