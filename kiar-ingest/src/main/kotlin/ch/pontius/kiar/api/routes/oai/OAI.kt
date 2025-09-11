@@ -3,6 +3,7 @@ package ch.pontius.kiar.api.routes.oai
 import ch.pontius.kiar.oai.OaiServer
 import io.javalin.http.Context
 import io.javalin.openapi.*
+import io.javalin.openapi.OpenApiParam
 import java.io.StringWriter
 import javax.xml.transform.TransformerFactory
 import javax.xml.transform.dom.DOMSource
@@ -53,8 +54,9 @@ fun getOaiPmh(ctx: Context, server: OaiServer) {
                 OpenApiContentProperty(name = "verb", type = "string"),
                 OpenApiContentProperty(name = "identifier", type = "string"),
                 OpenApiContentProperty(name = "resumptionToken", type = "string"),
-                OpenApiContentProperty(name = "metadataPrefix", type = "string")
-            ])
+                OpenApiContentProperty(name = "metadataPrefix", type = "string"),
+                OpenApiContentProperty(name = "set", type = "string")
+        ])
         ],
         description = "Multipart form data containing the form fields to upload.",
         required = true
