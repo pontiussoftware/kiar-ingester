@@ -1,6 +1,5 @@
 package ch.pontius.kiar.oai
 
-import ch.pontius.kiar.api.model.config.solr.ApacheSolrConfig
 import ch.pontius.kiar.oai.Verbs.*
 import ch.pontius.kiar.database.config.solr.DbCollection
 import ch.pontius.kiar.database.config.solr.DbCollectionType
@@ -8,6 +7,8 @@ import ch.pontius.kiar.ingester.parsing.xml.XmlDocumentParser
 import ch.pontius.kiar.ingester.solrj.Field
 import ch.pontius.kiar.ingester.solrj.uuid
 import ch.pontius.kiar.oai.mapper.OAIMapper
+import com.github.benmanes.caffeine.cache.Caffeine
+import com.github.benmanes.caffeine.cache.RemovalListener
 import io.javalin.http.Context
 import io.javalin.http.HandlerType
 import jetbrains.exodus.database.TransientEntityStore
@@ -21,6 +22,7 @@ import java.io.Closeable
 import java.text.DateFormat
 import java.text.ParseException
 import java.text.SimpleDateFormat
+import java.time.Duration
 import java.util.*
 import java.util.concurrent.ConcurrentHashMap
 import javax.xml.parsers.DocumentBuilder
@@ -48,10 +50,10 @@ class OaiServer(private val store: TransientEntityStore): Closeable {
     private val documentBuilder: DocumentBuilder = DocumentBuilderFactory.newInstance().newDocumentBuilder()
 
     /** A [ConcurrentHashMap] of [Http2SolrClient] used by this [OaiServer] to fetch data. */
-    private val clients = ConcurrentHashMap<ApacheSolrConfig, Http2SolrClient>()
+    private val clients = Caffeine.newBuilder().expireAfterWrite(Duration.ofHours(12)).removalListener(RemovalListener<String, Http2SolrClient> { key, value, cause -> value?.close() }).build<String, Http2SolrClient>().asMap()
 
     /** A [ConcurrentHashMap] of [Http2SolrClient] used by this [OaiServer] to fetch data. */
-    private val tokens = ConcurrentHashMap<String, Pair<Int,OAIMapper>>()
+    private val tokens = Caffeine.newBuilder().expireAfterWrite(Duration.ofMinutes(60)).build<String, Pair<Int, OAIMapper>>().asMap()
 
     /** The [DateFormat] used by this [OaiServer]. */
     private val responseDateFormat = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'")
@@ -151,9 +153,9 @@ class OaiServer(private val store: TransientEntityStore): Closeable {
 
         /* Prepare facet query. */
         val query = SolrQuery("*:*")
-        query.addFacetField(Field.INSTITUTION.name)
-        query.addFacetField(Field.COLLECTION.name)
-        query.addFacetField(Field.PARTIAL_COLLECTION.name)
+        query.addFacetField(Field.INSTITUTION.solr)
+        query.addFacetField(Field.COLLECTION.solr)
+        query.addFacetField(Field.PARTIAL_COLLECTION.solr)
         query.rows = 0
         query.start = 0
 
@@ -167,15 +169,14 @@ class OaiServer(private val store: TransientEntityStore): Closeable {
             for (value in facet.values) {
                 if (value.count > 0) {
                     val setElement = root.ownerDocument.createElement("set")
-                    setElement.appendChild(root.ownerDocument.createElement("spec").apply { textContent = "${facet.name}:(${value.name})" })
+                    setElement.appendChild(root.ownerDocument.createElement("spec").apply { textContent = "${facet.name}:(\"${value.name}\")" })
                     setElement.appendChild(root.ownerDocument.createElement("setName").apply {
                         when (facet.name) {
-                            Field.INSTITUTION.name -> textContent = "Institution: ${value.name}"
-                            Field.COLLECTION.name -> textContent = "Sammlung: ${value.name}"
-                            Field.PARTIAL_COLLECTION.name -> textContent = "Teilsammlung: ${value.name}"
+                            Field.INSTITUTION.solr -> textContent = "Institution: ${value.name}"
+                            Field.COLLECTION.solr -> textContent = "Sammlung: ${value.name}"
+                            Field.PARTIAL_COLLECTION.solr -> textContent = "Teilsammlung: ${value.name}"
                         }
                     })
-                    setElement.appendChild(root.ownerDocument.createElement("setDescription").apply { textContent = value.count.toString() })
                     root.appendChild(setElement)
                 }
             }
@@ -226,7 +227,7 @@ class OaiServer(private val store: TransientEntityStore): Closeable {
         }
 
         /* Generate response document. */
-        val root = this.documentBuilder.generateResponse("GetRecord")
+        val root = this.documentBuilder.generateResponse("GetRecord", prefix = mapper.format.prefix)
         val doc = root.ownerDocument
 
         val recordElement = doc.createElement("record")
@@ -254,7 +255,9 @@ class OaiServer(private val store: TransientEntityStore): Closeable {
      * @return [Document] representing the OAI-PMH response.
      */
     private fun handleListRecords(collection: String, parameters: Map<String,String>): Document {
+        /* Parse request. */
         val token = parameters["resumptionToken"]
+        val set = parameters["set"]
         val from = parameters["from"]?.let {
             try {
                 GRANULARITY_FORMAT.parse(it)
@@ -282,12 +285,20 @@ class OaiServer(private val store: TransientEntityStore): Closeable {
         /* Prepare Apache Solr query. */
         val query = SolrQuery("*:*")
         if (from != null && until != null) {
-            query.addFilterQuery("date:[${GRANULARITY_FORMAT.format(from)} TO ${GRANULARITY_FORMAT.format(until)}]")
+            val from = GRANULARITY_FORMAT.format(from)
+            val until = GRANULARITY_FORMAT.format(until)
+            query.addFilterQuery("date:[$from TO $until]")
         } else if (from != null) {
-            query.addFilterQuery("date:[${GRANULARITY_FORMAT.format(from)} TO *]")
+            val from = GRANULARITY_FORMAT.format(from)
+            query.addFilterQuery("date:[$from TO *]")
         } else if (until != null) {
-            query.addFilterQuery("date:[* TO ${GRANULARITY_FORMAT.format(until)}]")
+            val until = GRANULARITY_FORMAT.format(until)
+            query.addFilterQuery("date:[* TO $until]")
         }
+        if (set != null) {
+            query.addFilterQuery(set)
+        }
+
         query.start = start
         query.rows = PAGE_SIZE
 
@@ -296,9 +307,8 @@ class OaiServer(private val store: TransientEntityStore): Closeable {
         val response = client.query(collection, query)
 
         /* Construct response document. */
-        val root = this.documentBuilder.generateResponse("ListRecords")
+        val root = this.documentBuilder.generateResponse("ListRecords", prefix = mapper.format.prefix, from = from, until = until, set = set)
         val doc = root.ownerDocument
-
 
         /* Process results. */
         for (document in response.results) {
@@ -346,7 +356,9 @@ class OaiServer(private val store: TransientEntityStore): Closeable {
      * @return [Document] representing the OAI-PMH response.
      */
     private fun handleListIdentifiers(collection: String, parameters: Map<String,String>): Document {
+        /* Parse request. */
         val token = parameters["resumptionToken"]
+        val set = parameters["set"]
 
         /* Determine start and mapper to use. */
         val (start, mapper) = if (token != null) {
@@ -382,6 +394,9 @@ class OaiServer(private val store: TransientEntityStore): Closeable {
         } else if (until != null) {
             query.addFilterQuery("date:[* TO ${GRANULARITY_FORMAT.format(until)}]")
         }
+        if (set != null) {
+            query.addFilterQuery(set)
+        }
         query.addField("uuid")
         query.start = start
         query.rows = PAGE_SIZE
@@ -394,7 +409,7 @@ class OaiServer(private val store: TransientEntityStore): Closeable {
         }
 
         /* Construct response document. */
-        val root = this.documentBuilder.generateResponse("ListIdentifiers")
+        val root = this.documentBuilder.generateResponse("ListIdentifiers", prefix = mapper.format.prefix, from = from, until = until, set = set)
         val doc = root.ownerDocument
 
         /* Process results. */
@@ -438,7 +453,7 @@ class OaiServer(private val store: TransientEntityStore): Closeable {
                 ?: throw IllegalArgumentException("Collection '$collection' does not exist.")
         }
 
-        return this.clients.computeIfAbsent(config) {
+        return this.clients.computeIfAbsent(config.name) {
             /* Prepare builder */
             var httpBuilder = Http2SolrClient.Builder(config.server)
             httpBuilder.useHttp1_1(true)
@@ -457,7 +472,7 @@ class OaiServer(private val store: TransientEntityStore): Closeable {
      * @param verb The OAI-PMH verb.
      * @return [Pair] of [Document] and root [Element]
      */
-    private fun DocumentBuilder.generateResponse(verb: String):Element {
+    private fun DocumentBuilder.generateResponse(verb: String, prefix: String? = null, set: String? = null, from: Date? = null, until: Date? = null):Element {
         /* Construct response document. */
         val doc = this.newDocument()
 
@@ -476,6 +491,18 @@ class OaiServer(private val store: TransientEntityStore): Closeable {
         /* Append response date. */
         val request = doc.createElement("request")
         request.setAttribute("verb", verb)
+        if (prefix != null) {
+            request.setAttribute("metadataPrefix", prefix)
+        }
+        if (set != null) {
+            request.setAttribute("set", set)
+        }
+        if (from != null) {
+            request.setAttribute("from", GRANULARITY_FORMAT.format(from))
+        }
+        if (until != null) {
+            request.setAttribute("until", GRANULARITY_FORMAT.format(until))
+        }
         rootElement.appendChild(request)
 
         /* Verb element. */

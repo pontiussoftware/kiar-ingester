@@ -4,6 +4,7 @@ import ch.pontius.kiar.ingester.solrj.Field
 import ch.pontius.kiar.ingester.solrj.get
 import ch.pontius.kiar.ingester.solrj.getAll
 import ch.pontius.kiar.ingester.solrj.has
+import ch.pontius.kiar.oai.Formats
 import org.apache.solr.common.SolrDocument
 import org.w3c.dom.Element
 import org.w3c.dom.Node
@@ -15,6 +16,9 @@ import org.w3c.dom.Node
  * @version 1.0.0
  */
 object OAIDCMapper: OAIMapper {
+    /** The [OAIDCMapper] returns the [Formats.OAI_DC] format. */
+    override val format: Formats = Formats.OAI_DC
+
     /**
      * Maps the provided [SolrDocument] to an EDM element.
      *

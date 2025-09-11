@@ -6,6 +6,7 @@ import ch.pontius.kiar.ingester.solrj.Field
 import ch.pontius.kiar.ingester.solrj.get
 import ch.pontius.kiar.ingester.solrj.getAll
 import ch.pontius.kiar.ingester.solrj.has
+import ch.pontius.kiar.oai.Formats
 import jetbrains.exodus.database.TransientEntityStore
 import kotlinx.dnq.query.asSequence
 import org.apache.solr.common.SolrDocument
@@ -46,6 +47,9 @@ class EDMMapper(store: TransientEntityStore): OAIMapper {
     private val institutions: Map<String, Institution> = store.transactional(true) {
         DbInstitution.all().asSequence().map { it.name to it.toApi() }.toMap()
     }
+
+    /** The [EDMMapper] returns the [Formats.EDM] format. */
+    override val format: Formats = Formats.EDM
 
     /**
      * Maps the provided [SolrDocument] to an EDM element.

@@ -1,5 +1,6 @@
 package ch.pontius.kiar.oai.mapper
 
+import ch.pontius.kiar.oai.Formats
 import org.apache.solr.common.SolrDocument
 import org.w3c.dom.Node
 
@@ -10,6 +11,9 @@ import org.w3c.dom.Node
  * @version 1.0.0
  */
 interface OAIMapper {
+    /** The [Formats] supported by this [OAIMapper]. */
+    val format: Formats
+
     /**
      * Maps the given [SolrDocument] to an XML [Node] and appends it to the given [Node].
      *

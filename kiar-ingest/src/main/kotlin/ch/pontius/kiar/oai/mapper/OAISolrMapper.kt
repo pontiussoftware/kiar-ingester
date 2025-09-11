@@ -1,5 +1,6 @@
 package ch.pontius.kiar.oai.mapper
 
+import ch.pontius.kiar.oai.Formats
 import org.apache.solr.common.SolrDocument
 import org.w3c.dom.Document
 import org.w3c.dom.Element
@@ -12,6 +13,9 @@ import org.w3c.dom.Node
  * @version 1.0.0
  */
 object OAISolrMapper: OAIMapper {
+    /** The [OAIDCMapper] returns the [Formats.SOLR] format. */
+    override val format: Formats = Formats.SOLR
+
     /**
      * Maps the provided [SolrDocument] to an EDM element.
      *
@@ -38,7 +42,7 @@ object OAISolrMapper: OAIMapper {
                     val arrayElement = doc.createElement("arr")
                     arrayElement.setAttribute("name", fieldName)
                     fieldValues.forEach { value ->
-                        val fieldElement = fieldValues.first().toNode(doc) ?: return@forEach
+                        val fieldElement = value.toNode(doc) ?: return@forEach
                         arrayElement.appendChild(fieldElement)
                     }
                     docElement.appendChild(arrayElement)

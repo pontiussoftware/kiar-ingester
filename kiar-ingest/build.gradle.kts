@@ -1,13 +1,10 @@
-val appCompatVersion: String by project
-
 val bcryptVersion: String by project
+val caffeineVersion: String by project
 val cliktVersion: String by project
 val commonsImagingVersion: String by project
 val javalinVersion: String by project
-val jacksonVersion: String by project
 val jlineVersion: String by project
 val jsonPathVersion: String by project
-val kotlinVersion: String by project
 val kotlinCoroutines: String by project
 val kotlinSerialization: String by project
 val log4jVersion: String by project
@@ -16,7 +13,6 @@ val poiVersion: String by project
 val scrimageVersion: String by project
 val solrjVersion: String by project
 val slf4jVersion: String by project
-val twelveMonkeysVersion: String by project
 val xodusVersion: String by project
 val xodusDnqVersion: String by project
 
@@ -39,6 +35,9 @@ application {
 dependencies {
     /** Frontend. */
     implementation(project(":kiar-ui", "frontendFiles"))
+
+    /** Caffeine cache.*/
+    implementation("com.github.ben-manes.caffeine:caffeine:$caffeineVersion")
 
     /** SolrJ. */
     implementation("org.apache.solr:solr-solrj:$solrjVersion")

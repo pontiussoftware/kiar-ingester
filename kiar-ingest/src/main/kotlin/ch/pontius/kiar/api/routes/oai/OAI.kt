@@ -19,6 +19,7 @@ import javax.xml.transform.stream.StreamResult
         OpenApiParam(name = "identifier", type = String::class, description = "The identifier to harvest (used for GetRecord ).", required = false),
         OpenApiParam(name = "resumptionToken", type = String::class, description = "The OAI-PMH resumption token (used for ListIdentifiers and ListRecords).", required = false),
         OpenApiParam(name = "metadataPrefix", type = String::class, description = "The OAI-PMH metadata prefix (used for GetRecord, ListIdentifiers and ListRecords).", required = false),
+        OpenApiParam(name = "set", type = String::class, description = "The OAI-PMH set criterion for selective harvesting (used for ListIdentifiers and ListRecords).", required = false),
     ],
     pathParams = [
         OpenApiParam(name = "collection", type = String::class, description = "The collection to harvest.", required = true)
