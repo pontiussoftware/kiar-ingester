@@ -5,6 +5,7 @@ import ch.pontius.kiar.oai.Verbs.*
 import ch.pontius.kiar.database.config.solr.DbCollection
 import ch.pontius.kiar.database.config.solr.DbCollectionType
 import ch.pontius.kiar.ingester.parsing.xml.XmlDocumentParser
+import ch.pontius.kiar.ingester.solrj.Field
 import ch.pontius.kiar.ingester.solrj.uuid
 import ch.pontius.kiar.oai.mapper.OAIMapper
 import io.javalin.http.Context
@@ -78,14 +79,14 @@ class OaiServer(private val store: TransientEntityStore): Closeable {
         val verb = parameters["verb"] ?: return handleError("badVerb", "Missing verb.")
         val verbParsed = try {
             Verbs.valueOf(verb.uppercase())
-        } catch (e: IllegalArgumentException) {
+        } catch (_: IllegalArgumentException) {
             return handleError("badVerb", "Illegal OAI verb '${verb}'.")
         }
 
         /* Generate response document using OAI server. */
         return when (verbParsed) {
             IDENTIFY -> this.handleIdentify(collection)
-            LISTSETS -> this.handleListSets()
+            LISTSETS -> this.handleListSets(collection)
             LISTMETADATAFORMATS -> this.handleListMetadataFormats()
             LISTIDENTIFIERS -> this.handleListIdentifiers(collection, parameters)
             LISTRECORDS -> this.handleListRecords(collection, parameters)
@@ -145,15 +146,40 @@ class OaiServer(private val store: TransientEntityStore): Closeable {
      *
      * @return [Document] representing the OAI-PMH response.
      */
-    private fun handleListSets(): Document {
+    private fun handleListSets(collection: String): Document {
         val verb = "ListSets"
+
+        /* Prepare facet query. */
+        val query = SolrQuery("*:*")
+        query.addFacetField(Field.INSTITUTION.name)
+        query.addFacetField(Field.COLLECTION.name)
+        query.addFacetField(Field.PARTIAL_COLLECTION.name)
+        query.rows = 0
+        query.start = 0
+
+        /* Execute query. */
+        val client = getOrLoadClient(collection)
+        val response = client.query(collection, query)
 
         /* Construct response document. */
         val root = this.documentBuilder.generateResponse(verb)
-        root.appendChild(root.ownerDocument.createElement("error").apply {
-            this.setAttribute("code", "noSetHierarchy")
-            this.textContent = "This repository does not support sets."
-        })
+        for (facet in response.facetFields) {
+            for (value in facet.values) {
+                if (value.count > 0) {
+                    val setElement = root.ownerDocument.createElement("set")
+                    setElement.appendChild(root.ownerDocument.createElement("spec").apply { textContent = "${facet.name}:(${value.name})" })
+                    setElement.appendChild(root.ownerDocument.createElement("setName").apply {
+                        when (facet.name) {
+                            Field.INSTITUTION.name -> textContent = "Institution: ${value.name}"
+                            Field.COLLECTION.name -> textContent = "Sammlung: ${value.name}"
+                            Field.PARTIAL_COLLECTION.name -> textContent = "Teilsammlung: ${value.name}"
+                        }
+                    })
+                    setElement.appendChild(root.ownerDocument.createElement("setDescription").apply { textContent = value.count.toString() })
+                    root.appendChild(setElement)
+                }
+            }
+        }
 
         return root.ownerDocument
     }
@@ -195,7 +221,7 @@ class OaiServer(private val store: TransientEntityStore): Closeable {
         val client = getOrLoadClient(collection)
         val response = try {
             client.getById(collection, identifier) ?: return handleError("idDoesNotExist", "The provided identifier '${identifier}' does not exist.")
-        } catch (e: Throwable) {
+        } catch (_: Throwable) {
             return handleError("idDoesNotExist", "The provided identifier '${identifier}' does not exist.")
         }
 
@@ -208,7 +234,7 @@ class OaiServer(private val store: TransientEntityStore): Closeable {
 
         /* Create header element. */
         val headerElement = doc.createElement("header")
-        headerElement.appendChild(doc.createElement("identifier").apply { textContent = response.uuid().toString() })
+        headerElement.appendChild(doc.createElement("identifier").apply { textContent = response.uuid() })
         headerElement.appendChild(doc.createElement("datestamp").apply { textContent = "2024-01-01" })
         recordElement.appendChild(headerElement)
 
@@ -232,14 +258,14 @@ class OaiServer(private val store: TransientEntityStore): Closeable {
         val from = parameters["from"]?.let {
             try {
                 GRANULARITY_FORMAT.parse(it)
-            } catch (e: ParseException) {
+            } catch (_: ParseException) {
                 return handleError("badArgument", "Malformed 'from'.")
             }
         }
         val until = parameters["until"]?.let {
             try {
                 GRANULARITY_FORMAT.parse(it)
-            } catch (e: ParseException) {
+            } catch (_: ParseException) {
                 return handleError("badArgument", "Malformed 'until'.")
             }
         }
@@ -283,7 +309,7 @@ class OaiServer(private val store: TransientEntityStore): Closeable {
             recordElement.appendChild(headerElement)
 
             /* Create header element. */
-            headerElement.appendChild(doc.createElement("identifier").apply { textContent = document.uuid().toString() })
+            headerElement.appendChild(doc.createElement("identifier").apply { textContent = document.uuid() })
             headerElement.appendChild(doc.createElement("datestamp").apply { textContent = "2024-01-01" })
             recordElement.appendChild(headerElement)
 
@@ -335,14 +361,14 @@ class OaiServer(private val store: TransientEntityStore): Closeable {
         val from = parameters["from"]?.let {
             try {
                 GRANULARITY_FORMAT.parse(it)
-            } catch (e: ParseException) {
+            } catch (_: ParseException) {
                 return handleError("badArgument", "Malformed 'from'.")
             }
         }
         val until = parameters["until"]?.let {
             try {
                 GRANULARITY_FORMAT.parse(it)
-            } catch (e: ParseException) {
+            } catch (_: ParseException) {
                 return handleError("badArgument", "Malformed 'until'.")
             }
         }
@@ -381,7 +407,7 @@ class OaiServer(private val store: TransientEntityStore): Closeable {
 
             val identifierElement = doc.createElement("identifier")
             headerElement.appendChild(identifierElement)
-            identifierElement.appendChild(doc.createTextNode(document.uuid().toString()))
+            identifierElement.appendChild(doc.createTextNode(document.uuid()))
         }
 
         /* If there are more documents to return, include a resumptionToken. */

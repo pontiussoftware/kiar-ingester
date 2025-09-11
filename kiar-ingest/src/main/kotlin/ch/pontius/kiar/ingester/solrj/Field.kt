@@ -4,7 +4,7 @@ package ch.pontius.kiar.ingester.solrj
  * Enumeration of all fields known to the KIM.ch Data Ingest Platform.
  *
  * @author Ralph Gasser
- * @version 1.0.0
+ * @version 1.0.1
  */
 enum class Field(val solr: String, val required: Boolean = false, val multiValued: Boolean = false, val transient: Boolean = false) {
     /** A transient field used to store raw image information. */
@@ -63,6 +63,9 @@ enum class Field(val solr: String, val required: Boolean = false, val multiValue
 
     /** Field containing the name of the institution the object belongs to. */
     COLLECTION("sammlung", true),
+
+    /** Field containing the name of the institution the object belongs to. */
+    PARTIAL_COLLECTION("teilsammlung", false),
 
     /** Field containing the name of the institution the object belongs to. */
     INSTITUTION("institution", true),
