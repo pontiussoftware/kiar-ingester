@@ -127,6 +127,23 @@ class XmlParsingContext(config: EntityMapping, private val context: ProcessingCo
     }
 
     /**
+     * Handles fatal [SAXParseException].
+     *
+     * @param e [SAXParseException]
+     */
+    override fun fatalError(e: SAXParseException) {
+        /* Convert invalid characters to recoverable error. */
+        if (e.message?.endsWith(" is an invalid XML character.") == true) {
+            LOGGER.error("Encountered invalid character while parsing XML: ${e.message}.")
+            this.error = true
+            return
+        }
+
+        /* For other fatal errors, use default behavior. */
+        super.fatalError(e)
+    }
+
+    /**
      * Creates a new [Element] in the given [Document].
      *
      * @param node The [Node] to append [Element] to.
