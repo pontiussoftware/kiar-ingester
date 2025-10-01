@@ -13,11 +13,11 @@
     </RollingFile>
   </Appenders>
   <Loggers>
-    <Root level="info">
+    <Root level="warn">
       <AppenderRef ref="STDOUT"/>
+      <AppenderRef ref="FILE"/>
     </Root>
     <Logger name="ch.pontius.kiar" level="debug" additivity="false">
-      <AppenderRef ref="STDOUT"/>
       <AppenderRef ref="FILE"/>
     </Logger>
   </Loggers>
