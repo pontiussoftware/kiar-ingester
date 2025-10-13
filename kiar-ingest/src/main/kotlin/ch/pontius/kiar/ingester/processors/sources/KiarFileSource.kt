@@ -22,7 +22,7 @@ import java.nio.file.Path
  * A [Source] for a KIAR file, as delivered by mainly smaller museums.
  *
  * @author Ralph Gasser
- * @version 1.1.1
+ * @version 1.1.2
  */
 class KiarFileSource(private val file: Path, private val config: EntityMapping, private val skipResources: Boolean = false): Source<SolrInputDocument> {
     companion object {
@@ -57,6 +57,9 @@ class KiarFileSource(private val file: Path, private val config: EntityMapping, 
                         doc.addField(Field.RAW, KiarImageProvider(i, entry))
                     }
                 }
+
+                /* Check if context is still active. Break otherwise. */
+                if (context.aborted) break
 
                 /* Send document down the channel. */
                 this.send(doc)

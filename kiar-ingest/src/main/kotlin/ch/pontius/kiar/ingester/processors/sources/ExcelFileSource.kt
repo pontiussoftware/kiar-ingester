@@ -21,7 +21,7 @@ import java.nio.file.StandardOpenOption
  * A [Source] for a single Microsoft Excel file. This is, for example, used by museumPlus import.
  *
  * @author Ralph Gasser
- * @version 1.0.2
+ * @version 1.0.3
  */
 class ExcelFileSource(private val file: Path, private val config: EntityMapping): Source<SolrInputDocument> {
     override fun toFlow(context: ProcessingContext): Flow<SolrInputDocument> = flow {
@@ -53,6 +53,9 @@ class ExcelFileSource(private val file: Path, private val config: EntityMapping)
                         }?.trim()
                         parser.parse(value, doc, context)
                     }
+
+                    /* Check if context is still active. Break otherwise. */
+                    if (context.aborted) break
 
                     /* Emit document. */
                     emit(doc)

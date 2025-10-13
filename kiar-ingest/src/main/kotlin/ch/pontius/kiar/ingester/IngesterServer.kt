@@ -43,7 +43,7 @@ class IngesterServer(val store: TransientEntityStore, val config: Config) {
     private val activeWatchers = ConcurrentHashMap<String,FileWatcher>()
 
     /** A [Map] of [FileWatcher]s that are currently running. */
-    private val activeJobs = ConcurrentHashMap<String, Pair<ProcessingContext, Job>>()
+    private val activeJobs = ConcurrentHashMap<String, ProcessingContext>()
 
     /**
      * The [ExecutorService] used to execute continuous jobs, e.g., driven by file watchers.
@@ -123,8 +123,10 @@ class IngesterServer(val store: TransientEntityStore, val config: Config) {
      * @param jobId The ID of the job to schedule.
      */
     fun scheduleJob(jobId: String, test: Boolean = false) {
-        val (pipeline, context) = this.store.transactional {
+        /* Step 1: Perform sanity checks and create pipeline. */
+        val (participant, pipeline) = this.store.transactional {
             val job = DbJob.findById(jobId)
+            val participant = job.template?.participant?.name ?: throw IllegalStateException("Job is not associated with a participant.")
 
             /* Perform sanity check. */
             require(job.status == DbJobStatus.FAILED || job.status == DbJobStatus.HARVESTED || job.status == DbJobStatus.INTERRUPTED) {
@@ -134,20 +136,21 @@ class IngesterServer(val store: TransientEntityStore, val config: Config) {
             job.changedAt = DateTime.now()
 
             /* Return pipeline and job*/
-            val pipeline = job.toPipeline(this.config, test)
-            pipeline to ProcessingContext(
-                jobId,
-                job.template?.participant?.name ?: throw IllegalStateException("Job is not associated with a participant."),
-                this.store
-            )
+            participant to job.toPipeline(this.config, test)
         }
 
-        /* Prepare flow including finalization. */
+        /* Step 2: Create processing context. */
+        val context = ProcessingContext(jobId, participant)
+        this.activeJobs[jobId] = context
+
+        /* Step 3: Create flow. */
         val flow = pipeline.toFlow(context).onStart {
             this@IngesterServer.store.transactional {
                 val job = DbJob.findById(jobId)
                 job.status = DbJobStatus.RUNNING
             }
+        }.takeWhile {
+            !context.aborted
         }.onCompletion { e ->
             /* Remove job from list of active jobs. */
             this@IngesterServer.activeJobs.remove(jobId)
@@ -155,21 +158,18 @@ class IngesterServer(val store: TransientEntityStore, val config: Config) {
             /* Store information about finished job. */
             this@IngesterServer.store.transactional {
                 val job = DbJob.findById(jobId)
-                when (e) {
-                    null -> {
-                        LOGGER.info("Data ingest (name = ${job.name}, test = ${test}) completed successfully!")
-                        if (test) {
-                            job.status = DbJobStatus.HARVESTED
-                        } else {
-                            job.status = DbJobStatus.INGESTED
-                        }
-                    }
-                    is CancellationException -> {
-                        job.status = DbJobStatus.ABORTED
-                    }
-                    else -> {
-                        LOGGER.error("Data ingest for job (name = ${job.name}, test = ${test}) failed: ${e.printStackTrace()}")
-                        job.status = DbJobStatus.FAILED
+                if (e != null) {
+                    LOGGER.error("Data ingest (name = ${job.name}, test = ${test}) failed: ${e.printStackTrace()}")
+                    job.status = DbJobStatus.FAILED
+                } else if (context.aborted) {
+                    LOGGER.warn("Data ingest (name = ${job.name}, test = ${test}) was aborted by user!")
+                    job.status = DbJobStatus.ABORTED
+                } else {
+                    LOGGER.info("Data ingest (name = ${job.name}, test = ${test}) completed successfully!")
+                    if (test) {
+                        job.status = DbJobStatus.HARVESTED
+                    } else {
+                        job.status = DbJobStatus.INGESTED
                     }
                 }
 
@@ -178,16 +178,16 @@ class IngesterServer(val store: TransientEntityStore, val config: Config) {
                 job.error = context.error
                 job.skipped = context.skipped
                 job.changedAt = DateTime.now()
+
+                /* Flush logs. */
+                context.flushLogs()
             }
+        }
 
-            /* Flush logs. */
-            context.flushLogs()
-        }.cancellable()
-
-        /* Schedule job for execution. */
-        runBlocking {
-            this@IngesterServer.activeJobs[jobId] = context to launch(this@IngesterServer.jobDispatcher) {
-                flow.launchIn(this)
+        /* Step 4: Schedule job for execution. */
+       runBlocking {
+            launch(this@IngesterServer.jobDispatcher) {
+                flow.collect()
             }
         }
     }
@@ -200,16 +200,9 @@ class IngesterServer(val store: TransientEntityStore, val config: Config) {
      * @return True on success, false otherwise.
      */
     fun terminateJob(jobId: String): Boolean {
-        val active = this.activeJobs[jobId]
+        val active = this@IngesterServer.activeJobs[jobId]
         if (active != null) {
-            active.second.cancel("The job $jobId has been cancelled by a user.")
-            this.store.transactional {
-                val job = DbJob.findById(jobId)
-                if (job.status.active) {
-                    job.status = DbJobStatus.ABORTED
-                    job.changedAt = DateTime.now()
-                }
-            }
+            active.abort()
             return true
         }
         return false
@@ -221,7 +214,7 @@ class IngesterServer(val store: TransientEntityStore, val config: Config) {
      * @param jobId The ID of the job to terminate.
      * @return [ProcessingContext] or null
      */
-    fun getContext(jobId: String): ProcessingContext? = this.activeJobs[jobId]?.first
+    fun getContext(jobId: String): ProcessingContext? = this.activeJobs[jobId]
 
     /**
      * Stops this [IngesterServer] and all periodic task registered with it.

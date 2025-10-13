@@ -34,7 +34,7 @@ import java.util.UUID
  * A [Sink] that processes [SolrInputDocument]s and ingests them into Apache Solr.
  *
  * @author Ralph Gasser
- * @version 1.2.2
+ * @version 1.3.0
  */
 class ApacheSolrSink(override val input: Source<SolrInputDocument>, private val config: ApacheSolrConfig): Sink<SolrInputDocument> {
 
@@ -58,7 +58,7 @@ class ApacheSolrSink(override val input: Source<SolrInputDocument>, private val 
      *
      * @return [Flow]
      */
-    override fun toFlow(context: ProcessingContext): Flow<Unit> {
+    override fun toFlow(context: ProcessingContext): Flow<SolrInputDocument> {
         /* Prepare HTTP client builder. */
         var httpBuilder = Http2SolrClient.Builder(this.config.server)
         if (this.config.username != null && this.config.password != null) {
@@ -70,80 +70,76 @@ class ApacheSolrSink(override val input: Source<SolrInputDocument>, private val 
         /* Initializes the document validators. */
         this.initializeValidators(client)
 
+
+
         /* Return flow. */
-        return flow {
-            /* Prepare ingest. */
+        return this@ApacheSolrSink.input.toFlow(context).onStart {
             this@ApacheSolrSink.prepareIngest(client, context)
+        }.onEach { doc ->
+            val uuid = doc.get<String>(Field.UUID)
+            if (uuid != null) {
+                /* Set last change field. */
+                if (!doc.has(Field.LASTCHANGE)) {
+                    doc.setField(Field.LASTCHANGE, Date())
+                }
 
-            /* Start collection of incoming flow. */
-            this@ApacheSolrSink.input.toFlow(context).collect() { doc ->
-                val uuid = doc.get<String>(Field.UUID)
-                if (uuid != null) {
-                    /* Set last change field. */
-                    if (!doc.has(Field.LASTCHANGE)) {
-                        doc.setField(Field.LASTCHANGE, Date())
-                    }
+                /* Ingest into collections. */
+                for ((collection, selector) in this@ApacheSolrSink.collections) {
+                    try {
+                        /* Apply per-institution collection filter. */
+                        if (this@ApacheSolrSink.institutions[doc.get<String>(Field.INSTITUTION)]?.contains(collection) != true) {
+                            LOGGER.debug("Skipping document due to institution not publishing to per-institution filter (jobId = {}, collection = {}, docId = {}).", context.jobId, collection, uuid)
+                            continue
+                        }
 
-                    /* Ingest into collections. */
-                    for ((collection, selector) in this@ApacheSolrSink.collections) {
-                        try {
-                            /* Apply per-institution collection filter. */
-                            if (this@ApacheSolrSink.institutions[doc.get<String>(Field.INSTITUTION)]?.contains(collection) != true) {
-                                LOGGER.debug("Skipping document due to institution not publishing to per-institution filter (jobId = {}, collection = {}, docId = {}).", context.jobId, collection, uuid)
+                        /* Apply per-object collection filter. */
+                        if (doc.has(Field.PUBLISH_TO)) {
+                            val collections = doc.getAll<String>(Field.PUBLISH_TO)
+                            if (!collections.contains(collection)) {
+                                LOGGER.debug("Skipping document due to institution not publishing to per-object filter (jobId = {}, collection = {}, docId = {}).", context.jobId, collection, uuid)
                                 continue
                             }
-
-                            /* Apply per-object collection filter. */
-                            if (doc.has(Field.PUBLISH_TO)) {
-                                val collections = doc.getAll<String>(Field.PUBLISH_TO)
-                                if (!collections.contains(collection)) {
-                                    LOGGER.debug("Skipping document due to institution not publishing to per-object filter (jobId = {}, collection = {}, docId = {}).", context.jobId, collection, uuid)
-                                    continue
-                                }
-                            }
-
-                            /* Apply selector if defined. */
-                            if (!selector.isNullOrEmpty()) {
-                                val map = doc.fieldNames.associateWith { doc.getFieldValue(it) }
-                                try {
-                                    if (JsonPath.parse(listOf(map)).read<List<*>>("$[?($selector)])").isEmpty()) {
-                                        LOGGER.debug("Skipping document due to selector; no match (jobId = {}, collection = {}, docId = {}).", context.jobId, collection, uuid)
-                                        continue
-                                    }
-                                } catch (_: PathNotFoundException) {
-                                    LOGGER.warn("Skipping document due to selector; path not found (jobId = {}, collection = {}, docId = {}).", context.jobId, collection, uuid)
-                                    continue
-                                }  catch (_: InvalidPathException) {
-                                    LOGGER.warn("Skipping document due to selector; invalid path (jobId = {}, collection = {}, docId = {}).", context.jobId, collection, uuid)
-                                    continue
-                                }
-                            }
-
-                            /* Ingest object. */
-                            val validated = this@ApacheSolrSink.validate(collection, uuid, doc, context) ?: continue
-                            val response = client.add(collection, validated)
-                            if (response.status == 0) {
-                                LOGGER.info("Ingested document (jobId = {}, collection = {}, docId = {}).", context.jobId, collection, uuid)
-                            } else {
-                                LOGGER.error("Failed to ingest document (jobId = ${context.jobId}, docId = $uuid).")
-                                context.log(JobLog(null, uuid, collection, JobLogContext.SYSTEM, JobLogLevel.ERROR, "Failed to ingest document due to an Apache Solr error (status = ${response.status})."))
-                            }
-                        } catch (e: Throwable) {
-                            context.log(JobLog(null, uuid, collection, JobLogContext.SYSTEM, JobLogLevel.SEVERE, "Failed to ingest document due to exception: ${e.message}."))
                         }
-                    }
 
-                    /* Increment counter. */
-                    context.processed()
-                } else {
-                    context.log(JobLog(null, null, null, JobLogContext.SYSTEM, JobLogLevel.SEVERE, "Failed to ingest document, because UUID is missing."))
+                        /* Apply selector if defined. */
+                        if (!selector.isNullOrEmpty()) {
+                            val map = doc.fieldNames.associateWith { doc.getFieldValue(it) }
+                            try {
+                                if (JsonPath.parse(listOf(map)).read<List<*>>("$[?($selector)])").isEmpty()) {
+                                    LOGGER.debug("Skipping document due to selector; no match (jobId = {}, collection = {}, docId = {}).", context.jobId, collection, uuid)
+                                    continue
+                                }
+                            } catch (_: PathNotFoundException) {
+                                LOGGER.warn("Skipping document due to selector; path not found (jobId = {}, collection = {}, docId = {}).", context.jobId, collection, uuid)
+                                continue
+                            }  catch (_: InvalidPathException) {
+                                LOGGER.warn("Skipping document due to selector; invalid path (jobId = {}, collection = {}, docId = {}).", context.jobId, collection, uuid)
+                                continue
+                            }
+                        }
+
+                        /* Ingest object. */
+                        val validated = this@ApacheSolrSink.validate(collection, uuid, doc, context) ?: continue
+                        val response = client.add(collection, validated)
+                        if (response.status == 0) {
+                            LOGGER.info("Ingested document (jobId = {}, collection = {}, docId = {}).", context.jobId, collection, uuid)
+                        } else {
+                            LOGGER.error("Failed to ingest document (jobId = ${context.jobId}, docId = $uuid).")
+                            context.log(JobLog(null, uuid, collection, JobLogContext.SYSTEM, JobLogLevel.ERROR, "Failed to ingest document due to an Apache Solr error (status = ${response.status})."))
+                        }
+                    } catch (e: Throwable) {
+                        context.log(JobLog(null, uuid, collection, JobLogContext.SYSTEM, JobLogLevel.SEVERE, "Failed to ingest document due to exception: ${e.message}."))
+                    }
                 }
+
+                /* Increment counter. */
+                context.processed()
+            } else {
+                context.log(JobLog(null, null, null, JobLogContext.SYSTEM, JobLogLevel.SEVERE, "Failed to ingest document, because UUID is missing."))
             }
 
             /* Finalize ingest for all collections. */
             this@ApacheSolrSink.finalizeIngest(client, context)
-
-            emit(Unit)
         }.onCompletion {
             client.close()
         }

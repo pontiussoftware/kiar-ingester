@@ -20,5 +20,5 @@ interface Sink<I> {
      * @param context The [ProcessingContext] used by this [Sink].
      * @return [Flow] of this [Sink].
      */
-    fun toFlow(context: ProcessingContext): Flow<Unit>
+    fun toFlow(context: ProcessingContext): Flow<I>
 }

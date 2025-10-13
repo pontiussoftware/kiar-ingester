@@ -4,10 +4,10 @@ import ch.pontius.kiar.api.model.job.JobLog
 import ch.pontius.kiar.api.model.job.JobLogLevel
 import ch.pontius.kiar.database.job.DbJob
 import ch.pontius.kiar.database.job.DbJobLog
-import jetbrains.exodus.database.TransientEntityStore
 import kotlinx.dnq.util.findById
 import org.apache.logging.log4j.LogManager
 import java.util.*
+import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicLong
 
 /**
@@ -22,9 +22,6 @@ class ProcessingContext(
 
     /** The name of the participant this [ProcessingContext]. */
     val participant: String,
-
-    /** */
-    private val store: TransientEntityStore
 ) {
 
     companion object {
@@ -39,6 +36,9 @@ class ProcessingContext(
 
     /** Number of processing errors this [ProcessingContext]. */
     private val _error = AtomicLong(0L)
+
+    /** Number of processing errors this [ProcessingContext]. */
+    private val _aborted = AtomicBoolean(false)
 
     /** Append-only list of [JobLog] entries. */
     private val buffer: MutableList<JobLog> = Collections.synchronizedList(LinkedList())
@@ -55,12 +55,21 @@ class ProcessingContext(
     val error: Long
         get() = this._error.get()
 
+    /** Flag indicating, that this job has been aborted. */
+    val aborted: Boolean
+        get() = this._aborted.get()
+
     /**
      * Increments the processed counter.
      */
     fun processed() {
         this._processed.incrementAndGet()
     }
+
+    /**
+     * Aborts the job associated with this [ProcessingContext].
+     */
+    fun abort() = this._aborted.set(true)
 
     /**
      * Appends a [JobLog] entry to this [ProcessingContext],
@@ -84,29 +93,24 @@ class ProcessingContext(
                 LOGGER.error(log.description)
             }
         }
-
-        /* Flush logs if buffer is full. */
-        if (this.buffer.size > 1000) {
-            this.flushLogs()
-        }
     }
 
     /**
      * Flushes all [JobLog]s to the database.
+     *
+     * Requires an ongoing transaction.
      */
     @Synchronized
     fun flushLogs() {
-        this.store.transactional {
-            val job = DbJob.findById(this@ProcessingContext.jobId)
-            this.buffer.removeIf { log ->
-                job.log.add(DbJobLog.new {
-                    this.documentId = log.documentId.toString()
-                    this.context = log.context.toDb()
-                    this.level = log.level.toDb()
-                    this.description = log.description
-                })
-                true
-            }
+        val job = DbJob.findById(this@ProcessingContext.jobId)
+        this.buffer.removeIf { log ->
+            job.log.add(DbJobLog.new {
+                this.documentId = log.documentId.toString()
+                this.context = log.context.toDb()
+                this.level = log.level.toDb()
+                this.description = log.description
+            })
+            true
         }
     }
 }

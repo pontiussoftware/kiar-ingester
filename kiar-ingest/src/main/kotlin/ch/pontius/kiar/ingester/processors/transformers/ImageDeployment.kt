@@ -107,7 +107,7 @@ class ImageDeployment(override val input: Source<SolrInputDocument>, private val
             } else {
                 it.setField(Field.IMAGECOUNT, 0)
             }
-        }.onCompletion {e ->
+        }.onCompletion { e ->
             for (deployment in this@ImageDeployment.deployments) {
                 try {
                     val dst = Paths.get(deployment.path).resolve(context.participant).resolve(deployment.name)
