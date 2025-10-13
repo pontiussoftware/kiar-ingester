@@ -2,21 +2,29 @@ package ch.pontius.kiar.api.routes.collection
 
 import ch.pontius.kiar.api.model.collection.ObjectCollection
 import ch.pontius.kiar.api.model.config.solr.ApacheSolrConfig
+import ch.pontius.kiar.api.model.config.solr.CollectionType
 import ch.pontius.kiar.api.model.status.ErrorStatus
 import ch.pontius.kiar.api.model.status.ErrorStatusException
 import ch.pontius.kiar.api.model.status.SuccessStatus
-import ch.pontius.kiar.database.collection.DbObjectCollection
-import ch.pontius.kiar.database.config.solr.DbCollectionType
-import ch.pontius.kiar.database.config.solr.DbSolr
+import ch.pontius.kiar.database.collections.Collections
+import ch.pontius.kiar.database.collections.Collections.toObjectCollection
+import ch.pontius.kiar.database.config.SolrCollections
+import ch.pontius.kiar.database.config.SolrConfigs
+import ch.pontius.kiar.database.config.SolrConfigs.toSolr
+import ch.pontius.kiar.database.institutions.Institutions
+import ch.pontius.kiar.database.institutions.Institutions.toInstitution
 import ch.pontius.kiar.ingester.solrj.Constants
 import com.sksamuel.scrimage.ImmutableImage
 import io.javalin.http.Context
 import io.javalin.openapi.*
-import jetbrains.exodus.database.TransientEntityStore
-import kotlinx.dnq.query.*
 import org.apache.logging.log4j.LogManager
 import org.apache.solr.client.solrj.impl.Http2SolrClient
 import org.apache.solr.common.SolrInputDocument
+import org.jetbrains.exposed.v1.core.and
+import org.jetbrains.exposed.v1.core.eq
+import org.jetbrains.exposed.v1.jdbc.select
+import org.jetbrains.exposed.v1.jdbc.selectAll
+import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 import java.nio.file.Paths
 
 private val LOGGER = LogManager.getLogger()
@@ -39,22 +47,23 @@ private val LOGGER = LogManager.getLogger()
         OpenApiResponse("500", [OpenApiContent(ErrorStatus::class)])
     ]
 )
-fun postSyncCollections(ctx: Context, store: TransientEntityStore) {
+fun postSyncCollections(ctx: Context) {
     val configName = ctx.queryParam("solr") ?: throw ErrorStatusException(400, "Query parameter 'solr' is required.")
     val collectionName = ctx.queryParam("collection") ?: throw ErrorStatusException(400, "Query parameter 'collectionName' is required.")
-    store.transactional(true) {
-        val collection = DbSolr.filter {
-            it.name eq configName
-        }.flatMapDistinct {
-            it.collections
-        }.filter {
-            (it.name eq collectionName) and (it.type eq DbCollectionType.COLLECTION)
-        }.firstOrNull() ?: throw ErrorStatusException(404, "Apache Solr collection with name $collectionName could not be found.")
 
-        val config = collection.solr.toApi()
-        val collections = DbObjectCollection.filter { it.publish eq true }.toList()
-        synchronise(config, collectionName, collections)
+    val (config, collections) = transaction {
+        val config = (SolrConfigs innerJoin SolrCollections).select(SolrConfigs.columns).where {
+            (SolrConfigs.name eq configName) and (SolrCollections.name eq collectionName) and (SolrCollections.type eq CollectionType.COLLECTION)
+        }.map {
+            it.toSolr()
+        }.firstOrNull() ?: throw ErrorStatusException(404, "Apache Solr config with name '$configName' for collection '$collectionName' could not be found.")
+
+        val collections = (Collections innerJoin Institutions).selectAll().where { Collections.publish eq true }.map { it.toObjectCollection() }
+        config to collections
     }
+
+    /* Perform actual synchronization. */
+    synchronise(config, collectionName, collections)
 
     /* Return success status. */
     ctx.json(SuccessStatus("Successfully synchronized object collections."))
@@ -68,7 +77,7 @@ fun postSyncCollections(ctx: Context, store: TransientEntityStore) {
  * @param collection The name of the collection to synchronise with.
  * @param collections The [List] of [ObjectCollection]s to add.
  */
-private fun synchronise(config: ApacheSolrConfig, collection: String, collections: List<DbObjectCollection>) {
+private fun synchronise(config: ApacheSolrConfig, collection: String, collections: List<ObjectCollection>) {
     /* Prepare HTTP client builder. */
     var httpBuilder = Http2SolrClient.Builder(config.server)
     if (config.username != null && config.password != null) {
@@ -87,12 +96,12 @@ private fun synchronise(config: ApacheSolrConfig, collection: String, collection
             /* Map documents and add them. */
             val documents = collections.map { collection ->
                 val doc = SolrInputDocument()
-                doc.setField(Constants.FIELD_NAME_UUID, collection.xdId)
-                doc.setField(Constants.FIELD_NAME_PARTICIPANT, collection.institution.participant.name)
-                doc.setField(Constants.FIELD_NAME_CANTON, collection.institution.canton)
+                doc.setField(Constants.FIELD_NAME_UUID, collection.id)
+                doc.setField(Constants.FIELD_NAME_PARTICIPANT, collection.institution?.participantName)
+                doc.setField(Constants.FIELD_NAME_CANTON, collection.institution?.canton)
                 doc.setField(Constants.FIELD_NAME_DISPLAY, collection.displayName)
                 doc.setField("name", collection.name)
-                doc.setField("institution", collection.institution.name)
+                doc.setField("institution", collection.institution?.name)
                 collection.filters.forEach {
                     doc.addField("filters", it)
                 }

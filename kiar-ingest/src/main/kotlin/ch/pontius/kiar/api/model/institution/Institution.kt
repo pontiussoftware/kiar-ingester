@@ -2,6 +2,8 @@ package ch.pontius.kiar.api.model.institution
 
 import kotlinx.serialization.Serializable
 
+typealias InstitutionId = Int
+
 /**
  * An API representation of a [DbInstitution].
  *
@@ -10,7 +12,7 @@ import kotlinx.serialization.Serializable
  */
 @Serializable
 data class Institution(
-    val id: String? = null,
+    val id: InstitutionId? = null,
     val name: String,
     val displayName: String,
     val participantName: String,

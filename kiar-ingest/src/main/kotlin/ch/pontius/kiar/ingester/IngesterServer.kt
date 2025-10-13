@@ -1,22 +1,25 @@
 package ch.pontius.kiar.ingester
 
+import ch.pontius.kiar.api.model.config.templates.JobTemplateId
+import ch.pontius.kiar.api.model.job.JobId
+import ch.pontius.kiar.api.model.job.JobStatus
 import ch.pontius.kiar.config.Config
-import ch.pontius.kiar.database.config.jobs.DbJobTemplate
-import ch.pontius.kiar.database.job.DbJob
-import ch.pontius.kiar.database.job.DbJobStatus
+import ch.pontius.kiar.database.config.JobTemplates
+import ch.pontius.kiar.database.config.JobTemplates.toJobTemplate
+import ch.pontius.kiar.database.jobs.Jobs
 import ch.pontius.kiar.ingester.processors.ProcessingContext
 import ch.pontius.kiar.ingester.watcher.FileWatcher
-import jetbrains.exodus.database.TransientEntityStore
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.*
-import kotlinx.dnq.query.asSequence
-import kotlinx.dnq.query.filter
-import kotlinx.dnq.util.findById
 import org.apache.logging.log4j.LogManager
 import org.apache.logging.log4j.Logger
-import org.joda.time.DateTime
+import org.jetbrains.exposed.v1.core.eq
+import org.jetbrains.exposed.v1.jdbc.selectAll
+import org.jetbrains.exposed.v1.jdbc.transactions.transaction
+import org.jetbrains.exposed.v1.jdbc.update
 import java.lang.IllegalStateException
 import java.nio.file.Path
+import java.time.Instant
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
@@ -27,9 +30,9 @@ import java.util.concurrent.atomic.AtomicLong
  * The [IngesterServer]. This is the central piece of software that registers.
  *
  * @author Ralph Gasser
- * @version 1.0.0
+ * @version 2.0.0
  */
-class IngesterServer(val store: TransientEntityStore, val config: Config) {
+class IngesterServer(val config: Config) {
 
     companion object {
         /** Number of watchers. */
@@ -40,10 +43,10 @@ class IngesterServer(val store: TransientEntityStore, val config: Config) {
     }
 
     /** A [Map] of [FileWatcher]s that are currently running. */
-    private val activeWatchers = ConcurrentHashMap<String,FileWatcher>()
+    private val activeWatchers = ConcurrentHashMap<JobTemplateId,FileWatcher>()
 
     /** A [Map] of [FileWatcher]s that are currently running. */
-    private val activeJobs = ConcurrentHashMap<String, ProcessingContext>()
+    private val activeJobs = ConcurrentHashMap<JobId, ProcessingContext>()
 
     /**
      * The [ExecutorService] used to execute continuous jobs, e.g., driven by file watchers.
@@ -76,16 +79,16 @@ class IngesterServer(val store: TransientEntityStore, val config: Config) {
         private set
 
     init {
-        this.store.transactional {
+        transaction {
             /* Install file watchers for jobs that should be started automatically. */
-            for (template in DbJobTemplate.filter { it.startAutomatically eq true }.asSequence()) {
-                this.scheduleWatcher(template.xdId, this.config.ingestPath.resolve(template.participant.name).resolve("${template.name}.${template.type.suffix}"))
+            JobTemplates.selectAll().where { JobTemplates.startAutomatically eq true }.map { it.toJobTemplate() }.forEach {
+                this@IngesterServer.scheduleWatcher(it.id!!, this@IngesterServer.config.ingestPath.resolve(it.participantName).resolve("${it.name}.${it.type.suffix}"))
             }
 
             /* Mark jobs that are still running as interrupted. */
-            for (job in DbJob.filter { it.status eq DbJobStatus.RUNNING }.asSequence()) {
-                job.status = DbJobStatus.INTERRUPTED
-                job.changedAt = DateTime.now()
+            Jobs.update({ Jobs.status eq JobStatus.RUNNING }) { update ->
+                update[status] = JobStatus.INTERRUPTED
+                update[modified] = Instant.now()
             }
         }
     }
@@ -93,11 +96,11 @@ class IngesterServer(val store: TransientEntityStore, val config: Config) {
     /**
      * Schedules the [FileWatcher] for the provided [templateId].
      *
-     * @param templateId The name of the [FileWatcher] to terminate.
+     * @param templateId The [JobTemplateId] of the [FileWatcher] to schedule.
      * @param path The [Path] to the file to watch for.
      * @return True on success, false otherwise.
      */
-    fun scheduleWatcher(templateId: String, path: Path): Boolean {
+    fun scheduleWatcher(templateId: JobTemplateId, path: Path): Boolean {
         if (this.activeWatchers.contains(templateId)) return false
         val watcher = FileWatcher(this, templateId, path)
         this.activeWatchers[templateId] = watcher
@@ -111,7 +114,7 @@ class IngesterServer(val store: TransientEntityStore, val config: Config) {
      * @param templateId The name of the [FileWatcher] to terminate.
      * @return True on success, false otherwise.
      */
-    fun terminateWatcher(templateId: String): Boolean {
+    fun terminateWatcher(templateId: JobTemplateId): Boolean {
         val watcher = this.activeWatchers.remove(templateId) ?: return false
         watcher.cancel()
         return true
@@ -122,21 +125,25 @@ class IngesterServer(val store: TransientEntityStore, val config: Config) {
      *
      * @param jobId The ID of the job to schedule.
      */
-    fun scheduleJob(jobId: String, test: Boolean = false) {
+    fun scheduleJob(jobId: JobId, test: Boolean = false) {
         /* Step 1: Perform sanity checks and create pipeline. */
-        val (participant, pipeline) = this.store.transactional {
-            val job = DbJob.findById(jobId)
-            val participant = job.template?.participant?.name ?: throw IllegalStateException("Job is not associated with a participant.")
+        val (participant, pipeline) = transaction {
+            val job = Jobs.getById(jobId)  ?: throw IllegalStateException("Unknown job ID: $jobId.")
+            val participant = job.template?.participantName ?: throw IllegalStateException("Job is not associated with a participant.")
 
-            /* Perform sanity check. */
-            require(job.status == DbJobStatus.FAILED || job.status == DbJobStatus.HARVESTED || job.status == DbJobStatus.INTERRUPTED) {
+            /* Sanity check. */
+            require(job.status == JobStatus.FAILED || job.status == JobStatus.HARVESTED || job.status == JobStatus.INTERRUPTED) {
                 "Job $jobId cannot be executed because it is in wrong state."
             }
-            job.status = DbJobStatus.SCHEDULED
-            job.changedAt = DateTime.now()
 
-            /* Return pipeline and job*/
-            participant to job.toPipeline(this.config, test)
+            /* Update job. */
+            Jobs.update({ Jobs.id eq jobId }) { update ->
+                update[status] = JobStatus.SCHEDULED
+                update[modified] = Instant.now()
+            }
+
+            /* Return pipeline. */
+            participant to job.toPipeline(this@IngesterServer.config, test)
         }
 
         /* Step 2: Create processing context. */
@@ -145,16 +152,16 @@ class IngesterServer(val store: TransientEntityStore, val config: Config) {
 
         /* Step 3: Create flow. */
         val flow = pipeline.toFlow(context).onStart {
-            this@IngesterServer.store.transactional {
-                val job = DbJob.findById(jobId)
-                job.status = DbJobStatus.RUNNING
+            transaction {
+                Jobs.update({ Jobs.id eq jobId }) { update ->
+                    update[status] = JobStatus.SCHEDULED
+                    update[modified] = Instant.now()
+                }
             }
         }.onEach {
             /* Flush logs every once in a while. */
             if (context.logSize() >= 5000) {
-                this@IngesterServer.store.transactional {
-                    context.flushLogs()
-                }
+                context.flushLogs()
             }
         }.takeWhile {
             !context.aborted
@@ -163,28 +170,29 @@ class IngesterServer(val store: TransientEntityStore, val config: Config) {
             this@IngesterServer.activeJobs.remove(jobId)
 
             /* Store information about finished job. */
-            this@IngesterServer.store.transactional {
-                val job = DbJob.findById(jobId)
-                if (e != null) {
-                    LOGGER.error("Data ingest (name = ${job.name}, test = ${test}) failed: ${e.printStackTrace()}")
-                    job.status = DbJobStatus.FAILED
-                } else if (context.aborted) {
-                    LOGGER.warn("Data ingest (name = ${job.name}, test = ${test}) was aborted by user!")
-                    job.status = DbJobStatus.ABORTED
-                } else {
-                    LOGGER.info("Data ingest (name = ${job.name}, test = ${test}) completed successfully!")
-                    if (test) {
-                        job.status = DbJobStatus.HARVESTED
+            transaction {
+                Jobs.update({ Jobs.id eq jobId }) { update ->
+                    if (e != null) {
+                        LOGGER.error("Data ingest (ID = $jobId, test = ${test}) failed: ${e.printStackTrace()}")
+                        update[status] = JobStatus.FAILED
+                    } else if (context.aborted) {
+                        LOGGER.warn("Data ingest (ID = $jobId, test = ${test}) was aborted by user!")
+                        update[status] = JobStatus.ABORTED
                     } else {
-                        job.status = DbJobStatus.INGESTED
+                        LOGGER.info("Data ingest (ID = $jobId, test = ${test}) completed successfully!")
+                        if (test) {
+                            update[status] = JobStatus.HARVESTED
+                        } else {
+                            update[status] = JobStatus.INGESTED
+                        }
                     }
-                }
 
-                /* Update job with collected metrics. */
-                job.processed = context.processed
-                job.error = context.error
-                job.skipped = context.skipped
-                job.changedAt = DateTime.now()
+                    /* Update job with collected metrics. */
+                    update[processed] = context.processed
+                    update[error] = context.error
+                    update[skipped] = context.skipped
+                    update[modified] = Instant.now()
+                }
 
                 /* Flush logs. */
                 context.flushLogs()
@@ -206,7 +214,7 @@ class IngesterServer(val store: TransientEntityStore, val config: Config) {
      * @param jobId The ID of the job to terminate.
      * @return True on success, false otherwise.
      */
-    fun terminateJob(jobId: String): Boolean {
+    fun terminateJob(jobId: JobId): Boolean {
         val active = this@IngesterServer.activeJobs[jobId]
         if (active != null) {
             active.abort()
@@ -221,7 +229,7 @@ class IngesterServer(val store: TransientEntityStore, val config: Config) {
      * @param jobId The ID of the job to terminate.
      * @return [ProcessingContext] or null
      */
-    fun getContext(jobId: String): ProcessingContext? = this.activeJobs[jobId]
+    fun getContext(jobId: JobId): ProcessingContext? = this.activeJobs[jobId]
 
     /**
      * Stops this [IngesterServer] and all periodic task registered with it.

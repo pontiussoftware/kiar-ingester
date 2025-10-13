@@ -1,21 +1,25 @@
 import ch.pontius.kiar.api.model.config.mappings.AttributeMapping
 import ch.pontius.kiar.api.model.config.mappings.EntityMapping
-import ch.pontius.kiar.api.model.config.mappings.MappingFormat
-import ch.pontius.kiar.api.model.config.mappings.ValueParser
+import ch.pontius.kiar.api.model.config.mappings.EntityMappingId
 import ch.pontius.kiar.api.model.status.ErrorStatus
 import ch.pontius.kiar.api.model.status.ErrorStatusException
 import ch.pontius.kiar.api.model.status.SuccessStatus
-import ch.pontius.kiar.database.config.mapping.*
-import ch.pontius.kiar.utilities.mapToArray
+import ch.pontius.kiar.database.config.AttributeMappings
+import ch.pontius.kiar.database.config.AttributeMappings.toAttributeMapping
+import ch.pontius.kiar.database.config.EntityMappings
+import ch.pontius.kiar.database.config.EntityMappings.toEntityMapping
+import ch.pontius.kiar.utilities.extensions.parseBodyOrThrow
 import io.javalin.http.BadRequestResponse
 import io.javalin.http.Context
 import io.javalin.openapi.*
-import jetbrains.exodus.database.TransientEntityStore
-import kotlinx.dnq.query.asSequence
-import kotlinx.dnq.query.filter
-import kotlinx.dnq.query.sortedBy
-import kotlinx.dnq.util.findById
-import org.joda.time.DateTime
+import org.jetbrains.exposed.v1.core.eq
+import org.jetbrains.exposed.v1.jdbc.deleteWhere
+import org.jetbrains.exposed.v1.jdbc.insert
+import org.jetbrains.exposed.v1.jdbc.insertAndGetId
+import org.jetbrains.exposed.v1.jdbc.selectAll
+import org.jetbrains.exposed.v1.jdbc.transactions.transaction
+import org.jetbrains.exposed.v1.jdbc.update
+import java.time.Instant
 
 @OpenApi(
     path = "/api/mappings",
@@ -31,53 +35,11 @@ import org.joda.time.DateTime
         OpenApiResponse("500", [OpenApiContent(ErrorStatus::class)]),
     ]
 )
-fun listEntityMappings(ctx: Context, store: TransientEntityStore) {
-    store.transactional (true) {
-        val mappings = DbEntityMapping.all().sortedBy(DbEntityMapping::name)
-        ctx.json(mappings.mapToArray { it.toApiNoAttributes() })
+fun listEntityMappings(ctx: Context) {
+    val mappings = transaction {
+        EntityMappings.selectAll().map { it.toEntityMapping() }
     }
-}
-
-@OpenApi(
-    path = "/api/mappings/parsers",
-    methods = [HttpMethod.GET],
-    summary = "Lists all available parses available for entity mapping.",
-    operationId = "getListParsers",
-    tags = ["Config", "Entity Mapping"],
-    pathParams = [],
-    responses = [
-        OpenApiResponse("200", [OpenApiContent(Array<ValueParser>::class)]),
-        OpenApiResponse("401", [OpenApiContent(ErrorStatus::class)]),
-        OpenApiResponse("403", [OpenApiContent(ErrorStatus::class)]),
-        OpenApiResponse("500", [OpenApiContent(ErrorStatus::class)]),
-    ]
-)
-fun listParsers(ctx: Context, store: TransientEntityStore) {
-    store.transactional (true) {
-        val parsers = DbParser.filter { it.name ne "IMAGE" }
-        ctx.json(parsers.mapToArray { it.toApi() })
-    }
-}
-
-@OpenApi(
-    path = "/api/mappings/formats",
-    methods = [HttpMethod.GET],
-    summary = "Lists all available entity mapping formats.",
-    operationId = "getListMappingFormats",
-    tags = ["Config", "Entity Mapping"],
-    pathParams = [],
-    responses = [
-        OpenApiResponse("200", [OpenApiContent(Array<MappingFormat>::class)]),
-        OpenApiResponse("401", [OpenApiContent(ErrorStatus::class)]),
-        OpenApiResponse("403", [OpenApiContent(ErrorStatus::class)]),
-        OpenApiResponse("500", [OpenApiContent(ErrorStatus::class)]),
-    ]
-)
-fun listMappingFormats(ctx: Context, store: TransientEntityStore) {
-    store.transactional (true) {
-        val parsers = DbFormat.all()
-        ctx.json(parsers.mapToArray { it.toApi() })
-    }
+    ctx.json(mappings.toTypedArray())
 }
 
 @OpenApi(
@@ -96,25 +58,20 @@ fun listMappingFormats(ctx: Context, store: TransientEntityStore) {
         OpenApiResponse("500", [OpenApiContent(ErrorStatus::class)]),
     ]
 )
-fun createEntityMapping(ctx: Context, store: TransientEntityStore) {
-    val request = try {
-        ctx.bodyAsClass(EntityMapping::class.java)
-    } catch (e: BadRequestResponse) {
-        throw ErrorStatusException(400, "Malformed request body.")
-    }
-    val created = store.transactional {
-        /* Update basic properties. */
-        val mapping = DbEntityMapping.new {
-            name = request.name
-            description = request.description
-            type = request.type.toDb()
-            createdAt = DateTime.now()
-            changedAt = DateTime.now()
-        }
+fun createEntityMapping(ctx: Context) {
+    val request = ctx.parseBodyOrThrow<EntityMapping>()
+    val created = transaction {
+        val entityMappingId = EntityMappings.insertAndGetId { insert ->
+            insert[name] = request.name
+            insert[description] = request.description
+            insert[format] = request.type
+        }.value
 
-        /* Now merge attribute mappings. */
-        mapping.merge(request.attributes)
-        mapping.toApi()
+        /* Now create attributes. */
+        saveAttributeMappings(entityMappingId, request.attributes)
+
+        /* Return copy of newly created mapping. */
+        request.copy(id = entityMappingId)
     }
     ctx.json(created)
 }
@@ -126,7 +83,7 @@ fun createEntityMapping(ctx: Context, store: TransientEntityStore) {
     operationId = "getEntityMapping",
     tags = ["Config", "Entity Mapping"],
     pathParams = [
-        OpenApiParam(name = "id", description = "The ID of the entity mapping that should be retrieved.", required = true)
+        OpenApiParam(name = "id", type = Int::class, description = "The ID of the entity mapping that should be retrieved.", required = true)
     ],
     responses = [
         OpenApiResponse("200", [OpenApiContent(EntityMapping::class)]),
@@ -136,47 +93,19 @@ fun createEntityMapping(ctx: Context, store: TransientEntityStore) {
         OpenApiResponse("500", [OpenApiContent(ErrorStatus::class)])
     ]
 )
-fun getEntityMapping(ctx: Context, store: TransientEntityStore) {
-    val mappingId = ctx.pathParam("id")
-    val mapping = store.transactional(true) {
-        try {
-            DbEntityMapping.findById(mappingId).toApi()
-        } catch (e: Throwable) {
-            throw ErrorStatusException(404, "Entity mapping with ID $mappingId could not be found.")
-        }
+fun getEntityMapping(ctx: Context) {
+    val mappingId = ctx.pathParam("id").toIntOrNull() ?: throw ErrorStatusException(400, "Malformed mapping ID.")
+    val mapping = transaction {
+        val mapping = EntityMappings.selectAll().where { EntityMappings.id eq mappingId }.map { it.toEntityMapping() }.firstOrNull()
+            ?: throw ErrorStatusException(404, "Could not find entity mapping with ID $mappingId.")
+
+        /* Fetch attribute mappings. */
+        val attributeMappings = AttributeMappings.selectAll().where { AttributeMappings.entityMappingId eq mappingId }.map { it.toAttributeMapping() }
+
+        /* Return copy. */
+        mapping.copy(attributes = attributeMappings)
     }
     ctx.json(mapping)
-}
-
-
-@OpenApi(
-    path = "/api/mappings/{id}",
-    methods = [HttpMethod.DELETE],
-    summary = "Deletes an existing entity mapping.",
-    operationId = "deleteEntityMapping",
-    tags = ["Config", "Entity Mapping"],
-    pathParams = [
-        OpenApiParam(name = "id", description = "The ID of the entity mapping that should be deleted.", required = true)
-    ],
-    responses = [
-        OpenApiResponse("200", [OpenApiContent(SuccessStatus::class)]),
-        OpenApiResponse("401", [OpenApiContent(ErrorStatus::class)]),
-        OpenApiResponse("403", [OpenApiContent(ErrorStatus::class)]),
-        OpenApiResponse("404", [OpenApiContent(ErrorStatus::class)]),
-        OpenApiResponse("500", [OpenApiContent(ErrorStatus::class)])
-    ]
-)
-fun deleteEntityMapping(ctx: Context, store: TransientEntityStore) {
-    val mappingId = ctx.pathParam("id")
-    store.transactional {
-        val mapping = try {
-            DbEntityMapping.findById(mappingId)
-        } catch (e: Throwable) {
-            throw ErrorStatusException(404, "Entity mapping with ID $mappingId could not be found.")
-        }
-        mapping.delete()
-    }
-    ctx.json(SuccessStatus("Mapping $mappingId deleted successfully."))
 }
 
 @OpenApi(
@@ -186,7 +115,7 @@ fun deleteEntityMapping(ctx: Context, store: TransientEntityStore) {
     operationId = "updateEntityMapping",
     tags = ["Config", "Entity Mapping"],
     pathParams = [
-        OpenApiParam(name = "id", description = "The ID of the entity mapping that should be updated.", required = true)
+        OpenApiParam(name = "id", type = Int::class, description = "The ID of the entity mapping that should be updated.", required = true)
     ],
     requestBody = OpenApiRequestBody([OpenApiContent(EntityMapping::class)], required = true),
     responses = [
@@ -198,59 +127,77 @@ fun deleteEntityMapping(ctx: Context, store: TransientEntityStore) {
         OpenApiResponse("500", [OpenApiContent(ErrorStatus::class)])
     ]
 )
-fun updateEntityMapping(ctx: Context, store: TransientEntityStore) {
+fun updateEntityMapping(ctx: Context) {
     /* Extract the ID and the request body. */
-    val mappingId = ctx.pathParam("id")
-    val request = try {
-        ctx.bodyAsClass(EntityMapping::class.java)
-    } catch (e: BadRequestResponse) {
-        throw ErrorStatusException(400, "Malformed request body.")
-    }
+    val mappingId = ctx.pathParam("id").toIntOrNull() ?: throw ErrorStatusException(400, "Malformed mapping ID.")
+    val request = ctx.parseBodyOrThrow<EntityMapping>()
 
     /* Start transaction. */
-    val updated = store.transactional {
-        val mapping = try {
-            DbEntityMapping.findById(mappingId)
-        } catch (e: Throwable) {
-            throw ErrorStatusException(404, "Entity mapping with ID $mappingId could not be found.")
+    transaction {
+        val updated = EntityMappings.update({ EntityMappings.id eq mappingId }) { update ->
+            update[name] = request.name
+            update[description] = request.description
+            update[format] = request.type
+            update[modified] = Instant.now()
         }
 
-        /* Update basic properties. */
-        mapping.name = request.name
-        mapping.description = request.description
-        mapping.type = request.type.toDb()
-        mapping.changedAt = DateTime.now()
+        /* Sanity check. */
+        if (updated == 0) throw ErrorStatusException(404, "Entity mapping with ID $mappingId was not updated because it could not be found.")
 
-        /* Now merge attribute mappings. */
-        mapping.merge(request.attributes)
-        mapping.toApi()
+        /* Save attributes. */
+        saveAttributeMappings(mappingId, request.attributes)
     }
 
-    ctx.json(updated)
+    ctx.json(request)
+}
+
+@OpenApi(
+    path = "/api/mappings/{id}",
+    methods = [HttpMethod.DELETE],
+    summary = "Deletes an existing entity mapping.",
+    operationId = "deleteEntityMapping",
+    tags = ["Config", "Entity Mapping"],
+    pathParams = [
+        OpenApiParam(name = "id", type = Int::class, description = "The ID of the entity mapping that should be deleted.", required = true)
+    ],
+    responses = [
+        OpenApiResponse("200", [OpenApiContent(SuccessStatus::class)]),
+        OpenApiResponse("401", [OpenApiContent(ErrorStatus::class)]),
+        OpenApiResponse("403", [OpenApiContent(ErrorStatus::class)]),
+        OpenApiResponse("404", [OpenApiContent(ErrorStatus::class)]),
+        OpenApiResponse("500", [OpenApiContent(ErrorStatus::class)])
+    ]
+)
+fun deleteEntityMapping(ctx: Context) {
+    val mappingId = ctx.pathParam("id").toIntOrNull() ?: throw ErrorStatusException(400, "Malformed mapping ID.")
+    val deleted = transaction {
+        EntityMappings.deleteWhere { EntityMappings.id eq mappingId }
+    }
+    if (deleted > 0) {
+        ctx.json(SuccessStatus("Mapping with ID $mappingId deleted successfully."))
+    } else {
+        ctx.json(ErrorStatus(404, "Mapping with ID $mappingId could not be deleted, because it does not exist."))
+    }
 }
 
 /**
- * Overrides a [DbEntityMapping]'s [DbAttributeMapping]s using the provided list.
+ * Overrides a [EntityMapping]'s [AttributeMapping]s using the provided list.
  *
- * @param attributes [List] of [AttributeMapping]s to merge [DbEntityMapping] with.
+ * @param entityMappingId The [EntityMappingId] of the [EntityMapping]
+ * @param attributes [List] of [AttributeMapping]s to store.
  */
-private fun DbEntityMapping.merge(attributes: List<AttributeMapping>) {
-    /* Explicitly delete all existing attribute mappings (Note: this.attributes.clear() doesn't work). */
-    for (a in this.attributes.asSequence()) {
-        a.delete()
-    }
+private fun saveAttributeMappings(entityMappingId: EntityMappingId, attributes: List<AttributeMapping>) {
+    /* Delete all existing attribute mappings. */
+    AttributeMappings.deleteWhere { AttributeMappings.entityMappingId eq entityMappingId }
 
     /* Re-add attributes. */
     for (a in attributes) {
-        this.attributes.add(DbAttributeMapping.new {
-            source = a.source
-            destination = a.destination
-            required = a.required
-            multiValued = a.multiValued
-            parser = a.parser.toDb()
-            for (p in a.parameters) {
-                parameters.add(DbAttributeMappingParameters.new { key = p.key; value = p.value })
-            }
-        })
+        AttributeMappings.insert { insert ->
+            insert[AttributeMappings.src] = a.source
+            insert[AttributeMappings.destination] = a.destination
+            insert[AttributeMappings.required] = a.required
+            insert[AttributeMappings.multiValued] = a.multiValued
+            insert[AttributeMappings.parameters] = a.parameters
+        }
     }
 }

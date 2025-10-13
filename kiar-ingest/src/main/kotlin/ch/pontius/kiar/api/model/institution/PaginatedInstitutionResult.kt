@@ -7,11 +7,11 @@ import kotlinx.serialization.Serializable
  * A [PaginatedResult] of [Institution] objects.
  *
  * @author Ralph Gasser
- * @version 1.0.0
+ * @version 1.1.0
  */
 @Serializable
 data class PaginatedInstitutionResult(
-    override val total: Int,
+    override val total: Long,
     override val page: Int,
     override val pageSize: Int,
     override val results: List<Institution>

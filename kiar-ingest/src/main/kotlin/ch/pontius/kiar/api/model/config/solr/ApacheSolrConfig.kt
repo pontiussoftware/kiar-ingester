@@ -4,6 +4,8 @@ import ch.pontius.kiar.api.model.config.image.ImageDeployment
 import ch.pontius.kiar.config.CollectionConfig
 import kotlinx.serialization.Serializable
 
+typealias SolrConfigId = Int
+
 /**
  * Configuration regarding Apache Solr (for SolrJ).
  *
@@ -11,9 +13,9 @@ import kotlinx.serialization.Serializable
  * @version 1.1.0
  */
 @Serializable
-class ApacheSolrConfig(
-    /** The (optional) database ID of this [ApacheSolrConfig]. */
-    val id: String? = null,
+data class ApacheSolrConfig(
+    /** The (optional) database [SolrConfigId] of this [ApacheSolrConfig]. */
+    val id: SolrConfigId? = null,
 
     /** The name of this [ApacheSolrConfig]. */
     val name: String,

@@ -1,11 +1,12 @@
 package ch.pontius.kiar.ingester.processors
 
+import ch.pontius.kiar.api.model.job.JobId
 import ch.pontius.kiar.api.model.job.JobLog
 import ch.pontius.kiar.api.model.job.JobLogLevel
-import ch.pontius.kiar.database.job.DbJob
-import ch.pontius.kiar.database.job.DbJobLog
-import kotlinx.dnq.util.findById
+import ch.pontius.kiar.database.jobs.JobLogs
 import org.apache.logging.log4j.LogManager
+import org.jetbrains.exposed.v1.jdbc.insert
+import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 import java.util.*
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicLong
@@ -14,11 +15,11 @@ import java.util.concurrent.atomic.AtomicLong
  * A [ProcessingContext] that captures contextual information about a running job.
  *
  * @author Ralph Gasser
- * @version 1.1.0
+ * @version 1.2.0
  */
 class ProcessingContext(
-    /** The ID of the job this [ProcessingContext] belongs to. */
-    val jobId: String,
+    /** The [JobId] this [ProcessingContext] belongs to. */
+    val jobId: JobId,
 
     /** The name of the participant this [ProcessingContext]. */
     val participant: String,
@@ -102,15 +103,14 @@ class ProcessingContext(
      *
      * Requires an ongoing transaction.
      */
-    fun flushLogs() {
-        val job = DbJob.findById(this@ProcessingContext.jobId)
-        this.buffer.removeIf { log ->
-            job.log.add(DbJobLog.new {
-                this.documentId = log.documentId.toString()
-                this.context = log.context.toDb()
-                this.level = log.level.toDb()
-                this.description = log.description
-            })
+    fun flushLogs() = transaction {
+        this@ProcessingContext.buffer.removeIf { log ->
+            JobLogs.insert {
+                it[JobLogs.documentId] = log.documentId?.let { UUID.fromString(it) }
+                it[JobLogs.context] = log.context
+                it[JobLogs.level] = log.level
+                it[JobLogs.description] = log.description
+            }
             true
         }
     }

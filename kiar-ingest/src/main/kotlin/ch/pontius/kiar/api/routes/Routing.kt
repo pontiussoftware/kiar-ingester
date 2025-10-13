@@ -3,10 +3,23 @@ package ch.pontius.kiar.api.routes
 import ch.pontius.kiar.api.model.user.Role
 import ch.pontius.kiar.api.routes.collection.*
 import ch.pontius.kiar.api.routes.config.*
+import ch.pontius.kiar.api.routes.institution.deleteInstitution
+import ch.pontius.kiar.api.routes.institution.getImageForInstitution
+import ch.pontius.kiar.api.routes.institution.getInstitution
+import ch.pontius.kiar.api.routes.institution.getListInstitutionNames
+import ch.pontius.kiar.api.routes.institution.getListInstitutions
+import ch.pontius.kiar.api.routes.institution.postCreateInstitution
 import ch.pontius.kiar.api.routes.institution.postSyncInstitutions
+import ch.pontius.kiar.api.routes.institution.postUploadImageForInstitution
+import ch.pontius.kiar.api.routes.institution.putUpdateInstitution
 import ch.pontius.kiar.api.routes.job.*
 import ch.pontius.kiar.api.routes.masterdata.listCantons
+import ch.pontius.kiar.api.routes.masterdata.listImageFormats
+import ch.pontius.kiar.api.routes.masterdata.listJobTemplateTypes
+import ch.pontius.kiar.api.routes.masterdata.listMappingFormats
+import ch.pontius.kiar.api.routes.masterdata.listParsers
 import ch.pontius.kiar.api.routes.masterdata.listRightStatements
+import ch.pontius.kiar.api.routes.masterdata.listTransformerTypes
 import ch.pontius.kiar.api.routes.oai.getOaiPmh
 import ch.pontius.kiar.api.routes.oai.postOaiPmh
 import ch.pontius.kiar.api.routes.session.*
@@ -16,148 +29,139 @@ import ch.pontius.kiar.ingester.IngesterServer
 import ch.pontius.kiar.oai.OaiServer
 import createEntityMapping
 import deleteEntityMapping
-import deleteInstitution
 import getEntityMapping
-import getImageForInstitution
-import getInstitution
-import getListInstitutionNames
-import getListInstitutions
-
 import io.javalin.apibuilder.ApiBuilder.*
-import jetbrains.exodus.database.TransientEntityStore
 import listEntityMappings
-import listMappingFormats
-import listParsers
-import postCreateInstitution
-import postUploadImageForInstitution
-import putUpdateInstitution
 import updateEntityMapping
 
 /**
  * Configures all the API routes.
  *
- * @param store The [TransientEntityStore] used for persistence.
+ * @param server The [IngesterServer] instance.
+ * @param config The program [Config].
  */
-fun configureApiRoutes(store: TransientEntityStore, server: IngesterServer, config: Config) {
+fun configureApiRoutes(server: IngesterServer, config: Config) {
     /** Path to API related functionality. */
     path("api") {
         /** All paths related to session, login and logout handling. */
         path("session") {
-            post("login") { ctx -> login(ctx, store) }
-            get("logout", { ctx -> logout(ctx) }, Role.ADMINISTRATOR, Role.VIEWER, Role.MANAGER )
-            get("status", { ctx -> status(ctx, store) }, Role.ADMINISTRATOR, Role.VIEWER, Role.MANAGER )
-            get("user", { ctx -> getUser(ctx, store) }, Role.ADMINISTRATOR, Role.VIEWER, Role.MANAGER )
-            put("user", { ctx -> updateUser(ctx, store) }, Role.ADMINISTRATOR, Role.VIEWER, Role.MANAGER )
+            post("login") { ctx -> login(ctx) }
+            get("logout", { ctx -> logout(ctx) }, Role.ADMINISTRATOR, Role.VIEWER, Role.MANAGER)
+            get("status", { ctx -> status(ctx) }, Role.ADMINISTRATOR, Role.VIEWER, Role.MANAGER)
+            get("user", { ctx -> getUser(ctx) }, Role.ADMINISTRATOR, Role.VIEWER, Role.MANAGER)
+            put("user", { ctx -> updateUser(ctx) }, Role.ADMINISTRATOR, Role.VIEWER, Role.MANAGER)
         }
 
         /* Endpoints related to user management. */
-        get("users", { ctx -> getListUsers(ctx, store) }, Role.ADMINISTRATOR )
-        post("users", { ctx -> postCreateUser(ctx, store) }, Role.ADMINISTRATOR )
+        get("users", { ctx -> getListUsers(ctx) }, Role.ADMINISTRATOR)
+        post("users", { ctx -> postCreateUser(ctx) }, Role.ADMINISTRATOR)
         path("users") {
-            get("roles", { ctx -> getListRoles(ctx, store) }, Role.ADMINISTRATOR )
-            delete("{id}", { ctx -> deleteUser(ctx, store) }, Role.ADMINISTRATOR )
-            put("{id}",  { ctx -> putUpdateUser(ctx, store) }, Role.ADMINISTRATOR, Role.MANAGER  )
+            get("roles", { ctx -> getListRoles(ctx) }, Role.ADMINISTRATOR)
+            delete("{id}", { ctx -> deleteUser(ctx) }, Role.ADMINISTRATOR)
+            put("{id}", { ctx -> putUpdateUser(ctx) }, Role.ADMINISTRATOR, Role.MANAGER)
         }
 
         /* Endpoints related to institutions. */
-        get("institutions", { ctx -> getListInstitutions(ctx, store) }, Role.ADMINISTRATOR )
-        post("institutions", { ctx -> postCreateInstitution(ctx, store) }, Role.ADMINISTRATOR )
+        get("institutions", { ctx -> getListInstitutions(ctx) }, Role.ADMINISTRATOR)
+        post("institutions", { ctx -> postCreateInstitution(ctx) }, Role.ADMINISTRATOR)
         path("institutions") {
-            get("name", { ctx -> getListInstitutionNames(ctx, store) }, Role.ADMINISTRATOR )
-            post("synchronize", { ctx -> postSyncInstitutions(ctx, store) }, Role.ADMINISTRATOR )
-            get("{id}",  { ctx -> getInstitution(ctx, store) }, Role.ADMINISTRATOR, Role.MANAGER )
-            put("{id}",  { ctx -> putUpdateInstitution(ctx, store) }, Role.ADMINISTRATOR, Role.MANAGER)
-            delete("{id}",  { ctx -> deleteInstitution(ctx, store) }, Role.ADMINISTRATOR )
+            get("name", { ctx -> getListInstitutionNames(ctx) }, Role.ADMINISTRATOR)
+            post("synchronize", { ctx -> postSyncInstitutions(ctx) }, Role.ADMINISTRATOR)
+            get("{id}", { ctx -> getInstitution(ctx) }, Role.ADMINISTRATOR, Role.MANAGER)
+            put("{id}", { ctx -> putUpdateInstitution(ctx) }, Role.ADMINISTRATOR, Role.MANAGER)
+            delete("{id}", { ctx -> deleteInstitution(ctx) }, Role.ADMINISTRATOR)
             path("{id}") {
-                get("image", { ctx -> getImageForInstitution(ctx, store) }, Role.ADMINISTRATOR, Role.MANAGER, Role.VIEWER)
-                post("image", { ctx -> postUploadImageForInstitution(ctx, store) }, Role.ADMINISTRATOR, Role.MANAGER)
+                get("image", { ctx -> getImageForInstitution(ctx) }, Role.ADMINISTRATOR, Role.MANAGER, Role.VIEWER)
+                post("image", { ctx -> postUploadImageForInstitution(ctx) }, Role.ADMINISTRATOR, Role.MANAGER)
             }
         }
 
         /* Endpoints related to collections. */
-        get("collections", { ctx -> getListCollections(ctx, store) }, Role.ADMINISTRATOR )
-        post("collections", { ctx -> postCreateCollection(ctx, store) }, Role.ADMINISTRATOR )
+        get("collections", { ctx -> getListCollections(ctx) }, Role.ADMINISTRATOR)
+        post("collections", { ctx -> postCreateCollection(ctx) }, Role.ADMINISTRATOR)
         path("collections") {
-            post("synchronize", { ctx -> postSyncCollections(ctx, store) }, Role.ADMINISTRATOR )
-            get("{id}",  { ctx -> getCollection(ctx, store) }, Role.ADMINISTRATOR, Role.MANAGER )
-            put("{id}",  { ctx -> putUpdateCollection(ctx, store) }, Role.ADMINISTRATOR, Role.MANAGER)
-            delete("{id}",  { ctx -> deleteCollection(ctx, store) }, Role.ADMINISTRATOR )
-            post("{id}", { ctx -> postUploadImageForCollection(ctx, store) }, Role.ADMINISTRATOR, Role.MANAGER)
+            post("synchronize", { ctx -> postSyncCollections(ctx) }, Role.ADMINISTRATOR)
+            get("{id}", { ctx -> getCollection(ctx) }, Role.ADMINISTRATOR, Role.MANAGER)
+            put("{id}", { ctx -> putUpdateCollection(ctx) }, Role.ADMINISTRATOR, Role.MANAGER)
+            delete("{id}", { ctx -> deleteCollection(ctx) }, Role.ADMINISTRATOR)
+            post("{id}", { ctx -> postUploadImageForCollection(ctx) }, Role.ADMINISTRATOR, Role.MANAGER)
             path("{id}") {
-                get("{name}", { ctx -> getImageForCollection(ctx, store) }, Role.ADMINISTRATOR, Role.MANAGER, Role.VIEWER)
-                delete("{name}", { ctx -> deleteImageForCollection(ctx, store) }, Role.ADMINISTRATOR, Role.MANAGER, Role.VIEWER)
+                get("{name}", { ctx -> getImageForCollection(ctx) }, Role.ADMINISTRATOR, Role.MANAGER, Role.VIEWER)
+                delete(
+                    "{name}",
+                    { ctx -> deleteImageForCollection(ctx) },
+                    Role.ADMINISTRATOR,
+                    Role.MANAGER,
+                    Role.VIEWER
+                )
             }
         }
 
-
         /* Endpoints related to master data. */
         path("masterdata") {
-            get("rightstatements", { ctx -> listRightStatements(ctx, store) }, Role.ADMINISTRATOR, Role.MANAGER, Role.VIEWER )
-            get("cantons", { ctx -> listCantons(ctx, store) }, Role.ADMINISTRATOR, Role.MANAGER, Role.VIEWER )
+            get("rightstatements", { ctx -> listRightStatements(ctx) }, Role.ADMINISTRATOR, Role.MANAGER, Role.VIEWER)
+            get("cantons", { ctx -> listCantons(ctx) }, Role.ADMINISTRATOR, Role.MANAGER, Role.VIEWER)
+            get("transformers", { ctx -> listTransformerTypes(ctx) }, Role.ADMINISTRATOR, Role.MANAGER, Role.VIEWER)
+            get("parsers", { ctx -> listParsers(ctx) }, Role.ADMINISTRATOR, Role.MANAGER, Role.VIEWER)
+            get("image-formats",  { ctx -> listImageFormats(ctx) }, Role.ADMINISTRATOR, Role.MANAGER, Role.VIEWER )
+            get("mapping-formats",  { ctx -> listMappingFormats(ctx) }, Role.ADMINISTRATOR, Role.MANAGER, Role.VIEWER )
+            get("job-types",  { ctx -> listJobTemplateTypes(ctx) }, Role.ADMINISTRATOR, Role.MANAGER, Role.VIEWER )
+
         }
 
         /* Endpoints related to jobs. */
-        post("jobs", { ctx -> createJob(ctx, store) }, Role.ADMINISTRATOR, Role.MANAGER)
+        post("jobs", { ctx -> createJob(ctx) }, Role.ADMINISTRATOR, Role.MANAGER)
         path("jobs") {
-            get("active", { ctx -> getActiveJobs(ctx, store, server) }, Role.ADMINISTRATOR, Role.MANAGER, Role.VIEWER )
-            get("inactive",  { ctx -> getInactiveJobs(ctx, store) }, Role.ADMINISTRATOR, Role.MANAGER, Role.VIEWER )
-            delete("{id}",  { ctx -> abortJob(ctx, store, server) }, Role.ADMINISTRATOR, Role.MANAGER )
+            get("active", { ctx -> getActiveJobs(ctx, server) }, Role.ADMINISTRATOR, Role.MANAGER, Role.VIEWER )
+            get("inactive",  { ctx -> getInactiveJobs(ctx, server) }, Role.ADMINISTRATOR, Role.MANAGER, Role.VIEWER )
+            delete("{id}",  { ctx -> abortJob(ctx, server) }, Role.ADMINISTRATOR, Role.MANAGER )
             path("{id}") {
-                put("upload",  { ctx -> upload(ctx, store, config) }, Role.ADMINISTRATOR, Role.MANAGER )
-                put("schedule",  { ctx -> scheduleJob(ctx, store, server) }, Role.ADMINISTRATOR, Role.MANAGER )
-                get("logs",  { ctx -> getJobLogs(ctx, store) }, Role.ADMINISTRATOR, Role.MANAGER )
-                delete("logs",  { ctx -> purgeJobLogs(ctx, store) }, Role.ADMINISTRATOR, Role.MANAGER )
+                put("upload",  { ctx -> upload(ctx, config) }, Role.ADMINISTRATOR, Role.MANAGER )
+                put("schedule",  { ctx -> scheduleJob(ctx, server) }, Role.ADMINISTRATOR, Role.MANAGER )
+                get("logs",  { ctx -> getJobLogs(ctx) }, Role.ADMINISTRATOR, Role.MANAGER )
+                delete("logs",  { ctx -> purgeJobLogs(ctx) }, Role.ADMINISTRATOR, Role.MANAGER )
             }
         }
 
         /* Endpoints related to participants. */
-        get("participants", { ctx -> listParticipants(ctx, store) }, Role.ADMINISTRATOR, Role.MANAGER )
+        get("participants", { ctx -> listParticipants(ctx) }, Role.ADMINISTRATOR, Role.MANAGER )
         path("participants") {
-            post("{name}", { ctx -> createParticipants(ctx, store) }, Role.ADMINISTRATOR )
-            delete("{id}",  { ctx -> deleteParticipants(ctx, store) }, Role.ADMINISTRATOR )
+            post("{name}", { ctx -> createParticipants(ctx) }, Role.ADMINISTRATOR )
+            delete("{id}",  { ctx -> deleteParticipants(ctx) }, Role.ADMINISTRATOR )
         }
 
         /* Endpoints related to job templates. */
-        get("templates", { ctx -> listJobTemplates(ctx, store) }, Role.ADMINISTRATOR, Role.MANAGER )
-        post("templates", { ctx -> createJobTemplate(ctx, store, server) }, Role.ADMINISTRATOR )
+        get("templates", { ctx -> listJobTemplates(ctx) }, Role.ADMINISTRATOR, Role.MANAGER )
+        post("templates", { ctx -> createJobTemplate(ctx, server) }, Role.ADMINISTRATOR )
         path("templates") {
-            get("types",  { ctx -> listJobTemplateTypes(ctx, store) }, Role.ADMINISTRATOR )
-            get("{id}",  { ctx -> getJobTemplate(ctx, store) }, Role.ADMINISTRATOR, Role.MANAGER )
-            put("{id}",  { ctx -> updateJobTemplate(ctx, store) }, Role.ADMINISTRATOR )
-            delete("{id}",  { ctx -> deleteJobTemplate(ctx, store, server) }, Role.ADMINISTRATOR )
+            get("{id}",  { ctx -> getJobTemplate(ctx) }, Role.ADMINISTRATOR, Role.MANAGER )
+            put("{id}",  { ctx -> updateJobTemplate(ctx, server) }, Role.ADMINISTRATOR )
+            delete("{id}",  { ctx -> deleteJobTemplate(ctx, server) }, Role.ADMINISTRATOR )
         }
 
         /* Endpoint related to Apache Solr configurations. */
-        get("solr", { ctx -> listSolrConfigurations(ctx, store) }, Role.ADMINISTRATOR, Role.MANAGER )
-        post("solr", { ctx -> createSolrConfig(ctx, store) }, Role.ADMINISTRATOR )
+        get("solr", { ctx -> listSolrConfigurations(ctx) }, Role.ADMINISTRATOR, Role.MANAGER )
+        post("solr", { ctx -> createSolrConfig(ctx) }, Role.ADMINISTRATOR )
         path("solr") {
-            get("formats", { ctx -> listFormats(ctx, store) }, Role.ADMINISTRATOR, Role.MANAGER )
-            get("{id}", { ctx -> getSolrConfig(ctx, store) }, Role.ADMINISTRATOR, Role.MANAGER )
-            put("{id}", { ctx -> updateSolrConfig(ctx, store) }, Role.ADMINISTRATOR )
-            delete("{id}", { ctx -> deleteSolrConfig(ctx, store) }, Role.ADMINISTRATOR )
-        }
-
-        /* Endpoints related to transformers. */
-        path("transformers") {
-            get("types", { ctx -> listTransformerTypes(ctx, store) }, Role.ADMINISTRATOR )
+            get("{id}", { ctx -> getSolrConfig(ctx) }, Role.ADMINISTRATOR, Role.MANAGER )
+            put("{id}", { ctx -> updateSolrConfig(ctx) }, Role.ADMINISTRATOR )
+            delete("{id}", { ctx -> deleteSolrConfig(ctx) }, Role.ADMINISTRATOR )
         }
 
         /* Endpoints related to entity mappings. */
-        get("mappings", { ctx -> listEntityMappings(ctx, store) }, Role.ADMINISTRATOR )
-        post("mappings", { ctx -> createEntityMapping(ctx, store) }, Role.ADMINISTRATOR )
+        get("mappings", { ctx -> listEntityMappings(ctx) }, Role.ADMINISTRATOR )
+        post("mappings", { ctx -> createEntityMapping(ctx) }, Role.ADMINISTRATOR )
         path("mappings") {
-            get("formats",  { ctx -> listMappingFormats(ctx, store) }, Role.ADMINISTRATOR )
-            get("parsers",  { ctx -> listParsers(ctx, store) }, Role.ADMINISTRATOR )
-            get("{id}",  { ctx -> getEntityMapping(ctx, store) }, Role.ADMINISTRATOR )
-            put("{id}",  { ctx -> updateEntityMapping(ctx, store) }, Role.ADMINISTRATOR )
-            delete("{id}",  { ctx -> deleteEntityMapping(ctx, store) }, Role.ADMINISTRATOR )
+            get("{id}",  { ctx -> getEntityMapping(ctx) }, Role.ADMINISTRATOR )
+            put("{id}",  { ctx -> updateEntityMapping(ctx) }, Role.ADMINISTRATOR )
+            delete("{id}",  { ctx -> deleteEntityMapping(ctx) }, Role.ADMINISTRATOR )
         }
 
         /* Endpoints related to OAI-PMH. */
         path("{collection}") {
-            val oai = OaiServer(store)
-            get("oai-pmh",  { ctx -> getOaiPmh(ctx, oai) } )
-            post("oai-pmh",  { ctx -> postOaiPmh(ctx, oai) } )
+            val oai = OaiServer()
+            get("oai-pmh") { ctx -> getOaiPmh(ctx, oai) }
+            post("oai-pmh") { ctx -> postOaiPmh(ctx, oai) }
         }
     }
 }

@@ -2,27 +2,39 @@ package ch.pontius.kiar.api.routes.job
 
 import ch.pontius.kiar.api.model.job.CreateJobRequest
 import ch.pontius.kiar.api.model.job.Job
+import ch.pontius.kiar.api.model.job.JobLogContext
+import ch.pontius.kiar.api.model.job.JobLogLevel
+import ch.pontius.kiar.api.model.job.JobSource
+import ch.pontius.kiar.api.model.job.JobStatus
 import ch.pontius.kiar.api.model.job.PaginatedJobLogResult
 import ch.pontius.kiar.api.model.job.PaginatedJobResult
 import ch.pontius.kiar.api.model.status.ErrorStatus
 import ch.pontius.kiar.api.model.status.ErrorStatusException
 import ch.pontius.kiar.api.model.status.SuccessStatus
-import ch.pontius.kiar.api.routes.session.currentUser
-import ch.pontius.kiar.database.config.jobs.DbJobTemplate
-import ch.pontius.kiar.database.institution.DbRole
-import ch.pontius.kiar.database.job.DbJob
-import ch.pontius.kiar.database.job.DbJobLog
-import ch.pontius.kiar.database.job.DbJobSource
-import ch.pontius.kiar.database.job.DbJobStatus
+import ch.pontius.kiar.api.model.user.Role
+import ch.pontius.kiar.database.config.JobTemplates
+import ch.pontius.kiar.database.institutions.Institutions
+import ch.pontius.kiar.database.institutions.Participants
+import ch.pontius.kiar.database.jobs.JobLogs
+import ch.pontius.kiar.database.jobs.JobLogs.toJobLog
+import ch.pontius.kiar.database.jobs.Jobs
+import ch.pontius.kiar.database.jobs.Jobs.toJob
+import ch.pontius.kiar.utilities.extensions.currentUser
 import ch.pontius.kiar.ingester.IngesterServer
-import ch.pontius.kiar.utilities.mapToArray
-import io.javalin.http.BadRequestResponse
+import ch.pontius.kiar.utilities.extensions.parseBodyOrThrow
 import io.javalin.http.Context
 import io.javalin.openapi.*
-import jetbrains.exodus.database.TransientEntityStore
-import kotlinx.dnq.query.*
-import kotlinx.dnq.util.findById
-import org.joda.time.DateTime
+import org.jetbrains.exposed.v1.core.Op
+import org.jetbrains.exposed.v1.core.eq
+import org.jetbrains.exposed.v1.core.inList
+import org.jetbrains.exposed.v1.core.inSubQuery
+import org.jetbrains.exposed.v1.jdbc.andWhere
+import org.jetbrains.exposed.v1.jdbc.deleteWhere
+import org.jetbrains.exposed.v1.jdbc.insertAndGetId
+import org.jetbrains.exposed.v1.jdbc.select
+import org.jetbrains.exposed.v1.jdbc.selectAll
+import org.jetbrains.exposed.v1.jdbc.transactions.transaction
+import java.time.Instant
 
 @OpenApi(
     path = "/api/jobs/active",
@@ -42,27 +54,30 @@ import org.joda.time.DateTime
         OpenApiResponse("500", [OpenApiContent(ErrorStatus::class)])
     ]
 )
-fun getActiveJobs(ctx: Context, store: TransientEntityStore, server: IngesterServer) {
+fun getActiveJobs(ctx: Context, server: IngesterServer) {
     val page = ctx.queryParam("page")?.toIntOrNull() ?: 0
     val pageSize = ctx.queryParam("pageSize")?.toIntOrNull() ?: 50
-    val results = store.transactional(true) {
+
+    /* Fetch jobs. */
+    val (count, results) = transaction {
         val currentUser = ctx.currentUser()
-        val baseQuery = when (currentUser.role) {
-            DbRole.ADMINISTRATOR -> DbJob.filter { it.status.active eq true }
-            DbRole.MANAGER,
-            DbRole.VIEWER -> {
-                val participant = currentUser.institution?.participant
-                if (participant == null) {
-                    DbJob.emptyQuery()
-                } else {
-                    DbJob.filter { (it.status.active eq true) and (it.template?.participant eq participant) }
+        val query = (Jobs innerJoin JobTemplates innerJoin Participants).selectAll().where {
+            Jobs.status inList listOf(JobStatus.CREATED, JobStatus.HARVESTED, JobStatus.RUNNING, JobStatus.INTERRUPTED, JobStatus.SCHEDULED)
+        }
+
+        if (currentUser.role == Role.MANAGER || currentUser.role == Role.VIEWER) {
+            if (currentUser.institution == null) {
+                query.andWhere { Op.FALSE }
+            } else {
+                query.andWhere {
+                    Participants.id inSubQuery Institutions.select(Institutions.participantId)
+                        .where { Institutions.name eq currentUser.institution.name }
                 }
             }
-            else -> DbJob.emptyQuery()
-        }.sortedBy(DbJob::changedAt, false)
+        }
 
-        baseQuery.size() to baseQuery.drop(page * pageSize).take(pageSize).asSequence().map {
-            val job = it.toApi()
+        query.count() to query.orderBy(Jobs.modified).offset((page * pageSize).toLong()).limit(pageSize).map {
+            val job = it.toJob()
             val context = server.getContext(job.id!!)
             if (context != null) {
                 job.processed = context.processed
@@ -70,11 +85,11 @@ fun getActiveJobs(ctx: Context, store: TransientEntityStore, server: IngesterSer
                 job.error = context.error
             }
             job
-        }.toList()
+        }
     }
 
-    ctx.json(PaginatedJobResult(results.first, page, pageSize, results.second))
-
+    /* Return results. */
+    ctx.json(PaginatedJobResult(count, page, pageSize, results))
 }
 
 @OpenApi(
@@ -95,29 +110,33 @@ fun getActiveJobs(ctx: Context, store: TransientEntityStore, server: IngesterSer
         OpenApiResponse("500", [OpenApiContent(ErrorStatus::class)])
     ]
 )
-fun getInactiveJobs(ctx: Context, store: TransientEntityStore) {
+fun getInactiveJobs(ctx: Context, server: IngesterServer) {
     val page = ctx.queryParam("page")?.toIntOrNull() ?: 0
     val pageSize = ctx.queryParam("pageSize")?.toIntOrNull() ?: 50
-    val results = store.transactional(true) {
+
+    /* Fetch jobs. */
+    val (count, results) = transaction {
         val currentUser = ctx.currentUser()
-        val baseQuery = when (currentUser.role) {
-            DbRole.ADMINISTRATOR -> DbJob.filter { it.status.active eq false }
-            DbRole.MANAGER,
-            DbRole.VIEWER -> {
-                val participant = currentUser.institution?.participant
-                if (participant == null) {
-                    DbJob.emptyQuery()
-                } else {
-                    DbJob.filter { (it.status.active eq false) and (it.template?.participant eq participant) }
+        val query = (Jobs innerJoin JobTemplates innerJoin Participants).selectAll().where {
+            Jobs.status inList listOf(JobStatus.ABORTED, JobStatus.FAILED, JobStatus.INGESTED)
+        }
+
+        if (currentUser.role == Role.MANAGER || currentUser.role == Role.VIEWER) {
+            if (currentUser.institution == null) {
+                query.andWhere { Op.FALSE }
+            } else {
+                query.andWhere {
+                    Participants.id inSubQuery Institutions.select(Institutions.participantId)
+                        .where { Institutions.name eq currentUser.institution.name }
                 }
             }
-            else -> DbJob.emptyQuery()
-        }.sortedBy(DbJob::changedAt, false)
+        }
 
-        baseQuery.size() to baseQuery.drop(page * pageSize).take(pageSize).asSequence().map { it.toApi() }.toList()
+        query.count() to query.orderBy(Jobs.modified).offset((page * pageSize).toLong()).limit(pageSize).map { it.toJob() }
     }
-    ctx.json(PaginatedJobResult(results.first, page, pageSize, results.second))
 
+    /* Return results. */
+    ctx.json(PaginatedJobResult(count, page, pageSize, results))
 }
 
 @OpenApi(
@@ -127,7 +146,7 @@ fun getInactiveJobs(ctx: Context, store: TransientEntityStore) {
     operationId = "getJobLog",
     tags = ["Job"],
     pathParams = [
-        OpenApiParam(name = "id", description = "The ID of the Job for which the logs should be retrieved.", required = true)
+        OpenApiParam(name = "id", type = Int::class, description = "The ID of the Job for which the logs should be retrieved.", required = true)
     ],
     queryParams = [
         OpenApiParam(name = "page", type = Int::class, description = "The page index (zero-based) for pagination.", required = false),
@@ -142,30 +161,30 @@ fun getInactiveJobs(ctx: Context, store: TransientEntityStore) {
         OpenApiResponse("500", [OpenApiContent(ErrorStatus::class)])
     ]
 )
-fun getJobLogs(ctx: Context, store: TransientEntityStore) {
-    val jobId = ctx.pathParam("id")
+fun getJobLogs(ctx: Context) {
+    val jobId = ctx.pathParam("id").toIntOrNull() ?: throw ErrorStatusException(400, "Malformed job ID.")
     val page = ctx.queryParam("page")?.toIntOrNull() ?: 0
     val pageSize = ctx.queryParam("pageSize")?.toIntOrNull() ?: 50
-    val level = ctx.queryParam("level")?.uppercase()
-    val context = ctx.queryParam("context")?.uppercase()
-    val result = store.transactional(true) {
-        val job = DbJob.findById(jobId)
+    val level = ctx.queryParam("level")?.uppercase()?.let { JobLogLevel.valueOf(it) }
+    val context = ctx.queryParam("context")?.uppercase()?.let { JobLogContext.valueOf(it) }
 
-        /* Construct query. */
-        var logsQuery = DbJobLog.filter { it.job eq job }
+    /* Fetch job logs. */
+    val (count, results) = transaction {
+        val query = JobLogs.selectAll().where { JobLogs.jobId eq jobId }
+
+        /* Apply filters (optional). */
         if (level != null) {
-            logsQuery = logsQuery.filter { it.level.description eq level }
+            query.andWhere { JobLogs.level eq level }
         }
         if (context != null) {
-            logsQuery = logsQuery.filter { it.context.description eq context }
+            query.andWhere { JobLogs.context eq context }
         }
 
-        /* Materialize logs that match query. */
-        val logs = logsQuery.drop(page * pageSize).take(pageSize).asSequence().map { it.toApi() }.toList()
-        val total = logsQuery.size()
-        total to logs
+        query.count() to query.offset((page * pageSize).toLong()).limit(pageSize).map { it.toJobLog() }
     }
-    ctx.json(PaginatedJobLogResult(result.first, page, pageSize, result.second))
+
+    /* Return results. */
+    ctx.json(PaginatedJobLogResult(count, page, pageSize, results))
 }
 
 @OpenApi(
@@ -175,7 +194,7 @@ fun getJobLogs(ctx: Context, store: TransientEntityStore) {
     operationId = "deletePurgeJobLog",
     tags = ["Job"],
     pathParams = [
-        OpenApiParam(name = "id", description = "The ID of the Job for which the logs should be pruged.", required = true)
+        OpenApiParam(name = "id", type = Int::class, description = "The ID of the Job for which the logs should be pruged.", required = true)
     ],
     responses = [
         OpenApiResponse("200", [OpenApiContent(PaginatedJobLogResult::class)]),
@@ -184,15 +203,12 @@ fun getJobLogs(ctx: Context, store: TransientEntityStore) {
         OpenApiResponse("500", [OpenApiContent(ErrorStatus::class)])
     ]
 )
-fun purgeJobLogs(ctx: Context, store: TransientEntityStore) {
-    val jobId = ctx.pathParam("id")
-    store.transactional(false) {
-        val job = DbJob.findById(jobId)
-        for (log in job.log) {
-            log.delete()
-        }
+fun purgeJobLogs(ctx: Context) {
+    val jobId = ctx.pathParam("id").toIntOrNull() ?: throw ErrorStatusException(400, "Malformed job ID.")
+    val deleted = transaction {
+        JobLogs.deleteWhere { JobLogs.jobId eq jobId }
     }
-    ctx.json(SuccessStatus("Logs for job $jobId purged successfully."))
+    ctx.json(SuccessStatus("Logs for job $jobId purged successfully (count = $deleted)."))
 }
 
 @OpenApi(
@@ -212,40 +228,49 @@ fun purgeJobLogs(ctx: Context, store: TransientEntityStore) {
         OpenApiResponse("500", [OpenApiContent(ErrorStatus::class)])
     ]
 )
-fun createJob(ctx: Context, store: TransientEntityStore) {
-    val request = try {
-        ctx.bodyAsClass(CreateJobRequest::class.java)
-    } catch (e: BadRequestResponse) {
-        throw ErrorStatusException(400, "Malformed request.")
-    }
+fun createJob(ctx: Context) {
+    val request = ctx.parseBodyOrThrow<CreateJobRequest>()
 
     /* Create new job. */
-    val job = store.transactional {
+    val created = transaction {
         val currentUser = ctx.currentUser()
-        val template = try {
-            DbJobTemplate.findById(request.templateId)
-        } catch (e: Throwable) {
-            throw ErrorStatusException(404, "Job template with ID ${request.templateId} could not be found.")
-        }
+        val template = JobTemplates.getById(request.templateId)
+            ?: throw ErrorStatusException(404, "Job template with ID ${request.templateId} could not be found.")
 
         /* Check if user's participant is the same as the one associated with the template. */
-        if (currentUser.role != DbRole.ADMINISTRATOR && template.participant != currentUser.institution?.participant) {
-            throw ErrorStatusException(403, "You are not allowed to create a job for template ${template.xdId}.")
+        if (currentUser.role != Role.ADMINISTRATOR) {
+            if (currentUser.institution == null) {
+                throw ErrorStatusException(403, "You are not allowed to create a job for template ${template.id}.")
+            }
+            val participant = (Institutions innerJoin Participants)
+                .select(Participants.name)
+                .where { Institutions.name eq currentUser.institution.name }.map { it[Participants.name] }.firstOrNull()
+            if (participant != template.participantName) {
+                throw ErrorStatusException(403, "You are not allowed to create a job for template ${template.id}.")
+            }
         }
 
-        /* Create new job. */
-        DbJob.new {
-            this.name = if (request.jobName.isNullOrEmpty()) { (template.name + "-${System.currentTimeMillis()}") } else { request.jobName }
-            this.template = template
-            this.source = DbJobSource.WEB
-            this.status = DbJobStatus.CREATED
-            this.createdAt = DateTime.now()
-            this.changedAt = DateTime.now()
-            this.createdBy = currentUser
-            this.createdByName = currentUser.name
-        }.toApi()
+        /* Create job. */
+        val jobId = Jobs.insertAndGetId { insert ->
+            insert[name] = if (request.jobName.isNullOrEmpty()) { (template.name + "-${System.currentTimeMillis()}") } else { request.jobName }
+            insert[templateId] = template.id
+            insert[src] = JobSource.WEB
+            insert[status] = JobStatus.CREATED
+            insert[createdBy] = currentUser.username
+        }.value
+
+        /* Return created object. */
+        Job(
+            id = jobId,
+            name =  if (request.jobName.isNullOrEmpty()) { (template.name + "-${System.currentTimeMillis()}") } else { request.jobName },
+            template = template,
+            source =  JobSource.WEB,
+            status = JobStatus.CREATED,
+            createdAt = Instant.now().toEpochMilli(),
+            createdBy = currentUser.username,
+        )
     }
 
     /* Return job object. */
-    ctx.json(job)
+    ctx.json(created)
 }

@@ -1,26 +1,27 @@
 package ch.pontius.kiar.ingester.processors.transformers
 
+import ch.pontius.kiar.api.model.institution.Institution
 import ch.pontius.kiar.api.model.job.JobLog
 import ch.pontius.kiar.api.model.job.JobLogContext
 import ch.pontius.kiar.api.model.job.JobLogLevel
-import ch.pontius.kiar.database.institution.DbInstitution
+import ch.pontius.kiar.database.institutions.Institutions
+import ch.pontius.kiar.database.institutions.Institutions.toInstitution
 import ch.pontius.kiar.ingester.processors.ProcessingContext
 import ch.pontius.kiar.ingester.processors.sources.Source
 import ch.pontius.kiar.ingester.solrj.*
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.filter
-import kotlinx.dnq.query.asSequence
-import kotlinx.dnq.query.filter
-import kotlinx.dnq.query.isEmpty
 import org.apache.logging.log4j.LogManager
 import org.apache.solr.common.SolrInputDocument
+import org.jetbrains.exposed.v1.jdbc.selectAll
+import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 
 /**
  * A [Transformer] that a) validates incoming [SolrInputDocument]s with respect to required fields, b) checks and correct the association of the document
- * with a present [DbInstitution] and participant and c) enriches verified documents with meta information that can be derived from the [DbInstitution].
+ * with a present [Institution] and participant and c) enriches verified documents with meta information that can be derived from the [Institution].
  *
  * @author Ralph Gasser
- * @version 1.1.2
+ * @version 1.2.0
  */
 class InstitutionTransformer(override val input: Source<SolrInputDocument>): Transformer<SolrInputDocument, SolrInputDocument> {
 
@@ -28,8 +29,12 @@ class InstitutionTransformer(override val input: Source<SolrInputDocument>): Tra
         private val LOGGER = LogManager.getLogger(InstitutionTransformer::class.java)
     }
 
-    private val institutions = DbInstitution.filter { (it.selectedCollections.isEmpty() ) }.asSequence().associate { it.name to it.toApi() }
-
+    /** A [Map] of [Institution.name] to [Institution]. */
+    private val institutions: Map<String, Institution> by lazy {
+        transaction {
+            Institutions.selectAll().map { it.toInstitution() }.associateBy { it.name }
+        }
+    }
 
     /**
      * Converts this [InstitutionTransformer] to a [Flow]

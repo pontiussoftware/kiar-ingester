@@ -6,11 +6,11 @@ import kotlinx.serialization.Serializable
  * A [JobLog] entry. Usually [JobLog]s describe events that occured during the processing of a particular [Job].
  *
  * @author Ralph Gasser
- * @version 1.0.0
+ * @version 1.1.0
  */
 @Serializable
 data class JobLog(
-    val jobId: String? = null,
+    val jobId: JobId? = null,
     val documentId: String? = null,
     val collectionId: String? = null,
     val context: JobLogContext,

@@ -7,7 +7,7 @@ package ch.pontius.kiar.api.model
  * @version 1.0.0
  */
 interface PaginatedResult<T> {
-    val total: Int
+    val total: Long
     val page: Int
     val pageSize: Int
     val results: List<T>
