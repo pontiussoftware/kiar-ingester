@@ -480,16 +480,15 @@ class EDMMapper(store: TransientEntityStore): OAIMapper {
      */
     private fun decimalToEDTF(decimalDate: Float): String {
         val year = decimalDate.toInt()
-        var fractionalPart = decimalDate - year
 
-        /* Extract month. */
+        /* Removed based on suggestion of CARARE's data officer (see email from Natasa Gassia, 2025-07-17 to ralph.gasser@kimnet.ch).
+        var fractionalPart = decimalDate - year
         var month = 0
         if (fractionalPart > 0f) {
             month = (fractionalPart * 100f).toInt()
             fractionalPart = fractionalPart - (month / 100f)
         }
 
-        /* Extract day. */
         var day = 0
         if (fractionalPart > 0f) {
             day = (fractionalPart * 10000f).toInt()
@@ -499,6 +498,7 @@ class EDMMapper(store: TransientEntityStore): OAIMapper {
             day > 0 -> String.format("%04d-%02d-%02d", year, month, day)
             month > 0 -> String.format("%04d-%02d", year, month)
             else -> year.toString()
-        }
+        } */
+        return "$year"
     }
 }
