@@ -28,8 +28,17 @@ configurations {
 }
 
 application {
+    applicationName = "kiar-ingest"
     mainClass.set("ch.pontius.kiar.ApplicationKt")
     applicationDefaultJvmArgs = listOf("-Xms512M", "-Xmx4G")
+}
+
+/* Adjust names for archives. */
+tasks.distZip {
+    archiveFileName = "kiar-ingest.zip"
+}
+tasks.distTar {
+    archiveFileName = "kiar-ingest.tar"
 }
 
 dependencies {

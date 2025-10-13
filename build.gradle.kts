@@ -8,9 +8,10 @@ plugins {
     /* Kotlinx serialization plugin. */
     id("org.jetbrains.kotlin.plugin.serialization") version "2.2.20"
 
-    /* OpenAPI Generator for Frontend internal API generation */
+    /* OpenAPI Generator for Frontend internal API generation. */
     id ("org.openapi.generator") version "7.16.0"
 
+    /* Download plugin to load OAS. */
     id ("de.undercouch.download") version "5.6.0"
 
     idea
