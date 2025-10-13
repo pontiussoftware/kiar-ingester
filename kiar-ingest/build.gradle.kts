@@ -35,10 +35,10 @@ application {
 
 /* Adjust names for archives. */
 tasks.distZip {
-    archiveFileName = "kiar-ingest.zip"
+    archiveFileName = "kiar-ingest-bin.zip"
 }
 tasks.distTar {
-    archiveFileName = "kiar-ingest.tar"
+    archiveFileName = "kiar-ingest-bin.tar"
 }
 
 dependencies {
