@@ -1,41 +1,47 @@
 <h1 mat-dialog-title i18n="@@TitleUserProfile">User profile</h1>
 <div mat-dialog-content>
-    <form [formGroup]="formControl">
-      <mat-form-field [style.width]="'60%'">
-        <mat-label i18n="@@LabelPassword">Username:</mat-label>
-        <input type="text" matInput placeholder="Username" formControlName="username"  />
-      </mat-form-field>
+  <form [formGroup]="formControl">
+    <mat-form-field [style.width]="'60%'">
+      <mat-label i18n="@@LabelPassword">Username:</mat-label>
+      <input type="text" matInput placeholder="Username" formControlName="username"  />
+    </mat-form-field>
 
-      <mat-form-field [style.width]="'40%'">
-        <mat-label i18n="@@LabelRole">Role:</mat-label>
-        <input type="text" matInput placeholder="Role" formControlName="role"/>
+    <mat-form-field [style.width]="'40%'">
+      <mat-label i18n="@@LabelRole">Role:</mat-label>
+      <input type="text" matInput placeholder="Role" formControlName="role"/>
+    </mat-form-field>
+
+    <mat-form-field [style.width]="'100%'">
+      <mat-label i18n="@@LabelEmail">E-Mail:</mat-label>
+      <input type="email" matInput placeholder="E-Mail" formControlName="email"  />
+      @if (formControl.get('email')?.hasError('email')) {
+        <mat-error>Not a valid e-mail address.</mat-error>
+      }
+    </mat-form-field>
+
+    <mat-form-field [style.width]="'100%'">
+      <mat-label i18n="@@LabelInstitution">Institution:</mat-label>
+      <input type="text" matInput placeholder="Institution" formControlName="institution" />
+    </mat-form-field>
+
+    <div formGroupName="password">
+      <mat-form-field [style.width]="'100%'">
+        <mat-label i18n="@@LabelPassword">Password:</mat-label>
+        <input type="password" matInput placeholder="Minimum of 8 characters" formControlName="passwordFirst" />
+        @if (formControl.get('password')?.get('passwordFirst')?.hasError('minlength')) {
+          <mat-error>Password must have at least 8 characters.</mat-error>
+        }
       </mat-form-field>
 
       <mat-form-field [style.width]="'100%'">
-        <mat-label i18n="@@LabelEmail">E-Mail:</mat-label>
-        <input type="email" matInput placeholder="E-Mail" formControlName="email"  />
-        <mat-error *ngIf="formControl.get('email')?.hasError('email')">Not a valid e-mail address.</mat-error>
+        <mat-label i18n="@@LabelPasswordRepeat">Password (repeat):</mat-label>
+        <input type="password" matInput placeholder="Minimum of 8 characters" formControlName="passwordSecond"  />
+        @if (formControl.get('password')?.hasError('notSame')) {
+          <mat-error>Passwords do not match.</mat-error>
+        }
       </mat-form-field>
-
-      <mat-form-field [style.width]="'100%'">
-        <mat-label i18n="@@LabelInstitution">Institution:</mat-label>
-        <input type="text" matInput placeholder="Institution" formControlName="institution" />
-      </mat-form-field>
-
-      <div formGroupName="password">
-        <mat-form-field [style.width]="'100%'">
-          <mat-label i18n="@@LabelPassword">Password:</mat-label>
-          <input type="password" matInput placeholder="Minimum of 8 characters" formControlName="passwordFirst" />
-          <mat-error *ngIf="formControl.get('password')?.get('passwordFirst')?.hasError('minlength')">Password must have at least 8 characters.</mat-error>
-        </mat-form-field>
-
-        <mat-form-field [style.width]="'100%'">
-          <mat-label i18n="@@LabelPasswordRepeat">Password (repeat):</mat-label>
-          <input type="password" matInput placeholder="Minimum of 8 characters" formControlName="passwordSecond"  />
-          <mat-error *ngIf="formControl.get('password')?.hasError('notSame')">Passwords do not match.</mat-error>
-        </mat-form-field>
-      </div>
-    </form>
+    </div>
+  </form>
 </div>
 <div mat-dialog-actions>
   <button mat-flat-button color="primary" i18n="@@LabelUpdate" (click)="update()">Update</button>

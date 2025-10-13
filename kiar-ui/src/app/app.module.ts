@@ -6,7 +6,7 @@ import { AppComponent } from './app.component';
 import {ApiModule, Configuration} from "../../openapi";
 import {MatButtonModule} from "@angular/material/button";
 import {SessionModule} from "./components/session/session.module";
-import {HttpClientModule} from "@angular/common/http";
+import { provideHttpClient, withInterceptorsFromDi } from "@angular/common/http";
 import {BrowserAnimationsModule} from "@angular/platform-browser/animations";
 import {MatToolbarModule} from "@angular/material/toolbar";
 import {MatIconModule} from "@angular/material/icon";
@@ -28,36 +28,28 @@ export function initializeApiConfig() {
   return new Configuration({ basePath: window.location.origin, withCredentials: true }); /* TODO: Change. */
 }
 
-@NgModule({
-  imports: [
-    {
-      ngModule: ApiModule,
-      providers: [{provide: Configuration, useFactory: initializeApiConfig}],
-    },
-    AppRoutingModule,
-    BrowserAnimationsModule,
-    BrowserModule,
-    CommonModule,
-    HttpClientModule,
-    MatButtonModule,
-    MatIconModule,
-    MatMenuModule,
-    MatToolbarModule,
-    MatTooltipModule,
-
-    /* Own modules. */
-    AdminModule,
-    InstitutionModule,
-    CollectionModule,
-    UserModule,
-    DashboardModule,
-    SessionModule,
-    ServiceModule,
-  ],
-  declarations: [
-    AppComponent
-  ],
-  providers: [],
-  bootstrap: [AppComponent]
-})
+@NgModule({ declarations: [
+        AppComponent
+    ],
+    bootstrap: [AppComponent], imports: [{
+            ngModule: ApiModule,
+            providers: [{ provide: Configuration, useFactory: initializeApiConfig }],
+        },
+        AppRoutingModule,
+        BrowserAnimationsModule,
+        BrowserModule,
+        CommonModule,
+        MatButtonModule,
+        MatIconModule,
+        MatMenuModule,
+        MatToolbarModule,
+        MatTooltipModule,
+        /* Own modules. */
+        AdminModule,
+        InstitutionModule,
+        CollectionModule,
+        UserModule,
+        DashboardModule,
+        SessionModule,
+        ServiceModule], providers: [provideHttpClient(withInterceptorsFromDi())] })
 export class AppModule { }

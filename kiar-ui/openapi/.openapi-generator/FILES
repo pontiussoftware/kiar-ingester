@@ -1,5 +1,6 @@
 .gitignore
 README.md
+api.base.service.ts
 api.module.ts
 api/apacheSolr.service.ts
 api/api.ts
@@ -58,5 +59,6 @@ model/valueParser.ts
 ng-package.json
 package.json
 param.ts
+provide-api.ts
 tsconfig.json
 variables.ts

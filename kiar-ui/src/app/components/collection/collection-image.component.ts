@@ -3,9 +3,10 @@ import {CollectionService} from "../../../../openapi";
 import { catchError, of } from "rxjs";
 
 @Component({
-  selector: 'kiar-collection-image',
-  templateUrl: 'collection-image.component.html',
-  styleUrls: ['collection-image.component.scss']
+    selector: 'kiar-collection-image',
+    templateUrl: 'collection-image.component.html',
+    styleUrls: ['collection-image.component.scss'],
+    standalone: false
 })
 export class CollectionImageComponent implements OnInit {
   /** The ID to fetch image for. */

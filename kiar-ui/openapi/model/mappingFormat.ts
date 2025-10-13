@@ -9,11 +9,10 @@
  */
 
 
-export type MappingFormat = 'XML' | 'JSON' | 'EXCEL';
-
 export const MappingFormat = {
-    XML: 'XML' as MappingFormat,
-    JSON: 'JSON' as MappingFormat,
-    EXCEL: 'EXCEL' as MappingFormat
-};
+    XML: 'XML',
+    JSON: 'JSON',
+    EXCEL: 'EXCEL'
+} as const;
+export type MappingFormat = typeof MappingFormat[keyof typeof MappingFormat];
 

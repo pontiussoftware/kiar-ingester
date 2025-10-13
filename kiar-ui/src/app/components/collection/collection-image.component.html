@@ -1,14 +1,16 @@
 @if (imageUrl) {
-    @if (edit) {
-        <div class="image-container" (mouseenter)="showOverlay = true" (mouseleave)="showOverlay = false">
-            <img [src]="imageUrl" [width]="width" [height]="height" [style.object-fit]="'contain'" />
-            <div class="overlay" *ngIf="showOverlay" (click)="delete()">
-                <mat-icon>delete</mat-icon>
-            </div>
+  @if (edit) {
+    <div class="image-container" (mouseenter)="showOverlay = true" (mouseleave)="showOverlay = false">
+      <img [src]="imageUrl" [width]="width" [height]="height" [style.object-fit]="'contain'" />
+      @if (showOverlay) {
+        <div class="overlay" (click)="delete()">
+          <mat-icon>delete</mat-icon>
         </div>
-    } @else {
-        <div class="image-container">
-            <img [src]="imageUrl" [width]="width" [height]="height" [style.object-fit]="'contain'" />
-        </div>
-    }
+      }
+    </div>
+  } @else {
+    <div class="image-container">
+      <img [src]="imageUrl" [width]="width" [height]="height" [style.object-fit]="'contain'" />
+    </div>
+  }
 }

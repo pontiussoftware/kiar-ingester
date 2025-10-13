@@ -9,18 +9,22 @@
     <mat-form-field appearance="fill" [style.width]="'10%'">
       <mat-label>Type</mat-label>
       <mat-select formControlName="type">
-        <mat-option *ngFor="let type of (types | async)" [value]="type">
-          {{type}}
-        </mat-option>
+        @for (type of (types | async); track type) {
+          <mat-option [value]="type">
+            {{type}}
+          </mat-option>
+        }
       </mat-select>
     </mat-form-field>
 
     <mat-form-field appearance="fill" [style.width]="'20%'">
       <mat-label>Participant</mat-label>
       <mat-select formControlName="participantName">
-        <mat-option *ngFor="let participant of (participants | async)" [value]="participant">
-          {{participant}}
-        </mat-option>
+        @for (participant of (participants | async); track participant) {
+          <mat-option [value]="participant">
+            {{participant}}
+          </mat-option>
+        }
       </mat-select>
     </mat-form-field>
 
@@ -36,18 +40,22 @@
     <mat-form-field appearance="fill" [style.width]="'50%'">
       <mat-label>Entity Mapping</mat-label>
       <mat-select formControlName="entityMappingName">
-        <mat-option *ngFor="let mapping of (mappings | async)" [value]="mapping.name">
-          {{mapping.name}} ({{mapping.type}})
-        </mat-option>
+        @for (mapping of (mappings | async); track mapping) {
+          <mat-option [value]="mapping.name">
+            {{mapping.name}} ({{mapping.type}})
+          </mat-option>
+        }
       </mat-select>
     </mat-form-field>
 
     <mat-form-field appearance="fill" [style.width]="'50%'">
       <mat-label>Apache Solr Config</mat-label>
       <mat-select formControlName="solrConfigName">
-        <mat-option *ngFor="let config of (solr | async)" [value]="config.name">
-          {{config.name}} ({{config.server}})
-        </mat-option>
+        @for (config of (solr | async); track config) {
+          <mat-option [value]="config.name">
+            {{config.name}} ({{config.server}})
+          </mat-option>
+        }
       </mat-select>
     </mat-form-field>
   </form>

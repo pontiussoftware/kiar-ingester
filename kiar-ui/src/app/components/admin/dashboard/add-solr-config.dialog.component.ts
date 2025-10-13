@@ -4,8 +4,9 @@ import {MatDialogRef} from "@angular/material/dialog";
 import {ApacheSolrConfig} from "../../../../../openapi";
 
 @Component({
-  selector: 'kiar-add-solr-config-dialog',
-  templateUrl: './add-solr-config.dialog.component.html'
+    selector: 'kiar-add-solr-config-dialog',
+    templateUrl: './add-solr-config.dialog.component.html',
+    standalone: false
 })
 export class AddSolrConfigDialogComponent {
 

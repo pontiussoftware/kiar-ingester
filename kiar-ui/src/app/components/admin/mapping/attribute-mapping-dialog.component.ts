@@ -14,8 +14,9 @@ export interface AttributeMappingData {
 }
 
 @Component({
-  selector: 'attribute-mapping-dialog',
-  templateUrl: 'attribute-mapping-dialog.component.html',
+    selector: 'attribute-mapping-dialog',
+    templateUrl: 'attribute-mapping-dialog.component.html',
+    standalone: false
 })
 export class AttributeMappingDialogComponent {
 

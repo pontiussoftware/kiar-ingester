@@ -5,9 +5,10 @@ import {ActivatedRoute, Router} from "@angular/router";
 import {FormArray, FormControl, FormGroup, Validators} from "@angular/forms";
 import {MatSnackBar, MatSnackBarConfig} from "@angular/material/snack-bar";
 @Component({
-  selector: 'kiar-apache-solr-admin',
-  templateUrl: './apache-solr.component.html',
-  styleUrls: ['./apache-solr.component.scss']
+    selector: 'kiar-apache-solr-admin',
+    templateUrl: './apache-solr.component.html',
+    styleUrls: ['./apache-solr.component.scss'],
+    standalone: false
 })
 export class ApacheSolrComponent implements AfterViewInit{
 

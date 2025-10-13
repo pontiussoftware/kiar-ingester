@@ -6,9 +6,10 @@ import {MatSnackBar, MatSnackBarConfig} from "@angular/material/snack-bar";
 import {PASSWORD_VALIDATOR} from "../../../utilities/password";
 
 @Component({
-  selector: 'app-user-profile',
-  templateUrl: './profile.component.html',
-  styleUrls: ['./profile.component.scss']
+    selector: 'app-user-profile',
+    templateUrl: './profile.component.html',
+    styleUrls: ['./profile.component.scss'],
+    standalone: false
 })
 export class ProfileComponent implements AfterViewInit {
 

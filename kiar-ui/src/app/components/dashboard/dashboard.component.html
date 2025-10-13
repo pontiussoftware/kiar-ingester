@@ -61,31 +61,39 @@
       <ng-container matColumnDef="action">
         <th mat-header-cell *matHeaderCellDef i18n="@@ColHeaderAction"> Action </th>
         <td mat-cell *matCellDef="let element">
-          <div *ngIf="!isUploading(element)">
-            <button mat-icon-button aria-label="View logs." matTooltip="View logs." [routerLink]="['/manager/logs', element.id]">
-              <mat-icon>list_alt</mat-icon>
-            </button>
+          @if (!isUploading(element)) {
+            <div>
+              <button mat-icon-button aria-label="View logs." matTooltip="View logs." [routerLink]="['/manager/logs', element.id]">
+                <mat-icon>list_alt</mat-icon>
+              </button>
+              @if ((element.status === 'CREATED' || element.status === 'FAILED')) {
+                <button (click)="upload(element)" mat-icon-button matTooltip="Upload KIAR file." i18n-matTooltip="@@TooltipUploadKiar">
+                  <mat-icon>upload_file</mat-icon>
+                </button>
+              }
+              @if (element.status === 'HARVESTED' || element.status === 'INTERRUPTED' || element.status === 'FAILED') {
+                <button (click)="startIngest(element, false)" mat-icon-button matTooltip="Schedule for data ingest." i18n-matTooltip="@@TooltipStartIngest">
+                  <mat-icon>publish</mat-icon>
+                </button>
+              }
+              @if (element.status === 'HARVESTED' || element.status === 'INTERRUPTED' || element.status === 'FAILED') {
+                <button (click)="startIngest(element, true)" mat-icon-button matTooltip="Schedule for test run." i18n-matTooltip="@@TooltipStartIngest">
+                  <mat-icon>cruelty_free</mat-icon>
+                </button>
+              }
+              @if (element.status !== 'ABORTED' && element.status !== 'INGESTED') {
+                <button (click)="abortJob(element)" mat-icon-button matTooltip="Abort job." i18n-matTooltip="@@TooltipAbortJob">
+                  <mat-icon>cancel</mat-icon>
+                </button>
+              }
+            </div>
+          }
 
-            <button *ngIf="(element.status === 'CREATED' || element.status === 'FAILED')" (click)="upload(element)" mat-icon-button matTooltip="Upload KIAR file." i18n-matTooltip="@@TooltipUploadKiar">
-              <mat-icon>upload_file</mat-icon>
-            </button>
-
-            <button *ngIf="element.status === 'HARVESTED' || element.status === 'INTERRUPTED' || element.status === 'FAILED'" (click)="startIngest(element, false)" mat-icon-button matTooltip="Schedule for data ingest." i18n-matTooltip="@@TooltipStartIngest">
-              <mat-icon>publish</mat-icon>
-            </button>
-
-            <button *ngIf="element.status === 'HARVESTED' || element.status === 'INTERRUPTED' || element.status === 'FAILED'" (click)="startIngest(element, true)" mat-icon-button matTooltip="Schedule for test run." i18n-matTooltip="@@TooltipStartIngest">
-              <mat-icon>cruelty_free</mat-icon>
-            </button>
-
-            <button *ngIf="element.status !== 'ABORTED' && element.status !== 'INGESTED'" (click)="abortJob(element)" mat-icon-button matTooltip="Abort job." i18n-matTooltip="@@TooltipAbortJob">
-              <mat-icon>cancel</mat-icon>
-            </button>
-          </div>
-
-          <div *ngIf="isUploading(element)">
-            <mat-progress-bar diameter="25" [value]="progressForJob(element)"></mat-progress-bar>
-          </div>
+          @if (isUploading(element)) {
+            <div>
+              <mat-progress-bar diameter="25" [value]="progressForJob(element)"></mat-progress-bar>
+            </div>
+          }
         </td>
       </ng-container>
 
@@ -106,7 +114,7 @@
     <table mat-table [dataSource]="jobHistory" class="mat-elevation-z8">
 
       <!--- Note that these columns can be defined in any order.
-            The actual rendered columns are set as a property on the row definition" -->
+      The actual rendered columns are set as a property on the row definition" -->
 
       <!-- Name Column -->
       <ng-container matColumnDef="name">
@@ -162,12 +170,16 @@
       <ng-container matColumnDef="action">
         <th mat-header-cell *matHeaderCellDef i18n="@@ColHeaderAction"> Action </th>
         <td mat-cell *matCellDef="let element">
-          <button *ngIf="element.logEntries > 0" mat-icon-button aria-label="View log" matTooltip="View log." [routerLink]="['/manager/logs', element.id]">
-            <mat-icon>list_alt</mat-icon>
-          </button>
-          <button *ngIf="element.logEntries > 0" mat-icon-button aria-label="Purge log" matTooltip="Purge log." (click)="purgeLog(element)">
-            <mat-icon>delete_forever</mat-icon>
-          </button>
+          @if (element.logEntries > 0) {
+            <button mat-icon-button aria-label="View log" matTooltip="View log." [routerLink]="['/manager/logs', element.id]">
+              <mat-icon>list_alt</mat-icon>
+            </button>
+          }
+          @if (element.logEntries > 0) {
+            <button mat-icon-button aria-label="Purge log" matTooltip="Purge log." (click)="purgeLog(element)">
+              <mat-icon>delete_forever</mat-icon>
+            </button>
+          }
         </td>
       </ng-container>
 

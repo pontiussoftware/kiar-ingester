@@ -44,7 +44,7 @@ subprojects {
     group = "ch.pontius.kiar"
 
     /* Our current version, on dev branch this should always be release+1-SNAPSHOT */
-    version = "1.0.0-SNAPSHOT"
+    version = "1.1.0"
 
     tasks {
         compileKotlin {
@@ -75,14 +75,14 @@ openApiGenerate {
     outputDir.set("${project.projectDir}/kiar-ui/openapi")
     configOptions.set(mapOf(
         "npmName" to "@kiar-openapi/api",
-        "ngVersion" to "16.0.2",
+        "ngVersion" to "20.3.0",
         "snapshot" to "true",
         "enumPropertyNaming" to "original"
     ))
 }
 
 val generateOAS by tasks.registering(Download::class) {
-    /* Requires DRES running on default port */
+    /* Requires KIAR running on default port */
     val f = project.file(oasFile)
     src(fullOAS)
     dest(f)

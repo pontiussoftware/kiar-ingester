@@ -9,9 +9,11 @@
     <mat-form-field [style.width]="'100%'">
       <mat-label i18n="@@LabelTemplate">Template:</mat-label>
       <mat-select formControlName="template">
-        <mat-option *ngFor="let template of (templates | async)" [value]="template">
-          {{template.name}} ({{(template.type)}})
-        </mat-option>
+        @for (template of (templates | async); track template) {
+          <mat-option [value]="template">
+            {{template.name}} ({{(template.type)}})
+          </mat-option>
+        }
       </mat-select>
     </mat-form-field>
   </form>

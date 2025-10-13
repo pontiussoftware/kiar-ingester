@@ -9,12 +9,11 @@
  */
 
 
-export type CollectionType = 'OBJECT' | 'PERSON' | 'MUSEUM' | 'COLLECTION';
-
 export const CollectionType = {
-    OBJECT: 'OBJECT' as CollectionType,
-    PERSON: 'PERSON' as CollectionType,
-    MUSEUM: 'MUSEUM' as CollectionType,
-    COLLECTION: 'COLLECTION' as CollectionType
-};
+    OBJECT: 'OBJECT',
+    PERSON: 'PERSON',
+    MUSEUM: 'MUSEUM',
+    COLLECTION: 'COLLECTION'
+} as const;
+export type CollectionType = typeof CollectionType[keyof typeof CollectionType];
 

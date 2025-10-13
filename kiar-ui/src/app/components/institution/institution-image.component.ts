@@ -3,8 +3,9 @@ import {InstitutionService} from "../../../../openapi";
 import { catchError, of } from "rxjs";
 
 @Component({
-  selector: 'app-institution-image',
-  template: '<img *ngIf="imageUrl" [src]="imageUrl" [width]="width" [height]="height" [style.object-fit]="\'contain\'" />'
+    selector: 'app-institution-image',
+    template: '@if (imageUrl) {<img [src]="imageUrl" [width]="width" [height]="height" [style.object-fit]="\'contain\'" />}',
+    standalone: false
 })
 export class InstitutionImageComponent implements OnInit {
   /** The ID to fetch image for. */

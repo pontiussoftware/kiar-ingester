@@ -9,16 +9,15 @@
  */
 
 
-export type JobStatus = 'CREATED' | 'ABORTED' | 'HARVESTED' | 'RUNNING' | 'SCHEDULED' | 'INTERRUPTED' | 'INGESTED' | 'FAILED';
-
 export const JobStatus = {
-    CREATED: 'CREATED' as JobStatus,
-    ABORTED: 'ABORTED' as JobStatus,
-    HARVESTED: 'HARVESTED' as JobStatus,
-    RUNNING: 'RUNNING' as JobStatus,
-    SCHEDULED: 'SCHEDULED' as JobStatus,
-    INTERRUPTED: 'INTERRUPTED' as JobStatus,
-    INGESTED: 'INGESTED' as JobStatus,
-    FAILED: 'FAILED' as JobStatus
-};
+    CREATED: 'CREATED',
+    ABORTED: 'ABORTED',
+    HARVESTED: 'HARVESTED',
+    RUNNING: 'RUNNING',
+    SCHEDULED: 'SCHEDULED',
+    INTERRUPTED: 'INTERRUPTED',
+    INGESTED: 'INGESTED',
+    FAILED: 'FAILED'
+} as const;
+export type JobStatus = typeof JobStatus[keyof typeof JobStatus];
 

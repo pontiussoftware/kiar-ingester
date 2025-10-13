@@ -5,8 +5,9 @@ import {EntityMapping, EntityMappingService, MappingFormat} from "../../../../..
 import {Observable, shareReplay} from "rxjs";
 
 @Component({
-  selector: 'kiar-add-entity-mapping-dialog',
-  templateUrl: './add-entity-mapping-dialog.component.html'
+    selector: 'kiar-add-entity-mapping-dialog',
+    templateUrl: './add-entity-mapping-dialog.component.html',
+    standalone: false
 })
 export class AddEntityMappingDialogComponent {
 

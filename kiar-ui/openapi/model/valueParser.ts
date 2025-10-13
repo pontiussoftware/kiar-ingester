@@ -9,18 +9,17 @@
  */
 
 
-export type ValueParser = 'UUID' | 'STRING' | 'MULTISTRING' | 'DATE' | 'INTEGER' | 'DOUBLE' | 'COORD_WGS84' | 'COORD_LV95' | 'IMAGE_FILE' | 'IMAGE_MPLUS';
-
 export const ValueParser = {
-    UUID: 'UUID' as ValueParser,
-    STRING: 'STRING' as ValueParser,
-    MULTISTRING: 'MULTISTRING' as ValueParser,
-    DATE: 'DATE' as ValueParser,
-    INTEGER: 'INTEGER' as ValueParser,
-    DOUBLE: 'DOUBLE' as ValueParser,
-    COORD_WGS84: 'COORD_WGS84' as ValueParser,
-    COORD_LV95: 'COORD_LV95' as ValueParser,
-    IMAGE_FILE: 'IMAGE_FILE' as ValueParser,
-    IMAGE_MPLUS: 'IMAGE_MPLUS' as ValueParser
-};
+    UUID: 'UUID',
+    STRING: 'STRING',
+    MULTISTRING: 'MULTISTRING',
+    DATE: 'DATE',
+    INTEGER: 'INTEGER',
+    DOUBLE: 'DOUBLE',
+    COORD_WGS84: 'COORD_WGS84',
+    COORD_LV95: 'COORD_LV95',
+    IMAGE_FILE: 'IMAGE_FILE',
+    IMAGE_MPLUS: 'IMAGE_MPLUS'
+} as const;
+export type ValueParser = typeof ValueParser[keyof typeof ValueParser];
 

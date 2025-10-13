@@ -9,11 +9,10 @@
  */
 
 
-export type Role = 'ADMINISTRATOR' | 'MANAGER' | 'VIEWER';
-
 export const Role = {
-    ADMINISTRATOR: 'ADMINISTRATOR' as Role,
-    MANAGER: 'MANAGER' as Role,
-    VIEWER: 'VIEWER' as Role
-};
+    ADMINISTRATOR: 'ADMINISTRATOR',
+    MANAGER: 'MANAGER',
+    VIEWER: 'VIEWER'
+} as const;
+export type Role = typeof Role[keyof typeof Role];
 

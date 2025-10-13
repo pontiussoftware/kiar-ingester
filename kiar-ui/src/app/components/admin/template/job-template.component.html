@@ -11,36 +11,44 @@
     <mat-form-field appearance="fill" [style.width]="'5%'">
       <mat-label i18n="@@LabelType">Type</mat-label>
       <mat-select formControlName="type">
-        <mat-option *ngFor="let type of (jobTypes | async)" [value]="type">
-          {{type}}
-        </mat-option>
+        @for (type of (jobTypes | async); track type) {
+          <mat-option [value]="type">
+            {{type}}
+          </mat-option>
+        }
       </mat-select>
     </mat-form-field>
 
     <mat-form-field appearance="fill" [style.width]="'10%'">
       <mat-label i18n="@@LabelParticipant">Participant</mat-label>
       <mat-select formControlName="participantName">
-        <mat-option *ngFor="let participant of (participants | async)" [value]="participant">
-          {{participant}}
-        </mat-option>
+        @for (participant of (participants | async); track participant) {
+          <mat-option [value]="participant">
+            {{participant}}
+          </mat-option>
+        }
       </mat-select>
     </mat-form-field>
 
     <mat-form-field appearance="fill" [style.width]="'15%'">
       <mat-label i18n="@@LabelEntityMapping">Entity Mapping</mat-label>
       <mat-select formControlName="entityMappingName">
-        <mat-option *ngFor="let mapping of (mappings | async)" [value]="mapping.name">
-          {{mapping.name}}
-        </mat-option>
+        @for (mapping of (mappings | async); track mapping) {
+          <mat-option [value]="mapping.name">
+            {{mapping.name}}
+          </mat-option>
+        }
       </mat-select>
     </mat-form-field>
 
     <mat-form-field appearance="fill" [style.width]="'15%'">
       <mat-label i18n="@@ApacheSolrConfig">Apache Solr Config</mat-label>
       <mat-select formControlName="solrConfigName">
-        <mat-option *ngFor="let config of (solr | async)" [value]="config.name">
-          {{config.name}}
-        </mat-option>
+        @for (config of (solr | async); track config) {
+          <mat-option [value]="config.name">
+            {{config.name}}
+          </mat-option>
+        }
       </mat-select>
     </mat-form-field>
 
@@ -82,32 +90,35 @@
 
   <table formArrayName="transformers">
     <thead>
-    <tr>
-      <th>&nbsp;</th>
-      <th i18n="@@LabelTransformerName">Transformer Name</th>
-      <th i18n="@@LabelParameters">Parameters</th>
-    </tr>
+      <tr>
+        <th>&nbsp;</th>
+        <th i18n="@@LabelTransformerName">Transformer Name</th>
+        <th i18n="@@LabelParameters">Parameters</th>
+      </tr>
     </thead>
-    <tr *ngFor="let t of transformers.controls; let i = index" [formGroup]="t">
-      <td [style.padding-bottom]="'25px'" [style.width]="'250px'">
-        <button mat-icon-button matTooltip="Move transformer upwards." (click)="moveTransformer(i, i - 1)"><mat-icon>arrow_upward</mat-icon></button>
-        <button mat-icon-button matTooltip="Move transformer downwards."  (click)="moveTransformer(i, i + 1)"><mat-icon>arrow_downward</mat-icon></button>
-        <button mat-icon-button matTooltip="Edit transformer parameters." color="primary" (click)="editTransformer(i)"><mat-icon>edit</mat-icon></button>
-        <button mat-icon-button matTooltip="Remove transformer." color="warn" (click)="removeTransformer(i)"><mat-icon>delete</mat-icon></button>
-      </td>
-
-      <td [style.min-width]="'300px'">
-        <mat-form-field appearance="fill" [style.width]="'100%'">
-          <mat-select formControlName="type">
-            <mat-option *ngFor="let type of (transformerTypes | async)" [value]="type">
-              {{type}}
-            </mat-option>
-          </mat-select>
-        </mat-form-field>
-      </td>
-      <td [style.color]="'#888888'">
-        {{stringForAttributes(t)}}
-      </td>
-    </tr>
+    @for (t of transformers.controls; track t; let i = $index) {
+      <tr [formGroup]="t">
+        <td [style.padding-bottom]="'25px'" [style.width]="'250px'">
+          <button mat-icon-button matTooltip="Move transformer upwards." (click)="moveTransformer(i, i - 1)"><mat-icon>arrow_upward</mat-icon></button>
+          <button mat-icon-button matTooltip="Move transformer downwards."  (click)="moveTransformer(i, i + 1)"><mat-icon>arrow_downward</mat-icon></button>
+          <button mat-icon-button matTooltip="Edit transformer parameters." color="primary" (click)="editTransformer(i)"><mat-icon>edit</mat-icon></button>
+          <button mat-icon-button matTooltip="Remove transformer." color="warn" (click)="removeTransformer(i)"><mat-icon>delete</mat-icon></button>
+        </td>
+        <td [style.min-width]="'300px'">
+          <mat-form-field appearance="fill" [style.width]="'100%'">
+            <mat-select formControlName="type">
+              @for (type of (transformerTypes | async); track type) {
+                <mat-option [value]="type">
+                  {{type}}
+                </mat-option>
+              }
+            </mat-select>
+          </mat-form-field>
+        </td>
+        <td [style.color]="'#888888'">
+          {{stringForAttributes(t)}}
+        </td>
+      </tr>
+    }
   </table>
 </form>

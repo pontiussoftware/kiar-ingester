@@ -9,9 +9,10 @@ import {MatDialog} from "@angular/material/dialog";
 import {InstitutionDialogComponent} from "./institution-dialog.component";
 
 @Component({
-  selector: 'kiar-institution-list',
-  templateUrl: './institution-list.component.html',
-  styleUrls: ['./institution-list.component.scss']
+    selector: 'kiar-institution-list',
+    templateUrl: './institution-list.component.html',
+    styleUrls: ['./institution-list.component.scss'],
+    standalone: false
 })
 export class InstitutionListComponent implements AfterViewInit  {
 

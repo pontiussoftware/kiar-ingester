@@ -8,9 +8,10 @@ import {MatDialog} from "@angular/material/dialog";
 import {AttributeMappingData, AttributeMappingDialogComponent} from "./attribute-mapping-dialog.component";
 
 @Component({
-  selector: 'kiar-entity-mapping-admin',
-  templateUrl: './entity-mapping.component.html',
-  styleUrls: ['./entity-mapping.component.scss']
+    selector: 'kiar-entity-mapping-admin',
+    templateUrl: './entity-mapping.component.html',
+    styleUrls: ['./entity-mapping.component.scss'],
+    standalone: false
 })
 export class EntityMappingComponent implements AfterViewInit {
 

@@ -8,9 +8,10 @@ import {TransformerDialogComponent} from "./transformer-dialog.component";
 import {MatDialog} from "@angular/material/dialog";
 
 @Component({
-  selector: 'kiar-job-template-admin',
-  templateUrl: './job-template.component.html',
-  styleUrls: ['./job-template.component.scss']
+    selector: 'kiar-job-template-admin',
+    templateUrl: './job-template.component.html',
+    styleUrls: ['./job-template.component.scss'],
+    standalone: false
 })
 export class JobTemplateComponent implements AfterViewInit {
 

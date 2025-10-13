@@ -6,8 +6,9 @@ import {ActivatedRoute} from "@angular/router";
 import {MatPaginator} from "@angular/material/paginator";
 
 @Component({
-  selector: 'kiar-job-log',
-  templateUrl: 'job-log.component.html',
+    selector: 'kiar-job-log',
+    templateUrl: 'job-log.component.html',
+    standalone: false
 })
 export class JobLogComponent implements AfterViewInit, OnInit {
 

@@ -8,9 +8,10 @@ import {MatDialog} from "@angular/material/dialog";
 import {CollectionDialogComponent} from "./collection-dialog.component";
 
 @Component({
-  selector: 'kiar-collection-list',
-  templateUrl: './collection-list.component.html',
-  styleUrls: ['./collection-list.component.scss']
+    selector: 'kiar-collection-list',
+    templateUrl: './collection-list.component.html',
+    styleUrls: ['./collection-list.component.scss'],
+    standalone: false
 })
 export class CollectionListComponent implements AfterViewInit  {
 

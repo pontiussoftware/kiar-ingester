@@ -6,8 +6,9 @@ import {Observable, shareReplay} from "rxjs";
 import {ConfigService, TransformerType} from "../../../../../openapi";
 
 @Component({
-  selector: 'transformer-dialog',
-  templateUrl: 'transformer-dialog.component.html',
+    selector: 'transformer-dialog',
+    templateUrl: 'transformer-dialog.component.html',
+    standalone: false
 })
 export class TransformerDialogComponent {
 

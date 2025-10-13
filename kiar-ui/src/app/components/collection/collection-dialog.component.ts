@@ -10,9 +10,10 @@ import {Observable, shareReplay} from "rxjs";
 import {MatSnackBar, MatSnackBarConfig} from "@angular/material/snack-bar";
 
 @Component({
-  selector: 'kiar-collection-dialog',
-  templateUrl: './collection-dialog.component.html',
-  styleUrls: ['./collection-dialog.component.scss']
+    selector: 'kiar-collection-dialog',
+    templateUrl: './collection-dialog.component.html',
+    styleUrls: ['./collection-dialog.component.scss'],
+    standalone: false
 })
 export class CollectionDialogComponent {
 

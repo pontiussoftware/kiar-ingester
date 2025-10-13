@@ -9,9 +9,10 @@ import {JobHistoryDatasource} from "./job-history-datasource";
 import {JobCurrentDatasource} from "./job-current-datasource";
 
 @Component({
-  selector: 'kiar-dashboard',
-  templateUrl: './dashboard.component.html',
-  styleUrls: ['./dashboard.component.scss']
+    selector: 'kiar-dashboard',
+    templateUrl: './dashboard.component.html',
+    styleUrls: ['./dashboard.component.scss'],
+    standalone: false
 })
 export class DashboardComponent implements AfterViewInit, OnDestroy {
 

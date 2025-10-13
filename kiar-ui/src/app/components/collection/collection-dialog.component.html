@@ -1,65 +1,85 @@
 <h1 mat-dialog-title i18n="@@HeadingCreateCollection">Create Collection</h1>
 <div mat-dialog-content>
-    <form [formGroup]="formControl">
-        <mat-form-field appearance="fill" [style.width]="'50%'">
-            <mat-label i18n="@@LabelName">Name</mat-label>
-            <input matInput type="text" formControlName="name">
-            <mat-error *ngIf="formControl.get('name')?.hasError('minlength')">Minimum length is 10.</mat-error>
-        </mat-form-field>
+  <form [formGroup]="formControl">
+    <mat-form-field appearance="fill" [style.width]="'50%'">
+      <mat-label i18n="@@LabelName">Name</mat-label>
+      <input matInput type="text" formControlName="name">
+      @if (formControl.get('name')?.hasError('minlength')) {
+        <mat-error>Minimum length is 10.</mat-error>
+      }
+    </mat-form-field>
 
-        <mat-form-field appearance="fill" [style.width]="'30%'">
-            <mat-label i18n="@@LabelInstitution">Institution</mat-label>
-            <mat-select formControlName="institutionName">
-                <mat-option *ngFor="let institution of (institutionNames | async)" [value]="institution">
-                    {{ institution }}
-                </mat-option>
-            </mat-select>
-        </mat-form-field>
+    <mat-form-field appearance="fill" [style.width]="'30%'">
+      <mat-label i18n="@@LabelInstitution">Institution</mat-label>
+      <mat-select formControlName="institutionName">
+        @for (institution of (institutionNames | async); track institution) {
+          <mat-option [value]="institution">
+            {{ institution }}
+          </mat-option>
+        }
+      </mat-select>
+    </mat-form-field>
 
-        <mat-checkbox formControlName="publish" i18n="@@LabelPublish">
+    <mat-checkbox formControlName="publish" i18n="@@LabelPublish">
             Publish
         </mat-checkbox>
 
-        <mat-form-field appearance="fill" [style.width]="'100%'">
-            <mat-label i18n="@@LabelDisplayName">Display Name</mat-label>
-            <input matInput type="text" formControlName="displayName">
-            <mat-error *ngIf="formControl.get('displayName')?.hasError('minlength')">Minimum length is 10.</mat-error>
-        </mat-form-field>
+    <mat-form-field appearance="fill" [style.width]="'100%'">
+      <mat-label i18n="@@LabelDisplayName">Display Name</mat-label>
+      <input matInput type="text" formControlName="displayName">
+      @if (formControl.get('displayName')?.hasError('minlength')) {
+        <mat-error>Minimum length is 10.</mat-error>
+      }
+    </mat-form-field>
 
-        <div formArrayName="filters">
-            <div *ngFor="let filter of filters; let i = index" >
-                <mat-form-field appearance="fill" [style.width]="'85%'">
-                    <mat-label i18n="@@LabelFilter">Filter</mat-label>
-                    <input matInput type="text" [formControl]="filter">
-                </mat-form-field>
-                <button *ngIf="i == filters.length - 1" mat-icon-button (click)="addFilter()">
-                    <mat-icon>add</mat-icon>
-                </button>
-                <button *ngIf="filters.length > 1" mat-icon-button (click)="removeFilter(i)">
-                    <mat-icon>remove</mat-icon>
-                </button>
-            </div>
+    <div formArrayName="filters">
+      @for (filter of filters; track filter; let i = $index) {
+        <div >
+          <mat-form-field appearance="fill" [style.width]="'85%'">
+            <mat-label i18n="@@LabelFilter">Filter</mat-label>
+            <input matInput type="text" [formControl]="filter">
+          </mat-form-field>
+          @if (i == filters.length - 1) {
+            <button mat-icon-button (click)="addFilter()">
+              <mat-icon>add</mat-icon>
+            </button>
+          }
+          @if (filters.length > 1) {
+            <button mat-icon-button (click)="removeFilter(i)">
+              <mat-icon>remove</mat-icon>
+            </button>
+          }
         </div>
+      }
+    </div>
 
-        <mat-form-field appearance="fill" [style.width]="'100%'">
-            <mat-label i18n="@@LabelDescription">Description</mat-label>
-            <textarea matInput formControlName="description"></textarea>
-        </mat-form-field>
+    <mat-form-field appearance="fill" [style.width]="'100%'">
+      <mat-label i18n="@@LabelDescription">Description</mat-label>
+      <textarea matInput formControlName="description"></textarea>
+    </mat-form-field>
 
-        <hr *ngIf="images.length > 0"/>
+    @if (images.length > 0) {
+      <hr/>
+    }
 
-        <div *ngIf="collectionId" class="image-gallery">
-            <kiar-collection-image *ngFor="let image of images" [collectionId]="collectionId" [name]="image" [edit]="true"></kiar-collection-image>
-        </div>
-    </form>
+    @if (collectionId) {
+      <div class="image-gallery">
+        @for (image of images; track image) {
+          <kiar-collection-image [collectionId]="collectionId" [name]="image" [edit]="true"></kiar-collection-image>
+        }
+      </div>
+    }
+  </form>
 </div>
 <div mat-dialog-actions>
-    <button mat-button color="primary" (click)="save()">
-        <mat-icon>save</mat-icon>
-        Save
+  <button mat-button color="primary" (click)="save()">
+    <mat-icon>save</mat-icon>
+    Save
+  </button>
+  @if (collectionId) {
+    <button mat-button (click)="uploadImage()">
+      <mat-icon>upload</mat-icon>
+      Upload Image
     </button>
-    <button *ngIf="collectionId" mat-button (click)="uploadImage()">
-        <mat-icon>upload</mat-icon>
-        Upload Image
-    </button>
+  }
 </div>

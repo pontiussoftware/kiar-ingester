@@ -13,6 +13,7 @@ configurations {
 
 
 val includeConfig: Boolean by lazy { project.hasProperty("includeConfig") }
+
 node {
     this.version.value("22.20.0")
     this.download.value(true)
@@ -35,9 +36,6 @@ val buildFrontend by tasks.registering(com.github.gradle.node.npm.task.NpxTask::
  */
 val packageFrontend by tasks.registering(Zip::class) {
     dependsOn(buildFrontend)
-    outputs.upToDateWhen {
-        project.layout.buildDirectory.file("/libs/kiar-ui.jar").get().asFile.exists()
-    }
     archiveFileName.set("kiar-ui.jar")
     destinationDirectory.set(project.layout.buildDirectory.dir("libs").get())
     from(project.layout.buildDirectory.dir("dist").get()) {

@@ -9,9 +9,10 @@ import {UserDataSource} from "./user-datasource";
 import {UserDialogComponent} from "./user-dialog.component";
 
 @Component({
-  selector: 'kiar-user-list',
-  templateUrl: './user-list.component.html',
-  styleUrls: ['./user-list.component.scss']
+    selector: 'kiar-user-list',
+    templateUrl: './user-list.component.html',
+    styleUrls: ['./user-list.component.scss'],
+    standalone: false
 })
 export class UserListComponent implements AfterViewInit  {
 

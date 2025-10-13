@@ -4,15 +4,19 @@
     <mat-form-field appearance="fill" [style.width]="'50%'">
       <mat-label i18n="@@LabelName">Username</mat-label>
       <input matInput type="text" formControlName="username">
-      <mat-error *ngIf="formControl.get('name')?.hasError('minlength')">Minimum length is 4.</mat-error>
+      @if (formControl.get('name')?.hasError('minlength')) {
+        <mat-error>Minimum length is 4.</mat-error>
+      }
     </mat-form-field>
 
     <mat-form-field appearance="fill" [style.width]="'20%'">
       <mat-label i18n="@@LabelRole">Role</mat-label>
       <mat-select formControlName="role">
-        <mat-option *ngFor="let role of (roles | async)" [value]="role">
-          {{role}}
-        </mat-option>
+        @for (role of (roles | async); track role) {
+          <mat-option [value]="role">
+            {{role}}
+          </mat-option>
+        }
       </mat-select>
     </mat-form-field>
 
@@ -28,9 +32,11 @@
     <mat-form-field appearance="fill" [style.width]="'50%'">
       <mat-label i18n="@@LabelInstitution">Institution</mat-label>
       <mat-select formControlName="institutionName">
-        <mat-option *ngFor="let institution of (institutions | async)" [value]="institution">
-          {{institution}}
-        </mat-option>
+        @for (institution of (institutions | async); track institution) {
+          <mat-option [value]="institution">
+            {{institution}}
+          </mat-option>
+        }
       </mat-select>
     </mat-form-field>
 
@@ -38,13 +44,17 @@
       <mat-form-field [style.width]="'100%'">
         <mat-label i18n="@@LabelPassword">Password:</mat-label>
         <input type="password" matInput placeholder="Minimum of 8 characters" formControlName="passwordFirst" />
-        <mat-error *ngIf="formControl.get('password')?.hasError('notLongEnough')">Password must have at least 8 characters.</mat-error>
+        @if (formControl.get('password')?.hasError('notLongEnough')) {
+          <mat-error>Password must have at least 8 characters.</mat-error>
+        }
       </mat-form-field>
 
       <mat-form-field [style.width]="'100%'">
         <mat-label i18n="@@LabelPasswordRepeat">Password (repeat):</mat-label>
         <input type="password" matInput placeholder="Minimum of 8 characters" formControlName="passwordSecond"  />
-        <mat-error *ngIf="formControl.get('password')?.hasError('notSame')">Passwords do not match.</mat-error>
+        @if (formControl.get('password')?.hasError('notSame')) {
+          <mat-error>Passwords do not match.</mat-error>
+        }
       </mat-form-field>
     </div>
 

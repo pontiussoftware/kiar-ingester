@@ -9,10 +9,9 @@
  */
 
 
-export type ImageFormat = 'JPEG' | 'PNG';
-
 export const ImageFormat = {
-    JPEG: 'JPEG' as ImageFormat,
-    PNG: 'PNG' as ImageFormat
-};
+    JPEG: 'JPEG',
+    PNG: 'PNG'
+} as const;
+export type ImageFormat = typeof ImageFormat[keyof typeof ImageFormat];
 

@@ -9,12 +9,11 @@
  */
 
 
-export type JobLogLevel = 'WARNING' | 'ERROR' | 'VALIDATION' | 'SEVERE';
-
 export const JobLogLevel = {
-    WARNING: 'WARNING' as JobLogLevel,
-    ERROR: 'ERROR' as JobLogLevel,
-    VALIDATION: 'VALIDATION' as JobLogLevel,
-    SEVERE: 'SEVERE' as JobLogLevel
-};
+    WARNING: 'WARNING',
+    ERROR: 'ERROR',
+    VALIDATION: 'VALIDATION',
+    SEVERE: 'SEVERE'
+} as const;
+export type JobLogLevel = typeof JobLogLevel[keyof typeof JobLogLevel];
 

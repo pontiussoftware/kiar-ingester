@@ -9,12 +9,11 @@
  */
 
 
-export type TransformerType = 'DISPLAY' | 'SYSTEM' | 'RIGHTS' | 'UUID';
-
 export const TransformerType = {
-    DISPLAY: 'DISPLAY' as TransformerType,
-    SYSTEM: 'SYSTEM' as TransformerType,
-    RIGHTS: 'RIGHTS' as TransformerType,
-    UUID: 'UUID' as TransformerType
-};
+    DISPLAY: 'DISPLAY',
+    SYSTEM: 'SYSTEM',
+    RIGHTS: 'RIGHTS',
+    UUID: 'UUID'
+} as const;
+export type TransformerType = typeof TransformerType[keyof typeof TransformerType];
 

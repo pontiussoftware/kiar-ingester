@@ -6,9 +6,10 @@ import {MAT_DIALOG_DATA, MatDialogRef} from "@angular/material/dialog";
 import {PASSWORD_VALIDATOR} from "../../utilities/password";
 
 @Component({
-  selector: 'kiar-user-dialog',
-  templateUrl: './user-dialog.component.html',
-  styleUrls: ['./user-dialog.component.scss']
+    selector: 'kiar-user-dialog',
+    templateUrl: './user-dialog.component.html',
+    styleUrls: ['./user-dialog.component.scss'],
+    standalone: false
 })
 export class UserDialogComponent {
 

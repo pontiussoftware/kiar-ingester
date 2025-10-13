@@ -2,7 +2,7 @@
   "openapi" : "3.0.3",
   "info" : {
     "title" : "KIAR Dashboard API",
-    "version" : "1.0.0",
+    "version" : "1.0.1",
     "description" : "API for the KIAR Dashboard.",
     "contact" : {
       "name" : "API Support",
@@ -4390,6 +4390,16 @@
           "schema" : {
             "type" : "string"
           }
+        }, {
+          "name" : "set",
+          "in" : "query",
+          "description" : "The OAI-PMH set criterion for selective harvesting (used for ListIdentifiers and ListRecords).",
+          "required" : false,
+          "deprecated" : false,
+          "allowEmptyValue" : false,
+          "schema" : {
+            "type" : "string"
+          }
         } ],
         "responses" : {
           "200" : {
@@ -4434,6 +4444,9 @@
                     "type" : "string"
                   },
                   "metadataPrefix" : {
+                    "type" : "string"
+                  },
+                  "set" : {
                     "type" : "string"
                   }
                 }

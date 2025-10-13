@@ -16,9 +16,11 @@
     <mat-form-field appearance="fill" [style.width]="'10%'">
       <mat-label>Type</mat-label>
       <mat-select formControlName="type">
-        <mat-option *ngFor="let format of (mappingFormats | async)" [value]="format">
-          {{format}}
-        </mat-option>
+        @for (format of (mappingFormats | async); track format) {
+          <mat-option [value]="format">
+            {{format}}
+          </mat-option>
+        }
       </mat-select>
     </mat-form-field>
 
@@ -46,59 +48,57 @@
 
   <table formArrayName="attributes" [style.width]="'100%'">
     <thead>
-    <tr>
-      <th  [style.width]="'10%'">&nbsp;</th>
-      <th i18n="@@LabelSource" [style.width]="'55%'">Source</th>
-      <th i18n="@@LabelDestination" [style.width]="'15%'">Destination</th>
-      <th i18n="@@LabelParser" [style.width]="'10%'">Parser</th>
-      <th i18n="@@LabelRequired"  [style.width]="'5%'">Required</th>
-      <th i18n="@@LabelMultiValued" [style.width]="'5%'">Multi-Valued</th>
+      <tr>
+        <th  [style.width]="'10%'">&nbsp;</th>
+        <th i18n="@@LabelSource" [style.width]="'55%'">Source</th>
+        <th i18n="@@LabelDestination" [style.width]="'15%'">Destination</th>
+        <th i18n="@@LabelParser" [style.width]="'10%'">Parser</th>
+        <th i18n="@@LabelRequired"  [style.width]="'5%'">Required</th>
+        <th i18n="@@LabelMultiValued" [style.width]="'5%'">Multi-Valued</th>
 
-    </tr>
+      </tr>
     </thead>
 
     <!-- Source Column -->
-    <tr *ngFor="let e of attributes.controls; let i = index" [formGroup]="e">
-      <td [style.padding-bottom]="'25px'">
-        <button mat-icon-button matTooltip="Move attribute mapping upwards." (click)="moveAttributeMapping(i, i - 1)"><mat-icon>arrow_upward</mat-icon></button>
-        <button mat-icon-button matTooltip="Move attribute mapping downwards."  (click)="moveAttributeMapping(i, i + 1)"><mat-icon>arrow_downward</mat-icon></button>
-        <button mat-icon-button matTooltip="Edit attribute mapping." (click)="editAttributeMapping(i)" color="primary"><mat-icon>edit</mat-icon></button>
-        <button mat-icon-button matTooltip="Remove attribute mapping." (click)="removeAttributeMapping(i)" color="warn"><mat-icon>delete</mat-icon></button>
-      </td>
-
-      <td>
-        <mat-form-field appearance="fill" [style.width]="'100%'">
-          <mat-label i18n="@@LabelSource">Source</mat-label>
-          <input matInput type="text" formControlName="source"/>
-        </mat-form-field>
-      </td>
-
-      <td>
-        <mat-form-field appearance="fill" [style.width]="'100%'">
-          <mat-label i18n="@@LabelDestination">Destination</mat-label>
-          <input matInput type="text" formControlName="destination"/>
-        </mat-form-field>
-      </td>
-
-      <td>
-        <mat-form-field appearance="fill" [style.width]="'100%'">
-          <mat-label i18n="@@LabelParser">Parser</mat-label>
-          <mat-select formControlName="parser">
-            <mat-option *ngFor="let parser of (parsers | async)" [value]="parser">
-              {{parser}}
-            </mat-option>
-          </mat-select>
-        </mat-form-field>
-
-      </td>
-
-      <td [style.padding-bottom]="'25px'" [style.text-align]="'center'">
-        <mat-checkbox formControlName="required"></mat-checkbox>
-      </td>
-
-      <td [style.padding-bottom]="'25px'" [style.text-align]="'center'">
-        <mat-checkbox formControlName="multiValued"></mat-checkbox>
-      </td>
-    </tr>
+    @for (e of attributes.controls; track e; let i = $index) {
+      <tr [formGroup]="e">
+        <td [style.padding-bottom]="'25px'">
+          <button mat-icon-button matTooltip="Move attribute mapping upwards." (click)="moveAttributeMapping(i, i - 1)"><mat-icon>arrow_upward</mat-icon></button>
+          <button mat-icon-button matTooltip="Move attribute mapping downwards."  (click)="moveAttributeMapping(i, i + 1)"><mat-icon>arrow_downward</mat-icon></button>
+          <button mat-icon-button matTooltip="Edit attribute mapping." (click)="editAttributeMapping(i)" color="primary"><mat-icon>edit</mat-icon></button>
+          <button mat-icon-button matTooltip="Remove attribute mapping." (click)="removeAttributeMapping(i)" color="warn"><mat-icon>delete</mat-icon></button>
+        </td>
+        <td>
+          <mat-form-field appearance="fill" [style.width]="'100%'">
+            <mat-label i18n="@@LabelSource">Source</mat-label>
+            <input matInput type="text" formControlName="source"/>
+          </mat-form-field>
+        </td>
+        <td>
+          <mat-form-field appearance="fill" [style.width]="'100%'">
+            <mat-label i18n="@@LabelDestination">Destination</mat-label>
+            <input matInput type="text" formControlName="destination"/>
+          </mat-form-field>
+        </td>
+        <td>
+          <mat-form-field appearance="fill" [style.width]="'100%'">
+            <mat-label i18n="@@LabelParser">Parser</mat-label>
+            <mat-select formControlName="parser">
+              @for (parser of (parsers | async); track parser) {
+                <mat-option [value]="parser">
+                  {{parser}}
+                </mat-option>
+              }
+            </mat-select>
+          </mat-form-field>
+        </td>
+        <td [style.padding-bottom]="'25px'" [style.text-align]="'center'">
+          <mat-checkbox formControlName="required"></mat-checkbox>
+        </td>
+        <td [style.padding-bottom]="'25px'" [style.text-align]="'center'">
+          <mat-checkbox formControlName="multiValued"></mat-checkbox>
+        </td>
+      </tr>
+    }
   </table>
 </form>

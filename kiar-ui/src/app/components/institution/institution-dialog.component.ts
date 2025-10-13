@@ -6,9 +6,10 @@ import {combineLatestWith, map, Observable, shareReplay} from "rxjs";
 import {MatSnackBar, MatSnackBarConfig} from "@angular/material/snack-bar";
 
 @Component({
-  selector: 'kiar-add-institution-dialog',
-  templateUrl: './institution-dialog.component.html',
-  styleUrls: ['./institution-dialog.component.scss']
+    selector: 'kiar-add-institution-dialog',
+    templateUrl: './institution-dialog.component.html',
+    styleUrls: ['./institution-dialog.component.scss'],
+    standalone: false
 })
 export class InstitutionDialogComponent {
 

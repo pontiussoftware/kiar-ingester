@@ -6,8 +6,9 @@ import {MatSnackBar, MatSnackBarConfig} from "@angular/material/snack-bar";
 import {MatDialogRef} from "@angular/material/dialog";
 
 @Component({
-  selector: 'create-job-dialog',
-  templateUrl: 'create-job-dialog.component.html',
+    selector: 'create-job-dialog',
+    templateUrl: 'create-job-dialog.component.html',
+    standalone: false
 })
 export class CreateJobDialogComponent {
   /** The {@link FormControl} that backs this {@link AddJobTemplateDialogComponent}. */

@@ -184,7 +184,7 @@ private fun initializeWebserver(store: TransientEntityStore, server: IngesterSer
         it.directory = "html"
         it.location = Location.CLASSPATH
     }
-    c.spaRoot.addFile("/", "html/index.html")
+    c.spaRoot.addFile("/", "html/browser/index.html")
 
     /* Configure routes. */
     c.router.apiBuilder() {
@@ -211,7 +211,7 @@ private fun initializeWebserver(store: TransientEntityStore, server: IngesterSer
                     .withInfo { openApiInfo: OpenApiInfo ->
                         openApiInfo
                             .title("KIAR Dashboard API")
-                            .version("1.0.0")
+                            .version("1.0.1")
                             .description("API for the KIAR Dashboard.")
                             .contact("API Support", "https://support.kimnet.ch", "support@kimnet.ch")
                     }

@@ -9,9 +9,10 @@ import {AddJobTemplateDialogComponent} from "./add-job-template-dialog.component
 import {AddParticipantDialogComponent} from "./add-participant-dialog.component";
 
 @Component({
-  selector: 'kiar-admin-dashboard',
-  templateUrl: './admin-dashboard.component.html',
-  styleUrls: ['./admin-dashboard.component.scss']
+    selector: 'kiar-admin-dashboard',
+    templateUrl: './admin-dashboard.component.html',
+    styleUrls: ['./admin-dashboard.component.scss'],
+    standalone: false
 })
 export class AdminDashboardComponent implements AfterViewInit {
 

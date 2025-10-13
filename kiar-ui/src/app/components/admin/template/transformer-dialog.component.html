@@ -1,12 +1,14 @@
 <h1 mat-dialog-title>Edit transformer</h1>
 <div mat-dialog-content>
   <form [formGroup]="formGroup">
-        <mat-form-field appearance="fill" [style.width]="'50%'">
+    <mat-form-field appearance="fill" [style.width]="'50%'">
       <mat-label i18n="@@LabelTransformer">Transformer</mat-label>
       <mat-select formControlName="type">
-        <mat-option *ngFor="let type of (transformerTypes | async)" [value]="type">
-          {{type}}
-        </mat-option>
+        @for (type of (transformerTypes | async); track type) {
+          <mat-option [value]="type">
+            {{type}}
+          </mat-option>
+        }
       </mat-select>
     </mat-form-field>
 
@@ -18,28 +20,30 @@
 
     <table [style.width]="'100%'">
       <thead>
-      <th i18n="@@LabelKey">Key</th>
-      <th i18n="@@LabelKey">Value</th>
-      <th>&nbsp;</th>
+        <th i18n="@@LabelKey">Key</th>
+        <th i18n="@@LabelKey">Value</th>
+        <th>&nbsp;</th>
       </thead>
       <tbody>
-      <tr *ngFor="let p of parameterForms?.controls; let i = index" [formGroup]="p">
-        <td [style.width]="'15%'">
-          <mat-form-field appearance="fill" [style.width]="'100%'">
-            <mat-label>Key</mat-label>
-            <input matInput type="text" formControlName="key">
-          </mat-form-field>
-        </td>
-        <td [style.width]="'75%'">
-          <mat-form-field appearance="fill" [style.width]="'100%'">
-            <mat-label>Value</mat-label>
-            <input matInput type="text" formControlName="value">
-          </mat-form-field>
-        </td>
-        <td [style.padding-bottom]="'25px'">
-          <button mat-icon-button (click)="removeParameter(i)" color="warn" i18n-matTooltip="@@TooltipRemoveParameter" matTooltip="Remove parameter."><mat-icon>delete</mat-icon></button>
-        </td>
-      </tr>
+        @for (p of parameterForms?.controls; track p; let i = $index) {
+          <tr [formGroup]="p">
+            <td [style.width]="'15%'">
+              <mat-form-field appearance="fill" [style.width]="'100%'">
+                <mat-label>Key</mat-label>
+                <input matInput type="text" formControlName="key">
+              </mat-form-field>
+            </td>
+            <td [style.width]="'75%'">
+              <mat-form-field appearance="fill" [style.width]="'100%'">
+                <mat-label>Value</mat-label>
+                <input matInput type="text" formControlName="value">
+              </mat-form-field>
+            </td>
+            <td [style.padding-bottom]="'25px'">
+              <button mat-icon-button (click)="removeParameter(i)" color="warn" i18n-matTooltip="@@TooltipRemoveParameter" matTooltip="Remove parameter."><mat-icon>delete</mat-icon></button>
+            </td>
+          </tr>
+        }
       </tbody>
     </table>
   </form>

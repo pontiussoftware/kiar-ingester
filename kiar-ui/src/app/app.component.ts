@@ -7,9 +7,10 @@ import {MatDialog} from "@angular/material/dialog";
 import {ProfileComponent} from "./components/session/user/profile.component";
 
 @Component({
-  selector: 'app-root',
-  templateUrl: './app.component.html',
-  styleUrls: ['./app.component.scss']
+    selector: 'app-root',
+    templateUrl: './app.component.html',
+    styleUrls: ['./app.component.scss'],
+    standalone: false
 })
 export class AppComponent {
   constructor(private authentication: AuthenticationService, private dialog: MatDialog, private router: Router) {

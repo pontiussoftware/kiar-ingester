@@ -9,11 +9,10 @@
  */
 
 
-export type JobLogContext = 'METADATA' | 'RESOURCE' | 'SYSTEM';
-
 export const JobLogContext = {
-    METADATA: 'METADATA' as JobLogContext,
-    RESOURCE: 'RESOURCE' as JobLogContext,
-    SYSTEM: 'SYSTEM' as JobLogContext
-};
+    METADATA: 'METADATA',
+    RESOURCE: 'RESOURCE',
+    SYSTEM: 'SYSTEM'
+} as const;
+export type JobLogContext = typeof JobLogContext[keyof typeof JobLogContext];
 

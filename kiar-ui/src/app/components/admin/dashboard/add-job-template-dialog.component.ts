@@ -5,8 +5,9 @@ import {ApacheSolrConfig, ConfigService, EntityMapping, JobTemplate, JobType} fr
 import {Observable, shareReplay} from "rxjs";
 
 @Component({
-  selector: 'kiar-add-job-template-dialog',
-  templateUrl: './add-job-template.dialog.component.html'
+    selector: 'kiar-add-job-template-dialog',
+    templateUrl: './add-job-template.dialog.component.html',
+    standalone: false
 })
 export class AddJobTemplateDialogComponent {
 
