@@ -76,7 +76,6 @@ class ProcessingContext(
      *
      * @param log The [JobLog] to append.
      */
-    @Synchronized
     fun log(log: JobLog) {
         this.buffer.add(log)
 
@@ -95,12 +94,14 @@ class ProcessingContext(
         }
     }
 
+    /** Returns the size of the current log. */
+    fun logSize(): Int = this.buffer.size
+
     /**
      * Flushes all [JobLog]s to the database.
      *
      * Requires an ongoing transaction.
      */
-    @Synchronized
     fun flushLogs() {
         val job = DbJob.findById(this@ProcessingContext.jobId)
         this.buffer.removeIf { log ->

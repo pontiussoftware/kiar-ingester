@@ -149,6 +149,13 @@ class IngesterServer(val store: TransientEntityStore, val config: Config) {
                 val job = DbJob.findById(jobId)
                 job.status = DbJobStatus.RUNNING
             }
+        }.onEach {
+            /* Flush logs every once in a while. */
+            if (context.logSize() >= 5000) {
+                this@IngesterServer.store.transactional {
+                    context.flushLogs()
+                }
+            }
         }.takeWhile {
             !context.aborted
         }.onCompletion { e ->
