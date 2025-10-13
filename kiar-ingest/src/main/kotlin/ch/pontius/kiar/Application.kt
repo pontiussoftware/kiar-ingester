@@ -148,7 +148,7 @@ private fun initializeDatabase(config: Config): TransientEntityStore {
     initMetaData(XdModel.hierarchy, store)
 
     /* Perform basic setup if needed. */
-    checkAndSetup(store, config)
+    checkAndSetup(store)
 
     return store
 }
@@ -157,9 +157,8 @@ private fun initializeDatabase(config: Config): TransientEntityStore {
  * Checks for an empty database and performs basic setup if needed.
  *
  * @param store [TransientEntityStore]
- * @param config The [Config]
  */
-private fun checkAndSetup(store: TransientEntityStore, config: Config) = store.transactional {
+private fun checkAndSetup(store: TransientEntityStore) = store.transactional {
     if (DbUser.all().size() == 0) {
         println("Empty database encountered... starting setup.")
         val pw = generatePassword(10)
@@ -181,13 +180,13 @@ private fun checkAndSetup(store: TransientEntityStore, config: Config) = store.t
 private fun initializeWebserver(store: TransientEntityStore, server: IngesterServer, config: Config) = Javalin.create { c ->
     /* Configure static routes for SPA. */
     c.staticFiles.add{
-        it.directory = "html"
+        it.directory = "html/browser/"
         it.location = Location.CLASSPATH
     }
     c.spaRoot.addFile("/", "html/browser/index.html")
 
     /* Configure routes. */
-    c.router.apiBuilder() {
+    c.router.apiBuilder {
         configureApiRoutes(store, server, config)
     }
 
@@ -196,7 +195,7 @@ private fun initializeWebserver(store: TransientEntityStore, server: IngesterSer
 
     /* Enable CORS. */
     c.bundledPlugins.enableCors { cors ->
-        cors.addRule() {
+        cors.addRule {
             it.reflectClientOrigin = true // anyHost() has similar implications and might be used in production? I'm not sure how to cope with production and dev here simultaneously
             it.allowCredentials = true
         }
