@@ -1,14 +1,15 @@
 import de.undercouch.gradle.tasks.download.Download
+import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 
 plugins {
     /* Kotlin JVM version. */
-    kotlin("jvm") version "2.1.0"
+    kotlin("jvm") version "2.2.20"
 
     /* Kotlinx serialization plugin. */
-    id("org.jetbrains.kotlin.plugin.serialization") version "2.1.0"
+    id("org.jetbrains.kotlin.plugin.serialization") version "2.2.20"
 
     /* OpenAPI Generator for Frontend internal API generation */
-    id ("org.openapi.generator") version "7.11.0"
+    id ("org.openapi.generator") version "7.16.0"
 
     id ("de.undercouch.download") version "5.6.0"
 
@@ -47,14 +48,14 @@ subprojects {
 
     tasks {
         compileKotlin {
-            kotlinOptions {
-                jvmTarget = "21"
+            compilerOptions {
+                compilerOptions.jvmTarget = JvmTarget.JVM_21
             }
         }
 
         compileTestKotlin {
-            kotlinOptions {
-                jvmTarget = "21"
+            compilerOptions {
+                compilerOptions.jvmTarget = JvmTarget.JVM_21
             }
         }
 

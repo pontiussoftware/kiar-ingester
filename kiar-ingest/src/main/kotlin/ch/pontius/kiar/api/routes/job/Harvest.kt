@@ -186,7 +186,7 @@ fun abortJob(ctx: Context, store: TransientEntityStore, server: IngesterServer) 
         val currentUser = ctx.currentUser()
         val job = try {
             DbJob.findById(jobId)
-        } catch (e: Throwable) {
+        } catch (_: Throwable) {
             throw ErrorStatusException(404, "Job with ID $jobId could not be found.")
         }
 
