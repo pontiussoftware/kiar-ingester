@@ -23,6 +23,9 @@ class FileImageValueParser(override val mapping: AttributeMapping): ValueParser<
     /** Reads the replacement pattern from the parameters map.*/
     private val replace: String? = this.mapping.parameters["replace"]
 
+    /** A source directory from which a path should be resolved. */
+    private val source: String? = this.mapping.parameters["source"]
+
     /**
      * Parses the given [String] and resolves it into a [FileImageProvider] the provided [SolrInputDocument].
      *
@@ -35,13 +38,19 @@ class FileImageValueParser(override val mapping: AttributeMapping): ValueParser<
 
         /* Read path - apply Regex search/replace if needed. */
         val actualPath = if (this.search != null && this.replace != null) {
-            value.replace(this.search, this.replace)
+            value.trim().replace(this.search, this.replace)
         } else {
-            value
+            value.trim()
         }
 
-        /* Parse path and read file. */
-        val path = Paths.get(actualPath)
+        /* Parse path. */
+        val path = if (!this.source.isNullOrEmpty()) {
+            Paths.get(this.source).resolve(actualPath)
+        } else {
+            Paths.get(actualPath)
+        }
+
+        /* Read file. */
         if (this.mapping.multiValued) {
             into.addField(mapping.destination, FileImageProvider(into.uuid(), path, context))
         } else {

@@ -52,7 +52,7 @@ class URLImageValueParser(override val mapping: AttributeMapping): ValueParser<L
             }
 
             try {
-                URL(str)
+                URI(str).toURL()
             } catch (e: Throwable) {
                 context.log(JobLog(context.jobId, into.uuidOrNull(), null, JobLogContext.RESOURCE, JobLogLevel.WARNING, "Failed to parse URL '$str'; ${e.message}."))
                 null
