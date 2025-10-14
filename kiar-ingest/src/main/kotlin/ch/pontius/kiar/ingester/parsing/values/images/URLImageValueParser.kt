@@ -1,6 +1,9 @@
 package ch.pontius.kiar.ingester.parsing.values.images
 
 import ch.pontius.kiar.api.model.config.mappings.AttributeMapping
+import ch.pontius.kiar.api.model.job.JobLog
+import ch.pontius.kiar.api.model.job.JobLogContext
+import ch.pontius.kiar.api.model.job.JobLogLevel
 import ch.pontius.kiar.ingester.parsing.values.ValueParser
 import ch.pontius.kiar.ingester.parsing.values.images.providers.URLImageProvider
 import ch.pontius.kiar.ingester.processors.ProcessingContext
@@ -42,11 +45,18 @@ class URLImageValueParser(override val mapping: AttributeMapping): ValueParser<L
         if (value.isNullOrEmpty()) return
 
         /* Read values. */
-        val urls = value.split(this.delimiter).map {
-            if (this.host.isNullOrEmpty()) {
-                URI(URLEncoder.encode(it.trim(), "UTF-8")).toURL() /* Absolute URL. */
+        val urls = value.split(this.delimiter).mapNotNull {
+            val str = if (this.host.isNullOrEmpty()) {
+               URLEncoder.encode(it.trim(), "UTF-8")
             } else {
-                URI(URLEncoder.encode(this.host + (if (this.host.endsWith("/") || it.startsWith("/")) "" else "/") + it.trim(), "UTF-8")).toURL() /* Relative URL. */
+               URLEncoder.encode(this.host + (if (this.host.endsWith("/") || it.startsWith("/")) "" else "/") + it.trim(), "UTF-8")
+            }
+
+            try {
+                URI(str).toURL()
+            } catch (e: Throwable) {
+                context.log(JobLog(context.jobId, into.uuidOrNull(), null, JobLogContext.RESOURCE, JobLogLevel.WARNING, "Failed to parse URL '$str'; ${e.message}."))
+                null
             }
         }
 
