@@ -16,7 +16,7 @@ import java.nio.file.StandardOpenOption
  * @author Ralph Gasser
  * @version 1.0.0
  */
-class FileImageProvider(private val uuid: String, private val path: Path, private val context: ProcessingContext): MediaProvider.Image {
+class FileImageProvider(private val uuid: String?, private val path: Path, private val context: ProcessingContext): MediaProvider.Image {
     override fun open(): ImmutableImage? = try {
         Files.newInputStream(this.path, StandardOpenOption.READ).use { ImmutableImage.loader().fromStream(it) }
     } catch (e: Throwable) {

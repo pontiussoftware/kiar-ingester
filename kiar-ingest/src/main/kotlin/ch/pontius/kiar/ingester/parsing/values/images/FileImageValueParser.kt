@@ -4,7 +4,7 @@ import ch.pontius.kiar.api.model.config.mappings.AttributeMapping
 import ch.pontius.kiar.ingester.parsing.values.ValueParser
 import ch.pontius.kiar.ingester.parsing.values.images.providers.FileImageProvider
 import ch.pontius.kiar.ingester.processors.ProcessingContext
-import ch.pontius.kiar.ingester.solrj.uuid
+import ch.pontius.kiar.ingester.solrj.uuidOrNull
 import com.sksamuel.scrimage.ImmutableImage
 import org.apache.solr.common.SolrInputDocument
 import java.nio.file.Paths
@@ -52,9 +52,9 @@ class FileImageValueParser(override val mapping: AttributeMapping): ValueParser<
 
         /* Read file. */
         if (this.mapping.multiValued) {
-            into.addField(mapping.destination, FileImageProvider(into.uuid(), path, context))
+            into.addField(mapping.destination, FileImageProvider(into.uuidOrNull(), path, context))
         } else {
-            into.setField(mapping.destination, FileImageProvider(into.uuid(), path, context))
+            into.setField(mapping.destination, FileImageProvider(into.uuidOrNull(), path, context))
         }
     }
 }
