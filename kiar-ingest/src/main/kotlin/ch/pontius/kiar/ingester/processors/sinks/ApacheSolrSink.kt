@@ -70,8 +70,6 @@ class ApacheSolrSink(override val input: Source<SolrInputDocument>, private val 
         /* Initializes the document validators. */
         this.initializeValidators(client)
 
-
-
         /* Return flow. */
         return this@ApacheSolrSink.input.toFlow(context).onStart {
             this@ApacheSolrSink.prepareIngest(client, context)
@@ -137,10 +135,11 @@ class ApacheSolrSink(override val input: Source<SolrInputDocument>, private val 
             } else {
                 context.log(JobLog(null, null, null, JobLogContext.SYSTEM, JobLogLevel.SEVERE, "Failed to ingest document, because UUID is missing."))
             }
-
+        }.onCompletion {
             /* Finalize ingest for all collections. */
             this@ApacheSolrSink.finalizeIngest(client, context)
-        }.onCompletion {
+
+            /* Close client. */
             client.close()
         }
     }
