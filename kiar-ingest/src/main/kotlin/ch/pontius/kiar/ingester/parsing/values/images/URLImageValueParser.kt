@@ -9,6 +9,7 @@ import com.sksamuel.scrimage.ImmutableImage
 import org.apache.solr.common.SolrInputDocument
 import java.net.URI
 import java.net.URL
+import java.net.URLEncoder
 
 /**
  * A [ValueParser] that converts a [URL] [String] [ImmutableImage] downloaded from a URL.
@@ -43,9 +44,9 @@ class URLImageValueParser(override val mapping: AttributeMapping): ValueParser<L
         /* Read values. */
         val urls = value.split(this.delimiter).map {
             if (this.host.isNullOrEmpty()) {
-                URI(it.trim()).toURL() /* Absolute URL. */
+                URI(URLEncoder.encode(it.trim(), "UTF-8")).toURL() /* Absolute URL. */
             } else {
-                URI(this.host + (if (this.host.endsWith("/") || it.startsWith("/")) "" else "/") + it.trim()).toURL() /* Relative URL. */
+                URI(URLEncoder.encode(this.host + (if (this.host.endsWith("/") || it.startsWith("/")) "" else "/") + it.trim(), "UTF-8")).toURL() /* Relative URL. */
             }
         }
 
