@@ -1,12 +1,7 @@
 package ch.pontius.kiar.database
 
-import ch.pontius.kiar.database.config.AttributeMappings
-import ch.pontius.kiar.database.config.EntityMappings
-import ch.pontius.kiar.database.config.ImageDeployments
-import ch.pontius.kiar.database.config.SolrCollections
-import ch.pontius.kiar.database.config.SolrConfigs
-import ch.pontius.kiar.database.config.JobTemplates
-import ch.pontius.kiar.database.config.Transformers
+import ch.pontius.kiar.database.collections.Collections
+import ch.pontius.kiar.database.config.*
 import ch.pontius.kiar.database.institutions.Institutions
 import ch.pontius.kiar.database.institutions.InstitutionsSolrCollections
 import ch.pontius.kiar.database.institutions.Participants
@@ -29,6 +24,7 @@ object Schema {
     /** [List] of [Table]s known to this [Schema]. */
     private val tables = arrayOf<Table>(
         AttributeMappings,
+        Collections,
         EntityMappings,
         ImageDeployments,
         Institutions,

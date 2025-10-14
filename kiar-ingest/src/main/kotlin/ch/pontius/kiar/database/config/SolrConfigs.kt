@@ -1,8 +1,6 @@
 package ch.pontius.kiar.database.config
 
 import ch.pontius.kiar.api.model.config.solr.ApacheSolrConfig
-import ch.pontius.kiar.database.config.SolrCollections.toSolrCollection
-import ch.pontius.kiar.database.institutions.Participants
 import org.jetbrains.exposed.v1.core.ResultRow
 import org.jetbrains.exposed.v1.core.dao.id.IntIdTable
 import org.jetbrains.exposed.v1.core.eq
@@ -18,7 +16,7 @@ import org.jetbrains.exposed.v1.jdbc.select
  * @author Ralph Gasser
  * @version 1.0.0
  */
-object SolrConfigs: IntIdTable("solr_confg") {
+object SolrConfigs: IntIdTable("solr_config") {
     /** The name of a [SolrConfigs] entry. */
     val name = varchar("name", 255).uniqueIndex()
 

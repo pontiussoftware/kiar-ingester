@@ -44,7 +44,7 @@ fun listRightStatements(ctx: Context) = ctx.json(RightStatement.DEFAULT)
         OpenApiResponse("500", [OpenApiContent(ErrorStatus::class)]),
     ]
 )
-fun listCantons(ctx: Context) = ctx.json(Canton.DEFAULT)
+fun listCantons(ctx: Context) = ctx.json(Canton.entries.toTypedArray())
 
 @OpenApi(
     path = "/api/masterdata/transformers",

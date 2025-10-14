@@ -1,8 +1,13 @@
 package ch.pontius.kiar.migration.database.config.solr
 
+import ch.pontius.kiar.api.model.config.image.ImageFormat
+import ch.pontius.kiar.database.config.ImageDeployments
+import ch.pontius.kiar.database.config.SolrConfigs
 import jetbrains.exodus.entitystore.Entity
 import jetbrains.exodus.entitystore.constraints.url
 import kotlinx.dnq.*
+import kotlinx.dnq.query.asSequence
+import org.jetbrains.exposed.v1.jdbc.insert
 
 /**
  * A (global) configuration for image deployment.
@@ -11,7 +16,21 @@ import kotlinx.dnq.*
  * @version 1.0.0
  */
 class DbImageDeployment(entity: Entity) : XdEntity(entity) {
-    companion object : XdNaturalEntityType<DbImageDeployment>()
+    companion object : XdNaturalEntityType<DbImageDeployment>()  {
+        fun migrate() {
+            all().asSequence().forEach { dbImageDeployment ->
+                ImageDeployments.insert {
+                    it[solrInstanceId] = SolrConfigs.idByName(dbImageDeployment.solr.name) ?: throw IllegalArgumentException("Could not find Apache Solr config with name '${dbImageDeployment.solr.name}'.")
+                    it[name] = dbImageDeployment.name
+                    it[path] = dbImageDeployment.path
+                    it[format] = ImageFormat.valueOf(dbImageDeployment.format.description)
+                    it[src] = dbImageDeployment.source
+                    it[server] = dbImageDeployment.server
+                    it[maxSize] = dbImageDeployment.maxSize
+                }
+            }
+        }
+    }
 
     /** The name held by this [DbImageDeployment] configuration. Must be unique!*/
     var name by xdRequiredStringProp(unique = true, trimmed = true)

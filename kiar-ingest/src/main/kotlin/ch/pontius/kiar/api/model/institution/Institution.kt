@@ -1,5 +1,6 @@
 package ch.pontius.kiar.api.model.institution
 
+import ch.pontius.kiar.api.model.masterdata.Canton
 import kotlinx.serialization.Serializable
 
 typealias InstitutionId = Int
@@ -21,7 +22,7 @@ data class Institution(
     val street: String? = null,
     val zip: Int,
     val city: String,
-    val canton: String,
+    val canton: Canton,
     var longitude: Float? = null,
     var latitude: Float? = null,
     val email: String,

@@ -7,12 +7,12 @@ import ch.pontius.kiar.database.institutions.Institutions.toInstitution
 import org.jetbrains.exposed.v1.core.ReferenceOption
 import org.jetbrains.exposed.v1.core.ResultRow
 import org.jetbrains.exposed.v1.core.Table
-import org.jetbrains.exposed.v1.core.and
 import org.jetbrains.exposed.v1.core.dao.id.IntIdTable
 import org.jetbrains.exposed.v1.core.eq
 import org.jetbrains.exposed.v1.javatime.CurrentTimestamp
 import org.jetbrains.exposed.v1.javatime.timestamp
 import org.jetbrains.exposed.v1.jdbc.andWhere
+import org.jetbrains.exposed.v1.jdbc.select
 import org.jetbrains.exposed.v1.jdbc.selectAll
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 
@@ -46,6 +46,14 @@ object Users : IntIdTable("users") {
 
     /** Timestamp of change of the [Participants] entry. */
     val modified = timestamp("modified").defaultExpression(CurrentTimestamp)
+
+    /**
+     * Obtains a [Users] [id] by its [name].
+     *
+     * @param name The name to lookup
+     * @return [Users] [id] or null, if no entry exists.
+     */
+    fun idByName(name: String) = Users.select(id).where { Users.name eq name }.map { it[id] }.firstOrNull()
 
     /**
      * Returns an active [User] by its ID.

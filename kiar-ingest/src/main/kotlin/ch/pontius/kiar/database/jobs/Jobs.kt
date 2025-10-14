@@ -1,17 +1,12 @@
 package ch.pontius.kiar.database.jobs
 
-import ch.pontius.kiar.api.model.config.templates.JobTemplate
-import ch.pontius.kiar.api.model.config.templates.JobTemplateId
 import ch.pontius.kiar.api.model.job.Job
 import ch.pontius.kiar.api.model.job.JobId
 import ch.pontius.kiar.api.model.job.JobSource
 import ch.pontius.kiar.api.model.job.JobStatus
 import ch.pontius.kiar.database.config.EntityMappings
 import ch.pontius.kiar.database.config.JobTemplates
-import ch.pontius.kiar.database.config.JobTemplates.description
-import ch.pontius.kiar.database.config.JobTemplates.startAutomatically
 import ch.pontius.kiar.database.config.JobTemplates.toJobTemplate
-import ch.pontius.kiar.database.config.JobTemplates.type
 import ch.pontius.kiar.database.config.SolrConfigs
 import ch.pontius.kiar.database.institutions.Participants
 import ch.pontius.kiar.database.institutions.Users
@@ -21,6 +16,7 @@ import org.jetbrains.exposed.v1.core.dao.id.IntIdTable
 import org.jetbrains.exposed.v1.core.eq
 import org.jetbrains.exposed.v1.javatime.CurrentTimestamp
 import org.jetbrains.exposed.v1.javatime.timestamp
+import org.jetbrains.exposed.v1.jdbc.select
 import org.jetbrains.exposed.v1.jdbc.selectAll
 
 /**
@@ -41,6 +37,9 @@ object Jobs: IntIdTable("jobs") {
 
     /** The name of the [Jobs] entry. */
     val name = varchar("name", 255).uniqueIndex()
+
+    /** Optional comment for the [Jobs] entry. */
+    val comment = text("comment").nullable()
 
     /** The [JobStatus] of a [Jobs] entry. */
     val status = enumerationByName("status", 16, JobStatus::class)
@@ -65,6 +64,14 @@ object Jobs: IntIdTable("jobs") {
 
     /** Timestamp of change of the [Jobs] entry. */
     val modified = timestamp("modified").defaultExpression(CurrentTimestamp)
+
+    /**
+     * Obtains a [Jobs] [id] by its [name].
+     *
+     * @param name The name to lookup
+     * @return [Jobs] [id] or null, if no entry exists.
+     */
+    fun idByName(name: String) = Jobs.select(id).where { Jobs.name eq name }.map { it[id] }.firstOrNull()
 
 
     /**

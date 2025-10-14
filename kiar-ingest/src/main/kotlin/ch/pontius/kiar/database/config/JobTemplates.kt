@@ -1,7 +1,5 @@
 package ch.pontius.kiar.database.config
 
-import ch.pontius.kiar.api.model.config.mappings.EntityMapping
-import ch.pontius.kiar.api.model.config.solr.ApacheSolrCollection
 import ch.pontius.kiar.api.model.config.templates.JobTemplate
 import ch.pontius.kiar.api.model.config.templates.JobTemplateId
 import ch.pontius.kiar.api.model.config.templates.JobType
@@ -16,6 +14,7 @@ import org.jetbrains.exposed.v1.core.dao.id.IntIdTable
 import org.jetbrains.exposed.v1.core.eq
 import org.jetbrains.exposed.v1.javatime.CurrentTimestamp
 import org.jetbrains.exposed.v1.javatime.timestamp
+import org.jetbrains.exposed.v1.jdbc.select
 import org.jetbrains.exposed.v1.jdbc.selectAll
 
 /**
@@ -24,7 +23,7 @@ import org.jetbrains.exposed.v1.jdbc.selectAll
  * @author Ralph Gasser
  * @version 1.0.0
  */
-object JobTemplates: IntIdTable("job_templates") {
+object JobTemplates: IntIdTable("jobs_templates") {
     /** A reference to a [Participants] entry, a [JobTemplates] belongs to. */
     val participantId = reference("participant_id", Participants,ReferenceOption.CASCADE)
 
@@ -51,6 +50,14 @@ object JobTemplates: IntIdTable("job_templates") {
 
     /** Timestamp of change of the [Institutions] entry. */
     val modified = timestamp("modified").defaultExpression(CurrentTimestamp)
+
+    /**
+     * Obtains a [JobTemplates] [id] by its [name].
+     *
+     * @param name The name to lookup
+     * @return [JobTemplates] [id] or null, if no entry exists.
+     */
+    fun idByName(name: String) = JobTemplates.select(id).where { JobTemplates.name eq name }.map { it[id] }.firstOrNull()
 
     /**
      * Finds a [JobTemplate] by its [JobTemplateId].

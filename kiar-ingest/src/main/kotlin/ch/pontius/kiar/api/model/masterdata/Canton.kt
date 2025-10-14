@@ -9,16 +9,11 @@ import kotlinx.serialization.Serializable
  * @version 1.1.0
  */
 @Serializable
-@ConsistentCopyVisibility
-data class Canton private constructor(val shortName: String, val longName: String) {
-    companion object {
-        val DEFAULT = arrayOf(
-            Canton("AG", "Aargau"),
-            Canton("BE", "Bern"),
-            Canton("BL", "Basel-Landschaft"),
-            Canton("BS", "Basel-Stadt"),
-            Canton("LU", "Luzern"),
-            Canton("SO", "Solothurn")
-       )
-    }
+enum class Canton(val longName: String) {
+    AG("Aargau"),
+    BE("Bern"),
+    BL("Basel-Landschaft"),
+    BS("Basel-Stadt"),
+    LU("Luzern"),
+    SO("Solothurn")
 }

@@ -2,7 +2,6 @@ package ch.pontius.kiar.database.config
 
 import ch.pontius.kiar.api.model.config.mappings.EntityMapping
 import ch.pontius.kiar.api.model.config.mappings.MappingFormat
-import ch.pontius.kiar.api.model.institution.Institution
 import org.jetbrains.exposed.v1.core.ResultRow
 import org.jetbrains.exposed.v1.core.dao.id.IntIdTable
 import org.jetbrains.exposed.v1.core.eq
@@ -35,7 +34,7 @@ object EntityMappings: IntIdTable("entity_mappings") {
     val modified = timestamp("modified").defaultExpression(CurrentTimestamp)
 
     /**
-     * Obtains a [EntityMappings] [id] by its [name]-
+     * Obtains a [EntityMappings] [id] by its [name].
      *
      * @param name The name to lookup
      * @return [EntityMappings] [id] or null, if no entry exists.

@@ -1,16 +1,17 @@
 package ch.pontius.kiar.database.institutions
 
 import ch.pontius.kiar.api.model.institution.Institution
+import ch.pontius.kiar.api.model.masterdata.Canton
 import ch.pontius.kiar.database.collections.Collections
-import org.jetbrains.exposed.v1.core.ReferenceOption
 import org.jetbrains.exposed.v1.core.ResultRow
 import org.jetbrains.exposed.v1.core.Table
 import org.jetbrains.exposed.v1.core.dao.id.IntIdTable
+import org.jetbrains.exposed.v1.core.eq
 import org.jetbrains.exposed.v1.javatime.CurrentTimestamp
 import org.jetbrains.exposed.v1.javatime.timestamp
 import org.jetbrains.exposed.v1.jdbc.select
 import org.jetbrains.exposed.v1.jdbc.selectAll
-import java.util.UUID
+import java.util.*
 
 /**
  * A [Table] that holds information about [Institutions] that publish their objects.
@@ -50,7 +51,7 @@ object Institutions : IntIdTable("institutions") {
     val zip = integer("zip")
 
     /** The canton of the [Institutions] entry. */
-    val canton = char("canton", 2)
+    val canton = enumerationByName<Canton>("canton", 2)
 
     /** The name held by this [Institutions] entry.*/
     val email = varchar("email", 255)
@@ -81,6 +82,14 @@ object Institutions : IntIdTable("institutions") {
 
     /** Timestamp of change of the [Institutions] entry. */
     val modified = timestamp("modified").defaultExpression(CurrentTimestamp)
+
+    /**
+     * Obtains a [Institutions] [id] by its [name],
+     *
+     * @param name The name to lookup
+     * @return [Institutions] [id] or null, if no entry exists.
+     */
+    fun idByName(name: String) = Institutions.select(id).where { Institutions.name eq name}.map { it[id] }.firstOrNull()
 
     /**
      * Returns all [Institution]s stored in the database.

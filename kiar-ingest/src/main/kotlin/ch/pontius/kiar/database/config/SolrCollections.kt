@@ -1,12 +1,13 @@
 package ch.pontius.kiar.database.config
 
 import ch.pontius.kiar.api.model.config.solr.ApacheSolrCollection
-import ch.pontius.kiar.api.model.config.solr.ApacheSolrConfig
 import ch.pontius.kiar.api.model.config.solr.CollectionType
-import ch.pontius.kiar.config.CollectionConfig
+import ch.pontius.kiar.database.institutions.Institutions
 import org.jetbrains.exposed.v1.core.ReferenceOption
 import org.jetbrains.exposed.v1.core.ResultRow
 import org.jetbrains.exposed.v1.core.dao.id.IntIdTable
+import org.jetbrains.exposed.v1.core.eq
+import org.jetbrains.exposed.v1.jdbc.select
 
 
 /**
@@ -38,6 +39,14 @@ object SolrCollections: IntIdTable("solr_collection") {
 
     /** Flag indicating, that the [SolrCollections] entry should be deleted before ingest starts. */
     val deleteBeforeIngest = bool("delete_before_ingest").default(false)
+
+    /**
+     * Obtains a [SolrCollections] [id] by its [name],
+     *
+     * @param name The name to lookup
+     * @return [SolrCollections] [id] or null, if no entry exists.
+     */
+    fun idByName(name: String) = Institutions.select(id).where { SolrCollections.name eq name}.map { it[id] }.firstOrNull()
 
     /**
      * Converts this [ResultRow] into an [ApacheSolrCollection].

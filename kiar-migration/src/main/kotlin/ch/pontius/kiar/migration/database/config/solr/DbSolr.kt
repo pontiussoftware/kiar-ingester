@@ -1,9 +1,11 @@
 package ch.pontius.kiar.migration.database.config.solr
 
-import ch.pontius.kiar.api.model.config.solr.ApacheSolrConfig
+import ch.pontius.kiar.database.config.SolrConfigs
 import jetbrains.exodus.entitystore.Entity
 import kotlinx.dnq.*
 import kotlinx.dnq.query.asSequence
+import org.jetbrains.exposed.v1.jdbc.insert
+import java.time.Instant
 
 /**
  * An Apache Solr instance managed by these KIAR tools.
@@ -12,7 +14,22 @@ import kotlinx.dnq.query.asSequence
  * @version 1.0.0
  */
 class DbSolr(entity: Entity) : XdEntity(entity) {
-    companion object: XdNaturalEntityType<DbSolr>()
+    companion object: XdNaturalEntityType<DbSolr>() {
+        fun migrate() {
+            all().asSequence().forEach { dbSolr ->
+                SolrConfigs.insert {
+                    it[name] = dbSolr.name
+                    it[description] = dbSolr.description
+                    it[server] = dbSolr.server
+                    it[publicServer] = dbSolr.publicServer
+                    it[username] = dbSolr.username
+                    it[password] = dbSolr.password
+                    it[created] = dbSolr.createdAt?.millis?.let { m -> Instant.ofEpochMilli(m) } ?: Instant.now()
+                    it[modified] = dbSolr.changedAt?.millis?.let { m -> Instant.ofEpochMilli(m) } ?: Instant.now()
+                }
+            }
+        }
+    }
 
     /** The name held by this [DbSolr]. Must be unique!*/
     var name by xdRequiredStringProp(unique = true, trimmed = true)
