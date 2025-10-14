@@ -44,7 +44,7 @@ class ExcelFileSource(private val file: Path, private val config: EntityMapping)
                 } else {
                     val doc = SolrInputDocument()
                     for ((parser, cellIndex) in map) {
-                        val cell = row.getCell(cellIndex)
+                        val cell = row.getCell(cellIndex) ?: continue
                         val value = when (cell.cellType) {
                             CellType.STRING -> cell.stringCellValue
                             CellType.NUMERIC -> cell.numericCellValue.toString()
