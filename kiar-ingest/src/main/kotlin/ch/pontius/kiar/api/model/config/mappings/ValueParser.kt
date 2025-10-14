@@ -20,6 +20,7 @@ enum class ValueParser {
     COORD_WGS84,
     COORD_LV95,
     IMAGE_FILE,
+    IMAGE_URL,
     IMAGE_MPLUS;
 
 
@@ -38,6 +39,7 @@ enum class ValueParser {
         COORD_WGS84 -> DbParser.COORD_WGS84
         COORD_LV95 -> DbParser.COORD_LV95
         IMAGE_FILE -> DbParser.IMAGE_FILE
+        IMAGE_URL -> DbParser.IMAGE_URL
         IMAGE_MPLUS -> DbParser.IMAGE_MPLUS
     }
 }

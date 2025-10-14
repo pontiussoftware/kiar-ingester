@@ -26,6 +26,7 @@ class DbParser(entity: Entity): XdEnumEntity(entity) {
 
         /* Image parsers. */
         val IMAGE_FILE by DbParser.enumField { description = "IMAGE_FILE" }
+        val IMAGE_URL by DbParser.enumField { description = "IMAGE_URL" }
         val IMAGE_MPLUS by DbParser.enumField { description = "IMAGE_MPLUS" }
     }
 

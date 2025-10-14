@@ -2,6 +2,7 @@ package ch.pontius.kiar.api.model.config.mappings
 
 import ch.pontius.kiar.ingester.parsing.values.images.FileImageValueParser
 import ch.pontius.kiar.ingester.parsing.values.images.MuseumplusImageParser
+import ch.pontius.kiar.ingester.parsing.values.images.URLImageValueParser
 import ch.pontius.kiar.ingester.parsing.values.primitive.*
 import ch.pontius.kiar.ingester.parsing.values.struct.LV95Parser
 import ch.pontius.kiar.ingester.parsing.values.struct.WGS84Parser
@@ -38,6 +39,7 @@ data class AttributeMapping(
         ValueParser.COORD_WGS84 -> WGS84Parser(this)
         ValueParser.COORD_LV95 -> LV95Parser(this)
         ValueParser.IMAGE_FILE -> FileImageValueParser(this)
+        ValueParser.IMAGE_URL -> URLImageValueParser(this)
         ValueParser.IMAGE_MPLUS -> MuseumplusImageParser(this)
     }
 }
