@@ -47,9 +47,9 @@ class URLImageValueParser(override val mapping: AttributeMapping): ValueParser<L
         /* Read values. */
         val urls = value.split(this.delimiter).mapNotNull {
             val str = if (this.host.isNullOrEmpty()) {
-               URLEncoder.encode(it.trim(), "UTF-8")
+              it.trim()
             } else {
-               URLEncoder.encode(this.host + (if (this.host.endsWith("/") || it.startsWith("/")) "" else "/") + it.trim(), "UTF-8")
+              this.host + (if (this.host.endsWith("/") || it.startsWith("/")) "" else "/") + URLEncoder.encode(it.trim(), "UTF-8")
             }
 
             try {
