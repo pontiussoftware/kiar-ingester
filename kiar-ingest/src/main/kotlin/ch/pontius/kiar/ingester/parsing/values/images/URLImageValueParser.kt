@@ -12,7 +12,6 @@ import com.sksamuel.scrimage.ImmutableImage
 import org.apache.solr.common.SolrInputDocument
 import java.net.URI
 import java.net.URL
-import java.net.URLEncoder
 
 /**
  * A [ValueParser] that converts a [URL] [String] [ImmutableImage] downloaded from a URL.
@@ -49,11 +48,11 @@ class URLImageValueParser(override val mapping: AttributeMapping): ValueParser<L
             val str = if (this.host.isNullOrEmpty()) {
               it.trim()
             } else {
-              this.host + (if (this.host.endsWith("/") || it.startsWith("/")) "" else "/") + URLEncoder.encode(it.trim(), "UTF-8")
+              this.host + (if (this.host.endsWith("/") || it.startsWith("/")) "" else "/") + it.trim()
             }
 
             try {
-                URI(str).toURL()
+                URL(str)
             } catch (e: Throwable) {
                 context.log(JobLog(context.jobId, into.uuidOrNull(), null, JobLogContext.RESOURCE, JobLogLevel.WARNING, "Failed to parse URL '$str'; ${e.message}."))
                 null
