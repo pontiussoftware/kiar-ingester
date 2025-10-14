@@ -8,6 +8,7 @@ import ch.pontius.kiar.ingester.solrj.uuidOrNull
 import com.sksamuel.scrimage.ImmutableImage
 import org.apache.solr.common.SolrInputDocument
 import java.net.URI
+import java.net.URL
 
 /**
  * A [ValueParser] that converts a [URL] [String] [ImmutableImage] downloaded from a URL.
@@ -20,10 +21,13 @@ class URLImageValueParser(override val mapping: AttributeMapping): ValueParser<L
     /** The separator used for splitting. */
     private val delimiter: String = this.mapping.parameters["delimiter"] ?: ","
 
-    /** Reads the optional username from the parameters map. */
+    /** Reads the host name from the parameters map. If set, then the URL will be prefixed.*/
+    private val host: String? = this.mapping.parameters["host"]
+
+    /** Reads the optional username from the parameters map. If set, HTTP basic authorization will be used to access the resource. */
     private val username: String? = this.mapping.parameters["username"]
 
-    /** Reads the optional password from the parameters map.*/
+    /** Reads the optional password from the parameters map. If set, HTTP basic authorization will be used to access the resource.  */
     private val password: String? = this.mapping.parameters["password"]
 
     /**
@@ -38,7 +42,11 @@ class URLImageValueParser(override val mapping: AttributeMapping): ValueParser<L
 
         /* Read values. */
         val urls = value.split(this.delimiter).map {
-            URI(it.trim()).toURL()
+            if (this.host.isNullOrEmpty()) {
+                URI(it.trim()).toURL() /* Absolute URL. */
+            } else {
+                URI(this.host + (if (this.host.endsWith("/") || it.startsWith("/")) "" else "/") + it.trim()).toURL() /* Relative URL. */
+            }
         }
 
         /* Process URls. */
