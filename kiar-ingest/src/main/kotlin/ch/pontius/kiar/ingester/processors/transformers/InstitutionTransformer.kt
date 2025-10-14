@@ -11,7 +11,6 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.filter
 import kotlinx.dnq.query.asSequence
 import kotlinx.dnq.query.filter
-import kotlinx.dnq.query.isEmpty
 import org.apache.logging.log4j.LogManager
 import org.apache.solr.common.SolrInputDocument
 
@@ -28,7 +27,8 @@ class InstitutionTransformer(override val input: Source<SolrInputDocument>): Tra
         private val LOGGER = LogManager.getLogger(InstitutionTransformer::class.java)
     }
 
-    private val institutions = DbInstitution.filter { (it.selectedCollections.isEmpty() ) }.asSequence().associate { it.name to it.toApi() }
+    /** Fetches all [DbInstitution]s that have been selected for publication. */
+    private val institutions = DbInstitution.filter { (it.selectedCollections.isNotEmpty() ) }.asSequence().associate { it.name to it.toApi() }
 
 
     /**
@@ -65,7 +65,7 @@ class InstitutionTransformer(override val input: Source<SolrInputDocument>): Tra
             val entry = this@InstitutionTransformer.institutions[institutionName]
             if (entry == null) {
                 LOGGER.warn("Failed to verify document: Institution '$institutionName' is unknown (jobId = {}, participantId = {}, docId = {}).", context.jobId, context.participant, uuid)
-                context.log(JobLog(null, uuid, null, JobLogContext.METADATA, JobLogLevel.VALIDATION, "Failed to verify document: Institution '$institutionName'."))
+                context.log(JobLog(null, uuid, null, JobLogContext.METADATA, JobLogLevel.VALIDATION, "Failed to verify document: Institution '$institutionName' is unknown."))
                 return@filter false
             }
 
