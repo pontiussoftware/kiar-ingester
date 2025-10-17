@@ -9,8 +9,13 @@
  */
 
 
-export interface Canton { 
-    shortName: string;
-    longName: string;
-}
+export const Canton = {
+    AG: 'AG',
+    BE: 'BE',
+    BL: 'BL',
+    BS: 'BS',
+    LU: 'LU',
+    SO: 'SO'
+} as const;
+export type Canton = typeof Canton[keyof typeof Canton];
 

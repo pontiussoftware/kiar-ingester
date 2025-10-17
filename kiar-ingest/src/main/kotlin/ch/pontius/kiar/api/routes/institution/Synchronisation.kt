@@ -32,8 +32,7 @@ private val LOGGER = LogManager.getLogger()
     operationId = "postSynchronizeInstitutions",
     tags = ["Institution"],
     queryParams = [
-        OpenApiParam(name = "solr", type = String::class, description = "Name of the Apache Solr configuration to use.", required = true),
-        OpenApiParam(name = "collection", type = String::class, description = "The name of the collection to synchronize with.", required = true)
+        OpenApiParam(name = "collectionId", type = Int::class, description = "The ID of the Apache Solr collection to synchronize with.", required = true)
     ],
     responses = [
         OpenApiResponse("200", [OpenApiContent(SuccessStatus::class)]),
@@ -44,17 +43,16 @@ private val LOGGER = LogManager.getLogger()
     ]
 )
 fun postSyncInstitutions(ctx: Context) {
-    val configName = ctx.queryParam("solr") ?: throw ErrorStatusException(400, "Query parameter 'solr' is required.")
-    val collectionName = ctx.queryParam("collection") ?: throw ErrorStatusException(400, "Query parameter 'collectionName' is required.")
-    val (config, institutions) = transaction {
-        val config = (SolrConfigs innerJoin SolrCollections).select(SolrConfigs.columns).where {
-            (SolrConfigs.name eq configName) and (SolrCollections.name eq collectionName) and (SolrCollections.type eq CollectionType.MUSEUM)
+    val collectionId = ctx.queryParam("collectionId")?.toIntOrNull() ?: throw ErrorStatusException(400, "Query parameter 'collectionId' is required.")
+    val (config, collectionName, institutions) = transaction {
+        val (collectionName, config) = (SolrConfigs innerJoin SolrCollections).select(SolrConfigs.columns).where {
+            (SolrCollections.id eq collectionId) and (SolrCollections.type eq CollectionType.MUSEUM)
         }.map {
-            it.toSolr()
-        }.firstOrNull() ?: throw ErrorStatusException(404, "Apache Solr config with name '$configName' for collection '$collectionName' could not be found.")
+            it[SolrCollections.name] to it.toSolr()
+        }.firstOrNull() ?: throw ErrorStatusException(404, "Apache Solr config for collection with ID $collectionId could not be found.")
 
         val institutions = Institutions.selectAll().where { Institutions.publish eq true }.map { it.toInstitution() }
-        config to institutions
+        Triple(config,collectionName, institutions)
     }
 
     /* Perform actual synchronisation. */

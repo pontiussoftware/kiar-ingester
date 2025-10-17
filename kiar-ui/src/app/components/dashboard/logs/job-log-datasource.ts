@@ -15,7 +15,7 @@ export class JobLogDatasource implements DataSource<JobLog> {
   /** The {@link BehaviorSubject} that acts as a data source. */
   private total = new BehaviorSubject<number>(0)
 
-  constructor(private service: JobService, private jobId: string) {
+  constructor(private service: JobService, private jobId: number) {
   }
 
   connect(collectionViewer: CollectionViewer): Observable<JobLog[]> {

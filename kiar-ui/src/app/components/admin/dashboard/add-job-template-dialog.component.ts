@@ -25,10 +25,10 @@ export class AddJobTemplateDialogComponent {
   /** An {@link Observable} of available {@link JobTemplate}. */
   public readonly mappings: Observable<Array<EntityMapping>>
 
-  /** An {@link Observable} of available {@link SolrConfig}. */
+  /** An {@link Observable} of available {@link ApacheSolrConfig}. */
   public readonly solr: Observable<Array<ApacheSolrConfig>>
 
-  /** An {@link Observable} of available {@link SolrConfig}. */
+  /** An {@link Observable} of available {@link JobType}. */
   public readonly types: Observable<Array<JobType>>
 
   /** An {@link Observable} of available participants. */
@@ -52,9 +52,15 @@ export class AddJobTemplateDialogComponent {
         type: this.formControl.get('type')?.value as JobType,
         startAutomatically: this.formControl.get('startAutomatically')?.value,
         participantName: this.formControl.get('participantName')?.value,
-        entityMappingName: this.formControl.get('entityMappingName')?.value,
-        solrConfigName: this.formControl.get('solrConfigName')?.value,
-        transformers: []
+        mapping: {
+          name: this.formControl.get('entityMappingName')?.value
+        } as EntityMapping,
+        config: {
+            name: this.formControl.get('solrConfigName')?.value
+        } as ApacheSolrConfig,
+        transformers: [],
+          createdAt: -1,
+          changedAt: -1
       } as JobTemplate
       this.dialogRef.close(object)
     }

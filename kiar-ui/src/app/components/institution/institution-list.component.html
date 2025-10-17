@@ -14,7 +14,7 @@
   </button>
   <mat-menu #menu="matMenu" class=".collection-menu">
     @for (collection of (collections |async ) ?? []; track collection) {
-      <button mat-menu-item (click)="synchronize(collection[0], collection[1])">{{collection[0]}} > {{collection[1]}}</button>
+      <button mat-menu-item (click)="synchronize(collection)">{{collection.name}}</button>
     }
   </mat-menu>
 

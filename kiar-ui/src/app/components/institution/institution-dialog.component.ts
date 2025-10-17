@@ -1,6 +1,14 @@
 import {Component, Inject} from "@angular/core";
 import {FormArray, FormControl, FormGroup, Validators} from "@angular/forms";
-import {ApacheSolrCollection, Canton, ConfigService, Institution, InstitutionService, MasterdataService, RightStatement} from "../../../../openapi";
+import {
+  ApacheSolrCollection,
+  Canton,
+  ConfigService,
+  Institution,
+  InstitutionService,
+  MasterdataService,
+  RightStatement
+} from "../../../../openapi";
 import {MAT_DIALOG_DATA, MatDialogRef} from "@angular/material/dialog";
 import {combineLatestWith, map, Observable, shareReplay} from "rxjs";
 import {MatSnackBar, MatSnackBarConfig} from "@angular/material/snack-bar";
@@ -46,7 +54,7 @@ export class InstitutionDialogComponent {
       private institution: InstitutionService,
       private dialogRef: MatDialogRef<InstitutionDialogComponent>,
       private snackBar: MatSnackBar,
-      @Inject(MAT_DIALOG_DATA) protected institutionId: string | null
+      @Inject(MAT_DIALOG_DATA) protected institutionId: number | null
   ) {
     /* Prepare empty form. */
     this.formControl = new FormGroup({
@@ -75,8 +83,8 @@ export class InstitutionDialogComponent {
     this.participants = this.config.getListParticipants().pipe(shareReplay(1, 30000))
 
     /*  Get list of available collections. */
-    this.config.getListSolrConfiguration().pipe(
-        map(config => config.flatMap(c => c.collections).filter(c => c.type == 'OBJECT'))
+    this.config.getListSolrCollections().pipe(
+        map(collections => collections.filter(c => c.type == 'OBJECT'))
     ).subscribe(c => this.allCollections.push(...c))
 
     /* Get masterdata. */
@@ -181,7 +189,7 @@ export class InstitutionDialogComponent {
    *
    * @private
    */
-  private reload(id: string) {
+  private reload(id: number) {
     this.config.getListSolrConfiguration().pipe(
         map(c => c.flatMap(c => c.collections).filter(c => c.type == 'OBJECT')),
         combineLatestWith(this.institution.getInstitution(id))

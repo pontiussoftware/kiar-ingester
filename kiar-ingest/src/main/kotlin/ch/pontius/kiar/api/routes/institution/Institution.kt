@@ -15,28 +15,17 @@ import ch.pontius.kiar.database.institutions.Institutions
 import ch.pontius.kiar.database.institutions.Institutions.toInstitution
 import ch.pontius.kiar.database.institutions.InstitutionsSolrCollections
 import ch.pontius.kiar.database.institutions.Participants
-import ch.pontius.kiar.utilities.extensions.currentUser
 import ch.pontius.kiar.utilities.Geocoding
 import ch.pontius.kiar.utilities.ImageHandler
+import ch.pontius.kiar.utilities.extensions.currentUser
 import ch.pontius.kiar.utilities.extensions.parseBodyOrThrow
 import com.sksamuel.scrimage.ImmutableImage
 import com.sksamuel.scrimage.nio.JpegWriter
 import io.javalin.http.Context
 import io.javalin.openapi.*
-import org.jetbrains.exposed.v1.core.SortOrder
-import org.jetbrains.exposed.v1.core.and
-import org.jetbrains.exposed.v1.core.eq
-import org.jetbrains.exposed.v1.core.inSubQuery
-import org.jetbrains.exposed.v1.core.like
-import org.jetbrains.exposed.v1.core.or
-import org.jetbrains.exposed.v1.jdbc.andWhere
-import org.jetbrains.exposed.v1.jdbc.deleteWhere
-import org.jetbrains.exposed.v1.jdbc.insert
-import org.jetbrains.exposed.v1.jdbc.insertAndGetId
-import org.jetbrains.exposed.v1.jdbc.select
-import org.jetbrains.exposed.v1.jdbc.selectAll
+import org.jetbrains.exposed.v1.core.*
+import org.jetbrains.exposed.v1.jdbc.*
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
-import org.jetbrains.exposed.v1.jdbc.update
 import java.io.IOException
 import java.nio.file.Files
 import java.nio.file.Path
@@ -73,7 +62,7 @@ fun getListInstitutions(ctx: Context) {
     val filter = ctx.queryParam("filter")
     val (total, results) = transaction {
 
-        var query = Institutions.selectAll()
+        var query = (Institutions innerJoin Participants).selectAll()
         if (filter != null) {
             query.andWhere {
                 (Institutions.name like "${filter}%") or (Institutions.displayName like "${filter}%") or (Institutions.city like "${filter}%")
@@ -115,6 +104,55 @@ fun getListInstitutionNames(ctx: Context) {
         Institutions.select(Institutions.name).map { it[Institutions.name] }.toTypedArray()
     }
     ctx.json(list)
+}
+
+@OpenApi(
+    path = "/api/institutions/{id}",
+    methods = [HttpMethod.GET],
+    summary = "Gets information about an existing institution.",
+    operationId = "getInstitution",
+    tags = ["Institution"],
+    pathParams = [
+        OpenApiParam(name = "id", type = Int::class, description = "The ID of the institution that should be fetched.", required = true)
+    ],
+    responses = [
+        OpenApiResponse("200", [OpenApiContent(Institution::class)]),
+        OpenApiResponse("400", [OpenApiContent(ErrorStatus::class)]),
+        OpenApiResponse("401", [OpenApiContent(ErrorStatus::class)]),
+        OpenApiResponse("403", [OpenApiContent(ErrorStatus::class)]),
+        OpenApiResponse("404", [OpenApiContent(ErrorStatus::class)]),
+        OpenApiResponse("500", [OpenApiContent(ErrorStatus::class)])
+    ]
+)
+
+fun getInstitution(ctx: Context) {
+    val institutionId = ctx.pathParam("id").toIntOrNull() ?: throw ErrorStatusException(400,"Malformed institution ID.")
+
+    /* Fetch institution */
+    val institution = transaction {
+        val institution = (Institutions innerJoin Participants).selectAll().where {
+            Institutions.id eq institutionId
+        }
+        .map { it.toInstitution() }
+        .firstOrNull() ?: throw ErrorStatusException(404, "Institution with ID $institutionId could not be found.")
+
+        /* Fetches available and active collections. */
+        val availableCollections = (InstitutionsSolrCollections innerJoin SolrCollections)
+            .select(SolrCollections.name)
+            .where { (InstitutionsSolrCollections.institutionId eq institutionId) and (InstitutionsSolrCollections.available eq true) }
+            .map { it[SolrCollections.name] }
+
+        val selectedCollections = (InstitutionsSolrCollections innerJoin SolrCollections)
+            .select(SolrCollections.name)
+            .where { (InstitutionsSolrCollections.institutionId eq institutionId) and (InstitutionsSolrCollections.available eq true) and (InstitutionsSolrCollections.selected eq true) }
+            .map { it[SolrCollections.name] }
+
+        /* Returns institution with collections. */
+        institution.copy(availableCollections = availableCollections, selectedCollections = selectedCollections)
+    }
+
+    /* Return the institution object. */
+    ctx.json(institution)
 }
 
 @OpenApi(
@@ -186,55 +224,6 @@ fun postCreateInstitution(ctx: Context) {
     }
 
     /* Return institution object. */
-    ctx.json(institution)
-}
-@OpenApi(
-    path = "/api/institutions/{id}",
-    methods = [HttpMethod.GET],
-    summary = "Gets information about an existing institution.",
-    operationId = "getInstitution",
-    tags = ["Institution"],
-    pathParams = [
-        OpenApiParam(name = "id", type = Int::class, description = "The ID of the institution that should be fetched.", required = true)
-    ],
-    responses = [
-        OpenApiResponse("200", [OpenApiContent(Institution::class)]),
-        OpenApiResponse("400", [OpenApiContent(ErrorStatus::class)]),
-        OpenApiResponse("401", [OpenApiContent(ErrorStatus::class)]),
-        OpenApiResponse("403", [OpenApiContent(ErrorStatus::class)]),
-        OpenApiResponse("404", [OpenApiContent(ErrorStatus::class)]),
-        OpenApiResponse("500", [OpenApiContent(ErrorStatus::class)])
-    ]
-)
-
-fun getInstitution(ctx: Context) {
-    val institutionId = ctx.pathParam("id").toIntOrNull() ?: throw ErrorStatusException(400,"Malformed institution ID.")
-
-    /* Fetch institution */
-    val institution = transaction {
-        val institution = Institutions.selectAll().where {
-            Institutions.id eq institutionId
-        }.map { it.toInstitution() }.firstOrNull() ?: throw ErrorStatusException(
-            404,
-            "Institution with ID $institutionId could not be found."
-        )
-
-        /* Fetches available and active collections. */
-        val availableCollections = (InstitutionsSolrCollections innerJoin SolrCollections)
-            .select(SolrCollections.name)
-            .where { (Institutions.id eq institutionId) and (InstitutionsSolrCollections.available eq true) }
-            .map { it[SolrCollections.name] }
-
-        val selectedCollections = (InstitutionsSolrCollections innerJoin SolrCollections)
-            .select(SolrCollections.name)
-            .where { (Institutions.id eq institutionId) and (InstitutionsSolrCollections.available eq true) and (InstitutionsSolrCollections.selected eq true) }
-            .map { it[SolrCollections.name] }
-
-        /* Returns institution with collections. */
-        institution.copy(availableCollections = availableCollections, selectedCollections = selectedCollections)
-    }
-
-    /* Return the institution object. */
     ctx.json(institution)
 }
 

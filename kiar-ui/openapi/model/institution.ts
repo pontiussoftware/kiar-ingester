@@ -7,10 +7,11 @@
  * https://openapi-generator.tech
  * Do not edit the class manually.
  */
+import {Canton} from './canton';
 
 
 export interface Institution { 
-    id?: string | null;
+    id?: number | null;
     name: string;
     displayName: string;
     participantName: string;
@@ -19,7 +20,7 @@ export interface Institution {
     street?: string | null;
     zip: number;
     city: string;
-    canton: string;
+    canton: Canton;
     longitude?: number | null;
     latitude?: number | null;
     email: string;
@@ -34,4 +35,7 @@ export interface Institution {
     createdAt?: number | null;
     changedAt?: number | null;
 }
+export namespace Institution {
+}
+
 

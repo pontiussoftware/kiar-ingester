@@ -17,12 +17,8 @@ import io.javalin.http.Context
 import io.javalin.openapi.*
 import org.jetbrains.exposed.v1.core.SortOrder
 import org.jetbrains.exposed.v1.core.eq
-import org.jetbrains.exposed.v1.jdbc.deleteWhere
-import org.jetbrains.exposed.v1.jdbc.insertAndGetId
-import org.jetbrains.exposed.v1.jdbc.select
-import org.jetbrains.exposed.v1.jdbc.selectAll
+import org.jetbrains.exposed.v1.jdbc.*
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
-import org.jetbrains.exposed.v1.jdbc.update
 import org.mindrot.jbcrypt.BCrypt
 import java.time.Instant
 
@@ -151,7 +147,7 @@ fun postCreateUser(ctx: Context) {
     tags = ["User"],
     requestBody = OpenApiRequestBody([OpenApiContent(User::class)], required = true),
     pathParams = [
-        OpenApiParam(name = "id", description = "The ID of the user that should be updated.", required = true)
+        OpenApiParam(name = "id", Int::class, description = "The ID of the user that should be updated.", required = true)
     ],
     responses = [
         OpenApiResponse("200", [OpenApiContent(SuccessStatus::class)]),
@@ -200,7 +196,7 @@ fun putUpdateUser(ctx: Context) {
     operationId = "deleteUser",
     tags = ["User"],
     pathParams = [
-        OpenApiParam(name = "id", description = "The ID of the user that should be deleted.", required = true)
+        OpenApiParam(name = "id", Int::class, description = "The ID of the user that should be deleted.", required = true)
     ],
     responses = [
         OpenApiResponse("200", [OpenApiContent(SuccessStatus::class)]),

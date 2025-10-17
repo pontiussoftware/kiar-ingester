@@ -1,10 +1,6 @@
 import {Component, ElementRef, Inject, ViewChild} from "@angular/core";
 import {FormArray, FormControl, FormGroup, Validators} from "@angular/forms";
-import {
-  CollectionService,
-  InstitutionService,
-  ObjectCollection,
-} from "../../../../openapi";
+import {CollectionService, InstitutionService, ObjectCollection,} from "../../../../openapi";
 import {MAT_DIALOG_DATA, MatDialogRef} from "@angular/material/dialog";
 import {Observable, shareReplay} from "rxjs";
 import {MatSnackBar, MatSnackBarConfig} from "@angular/material/snack-bar";
@@ -36,7 +32,7 @@ export class CollectionDialogComponent {
       private collectionService: CollectionService,
       private dialogRef: MatDialogRef<CollectionDialogComponent>,
       private snackBar: MatSnackBar,
-      @Inject(MAT_DIALOG_DATA) protected collectionId: string | null
+      @Inject(MAT_DIALOG_DATA) protected collectionId: number | null
   ) {
     /* Prepare empty form. */
     this.formControl = new FormGroup({
@@ -149,14 +145,14 @@ export class CollectionDialogComponent {
    *
    * @param id The ID of the collection to reload.
    */
-  private reload(id: string) {
+  private reload(id: number) {
     this.collectionService.getCollection(id).subscribe({
       next: (collection: ObjectCollection) => {
         /* Update form control. */
         this.formControl.get('name')?.setValue(collection.name)
         this.formControl.get('displayName')?.setValue(collection.displayName)
         this.formControl.get('description')?.setValue(collection.description)
-        this.formControl.get('institutionName')?.setValue(collection.institutionName)
+        this.formControl.get('institutionName')?.setValue(collection.institution?.name)
         this.formControl.get('publish')?.setValue(collection.publish)
 
         /* Update filters. */

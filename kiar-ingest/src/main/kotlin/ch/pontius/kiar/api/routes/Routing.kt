@@ -3,23 +3,9 @@ package ch.pontius.kiar.api.routes
 import ch.pontius.kiar.api.model.user.Role
 import ch.pontius.kiar.api.routes.collection.*
 import ch.pontius.kiar.api.routes.config.*
-import ch.pontius.kiar.api.routes.institution.deleteInstitution
-import ch.pontius.kiar.api.routes.institution.getImageForInstitution
-import ch.pontius.kiar.api.routes.institution.getInstitution
-import ch.pontius.kiar.api.routes.institution.getListInstitutionNames
-import ch.pontius.kiar.api.routes.institution.getListInstitutions
-import ch.pontius.kiar.api.routes.institution.postCreateInstitution
-import ch.pontius.kiar.api.routes.institution.postSyncInstitutions
-import ch.pontius.kiar.api.routes.institution.postUploadImageForInstitution
-import ch.pontius.kiar.api.routes.institution.putUpdateInstitution
+import ch.pontius.kiar.api.routes.institution.*
 import ch.pontius.kiar.api.routes.job.*
-import ch.pontius.kiar.api.routes.masterdata.listCantons
-import ch.pontius.kiar.api.routes.masterdata.listImageFormats
-import ch.pontius.kiar.api.routes.masterdata.listJobTemplateTypes
-import ch.pontius.kiar.api.routes.masterdata.listMappingFormats
-import ch.pontius.kiar.api.routes.masterdata.listParsers
-import ch.pontius.kiar.api.routes.masterdata.listRightStatements
-import ch.pontius.kiar.api.routes.masterdata.listTransformerTypes
+import ch.pontius.kiar.api.routes.masterdata.*
 import ch.pontius.kiar.api.routes.oai.getOaiPmh
 import ch.pontius.kiar.api.routes.oai.postOaiPmh
 import ch.pontius.kiar.api.routes.session.*
@@ -143,6 +129,7 @@ fun configureApiRoutes(server: IngesterServer, config: Config) {
         get("solr", { ctx -> listSolrConfigurations(ctx) }, Role.ADMINISTRATOR, Role.MANAGER )
         post("solr", { ctx -> createSolrConfig(ctx) }, Role.ADMINISTRATOR )
         path("solr") {
+            get("collections", { ctx -> listSolrCollections(ctx) }, Role.ADMINISTRATOR, Role.MANAGER )
             get("{id}", { ctx -> getSolrConfig(ctx) }, Role.ADMINISTRATOR, Role.MANAGER )
             put("{id}", { ctx -> updateSolrConfig(ctx) }, Role.ADMINISTRATOR )
             delete("{id}", { ctx -> deleteSolrConfig(ctx) }, Role.ADMINISTRATOR )

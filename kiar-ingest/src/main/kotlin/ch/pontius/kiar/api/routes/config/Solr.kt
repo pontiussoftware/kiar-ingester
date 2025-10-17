@@ -17,15 +17,10 @@ import ch.pontius.kiar.utilities.extensions.parseBodyOrThrow
 import ch.pontius.kiar.utilities.extensions.withSuffix
 import io.javalin.http.Context
 import io.javalin.openapi.*
-import org.apache.commons.compress.harmony.pack200.PackingUtils.config
 import org.jetbrains.exposed.v1.core.SortOrder
 import org.jetbrains.exposed.v1.core.eq
-import org.jetbrains.exposed.v1.jdbc.deleteWhere
-import org.jetbrains.exposed.v1.jdbc.insert
-import org.jetbrains.exposed.v1.jdbc.insertAndGetId
-import org.jetbrains.exposed.v1.jdbc.selectAll
+import org.jetbrains.exposed.v1.jdbc.*
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
-import org.jetbrains.exposed.v1.jdbc.update
 import java.time.Instant
 
 @OpenApi(
@@ -45,6 +40,27 @@ import java.time.Instant
 fun listSolrConfigurations(ctx: Context) {
     val results = transaction {
         SolrConfigs.selectAll().orderBy(SolrConfigs.name to SortOrder.ASC).map { it.toSolr() }
+    }
+    ctx.json(results.toTypedArray())
+}
+
+@OpenApi(
+    path = "/api/solr/collections",
+    methods = [HttpMethod.GET],
+    summary = "Lists all available Apache Solr collections.",
+    operationId = "getListSolrCollections",
+    tags = ["Config", "Apache Solr"],
+    pathParams = [],
+    responses = [
+        OpenApiResponse("200", [OpenApiContent(Array<ApacheSolrCollection>::class)]),
+        OpenApiResponse("401", [OpenApiContent(ErrorStatus::class)]),
+        OpenApiResponse("403", [OpenApiContent(ErrorStatus::class)]),
+        OpenApiResponse("500", [OpenApiContent(ErrorStatus::class)]),
+    ]
+)
+fun listSolrCollections(ctx: Context) {
+    val results = transaction {
+        SolrCollections.selectAll().orderBy(SolrCollections.name to SortOrder.ASC).map { it.toSolrCollection() }
     }
     ctx.json(results.toTypedArray())
 }

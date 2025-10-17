@@ -1,7 +1,15 @@
 import {AfterViewInit, Component} from "@angular/core";
 import {catchError, map, mergeMap, Observable, of, shareReplay} from "rxjs";
 import {FormArray, FormControl, FormGroup, Validators} from "@angular/forms";
-import {ApacheSolrConfig, ConfigService, EntityMapping, JobTemplate, JobType, TransformerConfig, TransformerType} from "../../../../../openapi";
+import {
+  ApacheSolrConfig,
+  ConfigService,
+  EntityMapping,
+  JobTemplate,
+  JobType,
+  TransformerConfig,
+  TransformerType
+} from "../../../../../openapi";
 import {ActivatedRoute, Router} from "@angular/router";
 import {MatSnackBar, MatSnackBarConfig} from "@angular/material/snack-bar";
 import {TransformerDialogComponent} from "./transformer-dialog.component";
@@ -16,7 +24,7 @@ import {MatDialog} from "@angular/material/dialog";
 export class JobTemplateComponent implements AfterViewInit {
 
   /** An {@link Observable} of the mapping ID that is being inspected by this {@link EntityMappingComponent}. */
-  public readonly templateId: Observable<string>
+  public readonly templateId: Observable<number>
 
   /** List of transformers {@link FormGroup}s. */
   public readonly transformers: FormArray = new FormArray<any>([])
@@ -55,7 +63,7 @@ export class JobTemplateComponent implements AfterViewInit {
       private snackBar: MatSnackBar,
       private dialog: MatDialog
   ) {
-    this.templateId = this.route.paramMap.pipe(map(params => params.get('id')!!));
+    this.templateId = this.route.paramMap.pipe(map(params => Number(params.get('id')!!)));
     this.mappings = this.service.getListEntityMappings().pipe(shareReplay(1))
     this.solr = this.service.getListSolrConfiguration().pipe(shareReplay(1))
     this.jobTypes = this.service.getListJobTemplateTypes().pipe(shareReplay(1))
@@ -204,7 +212,7 @@ export class JobTemplateComponent implements AfterViewInit {
    * @param id The ID of the {@link JobTemplate}
    * @return {@link JobTemplate}
    */
-  private formToJobTemplate(id: string): JobTemplate {
+  private formToJobTemplate(id: number): JobTemplate {
     return {
       id: id,
       name: this.formControl.get('name')?.value,
@@ -212,8 +220,12 @@ export class JobTemplateComponent implements AfterViewInit {
       type: this.formControl.get('type')?.value as JobType,
       startAutomatically: this.formControl.get('startAutomatically')?.value,
       participantName: this.formControl.get('participantName')?.value,
-      solrConfigName: this.formControl.get('solrConfigName')?.value,
-      entityMappingName:this.formControl.get('entityMappingName')?.value,
+      config: {
+        name: this.formControl.get('solrConfigName')?.value
+      } as ApacheSolrConfig,
+      mapping: {
+        name: this.formControl.get('entityMappingName')?.value
+      } as EntityMapping,
       transformers: this.transformers.controls.map(transformer => {
         let map = new Map<string,string>;
         (transformer.get('parameters') as FormArray)?.controls?.forEach(param => {
@@ -239,8 +251,8 @@ export class JobTemplateComponent implements AfterViewInit {
     this.formControl.controls['description'].setValue(template?.description || '');
     this.formControl.controls['type'].setValue(template?.type || '');
     this.formControl.controls['participantName'].setValue(template?.participantName || '');
-    this.formControl.controls['solrConfigName'].setValue(template?.solrConfigName || '');
-    this.formControl.controls['entityMappingName'].setValue(template?.entityMappingName || '');
+    this.formControl.controls['solrConfigName'].setValue(template?.config?.name || '');
+    this.formControl.controls['entityMappingName'].setValue(template?.mapping?.name || '');
     this.formControl.controls['startAutomatically'].setValue(template?.startAutomatically || false);
 
     this.transformers.clear()
