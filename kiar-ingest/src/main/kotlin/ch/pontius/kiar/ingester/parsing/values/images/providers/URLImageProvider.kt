@@ -9,7 +9,7 @@ import com.sksamuel.scrimage.ImmutableImage
 import java.io.IOException
 import java.net.HttpURLConnection
 import java.net.URL
-import java.util.Base64
+import java.util.*
 
 /**
  * A [MediaProvider.Image] for the images addressed by a [URL].

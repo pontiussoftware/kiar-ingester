@@ -1,5 +1,5 @@
 import {AfterViewInit, Component, ElementRef, ViewChild} from "@angular/core";
-import {ConfigService, Institution, InstitutionService} from "../../../../openapi";
+import {ApacheSolrCollection, ConfigService, Institution, InstitutionService} from "../../../../openapi";
 import {map, Observable, shareReplay, tap} from "rxjs";
 import {MatPaginator} from "@angular/material/paginator";
 import {InstitutionDatasource} from "./institution-datasource";
@@ -20,7 +20,7 @@ export class InstitutionListComponent implements AfterViewInit  {
   public readonly dataSource: InstitutionDatasource
 
   /** An {@link Observable} of available participants. */
-  public readonly collections: Observable<Array<string[]>>
+  public readonly collections: Observable<Array<ApacheSolrCollection>>
 
   /** The columns that should be displayed in the data table. */
   public readonly displayedColumns: string[] = ['image', 'name', 'displayName', 'participant', 'street', 'city', 'zip', 'canton', 'email', 'publish', 'action'];
@@ -36,9 +36,9 @@ export class InstitutionListComponent implements AfterViewInit  {
 
   constructor(private institutionService: InstitutionService, private configService: ConfigService, private dialog: MatDialog, private snackBar: MatSnackBar) {
     this.dataSource = new InstitutionDatasource(this.institutionService)
-    this.collections = this.configService.getListSolrConfiguration().pipe(
-        map((configs) => {
-          return configs.map(config => config.collections.filter(c => c.type === "MUSEUM").flatMap(collection => [config.name, collection.name]))
+    this.collections = this.configService.getListSolrCollections().pipe(
+        map((collections) => {
+          return collections.filter(c => c.type === "MUSEUM")
         }),
         shareReplay(1)
     )
@@ -101,13 +101,13 @@ export class InstitutionListComponent implements AfterViewInit  {
   /**
    * Uses the API to trigger synchronisation of institution master data with the Apache Solt backend.
    *
-   * @param config The name of the Apache Solr configuration to use.
    * @param collection The name of the collection to use.
    */
-  public synchronize(config: string, collection: string) {
-    this.institutionService.postSynchronizeInstitutions(config, collection).subscribe({
-      next: (value) =>  this.snackBar.open(`Successfully synchronised institutions with Apache Solr backend (${collection} (${config}).`, "Dismiss", { duration: 2000 } as MatSnackBarConfig),
-      error: (err) => this.snackBar.open(`Error occurred while synchronising institutions with Apache Solr backend (${collection} (${config}): ${err?.error?.description}.`, "Dismiss", { duration: 2000 } as MatSnackBarConfig),
+  public synchronize(collection: ApacheSolrCollection) {
+    if (!collection.id) return;
+    this.institutionService.postSynchronizeInstitutions(collection.id).subscribe({
+      next: (value) =>  this.snackBar.open(`Successfully synchronised institutions with Apache Solr backend (${collection.name}).`, "Dismiss", { duration: 2000 } as MatSnackBarConfig),
+      error: (err) => this.snackBar.open(`Error occurred while synchronising institutions with Apache Solr backend (${collection.name}): ${err?.error?.description}.`, "Dismiss", { duration: 2000 } as MatSnackBarConfig),
     })
   }
 }

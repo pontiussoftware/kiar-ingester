@@ -4,45 +4,28 @@ import ch.pontius.kiar.api.model.status.ErrorStatus
 import ch.pontius.kiar.api.model.status.ErrorStatusException
 import ch.pontius.kiar.api.routes.DatabaseAccessManager
 import ch.pontius.kiar.api.routes.configureApiRoutes
-import ch.pontius.kiar.api.routes.session.SALT
-import ch.pontius.kiar.cli.Cli
 import ch.pontius.kiar.config.Config
-import ch.pontius.kiar.database.collection.DbObjectCollection
-import ch.pontius.kiar.database.config.jobs.DbJobTemplate
-import ch.pontius.kiar.database.config.jobs.DbJobType
-import ch.pontius.kiar.database.config.mapping.*
-import ch.pontius.kiar.database.config.solr.*
-import ch.pontius.kiar.database.config.transformers.DbTransformer
-import ch.pontius.kiar.database.config.transformers.DbTransformerParameter
-import ch.pontius.kiar.database.config.transformers.DbTransformerType
-import ch.pontius.kiar.database.institution.DbInstitution
-import ch.pontius.kiar.database.institution.DbParticipant
-import ch.pontius.kiar.database.institution.DbRole
-import ch.pontius.kiar.database.institution.DbUser
-import ch.pontius.kiar.database.job.*
-import ch.pontius.kiar.database.masterdata.DbCanton
-import ch.pontius.kiar.database.masterdata.DbRightStatement
+import ch.pontius.kiar.database.Schema
 import ch.pontius.kiar.ingester.IngesterServer
 import ch.pontius.kiar.tasks.PurgeJobLogTask
 import ch.pontius.kiar.tasks.RemoveInputFilesTask
 import ch.pontius.kiar.utilities.KotlinxJsonMapper
-import ch.pontius.kiar.utilities.generatePassword
 import io.javalin.Javalin
 import io.javalin.http.staticfiles.Location
-import io.javalin.openapi.*
-import io.javalin.openapi.plugin.*
+import io.javalin.openapi.OpenApiInfo
+import io.javalin.openapi.plugin.DefinitionConfiguration
+import io.javalin.openapi.plugin.OpenApiPlugin
+import io.javalin.openapi.plugin.OpenApiPluginConfiguration
+import io.javalin.openapi.plugin.SecurityComponentConfiguration
 import io.javalin.openapi.plugin.swagger.SwaggerConfiguration
 import io.javalin.openapi.plugin.swagger.SwaggerPlugin
-import jetbrains.exodus.database.TransientEntityStore
-import kotlinx.dnq.XdModel
-import kotlinx.dnq.query.*
-import kotlinx.dnq.store.container.StaticStoreContainer
-import kotlinx.dnq.util.initMetaData
 import kotlinx.serialization.json.Json
-import org.mindrot.jbcrypt.BCrypt
+import org.jetbrains.exposed.v1.jdbc.Database
+import org.jetbrains.exposed.v1.jdbc.transactions.TransactionManager
 import java.io.FileNotFoundException
 import java.nio.file.Files
 import java.nio.file.Paths
+import java.sql.Connection
 import java.util.*
 import kotlin.system.exitProcess
 
@@ -56,26 +39,29 @@ fun main(args: Array<String>) {
         val config: Config = loadConfig(args.firstOrNull() ?: "./config.json")
         System.setProperty("log4j.saveDirectory", config.logPath.toString()) /* Set log path for Log4j2. */
 
-        /* Initializes the embedded Xodus database. */
-        val store = initializeDatabase(config)
+        /* Initializes the SQLite database and make it default. */
+        val database = Database.connect("jdbc:sqlite:${config.dbPath}?foreign_keys=on;", driver = "org.sqlite.JDBC")
+        TransactionManager.defaultDatabase = database
+        TransactionManager.manager.defaultIsolationLevel = Connection.TRANSACTION_SERIALIZABLE
+
+        /* Check and initialize the schema. */
+        if (!Schema.check(database)) {
+            println("Initializing database schema.")
+            Schema.initialize(database)
+        }
 
         /* Initializes the IngestServer. */
-        val server = IngesterServer(store, config)
+        val server = IngesterServer(config)
 
         /* Start Javalin web-server (if configured). */
         if (config.web) {
-            initializeWebserver(store, server, config).start(config.webPort)
+            initializeWebserver(server, config).start(config.webPort)
         }
 
         /* Schedule timer tasks. */
         val timer = Timer("Task scheduler")
-        timer.scheduleAtFixedRate(PurgeJobLogTask(store, config), 5000, 86400000)
-        timer.scheduleAtFixedRate(RemoveInputFilesTask(store, config), 5000, 86400000)
-
-        /* Start CLI (if configured). */
-        if (config.cli) {
-            Cli(config, server, store).loop()
-        }
+        timer.scheduleAtFixedRate(PurgeJobLogTask(config), 5000, 86400000)
+        timer.scheduleAtFixedRate(RemoveInputFilesTask(config), 5000, 86400000)
     } catch (e: Throwable) {
         System.err.println("Failed to start IngesterServer due to error:")
         System.err.println(e.printStackTrace())
@@ -108,76 +94,15 @@ private fun loadConfig(path: String): Config {
     }
 }
 
-/**
- * Initializes and returns the [TransientEntityStore] based on the provided [Config].
- *
- * @return [TransientEntityStore]
- */
-private fun initializeDatabase(config: Config): TransientEntityStore {
-    val store = StaticStoreContainer.init(dbFolder = config.dbPath.toFile(), entityStoreName = "kiar-db")
-    XdModel.registerNodes(
-        DbSolr,
-        DbCollection,
-        DbCollectionType,
-        DbJobTemplate,
-        DbJobType,
-        DbJobSource,
-        DbEntityMapping,
-        DbAttributeMapping,
-        DbAttributeMappingParameters,
-        DbRightStatement,
-        DbCanton,
-        DbFormat,
-        DbParser,
-        DbTransformer,
-        DbTransformerParameter,
-        DbTransformerType,
-        DbImageFormat,
-        DbImageDeployment,
-        DbParticipant,
-        DbJob,
-        DbJobLog,
-        DbJobLogLevel,
-        DbJobLogContext,
-        DbJobStatus,
-        DbInstitution,
-        DbObjectCollection,
-        DbRole,
-        DbUser
-    )
-    initMetaData(XdModel.hierarchy, store)
-
-    /* Perform basic setup if needed. */
-    checkAndSetup(store)
-
-    return store
-}
 
 /**
- * Checks for an empty database and performs basic setup if needed.
+ * Initializes and returns the [Database] based on the provided [Config].
  *
- * @param store [TransientEntityStore]
+ * @param server The [IngesterServer] instance.
+ * @param config The program [Config].
+ * @return [Javalin]
  */
-private fun checkAndSetup(store: TransientEntityStore) = store.transactional {
-    if (DbUser.all().size() == 0) {
-        println("Empty database encountered... starting setup.")
-        val pw = generatePassword(10)
-        DbUser.new {
-            name = "admin"
-            role = DbRole.ADMINISTRATOR
-            password = BCrypt.hashpw(pw, SALT)
-            inactive = false
-        }
-        println("Generated a new user 'admin' with password '$pw'.")
-    }
-}
-
-/**
- * Initializes and returns the [TransientEntityStore] based on the provided [Config].
- *
- * @return [TransientEntityStore]
- */
-private fun initializeWebserver(store: TransientEntityStore, server: IngesterServer, config: Config) = Javalin.create { c ->
+private fun initializeWebserver(server: IngesterServer, config: Config) = Javalin.create { c ->
     /* Configure static routes for SPA. */
     c.staticFiles.add{
         it.directory = "html/browser/"
@@ -187,7 +112,7 @@ private fun initializeWebserver(store: TransientEntityStore, server: IngesterSer
 
     /* Configure routes. */
     c.router.apiBuilder {
-        configureApiRoutes(store, server, config)
+        configureApiRoutes(server, config)
     }
 
     /* We use Kotlinx serialization for de-/serialization. */
@@ -225,7 +150,7 @@ private fun initializeWebserver(store: TransientEntityStore, server: IngesterSer
         swaggerConfiguration.documentationPath = "/swagger-docs"
         swaggerConfiguration.uiPath = "/swagger-ui"
     })
-}.beforeMatched(DatabaseAccessManager(store))
+}.beforeMatched(DatabaseAccessManager())
 .exception(ErrorStatusException::class.java) { e, ctx ->
     ctx.status(e.code).json(ErrorStatus(e.code, e.message))
 }.exception(Exception::class.java) { e, ctx ->

@@ -7,12 +7,12 @@
  * https://openapi-generator.tech
  * Do not edit the class manually.
  */
-import { MappingFormat } from './mappingFormat';
-import { AttributeMapping } from './attributeMapping';
+import {MappingFormat} from './mappingFormat';
+import {AttributeMapping} from './attributeMapping';
 
 
 export interface EntityMapping { 
-    id?: string | null;
+    id?: number | null;
     name: string;
     description?: string | null;
     type: MappingFormat;

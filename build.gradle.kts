@@ -82,9 +82,36 @@ openApiGenerate {
     ))
 }
 
-val generateOAS by tasks.registering(Download::class) {
-    /* Requires KIAR running on default port */
+/**
+ * Task to generate OAS. Requires running tool
+ */
+tasks.register<Download>("generateOAS") {
     val f = project.file(oasFile)
     src(fullOAS)
     dest(f)
+}
+
+/**
+ * Task to run database migration. Requires running tool
+ */
+tasks.register<JavaExec>("runMigration") {
+    group = "application"
+    description = "Run the database migration logic (Xodus > SQLite) with two custom arguments."
+
+    // use the same classpath that the standard `run` task uses
+    val migration = project(":kiar-migration")
+    classpath = migration.sourceSets["main"].runtimeClasspath
+    mainClass = "ch.pontius.kiar.migration.MainKt"
+
+    // read arguments from project properties (e.g. -PfirstArg=foo -PsecondArg=bar)
+    val source: String by project
+    val destination: String by project
+    args(source, destination)
+
+    // optional: fail fast if the user forgets to provide the arguments
+    doFirst {
+        if (!project.hasProperty("source") || !project.hasProperty("destination")) {
+            throw GradleException("Both `source` and `destination` must be supplied, e.g. -source=foo -destination=bar")
+        }
+    }
 }

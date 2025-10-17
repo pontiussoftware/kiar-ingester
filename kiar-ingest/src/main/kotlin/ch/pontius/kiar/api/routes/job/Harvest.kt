@@ -1,21 +1,22 @@
 package ch.pontius.kiar.api.routes.job
 
+import ch.pontius.kiar.api.model.job.JobStatus
 import ch.pontius.kiar.api.model.status.ErrorStatus
 import ch.pontius.kiar.api.model.status.ErrorStatusException
 import ch.pontius.kiar.api.model.status.SuccessStatus
-import ch.pontius.kiar.api.routes.session.currentUser
+import ch.pontius.kiar.api.model.user.Role
 import ch.pontius.kiar.config.Config
-import ch.pontius.kiar.database.institution.DbRole
-import ch.pontius.kiar.database.job.DbJob
-import ch.pontius.kiar.database.job.DbJobStatus
+import ch.pontius.kiar.database.jobs.Jobs
 import ch.pontius.kiar.ingester.IngesterServer
+import ch.pontius.kiar.utilities.extensions.currentUser
 import io.javalin.http.Context
 import io.javalin.openapi.*
-import jetbrains.exodus.database.TransientEntityStore
-import kotlinx.dnq.util.findById
-import org.joda.time.DateTime
+import org.jetbrains.exposed.v1.core.eq
+import org.jetbrains.exposed.v1.jdbc.transactions.transaction
+import org.jetbrains.exposed.v1.jdbc.update
 import java.nio.file.Files
 import java.nio.file.StandardOpenOption
+import java.time.Instant
 
 
 @OpenApi(
@@ -25,7 +26,7 @@ import java.nio.file.StandardOpenOption
     operationId = "putUpload",
     tags = ["Job"],
     pathParams = [
-        OpenApiParam(name = "id", description = "The ID of the Job for which a file should be uploaded.", required = true)
+        OpenApiParam(name = "id", type = Int::class, description = "The ID of the Job for which a file should be uploaded.", required = true)
     ],
     queryParams = [
         OpenApiParam(name = "first", description = "Set to 'true' if the submitted chunk is the first one.", required = false, type = Boolean::class),
@@ -41,23 +42,20 @@ import java.nio.file.StandardOpenOption
         OpenApiResponse("500", [OpenApiContent(ErrorStatus::class)])
     ]
 )
-fun upload(ctx: Context, store: TransientEntityStore, config: Config) {
+fun upload(ctx: Context, config: Config) {
     /* Obtain and check Job. */
-    val jobId = ctx.pathParam("id")
+    val jobId = ctx.pathParam("id").toIntOrNull() ?: throw ErrorStatusException(400, "Malformed job ID.")
     val first = ctx.queryParam("first")?.toBoolean() ?: false
-    val last = ctx.queryParam("last")?.toBoolean() ?: false
-    val participant = store.transactional(false) {
-        val job = try {
-            DbJob.findById(jobId)
-        } catch (e: Throwable) {
-            throw ErrorStatusException(404, "Job with ID $jobId could not be found.")
-        }
+    ctx.queryParam("last")?.toBoolean() ?: false
+    val participant = transaction {
+        val job = Jobs.getById(jobId) ?: throw ErrorStatusException(404, "Job with ID $jobId could not be found.")
 
-        if (job.status != DbJobStatus.CREATED && job.status != DbJobStatus.FAILED) {
+        /* Check if job is still active. */
+        if (job.status !in setOf(JobStatus.CREATED, JobStatus.FAILED)) {
             throw ErrorStatusException(400, "Job with ID $jobId is in wrong state.")
         }
 
-        job.template?.participant?.name ?: throw ErrorStatusException(400, "Job with ID $jobId is not associated with a proper participant.")
+        job.template?.participantName ?: throw ErrorStatusException(400, "Job with ID $jobId is not associated with a proper participant.")
     }
 
     /* Check for availability of directory and create it if necessary. */
@@ -71,9 +69,9 @@ fun upload(ctx: Context, store: TransientEntityStore, config: Config) {
 
     /* Create or re-use output file. TODO: In case of an error, we need a way to recover here. */
     val outputStream = if (first) {
-        Files.newOutputStream(ingestPath.resolve(jobId), StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING, StandardOpenOption.WRITE)
+        Files.newOutputStream(ingestPath.resolve("$jobId.job"), StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING, StandardOpenOption.WRITE)
     } else {
-        Files.newOutputStream(ingestPath.resolve(jobId), StandardOpenOption.APPEND, StandardOpenOption.WRITE)
+        Files.newOutputStream(ingestPath.resolve("$jobId.job"), StandardOpenOption.APPEND, StandardOpenOption.WRITE)
     }
 
     /* Upload the first file. */
@@ -96,15 +94,11 @@ fun upload(ctx: Context, store: TransientEntityStore, config: Config) {
     }
 
     /* Update Job status. */
-    store.transactional {
-        val job = try {
-            DbJob.findById(jobId)
-        } catch (e: Throwable) {
-            throw ErrorStatusException(404, "Job with ID $jobId could not be found.")
-        }
-        job.changedAt = DateTime.now()
-        if (last) {
-            job.status = DbJobStatus.HARVESTED
+    transaction {
+        Jobs.update({ Jobs.id eq jobId }) { update ->
+            update[status] = JobStatus.HARVESTED
+            update[modified] = Instant.now()
+
         }
     }
 
@@ -119,7 +113,7 @@ fun upload(ctx: Context, store: TransientEntityStore, config: Config) {
     operationId = "putScheduleJob",
     tags = ["Job"],
     pathParams = [
-        OpenApiParam(name = "id", description = "The ID of the Job that should be started.", required = true)
+        OpenApiParam(name = "id", type = Int::class, description = "The ID of the Job that should be started.", required = true)
     ],
     queryParams = [
         OpenApiParam(name = "test", type = Boolean::class, description = "True, if only a test-run should be executed.", required = false),
@@ -131,26 +125,22 @@ fun upload(ctx: Context, store: TransientEntityStore, config: Config) {
         OpenApiResponse("500", [OpenApiContent(ErrorStatus::class)])
     ]
 )
-fun scheduleJob(ctx: Context, store: TransientEntityStore, server: IngesterServer) {
-    val jobId = ctx.pathParam("id")
+fun scheduleJob(ctx: Context, server: IngesterServer) {
+    val jobId = ctx.pathParam("id").toIntOrNull() ?: throw ErrorStatusException(400, "Malformed job ID.")
     val test = ctx.queryParam("test")?.toBoolean() ?: false
 
     /* Perform sanity checks. */
-    store.transactional(true) {
+    transaction {
         val currentUser = ctx.currentUser()
-        val job = try {
-            DbJob.findById(jobId)
-        } catch (e: Throwable) {
-            throw ErrorStatusException(404, "Job with ID $jobId could not be found.")
-        }
+        val job = Jobs.getById(jobId) ?: throw ErrorStatusException(404, "Job with ID $jobId does not exist.")
 
         /* Check status of the job. */
-        if (job.status != DbJobStatus.HARVESTED && job.status != DbJobStatus.FAILED && job.status != DbJobStatus.INTERRUPTED) {
+        if (job.status !in setOf(JobStatus.HARVESTED, JobStatus.FAILED, JobStatus.INTERRUPTED)) {
             throw ErrorStatusException(400, "Job with ID $jobId is in wrong state.")
         }
 
         /* Check if user is actually allowed to start the job. */
-        if (currentUser.role != DbRole.ADMINISTRATOR && job.template?.participant != currentUser.institution?.participant) {
+        if (currentUser.role != Role.ADMINISTRATOR && job.template?.participantName != currentUser.institution?.participantName) {
             throw ErrorStatusException(403, "You are not allowed to start job $jobId.")
         }
     }
@@ -169,7 +159,7 @@ fun scheduleJob(ctx: Context, store: TransientEntityStore, server: IngesterServe
     operationId = "deleteAbortJob",
     tags = ["Job"],
     pathParams = [
-        OpenApiParam(name = "id", description = "The ID of the Job that should be aborted.", required = true)
+        OpenApiParam(name = "id", type = Int::class, description = "The ID of the Job that should be aborted.", required = true)
     ],
     responses = [
         OpenApiResponse("200", [OpenApiContent(SuccessStatus::class)]),
@@ -180,29 +170,28 @@ fun scheduleJob(ctx: Context, store: TransientEntityStore, server: IngesterServe
         OpenApiResponse("500", [OpenApiContent(ErrorStatus::class)])
     ]
 )
-fun abortJob(ctx: Context, store: TransientEntityStore, server: IngesterServer) {
-    val jobId = ctx.pathParam("id")
-    store.transactional {
+fun abortJob(ctx: Context, server: IngesterServer) {
+    val jobId = ctx.pathParam("id").toIntOrNull() ?: throw ErrorStatusException(400, "Malformed job ID.")
+
+    transaction {
         val currentUser = ctx.currentUser()
-        val job = try {
-            DbJob.findById(jobId)
-        } catch (_: Throwable) {
-            throw ErrorStatusException(404, "Job with ID $jobId could not be found.")
-        }
+        val job = Jobs.getById(jobId) ?: throw ErrorStatusException(404, "Job with ID $jobId could not be found.")
 
         /* Check if user's participant is the same as the one associated with the template. */
-        if (currentUser.role != DbRole.ADMINISTRATOR) {
-            if (job.template?.participant != currentUser.institution?.participant) {
+        if (currentUser.role != Role.ADMINISTRATOR) {
+            if (job.template?.participantName != currentUser.institution?.participantName) {
                 throw ErrorStatusException(403, "You are not allowed to abort a job that has been created for another participant.")
             }
         }
 
         /* Check if job is still active. */
-        if (!job.status.active) {
+        if (job.status !in setOf(JobStatus.CREATED, JobStatus.HARVESTED, JobStatus.INGESTED, JobStatus.RUNNING)) {
             throw ErrorStatusException(400, "Job with ID $jobId could not be aborted because it is already inactive.")
         }
-        job.status = DbJobStatus.ABORTED
-        job.changedAt = DateTime.now()
+        Jobs.update({ Jobs.id eq jobId }) { update ->
+            update[status] = JobStatus.ABORTED
+            update[modified] = Instant.now()
+        }
     }
 
     /* Inform ingest server that job should be terminated.*/

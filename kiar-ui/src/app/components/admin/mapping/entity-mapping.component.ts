@@ -1,5 +1,11 @@
 import {AfterViewInit, Component} from "@angular/core";
-import {AttributeMapping, EntityMapping, EntityMappingService, MappingFormat, ValueParser} from "../../../../../openapi";
+import {
+  AttributeMapping,
+  EntityMapping,
+  EntityMappingService,
+  MappingFormat,
+  ValueParser
+} from "../../../../../openapi";
 import {ActivatedRoute, Router} from "@angular/router";
 import {catchError, map, mergeMap, Observable, of, shareReplay} from "rxjs";
 import {MatSnackBar, MatSnackBarConfig} from "@angular/material/snack-bar";
@@ -16,7 +22,7 @@ import {AttributeMappingData, AttributeMappingDialogComponent} from "./attribute
 export class EntityMappingComponent implements AfterViewInit {
 
   /** An {@link Observable} of the mapping ID that is being inspected by this {@link EntityMappingComponent}. */
-  public readonly mappingId: Observable<string>
+  public readonly mappingId: Observable<number>
 
   /** An {@link Observable} of the list of available {@link ValueParser}s. */
   public readonly parsers: Observable<Array<ValueParser>>
@@ -42,7 +48,7 @@ export class EntityMappingComponent implements AfterViewInit {
       private snackBar: MatSnackBar,
       public dialog: MatDialog
   ) {
-    this.mappingId = this.route.paramMap.pipe(map(params => params.get('id')!!));
+    this.mappingId = this.route.paramMap.pipe(map(params => Number(params.get('id')!!)));
     this.parsers = this.service.getListParsers().pipe(shareReplay(1))
     this.mappingFormats = this.service.getListMappingFormats().pipe(shareReplay(1))
   }
@@ -195,7 +201,7 @@ export class EntityMappingComponent implements AfterViewInit {
    * @param id The ID of the {@link EntityMapping}
    * @return {@link EntityMapping}
    */
-  private formToEntityMapping(id: string): EntityMapping {
+  private formToEntityMapping(id: number): EntityMapping {
     return {
       id: id,
       name: this.formControl.get('name')?.value,

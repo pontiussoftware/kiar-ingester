@@ -20,7 +20,10 @@ object KotlinxJsonMapper: JsonMapper {
     private val projectModule = SerializersModule { }
 
     /** The [Json] object to perform de-/serialization with.  */
-    private val json = Json { serializersModule = projectModule }
+    private val json = Json {
+        serializersModule = projectModule
+        encodeDefaults = true
+    }
 
 
     /**

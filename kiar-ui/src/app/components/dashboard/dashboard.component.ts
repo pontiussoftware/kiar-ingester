@@ -43,7 +43,7 @@ export class DashboardComponent implements AfterViewInit, OnDestroy {
   private jobHistoryPaginator: MatPaginator;
 
   /** The upload progress for a specific job. */
-  private uploadProgress = new Map<string, number>()
+  private uploadProgress = new Map<number, number>()
 
   constructor(private dialog: MatDialog, private snackBar: MatSnackBar, private service: JobService) {
     this.activeJobs = new JobCurrentDatasource(this.service)
@@ -178,7 +178,8 @@ export class DashboardComponent implements AfterViewInit, OnDestroy {
    * @param job The @{link Job} to check for.
    */
   public isUploading(job: Job): boolean {
-    return this.uploadProgress.has(job.id || "");
+    if (!job.id) return false;
+    return this.uploadProgress.has(job.id);
   }
 
   /**
@@ -187,6 +188,7 @@ export class DashboardComponent implements AfterViewInit, OnDestroy {
    * @param job The @{link Job} to check for.
    */
   public progressForJob(job: Job): number {
-    return this.uploadProgress.get(job.id || "") || 0;
+    if (!job.id) return 0;
+    return this.uploadProgress.get(job.id) ?? 0;
   }
 }

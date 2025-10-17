@@ -1,5 +1,6 @@
 package ch.pontius.kiar.api.model.job
 
+import ch.pontius.kiar.api.model.config.templates.JobTemplateId
 import kotlinx.serialization.Serializable
 
 /**
@@ -8,4 +9,4 @@ import kotlinx.serialization.Serializable
  * @version 1.0.0
  */
 @Serializable
-data class CreateJobRequest(val templateId: String, val jobName: String? = null)
+data class CreateJobRequest(val templateId: JobTemplateId, val jobName: String? = null)

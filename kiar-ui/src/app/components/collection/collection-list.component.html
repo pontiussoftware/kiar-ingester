@@ -17,7 +17,7 @@
   <mat-menu #menu="matMenu" class=".collection-menu">
     @for (collection of ( solrCollections | async)  ?? []; track collection) {
       <button mat-menu-item
-        (click)="synchronize(collection[0], collection[1])">{{ collection[0] }} > {{ collection[1] }}
+        (click)="synchronize(collection)">{{ collection.name }} (ID: {{ collection.id }})
       </button>
     }
   </mat-menu>
@@ -60,7 +60,7 @@
   <!-- Institution Column -->
   <ng-container matColumnDef="institutionName" i18n="@@LabelInstitution">
         <th mat-header-cell *matHeaderCellDef> Institution</th>
-        <td mat-cell *matCellDef="let element"> {{ element.institutionName }}</td>
+        <td mat-cell *matCellDef="let element"> {{ element?.institution?.name }}</td>
     </ng-container>
 
   <!-- Publish Column -->

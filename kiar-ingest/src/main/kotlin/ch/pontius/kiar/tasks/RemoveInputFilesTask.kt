@@ -1,11 +1,12 @@
 package ch.pontius.kiar.tasks
 
 import ch.pontius.kiar.config.Config
-import ch.pontius.kiar.database.institution.DbParticipant
-import jetbrains.exodus.database.TransientEntityStore
-import kotlinx.dnq.query.asSequence
+import ch.pontius.kiar.database.institutions.Participants
 import org.apache.logging.log4j.LogManager
 import org.apache.logging.log4j.Logger
+import org.jetbrains.exposed.v1.core.eq
+import org.jetbrains.exposed.v1.jdbc.select
+import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 import java.io.IOException
 import java.nio.file.Files
 import java.nio.file.Path
@@ -17,9 +18,9 @@ import java.util.stream.Collectors
  * A simple [TimerTask] used to schedule the removal of old input files.
  *
  * @author Ralph Gasser
- * @version 1.0.0
+ * @version 1.1.0
  */
-class RemoveInputFilesTask(private val store: TransientEntityStore, private val config: Config): TimerTask() {
+class RemoveInputFilesTask(private val config: Config): TimerTask() {
     companion object {
         /** The [Logger] used by this [RemoveInputFilesTask]. */
         private val LOGGER: Logger = LogManager.getLogger()
@@ -29,8 +30,8 @@ class RemoveInputFilesTask(private val store: TransientEntityStore, private val 
         var deleted = 0L
 
         /* Obtain list of participants. */
-        val participants = this.store.transactional(true) {
-            DbParticipant.all().asSequence().map { it.name }.toList()
+        val participants = transaction {
+            Participants.select(Participants.name).map { it[Participants.name] }
         }
 
         /* Iterate through folders. */
@@ -49,7 +50,7 @@ class RemoveInputFilesTask(private val store: TransientEntityStore, private val 
                             Files.delete(files[i])
                             deleted++
                         } catch (e: IOException) {
-                            LOGGER.error("Failed to delete file ${files[i]}.")
+                            LOGGER.error("Failed to delete file ${files[i]}.", e)
                         }
                     }
                 }

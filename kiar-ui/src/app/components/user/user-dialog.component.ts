@@ -1,6 +1,6 @@
 import {Component, Inject} from "@angular/core";
 import {FormControl, FormGroup, Validators} from "@angular/forms";
-import {Observable, shareReplay} from "rxjs";
+import {first, map, Observable, shareReplay, tap} from "rxjs";
 import {Institution, InstitutionService, Role, User, UserService} from "../../../../openapi";
 import {MAT_DIALOG_DATA, MatDialogRef} from "@angular/material/dialog";
 import {PASSWORD_VALIDATOR} from "../../utilities/password";
@@ -17,7 +17,7 @@ export class UserDialogComponent {
   public formControl: FormGroup
 
   /** An {@link Observable} of available {@link Institution}s. */
-  public readonly institutions: Observable<Array<String>>
+  public readonly institutions: Observable<Array<Institution>>
 
   /** An {@link Observable} of available {@link Role}s. */
   public readonly roles: Observable<Array<Role>>
@@ -32,12 +32,22 @@ export class UserDialogComponent {
       },{ validators: PASSWORD_VALIDATOR }),
       active: new FormControl(this.data?.active),
       role: new FormControl(this.data?.role || ''),
-      institutionName: new FormControl(this.data?.institution || ''),
+      institution: new FormControl<Institution | null>(null),
     })
 
     /* Get list of institutions. */
-    this.institutions = this.institution.getInstitutionNames().pipe(shareReplay(1))
-    this.roles = this.user.getListRoles().pipe(shareReplay(1))
+    this.institutions = this.institution.getInstitutions(0, 1000).pipe(
+        first(),
+        map(r => r.results),
+        tap(institutions => {
+          this.formControl.get('institution')?.setValue(institutions.find(i => i.id == this.data?.institution?.id) ?? null)
+        }),
+        shareReplay(1)
+    )
+    this.roles = this.user.getListRoles().pipe(
+        first(),
+        shareReplay(1)
+    )
   }
 
   /**
@@ -51,8 +61,10 @@ export class UserDialogComponent {
         email: this.formControl.get('email')?.value,
         password: this.formControl.get('password')?.get('passwordFirst')?.value,
         role: this.formControl.get('role')?.value,
-        institution: this.formControl.get('institutionName')?.value,
-        active: (this.formControl.get('active')?.value || false)
+        institution: this.formControl.get('institution')?.value,
+        active: (this.formControl.get('active')?.value || false),
+        createdAt: -1,
+        changedAt: -1
       } as User
       this.dialogRef.close(object)
     }

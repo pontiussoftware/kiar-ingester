@@ -9,29 +9,25 @@
  */
 /* tslint:disable:no-unused-variable member-ordering */
 
-import { Inject, Injectable, Optional }                      from '@angular/core';
-import { HttpClient, HttpHeaders, HttpParams,
-         HttpResponse, HttpEvent, HttpParameterCodec, HttpContext 
-        }       from '@angular/common/http';
-import { CustomHttpParameterCodec }                          from '../encoder';
-import { Observable }                                        from 'rxjs';
+import {Inject, Injectable, Optional} from '@angular/core';
+import {HttpClient, HttpContext, HttpEvent, HttpResponse} from '@angular/common/http';
+import {Observable} from 'rxjs';
 
 // @ts-ignore
-import { EntityMapping } from '../model/entityMapping';
+import {EntityMapping} from '../model/entityMapping';
 // @ts-ignore
-import { ErrorStatus } from '../model/errorStatus';
+import {ErrorStatus} from '../model/errorStatus';
 // @ts-ignore
-import { MappingFormat } from '../model/mappingFormat';
+import {MappingFormat} from '../model/mappingFormat';
 // @ts-ignore
-import { SuccessStatus } from '../model/successStatus';
+import {SuccessStatus} from '../model/successStatus';
 // @ts-ignore
-import { ValueParser } from '../model/valueParser';
+import {ValueParser} from '../model/valueParser';
 
 // @ts-ignore
-import { BASE_PATH, COLLECTION_FORMATS }                     from '../variables';
-import { Configuration }                                     from '../configuration';
-import { BaseService } from '../api.base.service';
-
+import {BASE_PATH, COLLECTION_FORMATS} from '../variables';
+import {Configuration} from '../configuration';
+import {BaseService} from '../api.base.service';
 
 
 @Injectable({
@@ -49,10 +45,10 @@ export class EntityMappingService extends BaseService {
      * @param observe set whether or not to return the data Observable as the body, response or events. defaults to returning the body.
      * @param reportProgress flag to report request and response progress.
      */
-    public deleteEntityMapping(id: string, observe?: 'body', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext, transferCache?: boolean}): Observable<SuccessStatus>;
-    public deleteEntityMapping(id: string, observe?: 'response', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext, transferCache?: boolean}): Observable<HttpResponse<SuccessStatus>>;
-    public deleteEntityMapping(id: string, observe?: 'events', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext, transferCache?: boolean}): Observable<HttpEvent<SuccessStatus>>;
-    public deleteEntityMapping(id: string, observe: any = 'body', reportProgress: boolean = false, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext, transferCache?: boolean}): Observable<any> {
+    public deleteEntityMapping(id: number, observe?: 'body', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext, transferCache?: boolean}): Observable<SuccessStatus>;
+    public deleteEntityMapping(id: number, observe?: 'response', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext, transferCache?: boolean}): Observable<HttpResponse<SuccessStatus>>;
+    public deleteEntityMapping(id: number, observe?: 'events', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext, transferCache?: boolean}): Observable<HttpEvent<SuccessStatus>>;
+    public deleteEntityMapping(id: number, observe: any = 'body', reportProgress: boolean = false, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext, transferCache?: boolean}): Observable<any> {
         if (id === null || id === undefined) {
             throw new Error('Required parameter id was null or undefined when calling deleteEntityMapping.');
         }
@@ -82,7 +78,7 @@ export class EntityMappingService extends BaseService {
             }
         }
 
-        let localVarPath = `/api/mappings/${this.configuration.encodeParam({name: "id", value: id, in: "path", style: "simple", explode: false, dataType: "string", dataFormat: undefined})}`;
+        let localVarPath = `/api/mappings/${this.configuration.encodeParam({name: "id", value: id, in: "path", style: "simple", explode: false, dataType: "number", dataFormat: "int32"})}`;
         const { basePath, withCredentials } = this.configuration;
         return this.httpClient.request<SuccessStatus>('delete', `${basePath}${localVarPath}`,
             {
@@ -103,10 +99,10 @@ export class EntityMappingService extends BaseService {
      * @param observe set whether or not to return the data Observable as the body, response or events. defaults to returning the body.
      * @param reportProgress flag to report request and response progress.
      */
-    public getEntityMapping(id: string, observe?: 'body', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext, transferCache?: boolean}): Observable<EntityMapping>;
-    public getEntityMapping(id: string, observe?: 'response', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext, transferCache?: boolean}): Observable<HttpResponse<EntityMapping>>;
-    public getEntityMapping(id: string, observe?: 'events', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext, transferCache?: boolean}): Observable<HttpEvent<EntityMapping>>;
-    public getEntityMapping(id: string, observe: any = 'body', reportProgress: boolean = false, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext, transferCache?: boolean}): Observable<any> {
+    public getEntityMapping(id: number, observe?: 'body', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext, transferCache?: boolean}): Observable<EntityMapping>;
+    public getEntityMapping(id: number, observe?: 'response', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext, transferCache?: boolean}): Observable<HttpResponse<EntityMapping>>;
+    public getEntityMapping(id: number, observe?: 'events', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext, transferCache?: boolean}): Observable<HttpEvent<EntityMapping>>;
+    public getEntityMapping(id: number, observe: any = 'body', reportProgress: boolean = false, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext, transferCache?: boolean}): Observable<any> {
         if (id === null || id === undefined) {
             throw new Error('Required parameter id was null or undefined when calling getEntityMapping.');
         }
@@ -136,7 +132,7 @@ export class EntityMappingService extends BaseService {
             }
         }
 
-        let localVarPath = `/api/mappings/${this.configuration.encodeParam({name: "id", value: id, in: "path", style: "simple", explode: false, dataType: "string", dataFormat: undefined})}`;
+        let localVarPath = `/api/mappings/${this.configuration.encodeParam({name: "id", value: id, in: "path", style: "simple", explode: false, dataType: "number", dataFormat: "int32"})}`;
         const { basePath, withCredentials } = this.configuration;
         return this.httpClient.request<EntityMapping>('get', `${basePath}${localVarPath}`,
             {
@@ -236,7 +232,7 @@ export class EntityMappingService extends BaseService {
             }
         }
 
-        let localVarPath = `/api/mappings/formats`;
+        let localVarPath = `/api/masterdata/mapping-formats`;
         const { basePath, withCredentials } = this.configuration;
         return this.httpClient.request<Array<MappingFormat>>('get', `${basePath}${localVarPath}`,
             {
@@ -286,7 +282,7 @@ export class EntityMappingService extends BaseService {
             }
         }
 
-        let localVarPath = `/api/mappings/parsers`;
+        let localVarPath = `/api/masterdata/parsers`;
         const { basePath, withCredentials } = this.configuration;
         return this.httpClient.request<Array<ValueParser>>('get', `${basePath}${localVarPath}`,
             {
@@ -372,10 +368,10 @@ export class EntityMappingService extends BaseService {
      * @param observe set whether or not to return the data Observable as the body, response or events. defaults to returning the body.
      * @param reportProgress flag to report request and response progress.
      */
-    public updateEntityMapping(id: string, entityMapping: EntityMapping, observe?: 'body', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext, transferCache?: boolean}): Observable<EntityMapping>;
-    public updateEntityMapping(id: string, entityMapping: EntityMapping, observe?: 'response', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext, transferCache?: boolean}): Observable<HttpResponse<EntityMapping>>;
-    public updateEntityMapping(id: string, entityMapping: EntityMapping, observe?: 'events', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext, transferCache?: boolean}): Observable<HttpEvent<EntityMapping>>;
-    public updateEntityMapping(id: string, entityMapping: EntityMapping, observe: any = 'body', reportProgress: boolean = false, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext, transferCache?: boolean}): Observable<any> {
+    public updateEntityMapping(id: number, entityMapping: EntityMapping, observe?: 'body', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext, transferCache?: boolean}): Observable<EntityMapping>;
+    public updateEntityMapping(id: number, entityMapping: EntityMapping, observe?: 'response', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext, transferCache?: boolean}): Observable<HttpResponse<EntityMapping>>;
+    public updateEntityMapping(id: number, entityMapping: EntityMapping, observe?: 'events', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext, transferCache?: boolean}): Observable<HttpEvent<EntityMapping>>;
+    public updateEntityMapping(id: number, entityMapping: EntityMapping, observe: any = 'body', reportProgress: boolean = false, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext, transferCache?: boolean}): Observable<any> {
         if (id === null || id === undefined) {
             throw new Error('Required parameter id was null or undefined when calling updateEntityMapping.');
         }
@@ -417,7 +413,7 @@ export class EntityMappingService extends BaseService {
             }
         }
 
-        let localVarPath = `/api/mappings/${this.configuration.encodeParam({name: "id", value: id, in: "path", style: "simple", explode: false, dataType: "string", dataFormat: undefined})}`;
+        let localVarPath = `/api/mappings/${this.configuration.encodeParam({name: "id", value: id, in: "path", style: "simple", explode: false, dataType: "number", dataFormat: "int32"})}`;
         const { basePath, withCredentials } = this.configuration;
         return this.httpClient.request<EntityMapping>('put', `${basePath}${localVarPath}`,
             {

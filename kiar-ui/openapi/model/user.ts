@@ -7,19 +7,20 @@
  * https://openapi-generator.tech
  * Do not edit the class manually.
  */
-import { Role } from './role';
+import {Role} from './role';
+import {Institution} from './institution';
 
 
 export interface User { 
-    id?: string | null;
+    id?: number | null;
     username: string;
     password?: string | null;
     email?: string | null;
     active: boolean;
     role: Role;
-    institution?: string | null;
-    createdAt?: number | null;
-    changedAt?: number | null;
+    institution?: Institution;
+    createdAt: number;
+    changedAt: number;
 }
 export namespace User {
 }

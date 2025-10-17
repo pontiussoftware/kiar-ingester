@@ -7,12 +7,12 @@
  * https://openapi-generator.tech
  * Do not edit the class manually.
  */
-import { ImageDeployment } from './imageDeployment';
-import { ApacheSolrCollection } from './apacheSolrCollection';
+import {ImageDeployment} from './imageDeployment';
+import {ApacheSolrCollection} from './apacheSolrCollection';
 
 
 export interface ApacheSolrConfig { 
-    id?: string | null;
+    id?: number | null;
     name: string;
     description?: string | null;
     server: string;

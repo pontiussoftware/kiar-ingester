@@ -1,8 +1,11 @@
 package ch.pontius.kiar.oai
 
+import ch.pontius.kiar.api.model.config.solr.CollectionType
+import ch.pontius.kiar.database.config.SolrCollections
+import ch.pontius.kiar.database.config.SolrCollections.toSolrCollection
+import ch.pontius.kiar.database.config.SolrConfigs
+import ch.pontius.kiar.database.config.SolrConfigs.toSolr
 import ch.pontius.kiar.oai.Verbs.*
-import ch.pontius.kiar.database.config.solr.DbCollection
-import ch.pontius.kiar.database.config.solr.DbCollectionType
 import ch.pontius.kiar.ingester.parsing.xml.XmlDocumentParser
 import ch.pontius.kiar.ingester.solrj.Field
 import ch.pontius.kiar.ingester.solrj.uuid
@@ -11,11 +14,13 @@ import com.github.benmanes.caffeine.cache.Caffeine
 import com.github.benmanes.caffeine.cache.RemovalListener
 import io.javalin.http.Context
 import io.javalin.http.HandlerType
-import jetbrains.exodus.database.TransientEntityStore
-import kotlinx.dnq.query.filter
-import kotlinx.dnq.query.firstOrNull
 import org.apache.solr.client.solrj.SolrQuery
 import org.apache.solr.client.solrj.impl.Http2SolrClient
+import org.jetbrains.exposed.v1.core.and
+import org.jetbrains.exposed.v1.core.eq
+import org.jetbrains.exposed.v1.jdbc.select
+import org.jetbrains.exposed.v1.jdbc.selectAll
+import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 import org.w3c.dom.Document
 import org.w3c.dom.Element
 import java.io.Closeable
@@ -35,9 +40,9 @@ import javax.xml.parsers.DocumentBuilderFactory
  * See [OAI-PMH Protocol](https://www.openarchives.org/OAI/openarchivesprotocol.html) for more information.
  *
  * @author Ralph Gasser
- * @version 1.0.0
+ * @version 1.1.0
  */
-class OaiServer(private val store: TransientEntityStore): Closeable {
+class OaiServer(): Closeable {
 
     companion object {
         const val PAGE_SIZE = 100
@@ -216,7 +221,7 @@ class OaiServer(private val store: TransientEntityStore): Closeable {
     private fun handleGetRecord(collection: String, parameters: Map<String,String>): Document {
         val identifier = parameters["identifier"] ?: return handleError("badArgument", "Missing identifier.")
         val prefix = parameters["metadataPrefix"] ?: return handleError("badArgument", "Missing metadata prefix.")
-        val mapper = Formats.entries.find { it.prefix == prefix }?.toMapper(this.store) ?: return handleError("cannotDisseminateFormat", "Unsupported metadata prefix '$prefix'.")
+        val mapper = Formats.entries.find { it.prefix == prefix }?.toMapper() ?: return handleError("cannotDisseminateFormat", "Unsupported metadata prefix '$prefix'.")
 
         /* Obtain client and query for entry. */
         val client = getOrLoadClient(collection)
@@ -278,7 +283,7 @@ class OaiServer(private val store: TransientEntityStore): Closeable {
             this.tokens[token] ?: return handleError("badResumptionToken", "Invalid resumption token.")
         } else {
             val prefix = parameters["metadataPrefix"] ?: return handleError("badArgument", "Missing metadata prefix.")
-            val mapper = Formats.entries.find { it.prefix == prefix }?.toMapper(this.store) ?: return handleError("cannotDisseminateFormat", "Unsupported metadata prefix '$prefix'.")
+            val mapper = Formats.entries.find { it.prefix == prefix }?.toMapper() ?: return handleError("cannotDisseminateFormat", "Unsupported metadata prefix '$prefix'.")
             0 to mapper
         }
 
@@ -365,7 +370,7 @@ class OaiServer(private val store: TransientEntityStore): Closeable {
             this.tokens[token] ?: return handleError("badResumptionToken", "Invalid resumption token.")
         } else {
             val prefix = parameters["metadataPrefix"] ?: return handleError("badArgument", "Missing metadata prefix.")
-            val mapper = Formats.entries.find { it.prefix == prefix }?.toMapper(this.store) ?: return handleError("cannotDisseminateFormat", "Unsupported metadata prefix '$prefix'.")
+            val mapper = Formats.entries.find { it.prefix == prefix }?.toMapper() ?: return handleError("cannotDisseminateFormat", "Unsupported metadata prefix '$prefix'.")
             0 to mapper
         }
 
@@ -448,10 +453,12 @@ class OaiServer(private val store: TransientEntityStore): Closeable {
      * Loads the configuration for the Apache Solr client.
      */
     private fun getOrLoadClient(collection: String): Http2SolrClient {
-        val config = this.store.transactional(true) {
-            DbCollection.filter { (it.name eq collection) and (it.type.name eq DbCollectionType.OBJECT.name) and (it.oai eq true) }.firstOrNull()?.solr?.toApi()
-                ?: throw IllegalArgumentException("Collection '$collection' does not exist.")
-        }
+        val config = transaction {
+            (SolrCollections innerJoin SolrConfigs).select(SolrConfigs.columns)
+                .where { (SolrCollections.name eq collection) and (SolrCollections.type eq CollectionType.OBJECT) and (SolrCollections.oai eq true) }
+                .map { it.toSolr() }
+                .firstOrNull()
+        } ?: throw IllegalArgumentException("Apache Solr collection '$collection' does not exist.")
 
         return this.clients.computeIfAbsent(config.name) {
             /* Prepare builder */

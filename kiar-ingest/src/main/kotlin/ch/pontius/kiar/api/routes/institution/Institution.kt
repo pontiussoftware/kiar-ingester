@@ -1,33 +1,37 @@
+package ch.pontius.kiar.api.routes.institution
+
 import ch.pontius.kiar.api.model.config.image.ImageFormat
 import ch.pontius.kiar.api.model.institution.Institution
 import ch.pontius.kiar.api.model.institution.PaginatedInstitutionResult
 import ch.pontius.kiar.api.model.status.ErrorStatus
 import ch.pontius.kiar.api.model.status.ErrorStatusException
 import ch.pontius.kiar.api.model.status.SuccessStatus
-import ch.pontius.kiar.api.routes.session.currentUser
-import ch.pontius.kiar.database.config.solr.DbCollection
-import ch.pontius.kiar.database.config.solr.DbCollectionType
-import ch.pontius.kiar.database.institution.DbInstitution
-import ch.pontius.kiar.database.institution.DbParticipant
-import ch.pontius.kiar.database.institution.DbRole
-import ch.pontius.kiar.database.masterdata.DbRightStatement
+import ch.pontius.kiar.api.model.user.Role
+import ch.pontius.kiar.database.config.ImageDeployments
+import ch.pontius.kiar.database.config.ImageDeployments.toImageDeployment
+import ch.pontius.kiar.database.config.SolrCollections
+import ch.pontius.kiar.database.config.SolrConfigs
+import ch.pontius.kiar.database.institutions.Institutions
+import ch.pontius.kiar.database.institutions.Institutions.toInstitution
+import ch.pontius.kiar.database.institutions.InstitutionsSolrCollections
+import ch.pontius.kiar.database.institutions.Participants
 import ch.pontius.kiar.utilities.Geocoding
 import ch.pontius.kiar.utilities.ImageHandler
-import ch.pontius.kiar.utilities.mapToArray
+import ch.pontius.kiar.utilities.extensions.currentUser
+import ch.pontius.kiar.utilities.extensions.parseBodyOrThrow
 import com.sksamuel.scrimage.ImmutableImage
 import com.sksamuel.scrimage.nio.JpegWriter
-import io.javalin.http.BadRequestResponse
 import io.javalin.http.Context
 import io.javalin.openapi.*
-import jetbrains.exodus.database.TransientEntityStore
-import kotlinx.dnq.query.*
-import kotlinx.dnq.util.findById
-import org.joda.time.DateTime
+import org.jetbrains.exposed.v1.core.*
+import org.jetbrains.exposed.v1.jdbc.*
+import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 import java.io.IOException
 import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.Paths
 import java.nio.file.StandardOpenOption
+import java.time.Instant
 
 @OpenApi(
     path = "/api/institutions",
@@ -50,31 +54,38 @@ import java.nio.file.StandardOpenOption
         OpenApiResponse("500", [OpenApiContent(ErrorStatus::class)])
     ]
 )
-fun getListInstitutions(ctx: Context, store: TransientEntityStore) {
+fun getListInstitutions(ctx: Context) {
     val page = ctx.queryParam("page")?.toIntOrNull() ?: 0
     val pageSize = ctx.queryParam("pageSize")?.toIntOrNull() ?: 50
     val order = ctx.queryParam("order")?.lowercase() ?: "name"
-    val orderDir = ctx.queryParam("orderDir")?.lowercase() ?: "asc"
+    val orderDir = ctx.queryParam("orderDir")?.uppercase()?.let {
+        try {
+            SortOrder.valueOf(it)
+        } catch (_: Throwable) {
+            null
+        }
+    } ?: SortOrder.ASC
     val filter = ctx.queryParam("filter")
-    val (total, results) = store.transactional(true) {
-        /* Prepare query based on presence of filter. */
-        var query = if (filter == null) {
-            DbInstitution.all()
-        } else {
-            DbInstitution.filter { ((it.name startsWith filter) or (it.displayName startsWith filter) or (it.city startsWith filter)) }
+    val (total, results) = transaction {
+
+        var query = (Institutions innerJoin Participants).selectAll()
+        if (filter != null) {
+            query.andWhere {
+                (Institutions.name like "${filter}%") or (Institutions.displayName like "${filter}%") or (Institutions.city like "${filter}%")
+            }
         }
 
         /* Parse sort order. */
         query = when(order) {
-            "city" -> query.sortedBy(DbInstitution::city, orderDir == "asc")
-            "zip" -> query.sortedBy(DbInstitution::zip, orderDir == "asc")
-            "canton" -> query.sortedBy(DbInstitution::canton, orderDir == "asc")
-            "publish" -> query.sortedBy(DbInstitution::publish, orderDir == "asc")
-            else -> query.sortedBy(DbInstitution::name, orderDir == "asc")
+            "city" -> query.orderBy(Institutions.city, orderDir)
+            "zip" -> query.orderBy(Institutions.zip, orderDir)
+            "canton" -> query.orderBy(Institutions.canton, orderDir)
+            "publish" -> query.orderBy(Institutions.publish, orderDir)
+            else -> query.orderBy(Institutions.name, orderDir)
         }
 
         /* Execute query and return paginated result. */
-        query.size() to query.drop(page * pageSize).take(pageSize).asSequence().map { it.toApi() }.toList()
+        query.count() to query.drop(page * pageSize).take(pageSize).asSequence().map { it.toInstitution() }.toList()
     }
     ctx.json(PaginatedInstitutionResult(total, page, pageSize, results))
 }
@@ -94,11 +105,60 @@ fun getListInstitutions(ctx: Context, store: TransientEntityStore) {
         OpenApiResponse("500", [OpenApiContent(ErrorStatus::class)])
     ]
 )
-fun getListInstitutionNames(ctx: Context, store: TransientEntityStore) {
-    val list = store.transactional(true) {
-        DbInstitution.all().sortedBy(DbInstitution::name).mapToArray { it.name }
+fun getListInstitutionNames(ctx: Context) {
+    val list = transaction {
+        Institutions.select(Institutions.name).map { it[Institutions.name] }.toTypedArray()
     }
     ctx.json(list)
+}
+
+@OpenApi(
+    path = "/api/institutions/{id}",
+    methods = [HttpMethod.GET],
+    summary = "Gets information about an existing institution.",
+    operationId = "getInstitution",
+    tags = ["Institution"],
+    pathParams = [
+        OpenApiParam(name = "id", type = Int::class, description = "The ID of the institution that should be fetched.", required = true)
+    ],
+    responses = [
+        OpenApiResponse("200", [OpenApiContent(Institution::class)]),
+        OpenApiResponse("400", [OpenApiContent(ErrorStatus::class)]),
+        OpenApiResponse("401", [OpenApiContent(ErrorStatus::class)]),
+        OpenApiResponse("403", [OpenApiContent(ErrorStatus::class)]),
+        OpenApiResponse("404", [OpenApiContent(ErrorStatus::class)]),
+        OpenApiResponse("500", [OpenApiContent(ErrorStatus::class)])
+    ]
+)
+
+fun getInstitution(ctx: Context) {
+    val institutionId = ctx.pathParam("id").toIntOrNull() ?: throw ErrorStatusException(400,"Malformed institution ID.")
+
+    /* Fetch institution */
+    val institution = transaction {
+        val institution = (Institutions innerJoin Participants).selectAll().where {
+            Institutions.id eq institutionId
+        }
+        .map { it.toInstitution() }
+        .firstOrNull() ?: throw ErrorStatusException(404, "Institution with ID $institutionId could not be found.")
+
+        /* Fetches available and active collections. */
+        val availableCollections = (InstitutionsSolrCollections innerJoin SolrCollections)
+            .select(SolrCollections.name)
+            .where { (InstitutionsSolrCollections.institutionId eq institutionId) and (InstitutionsSolrCollections.available eq true) }
+            .map { it[SolrCollections.name] }
+
+        val selectedCollections = (InstitutionsSolrCollections innerJoin SolrCollections)
+            .select(SolrCollections.name)
+            .where { (InstitutionsSolrCollections.institutionId eq institutionId) and (InstitutionsSolrCollections.available eq true) and (InstitutionsSolrCollections.selected eq true) }
+            .map { it[SolrCollections.name] }
+
+        /* Returns institution with collections. */
+        institution.copy(availableCollections = availableCollections, selectedCollections = selectedCollections)
+    }
+
+    /* Return the institution object. */
+    ctx.json(institution)
 }
 
 @OpenApi(
@@ -118,82 +178,58 @@ fun getListInstitutionNames(ctx: Context, store: TransientEntityStore) {
         OpenApiResponse("500", [OpenApiContent(ErrorStatus::class)])
     ]
 )
-fun postCreateInstitution(ctx: Context, store: TransientEntityStore) {
-    val request = try {
-        ctx.bodyAsClass(Institution::class.java)
-    } catch (e: BadRequestResponse) {
-        throw ErrorStatusException(400, "Malformed request.")
-    }
+fun postCreateInstitution(ctx: Context) {
+    val request = ctx.parseBodyOrThrow<Institution>()
 
-    /* Create new job. */
-    val institution = store.transactional {
-        /* Create new job. */
-        DbInstitution.new {
-            this.name = request.name
-            this.displayName = request.displayName
-            this.description = request.description
-            this.isil = request.isil
-            this.street = request.street
-            this.city = request.city
-            this.zip = request.zip
-            this.canton = request.canton
-            this.publish = request.publish
-            this.email = request.email
-            this.homepage = request.homepage
-            this.participant = DbParticipant.filter { it.name eq request.participantName }.firstOrNull()
-                ?: throw ErrorStatusException(404, "Participant ${request.participantName} could not be found.")
-            this.createdAt = DateTime.now()
-            this.changedAt = DateTime.now()
+    /* Create new institution. */
+    val institution = transaction {
+        val institutionId = Institutions.insertAndGetId { new ->
+            new[name] = request.name
+            new[displayName] = request.displayName
+            new[description] = request.description
+            new[isil] = request.isil
+            new[street] = request.street
+            new[city] = request.city
+            new[zip] = request.zip
+            new[canton] = request.canton
+            new[publish] = request.publish
+            new[email] = request.email
+            new[homepage] = request.homepage
+            new[canton] = request.canton
 
-            /* Applies longitude and latitude, depending on what is available. */
+            /* Set participant by lookup. */
+            new[participantId] = Participants.select(Participants.id).where {
+                Participants.name eq request.participantName
+            }.map {
+                it[Participants.id]
+            }.firstOrNull() ?: throw ErrorStatusException(404, "Participant ${request.participantName} could not be found.")
+
+            /* Store longitude and latitude. */
             if (request.longitude == null || request.latitude == null) {
                 val geocoding = Geocoding.geocode(request.street, request.city, request.zip)
                 if (geocoding != null) {
-                    this.longitude = geocoding.lon
-                    this.latitude = geocoding.lat
+                    new[longitude] = geocoding.lon
+                    new[latitude] = geocoding.lat
                 }
             } else {
-                this.longitude = request.longitude!!
-                this.latitude = request.latitude!!
+                new[longitude] = request.longitude!!
+                new[latitude] = request.latitude!!
             }
-        }.toApi()
-    }
+        }.value
 
-    /* Return job object. */
-    ctx.json(SuccessStatus("Institution '${institution.name}' (id: ${institution.id}) created successfully."))
-}
-@OpenApi(
-    path = "/api/institutions/{id}",
-    methods = [HttpMethod.GET],
-    summary = "Gets information about an existing institution.",
-    operationId = "getInstitution",
-    tags = ["Institution"],
-    pathParams = [
-        OpenApiParam(name = "id", description = "The ID of the institution that should be fetched.", required = true)
-    ],
-    responses = [
-        OpenApiResponse("200", [OpenApiContent(Institution::class)]),
-        OpenApiResponse("400", [OpenApiContent(ErrorStatus::class)]),
-        OpenApiResponse("401", [OpenApiContent(ErrorStatus::class)]),
-        OpenApiResponse("403", [OpenApiContent(ErrorStatus::class)]),
-        OpenApiResponse("404", [OpenApiContent(ErrorStatus::class)]),
-        OpenApiResponse("500", [OpenApiContent(ErrorStatus::class)])
-    ]
-)
-
-fun getInstitution(ctx: Context, store: TransientEntityStore) {
-    val institutionId = ctx.pathParam("id")
-
-    /* Create new job. */
-    val institution = store.transactional(true) {
-        try {
-            DbInstitution.findById(institutionId).toApi()
-        } catch (e: Throwable) {
-            throw ErrorStatusException(404, "Institution with ID $institutionId could not be found.")
+        /* Create and connect available collections. */
+        for (collection in request.availableCollections) {
+            val selected = request.selectedCollections.contains(collection)
+            InstitutionsSolrCollections.insert { insert ->
+                insert[InstitutionsSolrCollections.institutionId] = institutionId
+                insert[InstitutionsSolrCollections.solrCollectionId] = SolrCollections.select(SolrCollections.id).where { SolrCollections.name eq collection }.map { it[SolrCollections.id] }.first()
+                insert[InstitutionsSolrCollections.selected] = selected
+            }
         }
+        request.copy(id = institutionId)
     }
 
-    /* Return job object. */
+    /* Return institution object. */
     ctx.json(institution)
 }
 
@@ -205,7 +241,7 @@ fun getInstitution(ctx: Context, store: TransientEntityStore) {
     tags = ["Institution"],
     requestBody = OpenApiRequestBody([OpenApiContent(Institution::class)], required = true),
     pathParams = [
-        OpenApiParam(name = "id", description = "The ID of the institution that should be updated.", required = true)
+        OpenApiParam(name = "id", type = Int::class, description = "The ID of the institution that should be updated.", required = true)
     ],
     responses = [
         OpenApiResponse("200", [OpenApiContent(SuccessStatus::class)]),
@@ -216,80 +252,83 @@ fun getInstitution(ctx: Context, store: TransientEntityStore) {
         OpenApiResponse("500", [OpenApiContent(ErrorStatus::class)])
     ]
 )
-fun putUpdateInstitution(ctx: Context, store: TransientEntityStore) {
-    val institutionId = ctx.pathParam("id")
-    val request = try {
-        ctx.bodyAsClass(Institution::class.java)
-    } catch (e: BadRequestResponse) {
-        throw ErrorStatusException(400, "Malformed request.")
-    }
+fun putUpdateInstitution(ctx: Context) {
+    val institutionId = ctx.pathParam("id").toIntOrNull() ?: throw ErrorStatusException(400,"Malformed institution ID.")
+    val request = ctx.parseBodyOrThrow<Institution>()
 
-    /* Create new job. */
-    val institutionName = store.transactional {
-        val institution = try {
-            DbInstitution.findById(institutionId)
-        } catch (e: Throwable) {
-            throw ErrorStatusException(404, "Institution with ID $institutionId could not be found.")
-        }
+    /* Update existing institution object. */
+    transaction {
+        val institutionName = Institutions.select(Institutions.name).where {
+            Institutions.id eq institutionId
+        }.map {
+            it[Institutions.name]
+        }.firstOrNull() ?: throw ErrorStatusException(404,"Institution with ID $institutionId could not be found.")
 
         /* Make sure, that the current user can actually edit this institution. */
         val currentUser = ctx.currentUser()
-        if (currentUser.role != DbRole.ADMINISTRATOR && currentUser.institution != institution) {
+        if (currentUser.role != Role.ADMINISTRATOR && currentUser.institution?.name != institutionName) {
             throw ErrorStatusException(403, "Institution with ID $institutionId cannot be edited by current user.")
         }
 
-        /* Update institution. */
-        institution.displayName = request.displayName
-        institution.description = request.description
-        institution.isil = request.isil
-        institution.street = request.street
-        institution.city = request.city
-        institution.zip = request.zip
-        institution.email = request.email
-        institution.homepage = request.homepage
-        institution.defaultCopyright = request.defaultCopyright
-        institution.defaultRightStatement = DbRightStatement.filter { it.short eq request.defaultRightStatement }.singleOrNull()
-        institution.defaultObjectUrl = request.defaultObjectUrl
-        institution.changedAt = DateTime.now()
+        /* Perform update . */
+        Institutions.update({ Institutions.id eq institutionId }) { update ->
+            update[displayName] = request.displayName
+            update[description] = request.description
+            update[isil] = request.isil
+            update[street] = request.street
+            update[zip] = request.zip
+            update[email] = request.email
+            update[homepage] = request.homepage
+            update[defaultCopyright] = request.defaultCopyright
+            update[defaultRightsStatement] = request.defaultRightStatement
+            update[defaultObjectUrl] = request.defaultObjectUrl
 
-        /* Applies longitude and latitude, depending on what is available. */
-        if (request.longitude == null || request.latitude == null) {
-            val geocoding = Geocoding.geocode(request.street, request.city, request.zip)
-            if (geocoding != null) {
-                institution.longitude = geocoding.lon
-                institution.latitude = geocoding.lat
+            /* Some data can only be edited by an administrator. */
+            if (currentUser.role == Role.ADMINISTRATOR) {
+                update[name] = request.name
+                update[participantId] = Participants.select(Participants.id).where {
+                    Participants.name eq request.participantName
+                }.map {
+                    it[Participants.id]
+                }.firstOrNull() ?: throw ErrorStatusException(404, "Participant ${request.participantName} could not be found.")
+                update[canton]  = request.canton
+                update[publish]  = request.publish
             }
-        } else {
-            institution.longitude = request.longitude!!
-            institution.latitude = request.latitude!!
+
+            /* Update longitude and latitude. */
+            if (request.longitude == null || request.latitude == null) {
+                val geocoding = Geocoding.geocode(request.street, request.city, request.zip)
+                if (geocoding != null) {
+                    update[longitude] = geocoding.lon
+                    update[latitude] = geocoding.lat
+                }
+            } else {
+                update[longitude] = request.longitude!!
+                update[latitude] = request.latitude!!
+            }
+
+            /* Update modification date. */
+            update[modified] = Instant.now()
         }
 
-        /* Some data can only be edited by an administrator. */
-        if (currentUser.role == DbRole.ADMINISTRATOR) {
-            institution.name = request.name
-            institution.participant = DbParticipant.filter { it.name eq request.participantName }.firstOrNull() ?: throw ErrorStatusException(404, "Participant ${request.participantName} could not be found.")
-            institution.canton = request.canton
-            institution.publish = request.publish
-
-            /* Clear and reconnect available collections. */
-            institution.availableCollections.clear()
-            for (collection in DbCollection.filter { (it.name isIn request.availableCollections) and (it.type.description eq DbCollectionType.OBJECT.description )}.asSequence()) {
-                institution.availableCollections.add(collection)
+        /* Clear and reconnect available collections. */
+        if (currentUser.role == Role.ADMINISTRATOR) {
+            InstitutionsSolrCollections.deleteWhere { InstitutionsSolrCollections.institutionId eq institutionId }
+            for (collection in request.availableCollections) {
+                val selected = request.selectedCollections.contains(collection)
+                InstitutionsSolrCollections.insert { insert ->
+                    insert[InstitutionsSolrCollections.institutionId] = institutionId
+                    insert[InstitutionsSolrCollections.solrCollectionId] = SolrCollections.select(SolrCollections.id).where { SolrCollections.name eq collection }.map { it[SolrCollections.id] }.first()
+                    insert[InstitutionsSolrCollections.selected] = selected
+                }
             }
         }
-
-        /* Clear and reconnect selected collections. */
-        institution.selectedCollections.clear()
-        for (collection in institution.availableCollections.filter { c -> c.name isIn request.selectedCollections }.asSequence()) {
-            institution.selectedCollections.add(collection)
-        }
-
-        institution.name
     }
 
-    /* Return job object. */
-    ctx.json(SuccessStatus("Institution '$institutionName' (id: $institutionId) updated successfully."))
+    /* Return success status. */
+    ctx.json(SuccessStatus("Institution with ID $institutionId updated successfully."))
 }
+
 @OpenApi(
     path = "/api/institutions/{id}/image",
     methods = [HttpMethod.GET],
@@ -297,7 +336,7 @@ fun putUpdateInstitution(ctx: Context, store: TransientEntityStore) {
     operationId = "getInstitutionImage",
     tags = ["Institution"],
     pathParams = [
-        OpenApiParam(name = "id", description = "The ID of the institution the image should be retrieved for.", required = true)
+        OpenApiParam(name = "id", type = Int::class, description = "The ID of the institution the image should be retrieved for.", required = true)
     ],
     responses = [
         OpenApiResponse("200", [
@@ -310,38 +349,45 @@ fun putUpdateInstitution(ctx: Context, store: TransientEntityStore) {
         OpenApiResponse("500", [OpenApiContent(ErrorStatus::class)])
     ]
 )
-fun getImageForInstitution(ctx: Context, store: TransientEntityStore) {
+fun getImageForInstitution(ctx: Context) {
     /* Obtain parameters. */
-    val institutionId = ctx.pathParam("id")
+    val institutionId = ctx.pathParam("id").toIntOrNull() ?: throw ErrorStatusException(400,"Malformed institution ID.")
 
     /* Start transaction */
-    store.transactional(true) {
-        val institution = try {
-            DbInstitution.findById(institutionId)
-        } catch (e: Throwable) {
-            throw ErrorStatusException(404, "Institution with ID $institutionId could not be found.")
-        }
-
-        /* Obtain image name. */
-        val imageName = institution.imageName ?: throw ErrorStatusException(404, "No image found for institution with ID $institutionId.")
-
-        /* Obtain deployment path. */
-        val deployment = institution.availableCollections.mapDistinct { it.solr }.flatMapDistinct { it.deployments }.asSequence().map { it.toApi() }.firstOrNull() ?: throw ErrorStatusException(404, "No deployment found for institution with ID $institutionId.")
-
-        /* Construct image path. */
-        val path = Paths.get(deployment.path).resolve("institutions").resolve(deployment.name).resolve(imageName)
-        if (!Files.exists(path)) {
-            throw ErrorStatusException(404, "No image found for institution with ID $institutionId; missing file.")
-        }
-
-        /* Send back image. */
-        ctx.status(200)
-        when(deployment.format) {
-            ImageFormat.JPEG -> ctx.contentType("image/jpeg")
-            ImageFormat.PNG -> ctx.contentType("image/png")
-        }
-        ctx.result(Files.newInputStream(path, StandardOpenOption.READ))
+    val (imageName, deployment) = transaction {
+        val imageName = Institutions.select(Institutions.imageName).where { Institutions.id eq institutionId }
+            .map { it[Institutions.imageName] }.firstOrNull() ?: throw ErrorStatusException(
+            404,
+            "No image found for institution with ID $institutionId."
+        )
+        val deployment = ImageDeployments.selectAll().where {
+            ImageDeployments.solrInstanceId inSubQuery (InstitutionsSolrCollections innerJoin SolrCollections innerJoin SolrConfigs).select(
+                SolrConfigs.id
+            ).where {
+                (InstitutionsSolrCollections.institutionId) eq institutionId and (InstitutionsSolrCollections.selected eq true)
+            }
+        }.map {
+            it.toImageDeployment()
+        }.firstOrNull() ?: throw ErrorStatusException(
+            404,
+            "No deployment found for institution with ID $institutionId."
+        )
+        imageName to deployment
     }
+
+    /* Construct image path. */
+    val path = Paths.get(deployment.path).resolve("institutions").resolve(deployment.name).resolve(imageName)
+    if (!Files.exists(path)) {
+        throw ErrorStatusException(404, "No image found for institution with ID $institutionId; missing file.")
+    }
+
+    /* Send back image. */
+    ctx.status(200)
+    when(deployment.format) {
+        ImageFormat.JPEG -> ctx.contentType("image/jpeg")
+        ImageFormat.PNG -> ctx.contentType("image/png")
+    }
+    ctx.result(Files.newInputStream(path, StandardOpenOption.READ))
 }
 
 @OpenApi(
@@ -351,7 +397,7 @@ fun getImageForInstitution(ctx: Context, store: TransientEntityStore) {
     operationId = "postInstitutionImage",
     tags = ["Institution"],
     pathParams = [
-        OpenApiParam(name = "id", description = "The ID of the institution the image should be added to.", required = true)
+        OpenApiParam(name = "id", type = Int::class, description = "The ID of the institution the image should be added to.", required = true)
     ],
     requestBody = OpenApiRequestBody(content = [
         OpenApiContent(mimeType = ContentType.FORM_DATA_MULTIPART, properties = [OpenApiContentProperty(name = "image", type = "string", format = "binary")])
@@ -364,9 +410,9 @@ fun getImageForInstitution(ctx: Context, store: TransientEntityStore) {
         OpenApiResponse("500", [OpenApiContent(ErrorStatus::class)])
     ]
 )
-fun postUploadImageForInstitution(ctx: Context, store: TransientEntityStore) {
+fun postUploadImageForInstitution(ctx: Context) {
     /* Obtain parameters. */
-    val institutionId = ctx.pathParam("id")
+    val institutionId = ctx.pathParam("id").toIntOrNull() ?: throw ErrorStatusException(400,"Malformed institution ID.")
     val files = ctx.uploadedFiles()
     val delete = mutableListOf<Path>()
 
@@ -374,34 +420,32 @@ fun postUploadImageForInstitution(ctx: Context, store: TransientEntityStore) {
     if (files.isEmpty()) throw ErrorStatusException(401, "Uploaded file is missing.")
 
     /* Start transaction */
-    store.transactional {
-        val institution = try {
-            DbInstitution.findById(institutionId)
-        } catch (e: Throwable) {
-            throw ErrorStatusException(404, "Institution with ID $institutionId could not be found.")
+    transaction {
+        val institution = Institutions.selectAll().where { Institutions.id eq institutionId }.map { it.toInstitution() }.firstOrNull() ?: throw ErrorStatusException(404, "No Institution with ID $institutionId found.")
+        val deployments = ImageDeployments.selectAll().where {
+            ImageDeployments.solrInstanceId inSubQuery (InstitutionsSolrCollections innerJoin SolrCollections innerJoin SolrConfigs).select(SolrConfigs.id).where{
+                (InstitutionsSolrCollections.institutionId) eq institutionId and (InstitutionsSolrCollections.selected eq true)
+            }
+        }.map {
+            it.toImageDeployment()
         }
 
-        /* List of deployment paths. */
-        val deployments = institution.availableCollections.mapDistinct {
-            it.solr
-        }.flatMapDistinct {
-            it.deployments
-        }.asSequence().map { it.toApi() }.toList()
+        /* Sanity check. */
         if (deployments.isEmpty()) {
-            throw ErrorStatusException(400, "No deployment configuration found for institution-")
+            throw ErrorStatusException(400, "No deployment configuration found for institution with ID $institutionId.")
         }
 
         /* Define file names. */
         val oldFilename = institution.imageName
-        val filename = "${institution.xdId}-${System.currentTimeMillis()}.jpg"
+        val filename = "${institution.id}-${System.currentTimeMillis()}.jpg"
 
         /* Process images. */
         for (f in ctx.uploadedFiles()) {
             /* Open image. */
             val image = try {
                 ImmutableImage.loader().fromStream(f.content())
-            } catch (e: IOException) {
-                throw ErrorStatusException(400, "Uploaded image file could not be opened.")
+            } catch (_: IOException) {
+                throw ErrorStatusException(400, "Uploaded image file could not be opened due to unhandled exception.")
             }
 
             /* Deploy files. */
@@ -412,6 +456,7 @@ fun postUploadImageForInstitution(ctx: Context, store: TransientEntityStore) {
                 } else {
                     image.scaleToHeight(d.maxSize)
                 }
+
                 /* Mark old file for deletion. */
                 val path = Paths.get(d.path).resolve("institutions").resolve(d.name).resolve(filename)
                 if (oldFilename != null) {
@@ -426,13 +471,16 @@ fun postUploadImageForInstitution(ctx: Context, store: TransientEntityStore) {
 
                     /* Write image. */
                     ImageHandler.store(scaled, image.metadata, JpegWriter.Default, path)
-                }  catch (e: IOException) {
-                    throw ErrorStatusException(400, "Could not deploy image.")
+                }  catch (_: IOException) {
+                    throw ErrorStatusException(500, "Could not deploy image due to unhandled exception.")
                 }
             }
 
             /* Update image name. */
-            institution.imageName = filename
+            Institutions.update({ Institutions.id eq institutionId }) { update ->
+                update[Institutions.imageName] = filename
+                update[modified] = Instant.now()
+            }
 
             /* One image is enough. */
             break
@@ -454,7 +502,7 @@ fun postUploadImageForInstitution(ctx: Context, store: TransientEntityStore) {
     operationId = "deleteInstitution",
     tags = ["Institution"],
     pathParams = [
-        OpenApiParam(name = "id", description = "The ID of the institution that should be deleted.", required = true)
+        OpenApiParam(name = "id", type = Int::class, description = "The ID of the institution that should be deleted.", required = true)
     ],
     responses = [
         OpenApiResponse("200", [OpenApiContent(SuccessStatus::class)]),
@@ -464,19 +512,16 @@ fun postUploadImageForInstitution(ctx: Context, store: TransientEntityStore) {
         OpenApiResponse("500", [OpenApiContent(ErrorStatus::class)])
     ]
 )
-fun deleteInstitution(ctx: Context, store: TransientEntityStore) {
-    val institutionId = ctx.pathParam("id")
-    val institutionName = store.transactional {
-        val institution = try {
-            DbInstitution.findById(institutionId)
-        } catch (e: Throwable) {
-            throw ErrorStatusException(404, "Institution with ID $institutionId could not be found.")
-        }
-        val name = institution.name
-        institution.delete()
-        name
+fun deleteInstitution(ctx: Context) {
+    val institutionId = ctx.pathParam("id").toIntOrNull() ?: throw ErrorStatusException(400,"Malformed institution ID.")
+    val deleted = transaction {
+        Institutions.deleteWhere { Institutions.id eq institutionId }
     }
-    ctx.json(SuccessStatus("Institution '$institutionName' (id: $institutionId) deleted successfully."))
+    if (deleted > 0) {
+        ctx.json(SuccessStatus("Institution with ID $institutionId deleted successfully."))
+    } else {
+        ctx.json(ErrorStatus(404, "Institution with ID $institutionId could not be deleted because it doesn't exist."))
+    }
 }
 
 

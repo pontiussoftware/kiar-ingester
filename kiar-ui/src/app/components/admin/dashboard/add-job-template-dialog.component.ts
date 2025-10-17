@@ -18,17 +18,17 @@ export class AddJobTemplateDialogComponent {
       type: new FormControl(JobType.KIAR, [Validators.required]),
       startAutomatically: new FormControl(false),
       participantName: new FormControl('', [Validators.required]),
-      entityMappingName: new FormControl('', [Validators.required]),
-      solrConfigName: new FormControl('', [Validators.required]),
+      mapping: new FormControl<EntityMapping | null>(null, [Validators.required]),
+      config: new FormControl<ApacheSolrConfig | null>(null, [Validators.required]),
   })
 
   /** An {@link Observable} of available {@link JobTemplate}. */
   public readonly mappings: Observable<Array<EntityMapping>>
 
-  /** An {@link Observable} of available {@link SolrConfig}. */
+  /** An {@link Observable} of available {@link ApacheSolrConfig}. */
   public readonly solr: Observable<Array<ApacheSolrConfig>>
 
-  /** An {@link Observable} of available {@link SolrConfig}. */
+  /** An {@link Observable} of available {@link JobType}. */
   public readonly types: Observable<Array<JobType>>
 
   /** An {@link Observable} of available participants. */
@@ -36,9 +36,9 @@ export class AddJobTemplateDialogComponent {
 
   constructor(private config: ConfigService, private dialogRef: MatDialogRef<AddJobTemplateDialogComponent>) {
       this.mappings = this.config.getListEntityMappings().pipe(shareReplay(1))
-    this.solr = this.config.getListSolrConfiguration().pipe(shareReplay(1))
-    this.types = this.config.getListJobTemplateTypes().pipe(shareReplay(1))
-    this.participants = this.config.getListParticipants().pipe(shareReplay(1))
+      this.solr = this.config.getListSolrConfiguration().pipe(shareReplay(1))
+      this.types = this.config.getListJobTemplateTypes().pipe(shareReplay(1))
+      this.participants = this.config.getListParticipants().pipe(shareReplay(1))
   }
 
   /**
@@ -52,9 +52,11 @@ export class AddJobTemplateDialogComponent {
         type: this.formControl.get('type')?.value as JobType,
         startAutomatically: this.formControl.get('startAutomatically')?.value,
         participantName: this.formControl.get('participantName')?.value,
-        entityMappingName: this.formControl.get('entityMappingName')?.value,
-        solrConfigName: this.formControl.get('solrConfigName')?.value,
-        transformers: []
+        mapping: this.formControl.get('mapping')?.value,
+        config: this.formControl.get('config')?.value,
+        transformers: [],
+          createdAt: -1,
+          changedAt: -1
       } as JobTemplate
       this.dialogRef.close(object)
     }

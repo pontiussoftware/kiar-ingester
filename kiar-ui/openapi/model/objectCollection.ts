@@ -7,16 +7,20 @@
  * https://openapi-generator.tech
  * Do not edit the class manually.
  */
+import {Institution} from './institution';
 
 
 export interface ObjectCollection { 
-    id?: string | null;
+    id?: number | null;
+    uuid?: string | null;
     name: string;
     displayName: string;
     publish: boolean;
-    institutionName: string;
     description: string;
+    institution?: Institution;
     filters: Array<string>;
     images: Array<string>;
+    createdAt?: number | null;
+    changedAt?: number | null;
 }
 

@@ -11,7 +11,7 @@ import kotlinx.serialization.Serializable
  */
 @Serializable
 data class PaginatedJobResult (
-    override val total: Int,
+    override val total: Long,
     override val page: Int,
     override val pageSize: Int,
     override val results: List<Job>

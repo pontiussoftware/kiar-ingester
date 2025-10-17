@@ -14,7 +14,6 @@ api/masterdata.service.ts
 api/oAI.service.ts
 api/participant.service.ts
 api/session.service.ts
-api/transformer.service.ts
 api/user.service.ts
 configuration.ts
 encoder.ts

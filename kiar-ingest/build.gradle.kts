@@ -2,6 +2,7 @@ val bcryptVersion: String by project
 val caffeineVersion: String by project
 val cliktVersion: String by project
 val commonsImagingVersion: String by project
+val exposedVersion: String by project
 val javalinVersion: String by project
 val jlineVersion: String by project
 val jsonPathVersion: String by project
@@ -11,10 +12,10 @@ val log4jVersion: String by project
 val picnicVersion: String by project
 val poiVersion: String by project
 val scrimageVersion: String by project
-val solrjVersion: String by project
 val slf4jVersion: String by project
-val xodusVersion: String by project
-val xodusDnqVersion: String by project
+val solrjVersion: String by project
+val sqliteVersion: String by project
+
 
 plugins {
     id("kotlin-kapt")
@@ -85,12 +86,12 @@ dependencies {
     implementation("io.javalin.community.ssl:ssl-plugin:$javalinVersion")
     kapt("io.javalin.community.openapi:openapi-annotation-processor:$javalinVersion")
 
-    /** Xodus & Xodus DNQ */
-    implementation("org.jetbrains.xodus:xodus-openAPI:$xodusVersion")
-    implementation("org.jetbrains.xodus:xodus-environment:$xodusVersion")
-    implementation("org.jetbrains.xodus:xodus-entity-store:$xodusVersion")
-    implementation("org.jetbrains.xodus:xodus-vfs:$xodusVersion")
-    implementation("org.jetbrains.xodus:dnq:$xodusDnqVersion")
+    /** SQLite + Kotlin Exposed */
+    implementation("org.xerial:sqlite-jdbc:${sqliteVersion}")
+    implementation("org.jetbrains.exposed:exposed-core:${exposedVersion}")
+    implementation("org.jetbrains.exposed:exposed-jdbc:${exposedVersion}")
+    implementation("org.jetbrains.exposed:exposed-java-time:${exposedVersion}")
+    implementation("org.jetbrains.exposed:exposed-json:${exposedVersion}")
 
     /** CLI. */
     implementation("com.github.ajalt.clikt:clikt:$cliktVersion")

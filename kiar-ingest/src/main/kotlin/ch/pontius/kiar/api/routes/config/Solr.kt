@@ -1,31 +1,27 @@
 package ch.pontius.kiar.api.routes.config
 
 import ch.pontius.kiar.api.model.config.image.ImageDeployment
-import ch.pontius.kiar.api.model.config.image.ImageFormat
 import ch.pontius.kiar.api.model.config.solr.ApacheSolrCollection
 import ch.pontius.kiar.api.model.config.solr.ApacheSolrConfig
+import ch.pontius.kiar.api.model.config.solr.SolrConfigId
 import ch.pontius.kiar.api.model.status.ErrorStatus
 import ch.pontius.kiar.api.model.status.ErrorStatusException
 import ch.pontius.kiar.api.model.status.SuccessStatus
-import ch.pontius.kiar.config.CollectionConfig
-import ch.pontius.kiar.database.config.jobs.DbJobTemplate
-import ch.pontius.kiar.database.config.solr.DbCollection
-import ch.pontius.kiar.database.config.solr.DbImageDeployment
-import ch.pontius.kiar.database.config.solr.DbImageFormat
-import ch.pontius.kiar.database.config.solr.DbSolr
-import ch.pontius.kiar.database.config.transformers.DbTransformer
-import ch.pontius.kiar.utilities.mapToArray
-import ch.pontius.kiar.utilities.withSuffix
-import io.javalin.http.BadRequestResponse
+import ch.pontius.kiar.database.config.ImageDeployments
+import ch.pontius.kiar.database.config.ImageDeployments.toImageDeployment
+import ch.pontius.kiar.database.config.SolrCollections
+import ch.pontius.kiar.database.config.SolrCollections.toSolrCollection
+import ch.pontius.kiar.database.config.SolrConfigs
+import ch.pontius.kiar.database.config.SolrConfigs.toSolr
+import ch.pontius.kiar.utilities.extensions.parseBodyOrThrow
+import ch.pontius.kiar.utilities.extensions.withSuffix
 import io.javalin.http.Context
 import io.javalin.openapi.*
-import jetbrains.exodus.database.TransientEntityStore
-import kotlinx.dnq.query.asSequence
-import kotlinx.dnq.query.filter
-import kotlinx.dnq.query.firstOrNull
-import kotlinx.dnq.query.sortedBy
-import kotlinx.dnq.util.findById
-import org.joda.time.DateTime
+import org.jetbrains.exposed.v1.core.SortOrder
+import org.jetbrains.exposed.v1.core.eq
+import org.jetbrains.exposed.v1.jdbc.*
+import org.jetbrains.exposed.v1.jdbc.transactions.transaction
+import java.time.Instant
 
 @OpenApi(
     path = "/api/solr",
@@ -41,31 +37,61 @@ import org.joda.time.DateTime
         OpenApiResponse("500", [OpenApiContent(ErrorStatus::class)]),
     ]
 )
-fun listSolrConfigurations(ctx: Context, store: TransientEntityStore) {
-    store.transactional (true) {
-        ctx.json(DbSolr.all().sortedBy(DbSolr::name).mapToArray { it.toApi() })
+fun listSolrConfigurations(ctx: Context) {
+    val results = transaction {
+        SolrConfigs.selectAll().orderBy(SolrConfigs.name to SortOrder.ASC).map { it.toSolr() }
     }
+    ctx.json(results.toTypedArray())
 }
 
 @OpenApi(
-    path = "/api/solr/formats",
+    path = "/api/solr/collections",
     methods = [HttpMethod.GET],
-    summary = "Lists all available formats available for image deployment.",
-    operationId = "getListImageFormats",
-    tags = ["Config",  "Apache Solr"],
+    summary = "Lists all available Apache Solr collections.",
+    operationId = "getListSolrCollections",
+    tags = ["Config", "Apache Solr"],
     pathParams = [],
     responses = [
-        OpenApiResponse("200", [OpenApiContent(Array<ImageFormat>::class)]),
+        OpenApiResponse("200", [OpenApiContent(Array<ApacheSolrCollection>::class)]),
         OpenApiResponse("401", [OpenApiContent(ErrorStatus::class)]),
         OpenApiResponse("403", [OpenApiContent(ErrorStatus::class)]),
         OpenApiResponse("500", [OpenApiContent(ErrorStatus::class)]),
     ]
 )
-fun listFormats(ctx: Context, store: TransientEntityStore) {
-    store.transactional (true) {
-        val parsers = DbImageFormat.all()
-        ctx.json(parsers.mapToArray { it.toApi() })
+fun listSolrCollections(ctx: Context) {
+    val results = transaction {
+        SolrCollections.selectAll().orderBy(SolrCollections.name to SortOrder.ASC).map { it.toSolrCollection() }
     }
+    ctx.json(results.toTypedArray())
+}
+
+@OpenApi(
+    path = "/api/solr/{id}",
+    methods = [HttpMethod.GET],
+    summary = "Retrieves all the details about an Apache Solr configuration.",
+    operationId = "getSolrConfig",
+    tags = ["Config", "Apache Solr"],
+    pathParams = [
+        OpenApiParam(name = "id", type = Int::class, description = "The ID of the Apache Solr configuration that should be deleted.", required = true)
+    ],
+    responses = [
+        OpenApiResponse("200", [OpenApiContent(ApacheSolrConfig::class)]),
+        OpenApiResponse("400", [OpenApiContent(ErrorStatus::class)]),
+        OpenApiResponse("401", [OpenApiContent(ErrorStatus::class)]),
+        OpenApiResponse("403", [OpenApiContent(ErrorStatus::class)]),
+        OpenApiResponse("404", [OpenApiContent(ErrorStatus::class)]),
+        OpenApiResponse("500", [OpenApiContent(ErrorStatus::class)])
+    ]
+)
+fun getSolrConfig(ctx: Context) {
+    val solrId = ctx.pathParam("id").toIntOrNull() ?: throw ErrorStatusException(400, "Malformed Apache Solr Configuration ID.")
+    val config = transaction {
+        val config = SolrConfigs.selectAll().where { SolrConfigs.id eq solrId }.map { it.toSolr() }.firstOrNull() ?: throw ErrorStatusException(404, "Could not find Apache Solr Configuration with ID $solrId.")
+        val collections = SolrCollections.selectAll().where { SolrCollections.solrInstanceId eq config.id }.map { it.toSolrCollection() }
+        val deployments = ImageDeployments.selectAll().where { ImageDeployments.solrInstanceId eq config.id }.map { it.toImageDeployment() }
+        config.copy(collections = collections,  deployments = deployments)
+    }
+    ctx.json(config)
 }
 
 @OpenApi(
@@ -84,89 +110,27 @@ fun listFormats(ctx: Context, store: TransientEntityStore) {
         OpenApiResponse("500", [OpenApiContent(ErrorStatus::class)]),
     ]
 )
-fun createSolrConfig(ctx: Context, store: TransientEntityStore) {
-    val request = try {
-        ctx.bodyAsClass(ApacheSolrConfig::class.java)
-    } catch (e: BadRequestResponse) {
-        throw ErrorStatusException(400, "Malformed request body.")
-    }
-    val created = store.transactional {
-        /* Update basic properties. */
-        val solr = DbSolr.new {
-            name = request.name
-            server = request.server
-            publicServer = request.publicServer
-            username = request.username
-            password = request.password
-            createdAt = DateTime.now()
-            changedAt = DateTime.now()
-        }
+fun createSolrConfig(ctx: Context) {
+    val request = ctx.parseBodyOrThrow<ApacheSolrConfig>()
+    val created = transaction {
+        val solrConfigId = SolrConfigs.insertAndGetId { config ->
+            config[name] = request.name
+            config[server] = request.server
+            config[publicServer] = request.publicServer
+            config[username] = request.username
+            config[password] = request.password
+        }.value
 
-        /* Now merge collection data. */
-        solr.mergeCollections(request.collections)
-        solr.mergeDeployments(request.deployments)
-        solr.toApi()
+        /* Create collection entries. */
+        mergeCollections(solrConfigId, request.collections)
+
+        /* Create deployment entries. */
+        mergeDeployments(solrConfigId, request.deployments)
+
+        /* Return copy with ID. */
+        request.copy(id = solrConfigId)
     }
     ctx.json(created)
-}
-
-@OpenApi(
-    path = "/api/solr/{id}",
-    methods = [HttpMethod.GET],
-    summary = "Retrieves all the details about an Apache Solr configuration.",
-    operationId = "getSolrConfig",
-    tags = ["Config", "Apache Solr"],
-    pathParams = [
-        OpenApiParam(name = "id", description = "The ID of the Apache Solr configuration that should be deleted.", required = true)
-    ],
-    responses = [
-        OpenApiResponse("200", [OpenApiContent(ApacheSolrConfig::class)]),
-        OpenApiResponse("401", [OpenApiContent(ErrorStatus::class)]),
-        OpenApiResponse("403", [OpenApiContent(ErrorStatus::class)]),
-        OpenApiResponse("404", [OpenApiContent(ErrorStatus::class)]),
-        OpenApiResponse("500", [OpenApiContent(ErrorStatus::class)])
-    ]
-)
-fun getSolrConfig(ctx: Context, store: TransientEntityStore) {
-    val solrId = ctx.pathParam("id")
-    val mapping = store.transactional(true) {
-        try {
-            DbSolr.findById(solrId).toApi()
-        } catch (e: Throwable) {
-            throw ErrorStatusException(404, "Apache Solr configuration with ID $solrId could not be found.")
-        }
-    }
-    ctx.json(mapping)
-}
-
-@OpenApi(
-    path = "/api/solr/{id}",
-    methods = [HttpMethod.DELETE],
-    summary = "Deletes an existing Apache Solr configuration.",
-    operationId = "deleteSolrConfig",
-    tags = ["Config", "Apache Solr"],
-    pathParams = [
-        OpenApiParam(name = "id", description = "The ID of the Apache Solr configuration that should be deleted.", required = true)
-    ],
-    responses = [
-        OpenApiResponse("200", [OpenApiContent(SuccessStatus::class)]),
-        OpenApiResponse("401", [OpenApiContent(ErrorStatus::class)]),
-        OpenApiResponse("403", [OpenApiContent(ErrorStatus::class)]),
-        OpenApiResponse("404", [OpenApiContent(ErrorStatus::class)]),
-        OpenApiResponse("500", [OpenApiContent(ErrorStatus::class)])
-    ]
-)
-fun deleteSolrConfig(ctx: Context, store: TransientEntityStore) {
-    val solrId = ctx.pathParam("id")
-    store.transactional {
-        val mapping = try {
-            DbSolr.findById(solrId)
-        } catch (e: Throwable) {
-            throw ErrorStatusException(404, "Apache Solr configuration with ID $solrId could not be found.")
-        }
-        mapping.delete()
-    }
-    ctx.json(SuccessStatus("Apache Solr configuration $solrId deleted successfully."))
 }
 
 @OpenApi(
@@ -176,7 +140,7 @@ fun deleteSolrConfig(ctx: Context, store: TransientEntityStore) {
     operationId = "updateSolrConfig",
     tags = ["Config", "Apache Solr"],
     pathParams = [
-        OpenApiParam(name = "id", description = "The ID of the Apache Solr configuration that should be updated.", required = true)
+        OpenApiParam(name = "id", type = Int::class, description = "The ID of the Apache Solr configuration that should be updated.", required = true)
     ],
     requestBody = OpenApiRequestBody([OpenApiContent(ApacheSolrConfig::class)], required = true),
     responses = [
@@ -188,98 +152,109 @@ fun deleteSolrConfig(ctx: Context, store: TransientEntityStore) {
         OpenApiResponse("500", [OpenApiContent(ErrorStatus::class)])
     ]
 )
-fun updateSolrConfig(ctx: Context, store: TransientEntityStore) {
+fun updateSolrConfig(ctx: Context) {
     /* Extract the ID and the request body. */
-    val solrId = ctx.pathParam("id")
-    val request = try {
-        ctx.bodyAsClass(ApacheSolrConfig::class.java)
-    } catch (e: Throwable) {
-        throw ErrorStatusException(400, "Malformed request body.")
-    }
+    val solrId = ctx.pathParam("id").toIntOrNull() ?: throw ErrorStatusException(400, "Malformed Apache Solr Configuration ID.")
+    val request = ctx.parseBodyOrThrow<ApacheSolrConfig>()
 
     /* Start transaction and apply changes. */
-    val updated = store.transactional {
-        val solr = try {
-            DbSolr.findById(solrId)
-        } catch (e: Throwable) {
-            throw ErrorStatusException(404, "Apache Solr configuration with ID $solrId could not be found.")
+    transaction {
+        SolrConfigs.update({ SolrConfigs.id eq solrId }) { config ->
+            config[name] = request.name
+            config[description] = request.description
+            config[server] = request.server.withSuffix("/")
+            config[publicServer] = request.publicServer
+            config[username] = request.username
+            config[password] = request.password
+            config[modified] = Instant.now()
         }
 
-        /* Update basic properties. */
-        solr.name = request.name
-        solr.description = request.description
-        solr.server = request.server.withSuffix("/")
-        solr.publicServer = request.publicServer?.withSuffix("/")
-        solr.username = request.username
-        solr.password = request.password
-        solr.changedAt = DateTime.now()
+        /* Create collection entries. */
+        mergeCollections(solrId, request.collections)
 
-        /* Now merge attribute mappings. */
-        solr.mergeCollections(request.collections)
-        solr.mergeDeployments(request.deployments)
-        solr.toApi()
+        /* Create deployment entries. */
+        mergeDeployments(solrId, request.deployments)
     }
 
-    ctx.json(updated)
+    ctx.json(request)
+}
+
+@OpenApi(
+    path = "/api/solr/{id}",
+    methods = [HttpMethod.DELETE],
+    summary = "Deletes an existing Apache Solr configuration.",
+    operationId = "deleteSolrConfig",
+    tags = ["Config", "Apache Solr"],
+    pathParams = [
+        OpenApiParam(name = "id", type = Int::class, description = "The ID of the Apache Solr configuration that should be deleted.", required = true)
+    ],
+    responses = [
+        OpenApiResponse("200", [OpenApiContent(SuccessStatus::class)]),
+        OpenApiResponse("401", [OpenApiContent(ErrorStatus::class)]),
+        OpenApiResponse("403", [OpenApiContent(ErrorStatus::class)]),
+        OpenApiResponse("404", [OpenApiContent(ErrorStatus::class)]),
+        OpenApiResponse("500", [OpenApiContent(ErrorStatus::class)])
+    ]
+)
+fun deleteSolrConfig(ctx: Context) {
+    val solrId = ctx.pathParam("id").toIntOrNull() ?: throw ErrorStatusException(400, "Malformed configuration ID")
+    val deleted = transaction {
+        SolrCollections.deleteWhere { SolrCollections.id eq solrId }
+    }
+    if (deleted > 0) {
+        ctx.json(SuccessStatus("Apache Solr configuration $solrId deleted successfully."))
+    } else {
+        ctx.json(ErrorStatus(404, "Apache Solr configuration with ID $solrId could not be found."))
+    }
 }
 
 /**
- * Overrides a [DbSolr]'s [DbCollection]s using the provided list.
+ * Overrides all [ApacheSolrCollection]s for the given [SolrConfigId]. Used during insert and update.
  *
- * @param collections [List] of [CollectionConfig]s to merge [DbSolr] with.
+ * @param solrConfigId [SolrConfigId] of the [ApacheSolrConfig]
+ * @param collections [List] of [ApacheSolrCollection]s to merge.
  */
-private fun DbSolr.mergeCollections(collections: List<ApacheSolrCollection>) {
-    /* Update and/or add collections. */
+private fun mergeCollections(solrConfigId: SolrConfigId, collections: List<ApacheSolrCollection>) {
+    /* Delete all existing entries. */
+    SolrCollections.deleteWhere { SolrCollections.solrInstanceId eq solrConfigId }
+
+    /* Re-create entries. */
     for (c in collections) {
-        var collection = this.collections.filter { it.name eq c.name }.firstOrNull()
-        if (collection == null) {
-            collection = DbCollection.new {  }
-            this.collections.add(collection)
-        }
-
-        /* Update attributes. */
-        collection.name = c.name
-        collection.displayName = c.displayName
-        collection.type = c.type.toDb()
-        collection.selector = c.selector
-        collection.deleteBeforeIngest = c.deleteBeforeIngest
-        collection.oai = c.oai
-    }
-
-    /* Delete collections that have been removed. */
-    for (c in this.collections.asSequence()) {
-        if (collections.none { it.name == c.name }) {
-            c.delete()
+        SolrCollections.insert { collection ->
+            if (c.id != null) collection[SolrCollections.id] = c.id
+            collection[SolrCollections.solrInstanceId] = solrConfigId
+            collection[SolrCollections.name] = c.name
+            collection[SolrCollections.displayName] = c.displayName
+            collection[SolrCollections.type] = c.type
+            collection[SolrCollections.selector] = c.selector
+            collection[SolrCollections.deleteBeforeIngest] = c.deleteBeforeIngest
+            collection[SolrCollections.oai] = c.oai
         }
     }
 }
 
 /**
- * Overrides a [DbJobTemplate]'s [DbTransformer]s using the provided list.
+ * Overrides all [ImageDeployment]s for the given [SolrConfigId]. Used during insert and update.
  *
- * @param deployments [List] of [ImageDeployment]s to merge [DbJobTemplate] with.
+ * @param solrConfigId [SolrConfigId] of the [ApacheSolrConfig]
+ * @param deployments [List] of [ImageDeployment]s to merge.
  */
-private fun DbSolr.mergeDeployments(deployments: List<ImageDeployment>) {
+private fun mergeDeployments(solrConfigId: SolrConfigId, deployments: List<ImageDeployment>) {
+    /* Delete all existing entries. */
+    ImageDeployments.deleteWhere { ImageDeployments.solrInstanceId eq solrConfigId }
+
+    /* Re-create entries. */
     for (d in deployments) {
-        var deployment = this.deployments.filter { it.name eq d.name }.firstOrNull()
-        if (deployment == null) {
-            deployment = DbImageDeployment.new {  }
-            this.deployments.add(deployment)
-        }
+        ImageDeployments.insert { deployment ->
+            if (d.id != null) deployment[ImageDeployments.id] = d.id
+            deployment[ImageDeployments.solrInstanceId] = solrConfigId
+            deployment[ImageDeployments.name] = d.name
+            deployment[ImageDeployments.format] = d.format
+            deployment[ImageDeployments.src] = d.source
+            deployment[ImageDeployments.server] = d.server?.withSuffix("/")
+            deployment[ImageDeployments.path] = d.path
+            deployment[ImageDeployments.maxSize] = d.maxSize
 
-        /* Update attributes. */
-        deployment.name = d.name
-        deployment.format = d.format.toDb()
-        deployment.source = d.source
-        deployment.server = d.server?.withSuffix("/")
-        deployment.path = d.path
-        deployment.maxSize = d.maxSize
-    }
-
-    /* Delete deployments that have been removed. */
-    for (d in this.deployments.asSequence()) {
-        if (deployments.none { it.name == d.name }) {
-            d.delete()
         }
     }
 }

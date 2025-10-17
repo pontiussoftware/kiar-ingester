@@ -32,9 +32,9 @@
 
     <mat-form-field appearance="fill" [style.width]="'15%'">
       <mat-label i18n="@@LabelEntityMapping">Entity Mapping</mat-label>
-      <mat-select formControlName="entityMappingName">
-        @for (mapping of (mappings | async); track mapping) {
-          <mat-option [value]="mapping.name">
+      <mat-select formControlName="mapping">
+        @for (mapping of (mappings | async); track mapping.id) {
+          <mat-option [value]="mapping">
             {{mapping.name}}
           </mat-option>
         }
@@ -43,9 +43,9 @@
 
     <mat-form-field appearance="fill" [style.width]="'15%'">
       <mat-label i18n="@@ApacheSolrConfig">Apache Solr Config</mat-label>
-      <mat-select formControlName="solrConfigName">
-        @for (config of (solr | async); track config) {
-          <mat-option [value]="config.name">
+      <mat-select formControlName="config">
+        @for (config of (solr | async); track config.id) {
+          <mat-option [value]="config">
             {{config.name}}
           </mat-option>
         }

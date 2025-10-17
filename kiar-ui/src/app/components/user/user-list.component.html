@@ -27,7 +27,7 @@
   <!-- Institution Column -->
   <ng-container matColumnDef="institution" i18n="@@LabelInstitution">
     <th mat-header-cell *matHeaderCellDef>Institution</th>
-    <td mat-cell *matCellDef="let element">{{element.institution}}</td>
+    <td mat-cell *matCellDef="let element">{{element?.institution?.name}}</td>
   </ng-container>
 
   <!-- Active Column-->

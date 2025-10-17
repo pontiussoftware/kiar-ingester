@@ -2,6 +2,8 @@ package ch.pontius.kiar.api.model.config.solr
 
 import kotlinx.serialization.Serializable
 
+typealias SolrCollectionId = Int
+
 /**
  * Configuration regarding an Apache Solr collection.
  *
@@ -10,6 +12,9 @@ import kotlinx.serialization.Serializable
  */
 @Serializable
 data class ApacheSolrCollection(
+    /** Optional [SolrCollectionId] of the [ApacheSolrCollection] entry. */
+    val id: SolrCollectionId? = null,
+
     /** The name of the Apache Solr collection. */
     val name: String,
 

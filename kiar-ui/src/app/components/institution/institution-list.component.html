@@ -13,8 +13,8 @@
     <mat-icon>sync</mat-icon>
   </button>
   <mat-menu #menu="matMenu" class=".collection-menu">
-    @for (collection of (collections |async ) ?? []; track collection) {
-      <button mat-menu-item (click)="synchronize(collection[0], collection[1])">{{collection[0]}} > {{collection[1]}}</button>
+    @for (collection of (collections | async ) ?? []; track collection) {
+      <button mat-menu-item (click)="synchronize(collection)">{{collection.name}} (ID: {{collection.id}})</button>
     }
   </mat-menu>
 
