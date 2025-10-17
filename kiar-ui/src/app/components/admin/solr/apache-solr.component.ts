@@ -36,8 +36,8 @@ export class ApacheSolrComponent implements AfterViewInit{
   public formControl = new FormGroup({
     name: new FormControl('', [Validators.required]),
     description: new FormControl(''),
-    server: new FormControl('', [Validators.required, Validators.pattern('(https?://)?([\\da-z.-]+)\\.([a-z.]{2,6})[/\\w .-]*/?')]),
-    publicServer: new FormControl('', [Validators.pattern('(https?://)?([\\da-z.-]+)\\.([a-z.]{2,6})[/\\w .-]*/?')]),
+    server: new FormControl('', [Validators.required, Validators.pattern('((https|http)://)?([\\da-z.-]+)\\.([a-z.]{2,6})[/\\w .-]*/?')]),
+    publicServer: new FormControl('', [Validators.pattern('((https|http)://)?([\\da-z.-]+)\\.([a-z.]{2,6})[/\\w .-]*/?')]),
     username: new FormControl(''),
     password: new FormControl(''),
     collections: new FormArray(this.collections),
@@ -211,7 +211,7 @@ export class ApacheSolrComponent implements AfterViewInit{
         name: new FormControl(collection.name ?? '', [Validators.required]),
         type: new FormControl(collection.type ?? '', [Validators.required]),
         selector: new FormControl(collection.selector ?? ''),
-        oai: new FormControl(collection.oai ?? false)
+        oai: new FormControl({ value: collection.oai ?? false, disabled: collection.type !== 'OBJECT' }),
       }))
     }
 
