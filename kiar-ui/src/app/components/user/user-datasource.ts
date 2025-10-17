@@ -50,11 +50,11 @@ export class UserDataSource implements DataSource<User> {
    * @param orderDir The sort order direction.
    */
   public load(page: number, pageSize: number, order: string, orderDir: string = 'asc') {
-    this.service.getUsers(page, pageSize, order, orderDir).subscribe(
-        (next) => {
-          this.total.next(next.total)
-          this.data.next(next.results)
-        }
-    )
-  }
+      this.service.getUsers(page, pageSize, order, orderDir).subscribe(
+          (next) => {
+            this.total.next(next.total)
+            this.data.next(next.results)
+          }
+      )
+    }
 }

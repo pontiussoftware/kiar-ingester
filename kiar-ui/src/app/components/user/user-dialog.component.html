@@ -31,10 +31,10 @@
 
     <mat-form-field appearance="fill" [style.width]="'50%'">
       <mat-label i18n="@@LabelInstitution">Institution</mat-label>
-      <mat-select formControlName="institutionName">
-        @for (institution of (institutions | async); track institution) {
+      <mat-select formControlName="institution">
+        @for (institution of (institutions | async); track institution.id) {
           <mat-option [value]="institution">
-            {{institution}}
+            {{ institution.name}}
           </mat-option>
         }
       </mat-select>

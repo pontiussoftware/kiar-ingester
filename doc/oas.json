@@ -181,24 +181,15 @@
         "summary" : "Synchronizes object collections with an Apache Solr backend.",
         "operationId" : "postSynchronizeCollections",
         "parameters" : [ {
-          "name" : "solr",
+          "name" : "collectionId",
           "in" : "query",
-          "description" : "Name of the Apache Solr configuration to use.",
+          "description" : "The ID  of the Apache Solr configuration to use.",
           "required" : true,
           "deprecated" : false,
           "allowEmptyValue" : false,
           "schema" : {
-            "type" : "string"
-          }
-        }, {
-          "name" : "collection",
-          "in" : "query",
-          "description" : "The name of the collection to synchronize with.",
-          "required" : true,
-          "deprecated" : false,
-          "allowEmptyValue" : false,
-          "schema" : {
-            "type" : "string"
+            "type" : "integer",
+            "format" : "int32"
           }
         } ],
         "responses" : {
@@ -270,7 +261,8 @@
           "deprecated" : false,
           "allowEmptyValue" : false,
           "schema" : {
-            "type" : "string"
+            "type" : "integer",
+            "format" : "int32"
           }
         } ],
         "responses" : {
@@ -350,7 +342,8 @@
           "deprecated" : false,
           "allowEmptyValue" : false,
           "schema" : {
-            "type" : "string"
+            "type" : "integer",
+            "format" : "int32"
           }
         } ],
         "requestBody" : {
@@ -440,7 +433,8 @@
           "deprecated" : false,
           "allowEmptyValue" : false,
           "schema" : {
-            "type" : "string"
+            "type" : "integer",
+            "format" : "int32"
           }
         } ],
         "requestBody" : {
@@ -527,7 +521,8 @@
           "deprecated" : false,
           "allowEmptyValue" : false,
           "schema" : {
-            "type" : "string"
+            "type" : "integer",
+            "format" : "int32"
           }
         } ],
         "responses" : {
@@ -599,7 +594,8 @@
           "deprecated" : false,
           "allowEmptyValue" : false,
           "schema" : {
-            "type" : "string"
+            "type" : "integer",
+            "format" : "int32"
           }
         }, {
           "name" : "name",
@@ -686,7 +682,8 @@
           "deprecated" : false,
           "allowEmptyValue" : false,
           "schema" : {
-            "type" : "string"
+            "type" : "integer",
+            "format" : "int32"
           }
         }, {
           "name" : "name",
@@ -1000,24 +997,15 @@
         "summary" : "Synchronizes institutions with an Apache Solr backend.",
         "operationId" : "postSynchronizeInstitutions",
         "parameters" : [ {
-          "name" : "solr",
+          "name" : "collectionId",
           "in" : "query",
-          "description" : "Name of the Apache Solr configuration to use.",
+          "description" : "The ID of the Apache Solr collection to synchronize with.",
           "required" : true,
           "deprecated" : false,
           "allowEmptyValue" : false,
           "schema" : {
-            "type" : "string"
-          }
-        }, {
-          "name" : "collection",
-          "in" : "query",
-          "description" : "The name of the collection to synchronize with.",
-          "required" : true,
-          "deprecated" : false,
-          "allowEmptyValue" : false,
-          "schema" : {
-            "type" : "string"
+            "type" : "integer",
+            "format" : "int32"
           }
         } ],
         "responses" : {
@@ -1089,7 +1077,8 @@
           "deprecated" : false,
           "allowEmptyValue" : false,
           "schema" : {
-            "type" : "string"
+            "type" : "integer",
+            "format" : "int32"
           }
         } ],
         "responses" : {
@@ -1169,7 +1158,8 @@
           "deprecated" : false,
           "allowEmptyValue" : false,
           "schema" : {
-            "type" : "string"
+            "type" : "integer",
+            "format" : "int32"
           }
         } ],
         "requestBody" : {
@@ -1259,7 +1249,8 @@
           "deprecated" : false,
           "allowEmptyValue" : false,
           "schema" : {
-            "type" : "string"
+            "type" : "integer",
+            "format" : "int32"
           }
         } ],
         "responses" : {
@@ -1331,7 +1322,8 @@
           "deprecated" : false,
           "allowEmptyValue" : false,
           "schema" : {
-            "type" : "string"
+            "type" : "integer",
+            "format" : "int32"
           }
         } ],
         "responses" : {
@@ -1408,7 +1400,8 @@
           "deprecated" : false,
           "allowEmptyValue" : false,
           "schema" : {
-            "type" : "string"
+            "type" : "integer",
+            "format" : "int32"
           }
         } ],
         "requestBody" : {
@@ -1727,7 +1720,8 @@
           "deprecated" : false,
           "allowEmptyValue" : false,
           "schema" : {
-            "type" : "string"
+            "type" : "integer",
+            "format" : "int32"
           }
         } ],
         "responses" : {
@@ -1809,7 +1803,8 @@
           "deprecated" : false,
           "allowEmptyValue" : false,
           "schema" : {
-            "type" : "string"
+            "type" : "integer",
+            "format" : "int32"
           }
         }, {
           "name" : "page",
@@ -1911,7 +1906,8 @@
           "deprecated" : false,
           "allowEmptyValue" : false,
           "schema" : {
-            "type" : "string"
+            "type" : "integer",
+            "format" : "int32"
           }
         } ],
         "responses" : {
@@ -1973,7 +1969,8 @@
           "deprecated" : false,
           "allowEmptyValue" : false,
           "schema" : {
-            "type" : "string"
+            "type" : "integer",
+            "format" : "int32"
           }
         }, {
           "name" : "test",
@@ -2045,7 +2042,8 @@
           "deprecated" : false,
           "allowEmptyValue" : false,
           "schema" : {
-            "type" : "string"
+            "type" : "integer",
+            "format" : "int32"
           }
         }, {
           "name" : "first",
@@ -2256,116 +2254,6 @@
         "security" : [ ]
       }
     },
-    "/api/mappings/formats" : {
-      "get" : {
-        "tags" : [ "Config", "Entity Mapping" ],
-        "summary" : "Lists all available entity mapping formats.",
-        "operationId" : "getListMappingFormats",
-        "parameters" : [ ],
-        "responses" : {
-          "200" : {
-            "description" : "OK",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "type" : "array",
-                  "items" : {
-                    "$ref" : "#/components/schemas/MappingFormat"
-                  }
-                }
-              }
-            }
-          },
-          "401" : {
-            "description" : "Unauthorized",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorStatus"
-                }
-              }
-            }
-          },
-          "403" : {
-            "description" : "Forbidden",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorStatus"
-                }
-              }
-            }
-          },
-          "500" : {
-            "description" : "Server Error",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorStatus"
-                }
-              }
-            }
-          }
-        },
-        "deprecated" : false,
-        "security" : [ ]
-      }
-    },
-    "/api/mappings/parsers" : {
-      "get" : {
-        "tags" : [ "Config", "Entity Mapping" ],
-        "summary" : "Lists all available parses available for entity mapping.",
-        "operationId" : "getListParsers",
-        "parameters" : [ ],
-        "responses" : {
-          "200" : {
-            "description" : "OK",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "type" : "array",
-                  "items" : {
-                    "$ref" : "#/components/schemas/ValueParser"
-                  }
-                }
-              }
-            }
-          },
-          "401" : {
-            "description" : "Unauthorized",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorStatus"
-                }
-              }
-            }
-          },
-          "403" : {
-            "description" : "Forbidden",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorStatus"
-                }
-              }
-            }
-          },
-          "500" : {
-            "description" : "Server Error",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorStatus"
-                }
-              }
-            }
-          }
-        },
-        "deprecated" : false,
-        "security" : [ ]
-      }
-    },
     "/api/mappings/{id}" : {
       "get" : {
         "tags" : [ "Config", "Entity Mapping" ],
@@ -2379,7 +2267,8 @@
           "deprecated" : false,
           "allowEmptyValue" : false,
           "schema" : {
-            "type" : "string"
+            "type" : "integer",
+            "format" : "int32"
           }
         } ],
         "responses" : {
@@ -2389,76 +2278,6 @@
               "application/json" : {
                 "schema" : {
                   "$ref" : "#/components/schemas/EntityMapping"
-                }
-              }
-            }
-          },
-          "401" : {
-            "description" : "Unauthorized",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorStatus"
-                }
-              }
-            }
-          },
-          "403" : {
-            "description" : "Forbidden",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorStatus"
-                }
-              }
-            }
-          },
-          "404" : {
-            "description" : "Not Found",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorStatus"
-                }
-              }
-            }
-          },
-          "500" : {
-            "description" : "Server Error",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorStatus"
-                }
-              }
-            }
-          }
-        },
-        "deprecated" : false,
-        "security" : [ ]
-      },
-      "delete" : {
-        "tags" : [ "Config", "Entity Mapping" ],
-        "summary" : "Deletes an existing entity mapping.",
-        "operationId" : "deleteEntityMapping",
-        "parameters" : [ {
-          "name" : "id",
-          "in" : "path",
-          "description" : "The ID of the entity mapping that should be deleted.",
-          "required" : true,
-          "deprecated" : false,
-          "allowEmptyValue" : false,
-          "schema" : {
-            "type" : "string"
-          }
-        } ],
-        "responses" : {
-          "200" : {
-            "description" : "OK",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/SuccessStatus"
                 }
               }
             }
@@ -2519,7 +2338,8 @@
           "deprecated" : false,
           "allowEmptyValue" : false,
           "schema" : {
-            "type" : "string"
+            "type" : "integer",
+            "format" : "int32"
           }
         } ],
         "requestBody" : {
@@ -2549,6 +2369,77 @@
               "application/json" : {
                 "schema" : {
                   "$ref" : "#/components/schemas/ErrorStatus"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorStatus"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Forbidden",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorStatus"
+                }
+              }
+            }
+          },
+          "404" : {
+            "description" : "Not Found",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorStatus"
+                }
+              }
+            }
+          },
+          "500" : {
+            "description" : "Server Error",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorStatus"
+                }
+              }
+            }
+          }
+        },
+        "deprecated" : false,
+        "security" : [ ]
+      },
+      "delete" : {
+        "tags" : [ "Config", "Entity Mapping" ],
+        "summary" : "Deletes an existing entity mapping.",
+        "operationId" : "deleteEntityMapping",
+        "parameters" : [ {
+          "name" : "id",
+          "in" : "path",
+          "description" : "The ID of the entity mapping that should be deleted.",
+          "required" : true,
+          "deprecated" : false,
+          "allowEmptyValue" : false,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int32"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/SuccessStatus"
                 }
               }
             }
@@ -2653,6 +2544,226 @@
         "security" : [ ]
       }
     },
+    "/api/masterdata/image-formats" : {
+      "get" : {
+        "tags" : [ "Config", "Apache Solr", "Masterdata" ],
+        "summary" : "Lists all available formats available for image deployment.",
+        "operationId" : "getListImageFormats",
+        "parameters" : [ ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "array",
+                  "items" : {
+                    "$ref" : "#/components/schemas/ImageFormat"
+                  }
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorStatus"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Forbidden",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorStatus"
+                }
+              }
+            }
+          },
+          "500" : {
+            "description" : "Server Error",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorStatus"
+                }
+              }
+            }
+          }
+        },
+        "deprecated" : false,
+        "security" : [ ]
+      }
+    },
+    "/api/masterdata/job-types" : {
+      "get" : {
+        "tags" : [ "Config", "Job Template", "Masterdata" ],
+        "summary" : "Lists all available job template types.",
+        "operationId" : "getListJobTemplateTypes",
+        "parameters" : [ ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "array",
+                  "items" : {
+                    "$ref" : "#/components/schemas/JobType"
+                  }
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorStatus"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Forbidden",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorStatus"
+                }
+              }
+            }
+          },
+          "500" : {
+            "description" : "Server Error",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorStatus"
+                }
+              }
+            }
+          }
+        },
+        "deprecated" : false,
+        "security" : [ ]
+      }
+    },
+    "/api/masterdata/mapping-formats" : {
+      "get" : {
+        "tags" : [ "Config", "Entity Mapping", "Masterdata" ],
+        "summary" : "Lists all available entity mapping formats.",
+        "operationId" : "getListMappingFormats",
+        "parameters" : [ ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "array",
+                  "items" : {
+                    "$ref" : "#/components/schemas/MappingFormat"
+                  }
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorStatus"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Forbidden",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorStatus"
+                }
+              }
+            }
+          },
+          "500" : {
+            "description" : "Server Error",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorStatus"
+                }
+              }
+            }
+          }
+        },
+        "deprecated" : false,
+        "security" : [ ]
+      }
+    },
+    "/api/masterdata/parsers" : {
+      "get" : {
+        "tags" : [ "Config", "Entity Mapping", "Masterdata" ],
+        "summary" : "Lists all available parses available for entity mapping.",
+        "operationId" : "getListParsers",
+        "parameters" : [ ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "array",
+                  "items" : {
+                    "$ref" : "#/components/schemas/ValueParser"
+                  }
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorStatus"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Forbidden",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorStatus"
+                }
+              }
+            }
+          },
+          "500" : {
+            "description" : "Server Error",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorStatus"
+                }
+              }
+            }
+          }
+        },
+        "deprecated" : false,
+        "security" : [ ]
+      }
+    },
     "/api/masterdata/rightstatements" : {
       "get" : {
         "tags" : [ "Masterdata" ],
@@ -2668,6 +2779,61 @@
                   "type" : "array",
                   "items" : {
                     "$ref" : "#/components/schemas/RightStatement"
+                  }
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorStatus"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Forbidden",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorStatus"
+                }
+              }
+            }
+          },
+          "500" : {
+            "description" : "Server Error",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorStatus"
+                }
+              }
+            }
+          }
+        },
+        "deprecated" : false,
+        "security" : [ ]
+      }
+    },
+    "/api/masterdata/transformers" : {
+      "get" : {
+        "tags" : [ "Config", "Masterdata" ],
+        "summary" : "Lists all available transformer types.",
+        "operationId" : "getListTransformerTypes",
+        "parameters" : [ ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "array",
+                  "items" : {
+                    "$ref" : "#/components/schemas/TransformerType"
                   }
                 }
               }
@@ -2776,7 +2942,8 @@
           "deprecated" : false,
           "allowEmptyValue" : false,
           "schema" : {
-            "type" : "string"
+            "type" : "integer",
+            "format" : "int32"
           }
         } ],
         "responses" : {
@@ -3190,11 +3357,11 @@
         "security" : [ ]
       }
     },
-    "/api/solr/formats" : {
+    "/api/solr/collections" : {
       "get" : {
         "tags" : [ "Config", "Apache Solr" ],
-        "summary" : "Lists all available formats available for image deployment.",
-        "operationId" : "getListImageFormats",
+        "summary" : "Lists all available Apache Solr collections.",
+        "operationId" : "getListSolrCollections",
         "parameters" : [ ],
         "responses" : {
           "200" : {
@@ -3204,7 +3371,7 @@
                 "schema" : {
                   "type" : "array",
                   "items" : {
-                    "$ref" : "#/components/schemas/ImageFormat"
+                    "$ref" : "#/components/schemas/ApacheSolrCollection"
                   }
                 }
               }
@@ -3258,7 +3425,8 @@
           "deprecated" : false,
           "allowEmptyValue" : false,
           "schema" : {
-            "type" : "string"
+            "type" : "integer",
+            "format" : "int32"
           }
         } ],
         "responses" : {
@@ -3272,72 +3440,12 @@
               }
             }
           },
-          "401" : {
-            "description" : "Unauthorized",
+          "400" : {
+            "description" : "Bad Request",
             "content" : {
               "application/json" : {
                 "schema" : {
                   "$ref" : "#/components/schemas/ErrorStatus"
-                }
-              }
-            }
-          },
-          "403" : {
-            "description" : "Forbidden",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorStatus"
-                }
-              }
-            }
-          },
-          "404" : {
-            "description" : "Not Found",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorStatus"
-                }
-              }
-            }
-          },
-          "500" : {
-            "description" : "Server Error",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorStatus"
-                }
-              }
-            }
-          }
-        },
-        "deprecated" : false,
-        "security" : [ ]
-      },
-      "delete" : {
-        "tags" : [ "Config", "Apache Solr" ],
-        "summary" : "Deletes an existing Apache Solr configuration.",
-        "operationId" : "deleteSolrConfig",
-        "parameters" : [ {
-          "name" : "id",
-          "in" : "path",
-          "description" : "The ID of the Apache Solr configuration that should be deleted.",
-          "required" : true,
-          "deprecated" : false,
-          "allowEmptyValue" : false,
-          "schema" : {
-            "type" : "string"
-          }
-        } ],
-        "responses" : {
-          "200" : {
-            "description" : "OK",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/SuccessStatus"
                 }
               }
             }
@@ -3398,7 +3506,8 @@
           "deprecated" : false,
           "allowEmptyValue" : false,
           "schema" : {
-            "type" : "string"
+            "type" : "integer",
+            "format" : "int32"
           }
         } ],
         "requestBody" : {
@@ -3428,6 +3537,77 @@
               "application/json" : {
                 "schema" : {
                   "$ref" : "#/components/schemas/ErrorStatus"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorStatus"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Forbidden",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorStatus"
+                }
+              }
+            }
+          },
+          "404" : {
+            "description" : "Not Found",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorStatus"
+                }
+              }
+            }
+          },
+          "500" : {
+            "description" : "Server Error",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorStatus"
+                }
+              }
+            }
+          }
+        },
+        "deprecated" : false,
+        "security" : [ ]
+      },
+      "delete" : {
+        "tags" : [ "Config", "Apache Solr" ],
+        "summary" : "Deletes an existing Apache Solr configuration.",
+        "operationId" : "deleteSolrConfig",
+        "parameters" : [ {
+          "name" : "id",
+          "in" : "path",
+          "description" : "The ID of the Apache Solr configuration that should be deleted.",
+          "required" : true,
+          "deprecated" : false,
+          "allowEmptyValue" : false,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int32"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/SuccessStatus"
                 }
               }
             }
@@ -3602,61 +3782,6 @@
         "security" : [ ]
       }
     },
-    "/api/templates/types" : {
-      "get" : {
-        "tags" : [ "Config", "Job Template" ],
-        "summary" : "Lists all available job template types.",
-        "operationId" : "getListJobTemplateTypes",
-        "parameters" : [ ],
-        "responses" : {
-          "200" : {
-            "description" : "OK",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "type" : "array",
-                  "items" : {
-                    "$ref" : "#/components/schemas/JobType"
-                  }
-                }
-              }
-            }
-          },
-          "401" : {
-            "description" : "Unauthorized",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorStatus"
-                }
-              }
-            }
-          },
-          "403" : {
-            "description" : "Forbidden",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorStatus"
-                }
-              }
-            }
-          },
-          "500" : {
-            "description" : "Server Error",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorStatus"
-                }
-              }
-            }
-          }
-        },
-        "deprecated" : false,
-        "security" : [ ]
-      }
-    },
     "/api/templates/{id}" : {
       "get" : {
         "tags" : [ "Config", "Job Template" ],
@@ -3670,7 +3795,8 @@
           "deprecated" : false,
           "allowEmptyValue" : false,
           "schema" : {
-            "type" : "string"
+            "type" : "integer",
+            "format" : "int32"
           }
         } ],
         "responses" : {
@@ -3680,76 +3806,6 @@
               "application/json" : {
                 "schema" : {
                   "$ref" : "#/components/schemas/JobTemplate"
-                }
-              }
-            }
-          },
-          "401" : {
-            "description" : "Unauthorized",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorStatus"
-                }
-              }
-            }
-          },
-          "403" : {
-            "description" : "Forbidden",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorStatus"
-                }
-              }
-            }
-          },
-          "404" : {
-            "description" : "Not Found",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorStatus"
-                }
-              }
-            }
-          },
-          "500" : {
-            "description" : "Server Error",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorStatus"
-                }
-              }
-            }
-          }
-        },
-        "deprecated" : false,
-        "security" : [ ]
-      },
-      "delete" : {
-        "tags" : [ "Config", "Job Template" ],
-        "summary" : "Deletes an existing job template.",
-        "operationId" : "deleteJobTemplate",
-        "parameters" : [ {
-          "name" : "id",
-          "in" : "path",
-          "description" : "The ID of the job template that should be deleted.",
-          "required" : true,
-          "deprecated" : false,
-          "allowEmptyValue" : false,
-          "schema" : {
-            "type" : "string"
-          }
-        } ],
-        "responses" : {
-          "200" : {
-            "description" : "OK",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/SuccessStatus"
                 }
               }
             }
@@ -3810,7 +3866,8 @@
           "deprecated" : false,
           "allowEmptyValue" : false,
           "schema" : {
-            "type" : "string"
+            "type" : "integer",
+            "format" : "int32"
           }
         } ],
         "requestBody" : {
@@ -3887,24 +3944,30 @@
         },
         "deprecated" : false,
         "security" : [ ]
-      }
-    },
-    "/api/transformers/types" : {
-      "get" : {
-        "tags" : [ "Config", "Transformer" ],
-        "summary" : "Lists all available transformer types.",
-        "operationId" : "getListTransformerTypes",
-        "parameters" : [ ],
+      },
+      "delete" : {
+        "tags" : [ "Config", "Job Template" ],
+        "summary" : "Deletes an existing job template.",
+        "operationId" : "deleteJobTemplate",
+        "parameters" : [ {
+          "name" : "id",
+          "in" : "path",
+          "description" : "The ID of the job template that should be deleted.",
+          "required" : true,
+          "deprecated" : false,
+          "allowEmptyValue" : false,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int32"
+          }
+        } ],
         "responses" : {
           "200" : {
             "description" : "OK",
             "content" : {
               "application/json" : {
                 "schema" : {
-                  "type" : "array",
-                  "items" : {
-                    "$ref" : "#/components/schemas/TransformerType"
-                  }
+                  "$ref" : "#/components/schemas/SuccessStatus"
                 }
               }
             }
@@ -3921,6 +3984,16 @@
           },
           "403" : {
             "description" : "Forbidden",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorStatus"
+                }
+              }
+            }
+          },
+          "404" : {
+            "description" : "Not Found",
             "content" : {
               "application/json" : {
                 "schema" : {
@@ -4186,7 +4259,8 @@
           "deprecated" : false,
           "allowEmptyValue" : false,
           "schema" : {
-            "type" : "string"
+            "type" : "integer",
+            "format" : "int32"
           }
         } ],
         "requestBody" : {
@@ -4276,7 +4350,8 @@
           "deprecated" : false,
           "allowEmptyValue" : false,
           "schema" : {
-            "type" : "string"
+            "type" : "integer",
+            "format" : "int32"
           }
         } ],
         "responses" : {
@@ -4475,6 +4550,11 @@
         "additionalProperties" : false,
         "properties" : {
           "id" : {
+            "type" : "integer",
+            "format" : "int32",
+            "nullable" : true
+          },
+          "uuid" : {
             "type" : "string",
             "nullable" : true
           },
@@ -4487,11 +4567,12 @@
           "publish" : {
             "type" : "boolean"
           },
-          "institutionName" : {
-            "type" : "string"
-          },
           "description" : {
             "type" : "string"
+          },
+          "institution" : {
+            "$ref" : "#/components/schemas/Institution",
+            "nullable" : true
           },
           "filters" : {
             "type" : "array",
@@ -4504,9 +4585,19 @@
             "items" : {
               "type" : "string"
             }
+          },
+          "createdAt" : {
+            "type" : "integer",
+            "format" : "int64",
+            "nullable" : true
+          },
+          "changedAt" : {
+            "type" : "integer",
+            "format" : "int64",
+            "nullable" : true
           }
         },
-        "required" : [ "name", "displayName", "publish", "institutionName", "description", "filters", "images" ]
+        "required" : [ "name", "displayName", "publish", "description", "filters", "images" ]
       },
       "PaginatedObjectCollectionResult" : {
         "type" : "object",
@@ -4514,7 +4605,7 @@
         "properties" : {
           "total" : {
             "type" : "integer",
-            "format" : "int32"
+            "format" : "int64"
           },
           "page" : {
             "type" : "integer",
@@ -4537,6 +4628,11 @@
         "type" : "object",
         "additionalProperties" : false,
         "properties" : {
+          "id" : {
+            "type" : "integer",
+            "format" : "int32",
+            "nullable" : true
+          },
           "name" : {
             "type" : "string"
           },
@@ -4597,7 +4693,8 @@
         "additionalProperties" : false,
         "properties" : {
           "id" : {
-            "type" : "string",
+            "type" : "integer",
+            "format" : "int32",
             "nullable" : true
           },
           "name" : {
@@ -4641,6 +4738,11 @@
         "type" : "object",
         "additionalProperties" : false,
         "properties" : {
+          "id" : {
+            "type" : "integer",
+            "format" : "int32",
+            "nullable" : true
+          },
           "name" : {
             "type" : "string"
           },
@@ -4669,7 +4771,8 @@
         "additionalProperties" : false,
         "properties" : {
           "id" : {
-            "type" : "string",
+            "type" : "integer",
+            "format" : "int32",
             "nullable" : true
           },
           "name" : {
@@ -4728,7 +4831,8 @@
         "additionalProperties" : false,
         "properties" : {
           "id" : {
-            "type" : "string",
+            "type" : "integer",
+            "format" : "int32",
             "nullable" : true
           },
           "name" : {
@@ -4747,20 +4851,20 @@
           "participantName" : {
             "type" : "string"
           },
-          "solrConfigName" : {
-            "type" : "string"
-          },
-          "entityMappingName" : {
-            "type" : "string"
-          },
           "createdAt" : {
             "type" : "integer",
-            "format" : "int64",
-            "nullable" : true
+            "format" : "int64"
           },
           "changedAt" : {
             "type" : "integer",
-            "format" : "int64",
+            "format" : "int64"
+          },
+          "config" : {
+            "$ref" : "#/components/schemas/ApacheSolrConfig",
+            "nullable" : true
+          },
+          "mapping" : {
+            "$ref" : "#/components/schemas/EntityMapping",
             "nullable" : true
           },
           "transformers" : {
@@ -4770,7 +4874,7 @@
             }
           }
         },
-        "required" : [ "name", "type", "startAutomatically", "participantName", "solrConfigName", "entityMappingName", "transformers" ]
+        "required" : [ "name", "type", "startAutomatically", "participantName", "createdAt", "changedAt", "transformers" ]
       },
       "JobType" : {
         "type" : "string",
@@ -4801,7 +4905,8 @@
         "additionalProperties" : false,
         "properties" : {
           "id" : {
-            "type" : "string",
+            "type" : "integer",
+            "format" : "int32",
             "nullable" : true
           },
           "name" : {
@@ -4833,7 +4938,7 @@
             "type" : "string"
           },
           "canton" : {
-            "type" : "string"
+            "$ref" : "#/components/schemas/Canton"
           },
           "longitude" : {
             "type" : "number",
@@ -4902,7 +5007,7 @@
         "properties" : {
           "total" : {
             "type" : "integer",
-            "format" : "int32"
+            "format" : "int64"
           },
           "page" : {
             "type" : "integer",
@@ -4926,7 +5031,8 @@
         "additionalProperties" : false,
         "properties" : {
           "templateId" : {
-            "type" : "string"
+            "type" : "integer",
+            "format" : "int32"
           },
           "jobName" : {
             "type" : "string",
@@ -4940,7 +5046,8 @@
         "additionalProperties" : false,
         "properties" : {
           "id" : {
-            "type" : "string",
+            "type" : "integer",
+            "format" : "int32",
             "nullable" : true
           },
           "name" : {
@@ -4970,7 +5077,7 @@
           },
           "logEntries" : {
             "type" : "integer",
-            "format" : "int32"
+            "format" : "int64"
           },
           "createdAt" : {
             "type" : "integer",
@@ -4992,7 +5099,8 @@
         "additionalProperties" : false,
         "properties" : {
           "jobId" : {
-            "type" : "string",
+            "type" : "integer",
+            "format" : "int32",
             "nullable" : true
           },
           "documentId" : {
@@ -5037,7 +5145,7 @@
         "properties" : {
           "total" : {
             "type" : "integer",
-            "format" : "int32"
+            "format" : "int64"
           },
           "page" : {
             "type" : "integer",
@@ -5062,7 +5170,7 @@
         "properties" : {
           "total" : {
             "type" : "integer",
-            "format" : "int32"
+            "format" : "int64"
           },
           "page" : {
             "type" : "integer",
@@ -5082,17 +5190,8 @@
         "required" : [ "total", "page", "pageSize", "results" ]
       },
       "Canton" : {
-        "type" : "object",
-        "additionalProperties" : false,
-        "properties" : {
-          "shortName" : {
-            "type" : "string"
-          },
-          "longName" : {
-            "type" : "string"
-          }
-        },
-        "required" : [ "shortName", "longName" ]
+        "type" : "string",
+        "enum" : [ "AG", "BE", "BL", "BS", "LU", "SO" ]
       },
       "RightStatement" : {
         "type" : "object",
@@ -5166,7 +5265,7 @@
         "properties" : {
           "total" : {
             "type" : "integer",
-            "format" : "int32"
+            "format" : "int64"
           },
           "page" : {
             "type" : "integer",
@@ -5194,7 +5293,8 @@
         "additionalProperties" : false,
         "properties" : {
           "id" : {
-            "type" : "string",
+            "type" : "integer",
+            "format" : "int32",
             "nullable" : true
           },
           "username" : {
@@ -5215,21 +5315,19 @@
             "$ref" : "#/components/schemas/Role"
           },
           "institution" : {
-            "type" : "string",
+            "$ref" : "#/components/schemas/Institution",
             "nullable" : true
           },
           "createdAt" : {
             "type" : "integer",
-            "format" : "int64",
-            "nullable" : true
+            "format" : "int64"
           },
           "changedAt" : {
             "type" : "integer",
-            "format" : "int64",
-            "nullable" : true
+            "format" : "int64"
           }
         },
-        "required" : [ "username", "active", "role" ]
+        "required" : [ "username", "active", "role", "createdAt", "changedAt" ]
       }
     },
     "securitySchemes" : {

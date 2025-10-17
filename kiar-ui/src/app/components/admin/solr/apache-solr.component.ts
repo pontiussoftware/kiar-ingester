@@ -1,9 +1,17 @@
 import {AfterViewInit, Component} from "@angular/core";
 import {catchError, map, mergeMap, Observable, of, shareReplay} from "rxjs";
-import {ApacheSolrCollection, ApacheSolrConfig, ApacheSolrService, AttributeMapping, ImageDeployment, ImageFormat} from "../../../../../openapi";
+import {
+  ApacheSolrCollection,
+  ApacheSolrConfig,
+  ApacheSolrService,
+  AttributeMapping,
+  ImageDeployment,
+  ImageFormat
+} from "../../../../../openapi";
 import {ActivatedRoute, Router} from "@angular/router";
 import {FormArray, FormControl, FormGroup, Validators} from "@angular/forms";
 import {MatSnackBar, MatSnackBarConfig} from "@angular/material/snack-bar";
+
 @Component({
     selector: 'kiar-apache-solr-admin',
     templateUrl: './apache-solr.component.html',
@@ -11,9 +19,8 @@ import {MatSnackBar, MatSnackBarConfig} from "@angular/material/snack-bar";
     standalone: false
 })
 export class ApacheSolrComponent implements AfterViewInit{
-
   /** An {@link Observable} of the mapping ID that is being inspected by this {@link EntityMappingComponent}. */
-  public readonly solrId: Observable<string>
+  public readonly solrId: Observable<number>
 
   /** List of attribute {@link FormGroup}s. */
   public readonly collections: Array<FormGroup> = []
@@ -28,8 +35,8 @@ export class ApacheSolrComponent implements AfterViewInit{
   public formControl = new FormGroup({
     name: new FormControl('', [Validators.required]),
     description: new FormControl(''),
-    server: new FormControl('', [Validators.required, Validators.pattern('(https?://)?([\\da-z.-]+)\\.([a-z.]{2,6})[/\\w .-]*/?')]),
-    publicServer: new FormControl('', [Validators.pattern('(https?://)?([\\da-z.-]+)\\.([a-z.]{2,6})[/\\w .-]*/?')]),
+    server: new FormControl('', [Validators.required]),
+    publicServer: new FormControl('',),
     username: new FormControl(''),
     password: new FormControl(''),
     collections: new FormArray(this.collections),
@@ -42,7 +49,7 @@ export class ApacheSolrComponent implements AfterViewInit{
       private route: ActivatedRoute,
       private snackBar: MatSnackBar
   ) {
-    this.solrId = this.route.paramMap.pipe(map(params => params.get('id')!!));
+    this.solrId = this.route.paramMap.pipe(map(params => Number(params.get('id')!!)));
     this.imageFormats = this.service.getListImageFormats().pipe(shareReplay(1))
   }
 
@@ -203,7 +210,7 @@ export class ApacheSolrComponent implements AfterViewInit{
         name: new FormControl(collection.name ?? '', [Validators.required]),
         type: new FormControl(collection.type ?? '', [Validators.required]),
         selector: new FormControl(collection.selector ?? ''),
-        oai: new FormControl(collection.oai ?? false)
+        oai: new FormControl({ value: collection.oai ?? false, disabled: collection.type !== 'OBJECT' }),
       }))
     }
 
@@ -226,7 +233,7 @@ export class ApacheSolrComponent implements AfterViewInit{
    * @param id The ID of the {@link ApacheSolrConfig}
    * @return {@link ApacheSolrConfig}
    */
-  private formToApacheSolrConfig(id: string): ApacheSolrConfig {
+  private formToApacheSolrConfig(id: number): ApacheSolrConfig {
     return {
       id: id,
       name: this.formControl.get('name')?.value,

@@ -3,13 +3,14 @@ package ch.pontius.kiar.api.routes.config
 import ch.pontius.kiar.api.model.status.ErrorStatus
 import ch.pontius.kiar.api.model.status.ErrorStatusException
 import ch.pontius.kiar.api.model.status.SuccessStatus
-import ch.pontius.kiar.database.institution.DbParticipant
+import ch.pontius.kiar.database.institutions.Participants
 import io.javalin.http.Context
 import io.javalin.openapi.*
-import jetbrains.exodus.database.TransientEntityStore
-import kotlinx.dnq.query.asSequence
-import kotlinx.dnq.query.sortedBy
-import kotlinx.dnq.util.findById
+import org.jetbrains.exposed.v1.core.eq
+import org.jetbrains.exposed.v1.jdbc.deleteWhere
+import org.jetbrains.exposed.v1.jdbc.insert
+import org.jetbrains.exposed.v1.jdbc.select
+import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 
 
 @OpenApi(
@@ -26,9 +27,9 @@ import kotlinx.dnq.util.findById
         OpenApiResponse("500", [OpenApiContent(ErrorStatus::class)]),
     ]
 )
-fun listParticipants(ctx: Context, store: TransientEntityStore) {
-    store.transactional (true) {
-        ctx.json(DbParticipant.all().sortedBy(DbParticipant::name).asSequence().map { it.name }.toList().toTypedArray())
+fun listParticipants(ctx: Context) {
+    transaction {
+        ctx.json(Participants.select(Participants.name).map { it[Participants.name] }.toTypedArray())
     }
 }
 
@@ -47,11 +48,11 @@ fun listParticipants(ctx: Context, store: TransientEntityStore) {
         OpenApiResponse("500", [OpenApiContent(ErrorStatus::class)])
     ]
 )
-fun createParticipants(ctx: Context, store: TransientEntityStore) {
+fun createParticipants(ctx: Context) {
     val participantName = ctx.pathParam("name")
-    store.transactional {
-        DbParticipant.new {
-            name = participantName
+    transaction {
+        Participants.insert {
+            it[name] = participantName
         }
     }
     ctx.json(SuccessStatus("Participant '$participantName' created successfully."))
@@ -64,7 +65,7 @@ fun createParticipants(ctx: Context, store: TransientEntityStore) {
     operationId = "deleteParticipant",
     tags = ["Config", "Participant"],
     pathParams = [
-        OpenApiParam("id", String::class, description = "The ID of the participant to delete.", required = true)
+        OpenApiParam("id", Int::class, description = "The ID of the participant to delete.", required = true)
     ],
     responses = [
         OpenApiResponse("200", [OpenApiContent(SuccessStatus::class)]),
@@ -72,15 +73,14 @@ fun createParticipants(ctx: Context, store: TransientEntityStore) {
         OpenApiResponse("500", [OpenApiContent(ErrorStatus::class)]),
     ]
 )
-fun deleteParticipants(ctx: Context, store: TransientEntityStore) {
-    val participantId = ctx.pathParam("id")
-    store.transactional {
-        val participant = try {
-            DbParticipant.findById(participantId)
-        } catch (e: Throwable) {
-            throw ErrorStatusException(404, "Participant with ID $participantId could not be found.")
-        }
-        participant.delete()
+fun deleteParticipants(ctx: Context) {
+    val participantId = ctx.pathParam("id").toIntOrNull() ?: throw ErrorStatusException(400, "Malformed participant ID.")
+    val deleted = transaction {
+        Participants.deleteWhere { Participants.id eq participantId }
     }
-    ctx.json(SuccessStatus("Participant $participantId deleted successfully."))
+    if (deleted > 0) {
+        ctx.json(SuccessStatus("Participant with ID $participantId deleted successfully."))
+    } else {
+        ctx.json(ErrorStatus(404, "Participant with ID could not be found."))
+    }
 }

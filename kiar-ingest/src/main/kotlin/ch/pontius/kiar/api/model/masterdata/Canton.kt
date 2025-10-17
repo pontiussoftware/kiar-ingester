@@ -6,7 +6,14 @@ import kotlinx.serialization.Serializable
  * A representation of a [Canton].
  *
  * @author Ralph Gasser
- * @version 1.0.0
+ * @version 1.1.0
  */
 @Serializable
-data class Canton(val shortName: String, val longName: String)
+enum class Canton(val longName: String) {
+    AG("Aargau"),
+    BE("Bern"),
+    BL("Basel-Landschaft"),
+    BS("Basel-Stadt"),
+    LU("Luzern"),
+    SO("Solothurn")
+}

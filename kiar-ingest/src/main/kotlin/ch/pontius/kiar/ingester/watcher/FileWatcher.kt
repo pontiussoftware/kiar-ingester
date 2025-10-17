@@ -1,13 +1,16 @@
 package ch.pontius.kiar.ingester.watcher
 
-import ch.pontius.kiar.database.config.jobs.DbJobTemplate
-import ch.pontius.kiar.database.job.DbJob
-import ch.pontius.kiar.database.job.DbJobSource
-import ch.pontius.kiar.database.job.DbJobStatus
+import ch.pontius.kiar.api.model.config.templates.JobTemplateId
+import ch.pontius.kiar.api.model.job.JobSource
+import ch.pontius.kiar.api.model.job.JobStatus
+import ch.pontius.kiar.database.config.JobTemplates
+import ch.pontius.kiar.database.jobs.Jobs
 import ch.pontius.kiar.ingester.IngesterServer
-import kotlinx.dnq.util.findById
 import org.apache.logging.log4j.LogManager
-import org.joda.time.DateTime
+import org.jetbrains.exposed.v1.core.eq
+import org.jetbrains.exposed.v1.jdbc.insertAndGetId
+import org.jetbrains.exposed.v1.jdbc.select
+import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 import java.nio.file.*
 
 
@@ -15,9 +18,9 @@ import java.nio.file.*
  * A [FileWatcher] is a [Runnable] that polls for a new file to be created. Once the file becomes availabe, it launches a new job.
  *
  * @author Ralph Gasser
- * @version 1.1.0
+ * @version 1.2.0
  */
-class FileWatcher(private val server: IngesterServer, private val templateId: String, private val file: Path): Runnable {
+class FileWatcher(private val server: IngesterServer, private val templateId: JobTemplateId, private val file: Path): Runnable {
 
     companion object {
         private val LOGGER = LogManager.getLogger()
@@ -45,20 +48,19 @@ class FileWatcher(private val server: IngesterServer, private val templateId: St
             LOGGER.info("New file detected: ${this.file}; scheduling job...")
             try {
                 /* Create new job. */
-                val jobId = this@FileWatcher.server.store.transactional {
-                    val template = DbJobTemplate.findById(this@FileWatcher.templateId)
-                    DbJob.new {
-                        this.name = template.name + "-${System.currentTimeMillis()}"
-                        this.template = template
-                        this.source = DbJobSource.WATCHER
-                        this.status = DbJobStatus.HARVESTED
-                        this.createdAt = DateTime.now()
-                        this.createdByName = "SYSTEM"
-                    }.xdId
-                }
+                val jobId = transaction {
+                    val templateName = JobTemplates.select(JobTemplates.name).where { JobTemplates.id eq this@FileWatcher.templateId }.map { it[JobTemplates.name] }.first()
+                    Jobs.insertAndGetId { insert ->
+                        insert[name] = templateName + "-${System.currentTimeMillis()}"
+                        insert[templateId] = this@FileWatcher.templateId
+                        insert[src] = JobSource.WATCHER
+                        insert[status] = JobStatus.HARVESTED
+                        insert[createdBy] = "SYSTEM"
+                    }
+                }.value
 
                 /* Move file to new location. */
-                Files.move(this.file, this.file.parent.resolve(jobId), StandardCopyOption.ATOMIC_MOVE)
+                Files.move(this.file, this.file.parent.resolve("$jobId.job"), StandardCopyOption.ATOMIC_MOVE)
 
                 /* Schedule job. */
                 this.server.scheduleJob(jobId)

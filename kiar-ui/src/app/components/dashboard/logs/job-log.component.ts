@@ -39,7 +39,7 @@ export class JobLogComponent implements AfterViewInit, OnInit {
    * Initializes the data source and load the data.
    */
   public ngOnInit() {
-    this.dataSource = new JobLogDatasource(this.service, this.route.snapshot.paramMap.get("id")!!)
+    this.dataSource = new JobLogDatasource(this.service, Number(this.route.snapshot.paramMap.get("id")!!))
   }
 
   /**

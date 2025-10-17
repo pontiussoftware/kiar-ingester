@@ -1,6 +1,6 @@
 import {Component, Input, OnInit} from "@angular/core";
 import {CollectionService} from "../../../../openapi";
-import { catchError, of } from "rxjs";
+import {catchError, of} from "rxjs";
 
 @Component({
     selector: 'kiar-collection-image',
@@ -10,7 +10,7 @@ import { catchError, of } from "rxjs";
 })
 export class CollectionImageComponent implements OnInit {
   /** The ID to fetch image for. */
-  @Input() collectionId: string;
+  @Input() collectionId!: number;
 
   /** The name of the image. */
   @Input() name: string;

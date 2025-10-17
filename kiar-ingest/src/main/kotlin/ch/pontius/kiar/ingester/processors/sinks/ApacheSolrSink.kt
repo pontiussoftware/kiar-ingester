@@ -5,36 +5,38 @@ import ch.pontius.kiar.api.model.config.solr.CollectionType
 import ch.pontius.kiar.api.model.job.JobLog
 import ch.pontius.kiar.api.model.job.JobLogContext
 import ch.pontius.kiar.api.model.job.JobLogLevel
-import ch.pontius.kiar.database.institution.DbInstitution
+import ch.pontius.kiar.database.config.SolrCollections
+import ch.pontius.kiar.database.institutions.Institutions
+import ch.pontius.kiar.database.institutions.InstitutionsSolrCollections
 import ch.pontius.kiar.ingester.processors.ProcessingContext
 import ch.pontius.kiar.ingester.processors.sources.Source
+import ch.pontius.kiar.ingester.solrj.*
 import ch.pontius.kiar.ingester.solrj.Constants.FIELD_NAME_PARTICIPANT
 import ch.pontius.kiar.ingester.solrj.Constants.SYSTEM_FIELDS
-import ch.pontius.kiar.ingester.solrj.Field
-import ch.pontius.kiar.ingester.solrj.get
-import ch.pontius.kiar.ingester.solrj.getAll
-import ch.pontius.kiar.ingester.solrj.has
-import ch.pontius.kiar.ingester.solrj.setField
 import com.jayway.jsonpath.InvalidPathException
 import com.jayway.jsonpath.JsonPath
 import com.jayway.jsonpath.PathNotFoundException
-import kotlinx.coroutines.flow.*
-import kotlinx.dnq.query.asSequence
-import kotlinx.dnq.query.filter
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.onCompletion
+import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.flow.onStart
 import org.apache.logging.log4j.LogManager
 import org.apache.solr.client.solrj.SolrServerException
 import org.apache.solr.client.solrj.impl.Http2SolrClient
 import org.apache.solr.client.solrj.request.schema.SchemaRequest
 import org.apache.solr.common.SolrInputDocument
+import org.jetbrains.exposed.v1.core.and
+import org.jetbrains.exposed.v1.core.eq
+import org.jetbrains.exposed.v1.jdbc.select
+import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 import java.io.IOException
-import java.util.Date
-import java.util.UUID
+import java.util.*
 
 /**
  * A [Sink] that processes [SolrInputDocument]s and ingests them into Apache Solr.
  *
  * @author Ralph Gasser
- * @version 1.3.0
+ * @version 1.4.0
  */
 class ApacheSolrSink(override val input: Source<SolrInputDocument>, private val config: ApacheSolrConfig): Sink<SolrInputDocument> {
 
@@ -48,9 +50,13 @@ class ApacheSolrSink(override val input: Source<SolrInputDocument>, private val 
     /** List of collections this [ApacheSolrSink] processes. */
     private val collections = this.config.collections.filter { it.type == CollectionType.OBJECT }.map { it.name to it.selector }
 
-    /** A [Map] of [DbInstitution] name to selected collections. */
-    private val institutions = DbInstitution.filter { (it.selectedCollections.isNotEmpty() ) }.asSequence().associate {
-        it.name to it.selectedCollections.asSequence().map { c -> c.name }.toSet()
+    /** A [Map] of institution names to selected collections. */
+    private val institutions = transaction {
+        (Institutions innerJoin InstitutionsSolrCollections innerJoin SolrCollections).select(Institutions.name,SolrCollections.name).where {
+            (InstitutionsSolrCollections.selected eq true) and (InstitutionsSolrCollections.available eq true)
+        }.map {
+            it[Institutions.name] to it[SolrCollections.name]
+        }.groupBy({ it.first }, { it.second })
     }
 
     /**

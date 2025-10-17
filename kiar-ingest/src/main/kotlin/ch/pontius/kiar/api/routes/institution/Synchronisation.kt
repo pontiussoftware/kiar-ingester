@@ -1,25 +1,28 @@
 package ch.pontius.kiar.api.routes.institution
 
 import ch.pontius.kiar.api.model.config.solr.ApacheSolrConfig
+import ch.pontius.kiar.api.model.config.solr.CollectionType
 import ch.pontius.kiar.api.model.institution.Institution
 import ch.pontius.kiar.api.model.status.ErrorStatus
 import ch.pontius.kiar.api.model.status.ErrorStatusException
 import ch.pontius.kiar.api.model.status.SuccessStatus
-import ch.pontius.kiar.database.config.solr.DbCollectionType
-import ch.pontius.kiar.database.config.solr.DbSolr
-import ch.pontius.kiar.database.institution.DbInstitution
-import ch.pontius.kiar.ingester.processors.sinks.ApacheSolrSink
+import ch.pontius.kiar.database.config.SolrCollections
+import ch.pontius.kiar.database.config.SolrConfigs
+import ch.pontius.kiar.database.config.SolrConfigs.toSolr
+import ch.pontius.kiar.database.institutions.Institutions
+import ch.pontius.kiar.database.institutions.Institutions.toInstitution
+import ch.pontius.kiar.database.institutions.Participants
 import ch.pontius.kiar.ingester.solrj.Constants
 import io.javalin.http.Context
 import io.javalin.openapi.*
-import jetbrains.exodus.database.TransientEntityStore
-import kotlinx.dnq.query.asSequence
-import kotlinx.dnq.query.filter
-import kotlinx.dnq.query.firstOrNull
-import kotlinx.dnq.query.flatMapDistinct
 import org.apache.logging.log4j.LogManager
 import org.apache.solr.client.solrj.impl.Http2SolrClient
 import org.apache.solr.common.SolrInputDocument
+import org.jetbrains.exposed.v1.core.and
+import org.jetbrains.exposed.v1.core.eq
+import org.jetbrains.exposed.v1.jdbc.select
+import org.jetbrains.exposed.v1.jdbc.selectAll
+import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 
 private val LOGGER = LogManager.getLogger()
 
@@ -30,8 +33,7 @@ private val LOGGER = LogManager.getLogger()
     operationId = "postSynchronizeInstitutions",
     tags = ["Institution"],
     queryParams = [
-        OpenApiParam(name = "solr", type = String::class, description = "Name of the Apache Solr configuration to use.", required = true),
-        OpenApiParam(name = "collection", type = String::class, description = "The name of the collection to synchronize with.", required = true)
+        OpenApiParam(name = "collectionId", type = Int::class, description = "The ID of the Apache Solr collection to synchronize with.", required = true)
     ],
     responses = [
         OpenApiResponse("200", [OpenApiContent(SuccessStatus::class)]),
@@ -41,25 +43,21 @@ private val LOGGER = LogManager.getLogger()
         OpenApiResponse("500", [OpenApiContent(ErrorStatus::class)])
     ]
 )
-fun postSyncInstitutions(ctx: Context, store: TransientEntityStore) {
-    val configName = ctx.queryParam("solr") ?: throw ErrorStatusException(400, "Query parameter 'solr' is required.")
-    val collectionName = ctx.queryParam("collection") ?: throw ErrorStatusException(400, "Query parameter 'collectionName' is required.")
-    val data = store.transactional(true) {
-        val collection = DbSolr.filter {
-            it.name eq configName
-        }.flatMapDistinct {
-            it.collections
-        }.filter {
-            (it.name eq collectionName) and (it.type eq DbCollectionType.MUSEUM)
-        }.firstOrNull() ?: throw ErrorStatusException(404, "Apache Solr collection with name $collectionName could not be found.")
+fun postSyncInstitutions(ctx: Context) {
+    val collectionId = ctx.queryParam("collectionId")?.toIntOrNull() ?: throw ErrorStatusException(400, "Query parameter 'collectionId' is required.")
+    val (config, collectionName, institutions) = transaction {
+        val (collectionName, config) = (SolrConfigs innerJoin SolrCollections).select(SolrConfigs.columns + SolrCollections.name).where {
+            (SolrCollections.id eq collectionId) and (SolrCollections.type eq CollectionType.MUSEUM)
+        }.map {
+            it[SolrCollections.name] to it.toSolr()
+        }.firstOrNull() ?: throw ErrorStatusException(404, "Apache Solr config for collection with ID $collectionId could not be found.")
 
-        val config = collection.solr.toApi()
-        val institutions = DbInstitution.filter { it.publish eq true }.asSequence().map { it.toApi() }.toList()
-        config to institutions
+        val institutions = (Institutions innerJoin Participants).selectAll().where { Institutions.publish eq true }.map { it.toInstitution() }
+        Triple(config,collectionName, institutions)
     }
 
     /* Perform actual synchronisation. */
-    synchronise(data.first, collectionName, data.second)
+    synchronise(config, collectionName, institutions)
 
     /* Return success status. */
     ctx.json(SuccessStatus("Successfully synchronized institutions."))
@@ -83,7 +81,7 @@ private fun synchronise(config: ApacheSolrConfig, collection: String, institutio
         try {
             /* Delete all existing entries. */
             var response = client.deleteByQuery(collection, "*:*")
-            if (response.status == 0) {
+            if (response?.status == 0) {
                 LOGGER.info("Purged collection (collection = {}).", collection)
             } else {
                 LOGGER.error("Failed to purge collection (collection = {}).", collection)
@@ -92,7 +90,7 @@ private fun synchronise(config: ApacheSolrConfig, collection: String, institutio
             /* Map documents and add them. */
             val documents = institutions.map { institution ->
                 val doc = SolrInputDocument()
-                doc.setField(Constants.FIELD_NAME_UUID, institution.id)
+                doc.setField(Constants.FIELD_NAME_UUID, institution.uuid)
                 doc.setField(Constants.FIELD_NAME_PARTICIPANT, institution.participantName)
                 doc.setField(Constants.FIELD_NAME_CANTON, institution.canton)
                 doc.setField(Constants.FIELD_NAME_DISPLAY, institution.displayName)

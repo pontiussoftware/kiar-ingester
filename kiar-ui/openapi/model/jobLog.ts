@@ -7,12 +7,12 @@
  * https://openapi-generator.tech
  * Do not edit the class manually.
  */
-import { JobLogLevel } from './jobLogLevel';
-import { JobLogContext } from './jobLogContext';
+import {JobLogLevel} from './jobLogLevel';
+import {JobLogContext} from './jobLogContext';
 
 
 export interface JobLog { 
-    jobId?: string | null;
+    jobId?: number | null;
     documentId?: string | null;
     collectionId?: string | null;
     context: JobLogContext;

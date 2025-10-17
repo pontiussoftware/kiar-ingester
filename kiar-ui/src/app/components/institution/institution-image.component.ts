@@ -1,6 +1,6 @@
 import {Component, Input, OnInit} from "@angular/core";
 import {InstitutionService} from "../../../../openapi";
-import { catchError, of } from "rxjs";
+import {catchError, of} from "rxjs";
 
 @Component({
     selector: 'app-institution-image',
@@ -9,7 +9,7 @@ import { catchError, of } from "rxjs";
 })
 export class InstitutionImageComponent implements OnInit {
   /** The ID to fetch image for. */
-  @Input() institutionId: string;
+  @Input() institutionId!: number;
 
   /** The width of th image. */
   @Input() width: number = 100;

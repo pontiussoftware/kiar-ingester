@@ -1,15 +1,14 @@
 package ch.pontius.kiar.oai.mapper
 
 import ch.pontius.kiar.api.model.institution.Institution
-import ch.pontius.kiar.database.institution.DbInstitution
+import ch.pontius.kiar.database.institutions.Institutions
 import ch.pontius.kiar.ingester.solrj.Field
 import ch.pontius.kiar.ingester.solrj.get
 import ch.pontius.kiar.ingester.solrj.getAll
 import ch.pontius.kiar.ingester.solrj.has
 import ch.pontius.kiar.oai.Formats
-import jetbrains.exodus.database.TransientEntityStore
-import kotlinx.dnq.query.asSequence
 import org.apache.solr.common.SolrDocument
+import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 import org.w3c.dom.Element
 import org.w3c.dom.Node
 import java.time.LocalDate
@@ -18,9 +17,9 @@ import java.time.LocalDate
  * [OAIMapper] implementation that maps to the Europeana Data Model (EDM).
  *
  * @author Ralph Gasser
- * @version 1.0.0
+ * @version 1.0.1
  */
-class EDMMapper(store: TransientEntityStore): OAIMapper {
+class EDMMapper(): OAIMapper {
 
     companion object {
 
@@ -42,10 +41,9 @@ class EDMMapper(store: TransientEntityStore): OAIMapper {
         }
     }
 
-
-    /** A map of all institutions. */
-    private val institutions: Map<String, Institution> = store.transactional(true) {
-        DbInstitution.all().asSequence().map { it.name to it.toApi() }.toMap()
+    /** A map of all available [Institution]. */
+    private val institutions: Map<String, Institution> = transaction {
+        Institutions.getAll().associateBy { it.name }
     }
 
     /** The [EDMMapper] returns the [Formats.EDM] format. */

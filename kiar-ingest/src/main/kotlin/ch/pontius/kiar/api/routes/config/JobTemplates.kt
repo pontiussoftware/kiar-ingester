@@ -2,28 +2,33 @@ package ch.pontius.kiar.api.routes.config
 
 import ch.pontius.kiar.api.model.status.ErrorStatus
 import ch.pontius.kiar.api.model.config.templates.JobTemplate
-import ch.pontius.kiar.api.model.config.templates.JobType
+import ch.pontius.kiar.api.model.config.templates.JobTemplateId
 import ch.pontius.kiar.api.model.config.transformers.TransformerConfig
 import ch.pontius.kiar.api.model.status.ErrorStatusException
 import ch.pontius.kiar.api.model.status.SuccessStatus
-import ch.pontius.kiar.api.routes.session.currentUser
-import ch.pontius.kiar.database.config.jobs.DbJobTemplate
-import ch.pontius.kiar.database.config.jobs.DbJobType
-import ch.pontius.kiar.database.config.mapping.DbEntityMapping
-import ch.pontius.kiar.database.config.solr.DbSolr
-import ch.pontius.kiar.database.config.transformers.DbTransformer
-import ch.pontius.kiar.database.config.transformers.DbTransformerParameter
-import ch.pontius.kiar.database.institution.DbParticipant
-import ch.pontius.kiar.database.institution.DbRole
+import ch.pontius.kiar.api.model.user.Role
+import ch.pontius.kiar.database.config.EntityMappings
+import ch.pontius.kiar.database.config.JobTemplates
+import ch.pontius.kiar.database.config.JobTemplates.toJobTemplate
+import ch.pontius.kiar.database.config.SolrConfigs
+import ch.pontius.kiar.database.config.Transformers
+import ch.pontius.kiar.database.institutions.Institutions
+import ch.pontius.kiar.database.institutions.Participants
+import ch.pontius.kiar.utilities.extensions.currentUser
 import ch.pontius.kiar.ingester.IngesterServer
-import ch.pontius.kiar.utilities.mapToArray
-import io.javalin.http.BadRequestResponse
+import ch.pontius.kiar.utilities.extensions.parseBodyOrThrow
 import io.javalin.http.Context
 import io.javalin.openapi.*
-import jetbrains.exodus.database.TransientEntityStore
-import kotlinx.dnq.query.*
-import kotlinx.dnq.util.findById
-import org.joda.time.DateTime
+import org.jetbrains.exposed.v1.core.eq
+import org.jetbrains.exposed.v1.jdbc.andWhere
+import org.jetbrains.exposed.v1.jdbc.deleteWhere
+import org.jetbrains.exposed.v1.jdbc.insert
+import org.jetbrains.exposed.v1.jdbc.insertAndGetId
+import org.jetbrains.exposed.v1.jdbc.select
+import org.jetbrains.exposed.v1.jdbc.selectAll
+import org.jetbrains.exposed.v1.jdbc.transactions.transaction
+import org.jetbrains.exposed.v1.jdbc.update
+import java.time.Instant
 
 @OpenApi(
     path = "/api/templates",
@@ -39,38 +44,30 @@ import org.joda.time.DateTime
         OpenApiResponse("500", [OpenApiContent(ErrorStatus::class)]),
     ]
 )
-fun listJobTemplates(ctx: Context, store: TransientEntityStore) {
-    store.transactional (true) {
+fun listJobTemplates(ctx: Context) {
+    val templates = transaction {
         val user = ctx.currentUser()
-        val templates = if (user.role == DbRole.ADMINISTRATOR) {
-            DbJobTemplate.all()
-        } else if (user.institution?.participant != null) {
-            DbJobTemplate.filter { it.participant eq user.institution?.participant }
-        } else {
-            DbJobTemplate.emptyQuery()
-        }
-        ctx.json(templates.sortedBy(DbJobTemplate::name).mapToArray { it.toApi() })
-    }
-}
+        val query = (JobTemplates innerJoin Participants innerJoin SolrConfigs innerJoin EntityMappings).selectAll()
 
-@OpenApi(
-    path = "/api/templates/types",
-    methods = [HttpMethod.GET],
-    summary = "Lists all available job template types.",
-    operationId = "getListJobTemplateTypes",
-    tags = ["Config", "Job Template"],
-    pathParams = [],
-    responses = [
-        OpenApiResponse("200", [OpenApiContent(Array<JobType>::class)]),
-        OpenApiResponse("401", [OpenApiContent(ErrorStatus::class)]),
-        OpenApiResponse("403", [OpenApiContent(ErrorStatus::class)]),
-        OpenApiResponse("500", [OpenApiContent(ErrorStatus::class)]),
-    ]
-)
-fun listJobTemplateTypes(ctx: Context, store: TransientEntityStore) {
-    store.transactional (true) {
-        ctx.json(DbJobType.all().mapToArray { it.toApi() })
+        if (user.role != Role.ADMINISTRATOR) {
+            val participantId = user.institution?.let {
+                Institutions.select(Institutions.participantId)
+                    .where { Institutions.name eq user.institution.name }
+                    .map { it[Institutions.participantId].value }
+                    .firstOrNull()
+            }
+            if (participantId != null) {
+                query.andWhere { JobTemplates.participantId eq participantId }
+            } else {
+                return@transaction emptyList<JobTemplate>()
+            }
+        }
+
+        query.orderBy(JobTemplates.name).map { it.toJobTemplate() }
     }
+
+    /* Return results. */
+    ctx.json(templates.toTypedArray())
 }
 
 @OpenApi(
@@ -89,43 +86,37 @@ fun listJobTemplateTypes(ctx: Context, store: TransientEntityStore) {
         OpenApiResponse("500", [OpenApiContent(ErrorStatus::class)]),
     ]
 )
-fun createJobTemplate(ctx: Context, store: TransientEntityStore, server: IngesterServer) {
-    val request = try {
-        ctx.bodyAsClass(JobTemplate::class.java)
-    } catch (e: BadRequestResponse) {
-        throw ErrorStatusException(400, "Malformed request body.")
+fun createJobTemplate(ctx: Context, server: IngesterServer) {
+    val request = ctx.parseBodyOrThrow<JobTemplate>()
+    val created = transaction {
+        val jobTemplateId = JobTemplates.insertAndGetId { insert ->
+            insert[name] = request.name
+            insert[description] = request.description
+            insert[type] = request.type
+            insert[startAutomatically] = request.startAutomatically
+            insert[participantId] = Participants.idByName(request.participantName) ?: throw ErrorStatusException(404, "Could not find participant with name '${request.participantName}'.")
+            request.config?.name?.apply {
+                insert[solrId] = SolrConfigs.idByName(this) ?: throw ErrorStatusException(404, "Could not find Apache Solr configuration with name '$this'.")
+            }
+            request.mapping?.name?.apply {
+                insert[entityMappingId] = EntityMappings.idByName(this) ?: throw ErrorStatusException(404, "Could not find Apache Solr configuration with name '$this'.")
+            }
+        }.value
+
+        /* Save transformers. */
+        saveTransformers(jobTemplateId, request.transformers)
+
+        /* Return created items with ID. */
+        request.copy(jobTemplateId)
     }
 
-    val created = store.transactional {
-        /* Update basic properties. */
-        val mapping = DbJobTemplate.new {
-            name = request.name
-            description = request.description
-            type = request.type.toDb()
-            startAutomatically = request.startAutomatically
-            participant = DbParticipant.filter { it.name eq request.participantName }.firstOrNull()
-                ?: throw ErrorStatusException(404, "Could not find participant with name ${request.participantName}.")
-            solr = DbSolr.filter { it.name eq request.solrConfigName }.firstOrNull()
-                ?: throw ErrorStatusException(404, "Could not find Apache Solr configuration with name ${request.solrConfigName}.")
-            mapping = DbEntityMapping.filter { it.name eq request.entityMappingName }.firstOrNull()
-                ?: throw ErrorStatusException(404, "Could not find entity mapping configuration with name ${request.entityMappingName}.")
-            createdAt = DateTime.now()
-            changedAt = DateTime.now()
-
-            /* Adds all transformer configuration to template. */
-            this.mergeTransformers(request.transformers)
-        }
-
-        /* Now merge attribute mappings. */
-        mapping.toApi() to mapping.sourcePath(server.config)
+    /* Schedule watcher if job template starts automatically. */
+    if (created.startAutomatically) {
+        server.scheduleWatcher(created.id!!, created.sourcePath(server.config))
     }
 
-    /* Schedule a file watcher. */
-    if (created.first.startAutomatically) {
-        server.scheduleWatcher(created.first.name, created.second)
-    }
-
-    ctx.json(created.first)
+    /* Return created JSON. */
+    ctx.json(created)
 }
 
 @OpenApi(
@@ -135,7 +126,7 @@ fun createJobTemplate(ctx: Context, store: TransientEntityStore, server: Ingeste
     operationId = "getJobTemplate",
     tags = ["Config", "Job Template"],
     pathParams = [
-        OpenApiParam(name = "id", description = "The ID of the job template to retrieve.", required = true)
+        OpenApiParam(name = "id", type = Int::class, description = "The ID of the job template to retrieve.", required = true)
     ],
     responses = [
         OpenApiResponse("200", [OpenApiContent(JobTemplate::class)]),
@@ -145,60 +136,14 @@ fun createJobTemplate(ctx: Context, store: TransientEntityStore, server: Ingeste
         OpenApiResponse("500", [OpenApiContent(ErrorStatus::class)])
     ]
 )
-fun getJobTemplate(ctx: Context, store: TransientEntityStore) {
-    val templateId = ctx.pathParam("id")
-    val template = store.transactional {
-        try {
-            DbJobTemplate.findById(templateId).toApi(true)
-        } catch (e: Throwable) {
-            throw ErrorStatusException(404, "Job template with ID $templateId could not be found.")
-        }
+fun getJobTemplate(ctx: Context) {
+    val templateId = ctx.pathParam("id").toIntOrNull() ?: throw ErrorStatusException(400, "Malformed job template ID.")
+    val template = transaction {
+        val template =  JobTemplates.getById(templateId) ?: throw ErrorStatusException(404, "Job template with ID $templateId could not be found.")
+        val transformers = Transformers.getByJobTemplateId(templateId)
+        template.copy(transformers = transformers)
     }
     ctx.json(template)
-}
-
-@OpenApi(
-    path = "/api/templates/{id}",
-    methods = [HttpMethod.DELETE],
-    summary = "Deletes an existing job template.",
-    operationId = "deleteJobTemplate",
-    tags = ["Config", "Job Template"],
-    pathParams = [
-        OpenApiParam(name = "id", description = "The ID of the job template that should be deleted.", required = true)
-    ],
-    responses = [
-        OpenApiResponse("200", [OpenApiContent(SuccessStatus::class)]),
-        OpenApiResponse("401", [OpenApiContent(ErrorStatus::class)]),
-        OpenApiResponse("403", [OpenApiContent(ErrorStatus::class)]),
-        OpenApiResponse("404", [OpenApiContent(ErrorStatus::class)]),
-        OpenApiResponse("500", [OpenApiContent(ErrorStatus::class)])
-    ]
-)
-fun deleteJobTemplate(ctx: Context, store: TransientEntityStore, server: IngesterServer) {
-    val templateId = ctx.pathParam("id")
-    var terminateWatcher = false
-    val templateName = store.transactional {
-        val template = try {
-            DbJobTemplate.findById(templateId)
-        } catch (e: Throwable) {
-            throw ErrorStatusException(404, "Job template with ID $templateId could not be found.")
-        }
-
-        /* If template was started automatically, watcher must be terminated. */
-        if (template.startAutomatically) {
-            terminateWatcher = true
-        }
-        val name = template.name
-        template.delete()
-        name
-    }
-
-    /* Terminate watcher if necessary. */
-    if (terminateWatcher) {
-        server.terminateWatcher(templateName)
-    }
-
-    ctx.json(SuccessStatus("Job template '$templateName' (id: $templateId) deleted successfully."))
 }
 
 @OpenApi(
@@ -208,7 +153,7 @@ fun deleteJobTemplate(ctx: Context, store: TransientEntityStore, server: Ingeste
     operationId = "updateJobTemplate",
     tags = ["Config", "Job Template"],
     pathParams = [
-        OpenApiParam(name = "id", description = "The ID of the job template that should be updated.", required = true)
+        OpenApiParam(name = "id", type = Int::class, description = "The ID of the job template that should be updated.", required = true)
     ],
     requestBody = OpenApiRequestBody([OpenApiContent(JobTemplate::class)], required = true),
     responses = [
@@ -220,60 +165,97 @@ fun deleteJobTemplate(ctx: Context, store: TransientEntityStore, server: Ingeste
         OpenApiResponse("500", [OpenApiContent(ErrorStatus::class)])
     ]
 )
-fun updateJobTemplate(ctx: Context, store: TransientEntityStore) {
+fun updateJobTemplate(ctx: Context, server: IngesterServer) {
     /* Extract the ID and the request body. */
-    val templateId = ctx.pathParam("id")
-    val request = try {
-        ctx.bodyAsClass(JobTemplate::class.java)
-    } catch (e: Throwable) {
-        throw ErrorStatusException(400, "Malformed request body.")
-    }
+    val templateId = ctx.pathParam("id").toIntOrNull() ?: throw ErrorStatusException(400, "Malformed job template ID.")
+    val request = ctx.parseBodyOrThrow<JobTemplate>()
 
     /* Start transaction. */
-    val updated = store.transactional {
-        val template = try {
-            DbJobTemplate.findById(templateId)
-        } catch (e: Throwable) {
-            throw ErrorStatusException(404, "Job template with ID $templateId could not be found.")
+    transaction {
+        val existing = JobTemplates.getById(templateId) ?: throw ErrorStatusException(404, "Could not update job template with ID $templateId because it could not be found.")
+
+        /* Perform update. */
+        JobTemplates.update({ JobTemplates.id eq templateId }) { update ->
+            update[name] = request.name
+            update[description] = request.description
+            update[type] = request.type
+            update[startAutomatically] = request.startAutomatically
+            update[participantId] = Participants.idByName(request.participantName) ?: throw ErrorStatusException(404, "Could not find participant with name '${request.participantName}'.")
+            request.config?.name?.apply {
+                update[solrId] = SolrConfigs.idByName(this) ?: throw ErrorStatusException(404, "Could not find Apache Solr configuration with name '$this'.")
+            }
+            request.mapping?.name?.apply {
+                update[entityMappingId] = EntityMappings.idByName(this) ?: throw ErrorStatusException(404, "Could not find Apache Solr configuration with name '$this'.")
+            }
+            update[modified] = Instant.now()
         }
 
-        /* Update basic properties. */
-        template.name = request.name
-        template. description = request.description
-        template.type = request.type.toDb()
-        template.startAutomatically = request.startAutomatically
-        template.participant = DbParticipant.filter { it.name eq request.participantName }.firstOrNull()
-            ?: throw ErrorStatusException(404, "Could not find participant with name ${request.participantName}.")
-        template.solr = DbSolr.filter { it.name eq request.solrConfigName }.firstOrNull()
-            ?: throw ErrorStatusException(404, "Could not find Apache Solr configuration with name ${request.solrConfigName}.")
-        template.mapping = DbEntityMapping.filter { it.name eq request.entityMappingName }.firstOrNull()
-            ?: throw ErrorStatusException(404, "Could not find entity mapping configuration with name ${request.entityMappingName}.")
-        template.changedAt = DateTime.now()
+        /* Saves all transformers. */
+        saveTransformers(templateId, request.transformers)
 
-        /* Now merge transformers. */
-        template.mergeTransformers(request.transformers)
-        template.toApi()
+        /* (De-)Schedule watchers. */
+        if (existing.startAutomatically && !request.startAutomatically) {
+            server.terminateWatcher(templateId)
+        } else if (!existing.startAutomatically && request.startAutomatically) {
+            server.scheduleWatcher(templateId, request.sourcePath(server.config))
+        }
     }
 
-    ctx.json(updated)
+    /* Returns updated object. */
+    ctx.json(request)
+}
+
+@OpenApi(
+    path = "/api/templates/{id}",
+    methods = [HttpMethod.DELETE],
+    summary = "Deletes an existing job template.",
+    operationId = "deleteJobTemplate",
+    tags = ["Config", "Job Template"],
+    pathParams = [
+        OpenApiParam(name = "id", type = Int::class, description = "The ID of the job template that should be deleted.", required = true)
+    ],
+    responses = [
+        OpenApiResponse("200", [OpenApiContent(SuccessStatus::class)]),
+        OpenApiResponse("401", [OpenApiContent(ErrorStatus::class)]),
+        OpenApiResponse("403", [OpenApiContent(ErrorStatus::class)]),
+        OpenApiResponse("404", [OpenApiContent(ErrorStatus::class)]),
+        OpenApiResponse("500", [OpenApiContent(ErrorStatus::class)])
+    ]
+)
+fun deleteJobTemplate(ctx: Context, server: IngesterServer) {
+    val templateId = ctx.pathParam("id").toIntOrNull() ?: throw ErrorStatusException(400, "Malformed job template ID.")
+    var terminateWatcher = false
+    val deleted = transaction {
+        terminateWatcher = JobTemplates.select(JobTemplates.startAutomatically).where { JobTemplates.id eq templateId }.map { it[JobTemplates.startAutomatically] }.firstOrNull() ?: false
+        JobTemplates.deleteWhere { JobTemplates.id eq templateId }
+    }
+
+    /* Terminate watcher if necessary. */
+    if (terminateWatcher) {
+        server.terminateWatcher(templateId)
+    }
+
+    /* Return status. */
+    if (deleted > 0) {
+        ctx.json(SuccessStatus("Job template with ID $templateId  deleted successfully."))
+    } else {
+        ctx.json(ErrorStatus(404, "Job template with ID $templateId could not be deleted because it could not be found."))
+    }
 }
 
 /**
- * Overrides a [DbJobTemplate]'s [DbTransformer]s using the provided list.
+ * Overrides a [JobTemplate]'s [TransformerConfig]s using the provided list.
  *
- * @param transformers [List] of [TransformerConfig]s to merge [DbJobTemplate] with.
+ * @param jobTemplateId The [JobTemplateId] to store [TransformerConfig]s for.
+ * @param transformers [List] of [TransformerConfig]s to store.
  */
-private fun DbJobTemplate.mergeTransformers(transformers: List<TransformerConfig>) {
-    this.transformers.asSequence().forEach { it.delete() }
+private fun saveTransformers(jobTemplateId: JobTemplateId, transformers: List<TransformerConfig>) {
+    Transformers.deleteWhere { Transformers.jobTemplateId eq jobTemplateId }
     for (t in transformers) {
-        this.transformers.add(DbTransformer.new {
-            type = t.type.toDb()
-            for (p in t.parameters) {
-                parameters.add(DbTransformerParameter.new {
-                    key = p.key
-                    value = p.value
-                })
-            }
-        })
+        Transformers.insert { insert ->
+            insert[Transformers.jobTemplateId] = jobTemplateId
+            insert[type] = t.type
+            insert[parameters] = t.parameters
+        }
     }
 }

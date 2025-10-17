@@ -1,43 +1,34 @@
 package ch.pontius.kiar.tasks
 
 import ch.pontius.kiar.config.Config
-import ch.pontius.kiar.database.job.DbJobLog
+import ch.pontius.kiar.database.jobs.JobLogs
 import ch.pontius.kiar.ingester.IngesterServer
-import jetbrains.exodus.database.TransientEntityStore
-import kotlinx.dnq.query.asSequence
-import kotlinx.dnq.query.filter
 import org.apache.logging.log4j.LogManager
 import org.apache.logging.log4j.Logger
-import org.joda.time.DateTime
+import org.jetbrains.exposed.v1.core.less
+import org.jetbrains.exposed.v1.jdbc.deleteWhere
+import org.jetbrains.exposed.v1.jdbc.transactions.transaction
+import java.time.LocalDateTime
+import java.time.ZoneOffset
 import java.util.*
 
 /**
- * A simple [TimerTask] used to schedule the purging of old [DbJobLog] entries.
+ * A simple [TimerTask] used to schedule the purging of old [JobLogs] entries.
  *
  * @author Ralph Gasser
- * @version 1.0.0
+ * @version 1.1.0
  */
-class PurgeJobLogTask(private val store: TransientEntityStore, private val config: Config): TimerTask() {
+class PurgeJobLogTask(private val config: Config): TimerTask() {
     companion object {
         /** The [Logger] used by this [IngesterServer]. */
         private val LOGGER: Logger = LogManager.getLogger()
     }
 
     override fun run() {
-        var deleted = 0L
-        this.store.transactional { transaction ->
-            val threshold = DateTime.now().minusDays(this.config.jobLogRetentionDays)
-            DbJobLog.filter { it.job.createdAt le threshold }.asSequence().forEach {
-                it.delete()
-                deleted++
-                if (deleted % 100_000L == 0L) {
-                    transaction.flush()
-                    LOGGER.info("Purged $deleted job logs.")
-                }
-            }
+        val deleted = transaction {
+            val threshold = LocalDateTime.now().minusDays(this@PurgeJobLogTask.config.jobLogRetentionDays.toLong()).toInstant(ZoneOffset.UTC)
+            JobLogs.deleteWhere { JobLogs.created less threshold }
         }
-        if (deleted > 0L) {
-            LOGGER.info("Purged $deleted job logs.")
-        }
+        if (deleted > 0L) LOGGER.info("Purged $deleted job logs.")
     }
 }

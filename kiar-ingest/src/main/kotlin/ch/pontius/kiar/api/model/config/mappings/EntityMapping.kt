@@ -2,6 +2,8 @@ package ch.pontius.kiar.api.model.config.mappings
 
 import kotlinx.serialization.Serializable
 
+typealias EntityMappingId = Int
+
 /**
  * A [EntityMapping] as exposed and used by the KIAR API.
  *
@@ -10,11 +12,11 @@ import kotlinx.serialization.Serializable
  */
 @Serializable
 data class EntityMapping(
-    val id: String? = null,
+    val id: EntityMappingId? = null,
     val name: String,
     val description: String?,
     val type: MappingFormat,
     val createdAt: Long? = null,
     val changedAt: Long? = null,
-    val attributes: List<AttributeMapping>
+    val attributes: List<AttributeMapping> = emptyList(),
 )

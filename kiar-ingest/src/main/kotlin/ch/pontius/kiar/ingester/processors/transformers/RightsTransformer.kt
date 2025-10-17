@@ -3,13 +3,12 @@ package ch.pontius.kiar.ingester.processors.transformers
 import ch.pontius.kiar.api.model.job.JobLog
 import ch.pontius.kiar.api.model.job.JobLogContext
 import ch.pontius.kiar.api.model.job.JobLogLevel
-import ch.pontius.kiar.database.masterdata.DbRightStatement
+import ch.pontius.kiar.api.model.masterdata.RightStatement
 import ch.pontius.kiar.ingester.processors.ProcessingContext
 import ch.pontius.kiar.ingester.processors.sources.Source
 import ch.pontius.kiar.ingester.solrj.*
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.filter
-import kotlinx.dnq.query.asSequence
 import org.apache.logging.log4j.LogManager
 import org.apache.solr.common.SolrInputDocument
 
@@ -25,20 +24,18 @@ class RightsTransformer(override val input: Source<SolrInputDocument>): Transfor
         private val LOGGER = LogManager.getLogger(InstitutionTransformer::class.java)
     }
 
-    /** [MutableMap] of [DbRightStatement] entries. */
-    private val rights = DbRightStatement.all().asSequence().associate { it.short to it.toApi() }.toMutableMap()
+    /** [MutableMap] of [RightStatement] entries. */
+    private val rights = RightStatement.DEFAULT.associateBy { it.shortName }.toMutableMap()
 
     init {
         /* Special case for KIM.bl and AMBL objects. */
-        this.rights["Public Domain Mark"] = DbRightStatement.PDM.toApi()
-        this.rights["Urheberrechtsschutz nicht bewertet"] = DbRightStatement.CNE.toApi()
-        this.rights["Urheberrechtsschutz"] = DbRightStatement.InC.toApi()
-        this.rights["Urheberrechtsschutz - Nutzung zu Bildungszwecken erlaubt"] = DbRightStatement.InC_EDU.toApi()
-        this.rights["Freier Zugriff, keine Nachnutzung"] = DbRightStatement.InC.toApi()
-        this.rights["Alle Rechte vorbehalten"] = DbRightStatement.InC.toApi()
-
-        /* Special case: Typos */
-        this.rights["CC BY-SA-NC 4.0"] = DbRightStatement.CC_BY_NC_SA.toApi()
+        this.rights["Urheberrechtsschutz"] = RightStatement.DEFAULT[0]
+        this.rights["Freier Zugriff, keine Nachnutzung"] = RightStatement.DEFAULT[0]
+        this.rights["Alle Rechte vorbehalten"] = RightStatement.DEFAULT[0]
+        this.rights["Urheberrechtsschutz - Nutzung zu Bildungszwecken erlaubt"] =  RightStatement.DEFAULT[1]
+        this.rights["Urheberrechtsschutz nicht bewertet"] = RightStatement.DEFAULT[2]
+        this.rights["Public Domain Mark"] = RightStatement.DEFAULT[4]
+        this.rights["CC BY-SA-NC 4.0"] = RightStatement.DEFAULT[10]
     }
 
     /**
