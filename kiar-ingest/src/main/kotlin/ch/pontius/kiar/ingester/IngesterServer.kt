@@ -131,9 +131,8 @@ class IngesterServer(val config: Config) {
      */
     fun scheduleJob(jobId: JobId, test: Boolean = false) {
         /* Step 1: Perform sanity checks and create pipeline. */
-        val (participant, pipeline) = transaction {
-            val job = Jobs.getById(jobId)  ?: throw IllegalStateException("Unknown job ID: $jobId.")
-            val participant = job.template?.participantName ?: throw IllegalStateException("Job is not associated with a participant.")
+        val job = transaction {
+            val job = Jobs.getById(jobId) ?: throw IllegalStateException("Unknown job ID $jobId.")
 
             /* Sanity check. */
             require(job.status == JobStatus.FAILED || job.status == JobStatus.HARVESTED || job.status == JobStatus.INTERRUPTED) {
@@ -147,18 +146,18 @@ class IngesterServer(val config: Config) {
             }
 
             /* Return pipeline. */
-            participant to job.toPipeline(this@IngesterServer.config, test)
+            job
         }
 
         /* Step 2: Create processing context. */
-        val context = ProcessingContext(jobId, participant)
+        val context = ProcessingContext(jobId)
         this.activeJobs[jobId] = context
 
         /* Step 3: Create flow. */
-        val flow = pipeline.toFlow(context).onStart {
+        val flow = job.toPipeline(this@IngesterServer.config).toFlow(context).onStart {
             transaction {
                 Jobs.update({ Jobs.id eq jobId }) { update ->
-                    update[status] = JobStatus.SCHEDULED
+                    update[status] = JobStatus.RUNNING
                     update[modified] = Instant.now()
                 }
             }
@@ -193,8 +192,8 @@ class IngesterServer(val config: Config) {
                     update[modified] = Instant.now()
                 }
 
-                /* Flush logs. */
-                context.flushLogs()
+                /* Close context. */
+                context.close()
             }
         }
 

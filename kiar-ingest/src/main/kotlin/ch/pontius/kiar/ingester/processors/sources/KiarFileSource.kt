@@ -1,6 +1,5 @@
 package ch.pontius.kiar.ingester.processors.sources
 
-import ch.pontius.kiar.api.model.config.mappings.EntityMapping
 import ch.pontius.kiar.ingester.media.MediaProvider
 import ch.pontius.kiar.ingester.parsing.xml.XmlDocumentParser
 import ch.pontius.kiar.ingester.processors.ProcessingContext
@@ -22,9 +21,9 @@ import java.nio.file.Path
  * A [Source] for a KIAR file, as delivered by mainly smaller museums.
  *
  * @author Ralph Gasser
- * @version 1.1.2
+ * @version 1.2.0
  */
-class KiarFileSource(private val file: Path, private val config: EntityMapping, private val skipResources: Boolean = false): Source<SolrInputDocument> {
+class KiarFileSource(private val file: Path, private val skipResources: Boolean = false): Source<SolrInputDocument> {
     companion object {
         private val LOGGER = LogManager.getLogger()
     }
@@ -37,14 +36,15 @@ class KiarFileSource(private val file: Path, private val config: EntityMapping, 
     override fun toFlow(context: ProcessingContext): Flow<SolrInputDocument> {
         val kiar = KiarFile(this@KiarFileSource.file)
         return channelFlow {
-            val parser = XmlDocumentParser(this@KiarFileSource.config, context)
+            val mapping = context.jobTemplate.mapping ?: throw IllegalArgumentException("No entity mapping for job with ID ${context.jobId} found.")
+            val parser = XmlDocumentParser(mapping, context)
 
             /* Iterate over Kiar entries. */
             for (entry in kiar.iterator()) {
                 /* Create new document. */
                 val doc = SolrInputDocument()
                 doc.setField(Field.UUID, entry.uuid.toString())
-                doc.setField(Field.PARTICIPANT, context.participant)
+                doc.setField(Field.PARTICIPANT, context.jobTemplate.participantName)
 
                 /* Parse values. */
                 entry.open().use {

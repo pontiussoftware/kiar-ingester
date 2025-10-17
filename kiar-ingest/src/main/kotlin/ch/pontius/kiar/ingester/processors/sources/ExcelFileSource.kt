@@ -1,6 +1,5 @@
 package ch.pontius.kiar.ingester.processors.sources
 
-import ch.pontius.kiar.api.model.config.mappings.EntityMapping
 import ch.pontius.kiar.ingester.parsing.values.ValueParser
 import ch.pontius.kiar.ingester.processors.ProcessingContext
 import kotlinx.coroutines.Dispatchers
@@ -16,14 +15,13 @@ import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.StandardOpenOption
 
-
 /**
  * A [Source] for a single Microsoft Excel file. This is, for example, used by museumPlus import.
  *
  * @author Ralph Gasser
- * @version 1.0.3
+ * @version 1.2.0
  */
-class ExcelFileSource(private val file: Path, private val config: EntityMapping): Source<SolrInputDocument> {
+class ExcelFileSource(private val file: Path): Source<SolrInputDocument> {
     override fun toFlow(context: ProcessingContext): Flow<SolrInputDocument> = flow {
         Files.newInputStream(this@ExcelFileSource.file, StandardOpenOption.READ).use { input ->
             val workbook: Workbook = XSSFWorkbook(input)
@@ -32,7 +30,8 @@ class ExcelFileSource(private val file: Path, private val config: EntityMapping)
             var first = true
             for (row in sheet) {
                 if (first) {
-                    for (attribute in this@ExcelFileSource.config.attributes) {
+                    val mapping = context.jobTemplate.mapping ?: throw IllegalArgumentException("No entity mapping for job with ID ${context.jobId} found.")
+                    for (attribute in mapping.attributes) {
                         val index = row.indexOfFirst { it.stringCellValue == attribute.source }
                         if (index > -1) {
                             map.add(attribute.newParser() to index)

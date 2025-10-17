@@ -1,31 +1,20 @@
 package ch.pontius.kiar.api.model.job
 
-import ch.pontius.kiar.api.model.config.solr.CollectionType
 import ch.pontius.kiar.api.model.config.templates.JobTemplate
 import ch.pontius.kiar.api.model.config.templates.JobType
 import ch.pontius.kiar.config.Config
-import ch.pontius.kiar.database.config.AttributeMappings
-import ch.pontius.kiar.database.config.AttributeMappings.toAttributeMapping
-import ch.pontius.kiar.database.config.ImageDeployments
-import ch.pontius.kiar.database.config.ImageDeployments.toImageDeployment
-import ch.pontius.kiar.database.config.SolrCollections
-import ch.pontius.kiar.database.config.SolrCollections.toSolrCollection
-import ch.pontius.kiar.database.config.Transformers
-import ch.pontius.kiar.database.config.Transformers.toTransformerConfig
+import ch.pontius.kiar.ingester.processors.ProcessingContext
 import ch.pontius.kiar.ingester.processors.sinks.ApacheSolrSink
-import ch.pontius.kiar.ingester.processors.sinks.DummySink
 import ch.pontius.kiar.ingester.processors.sinks.Sink
 import ch.pontius.kiar.ingester.processors.sources.*
 import ch.pontius.kiar.ingester.processors.transformers.ImageDeployment
 import kotlinx.serialization.Serializable
 import org.apache.solr.common.SolrInputDocument
-import org.jetbrains.exposed.v1.core.and
-import org.jetbrains.exposed.v1.core.eq
-import org.jetbrains.exposed.v1.jdbc.selectAll
 
 typealias JobId = Int
 
 /**
+ * A data ingest [Job]]
  *
  * @author Ralph Gasser
  * @version 1.0.0
@@ -74,49 +63,31 @@ data class Job(
      * Requires an ongoing transactional context!
      *
      * @param config The KIAR tools [Config] object.
-     * @param test Flag indicating whether this pipeline is for testing purposes.
+     * @param context The [ProcessingContext] for which to create the pipeline
      * @return [Sink] representing the pipeline.
      */
-    fun toPipeline(config: Config, test: Boolean = false): Sink<SolrInputDocument> {
-        val template = this.template?.let {
-            val transformers = Transformers.selectAll().where { Transformers.jobTemplateId eq it.id }.map { it.toTransformerConfig() }
-            it.copy(transformers = transformers)
-        } ?: throw IllegalStateException("Failed to generated execution pipeline for job ${this.id}: Missing template.")
-        val mapping = template.mapping?.let {
-            val attributes = AttributeMappings.selectAll().where { AttributeMappings.entityMappingId eq it.id }.map { it.toAttributeMapping() }
-            it.copy(attributes = attributes)
-        } ?: throw IllegalStateException("Failed to generated execution pipeline for job ${this.id}: Missing entity mapping.")
-        val solrConfig = template.config?.let {
-            val collections = SolrCollections.selectAll().where { (SolrCollections.solrInstanceId eq it.id) and (SolrCollections.type eq CollectionType.OBJECT) }.map { it.toSolrCollection() }
-            it.copy(collections = collections)
-        } ?: throw IllegalStateException("Failed to generated execution pipeline for job ${this.id}: Missing Apache Solr configuration.")
+    fun toPipeline(config: Config): Sink<SolrInputDocument> {
+        require(this.template != null) { "Job template is required in order to construct a processing pipeline." }
 
         /* Generate file source. */
-        val sourcePath = config.ingestPath.resolve(template.participantName).resolve("${this.id}.job")
-        val source: Source<SolrInputDocument> = when (template.type) {
-            JobType.XML -> XmlFileSource(sourcePath, mapping)
-            JobType.JSON -> JsonFileSource(sourcePath, mapping)
-            JobType.KIAR -> KiarFileSource(sourcePath, mapping)
-            JobType.EXCEL -> ExcelFileSource(sourcePath, mapping)
+        val sourcePath = config.ingestPath.resolve(this.template.participantName).resolve("${this.id}.job")
+        val source: Source<SolrInputDocument> = when (this.template.type) {
+            JobType.XML -> XmlFileSource(sourcePath)
+            JobType.JSON -> JsonFileSource(sourcePath)
+            JobType.KIAR -> KiarFileSource(sourcePath)
+            JobType.EXCEL -> ExcelFileSource(sourcePath)
         }
         var root = source
 
         /* Generate all transformers. */
-        for (t in template.transformers.asSequence()) {
+        for (t in this.template.transformers.asSequence()) {
             root = t.newInstance(root)
         }
 
-        /* Create image deployment stage (if necessary). */
-        val deployments = ImageDeployments.selectAll().where { ImageDeployments.solrInstanceId eq solrConfig.id }.map { it.toImageDeployment() }
-        if (deployments.isNotEmpty()) {
-            root = ImageDeployment(root, deployments, test)
-        }
+        /* Create image deployment stage. */
+        root = ImageDeployment(root)
 
         /* Return ApacheSolrSink. */
-        return if (test) {
-            DummySink(root)
-        } else {
-            ApacheSolrSink(root, solrConfig)
-        }
+        return ApacheSolrSink(root)
     }
 }

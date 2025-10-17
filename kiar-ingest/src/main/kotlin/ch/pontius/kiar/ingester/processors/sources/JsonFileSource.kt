@@ -1,6 +1,5 @@
 package ch.pontius.kiar.ingester.processors.sources
 
-import ch.pontius.kiar.api.model.config.mappings.EntityMapping
 import ch.pontius.kiar.ingester.parsing.json.JsonDocumentParser
 import ch.pontius.kiar.ingester.processors.ProcessingContext
 import com.google.gson.JsonParser
@@ -17,11 +16,12 @@ import java.nio.file.Path
  * A [Source] for a JSON file, as delivered by mainly smaller museums.
  *
  * @author Ralph Gasser
- * @version 1.0.2
+ * @version 1.2.0
  */
-class JsonFileSource(private val file: Path, private val config: EntityMapping): Source<SolrInputDocument> {
+class JsonFileSource(private val file: Path): Source<SolrInputDocument> {
     override fun toFlow(context: ProcessingContext): Flow<SolrInputDocument> = flow {
-        val docParser = JsonDocumentParser(this@JsonFileSource.config, context)
+        val mapping = context.jobTemplate.mapping ?: throw IllegalArgumentException("No entity mapping for job with ID ${context.jobId} found.")
+        val docParser = JsonDocumentParser(mapping, context)
         JsonReader(Files.newBufferedReader(this@JsonFileSource.file)).use { reader ->
             reader.beginArray()
             while (reader.hasNext()) {

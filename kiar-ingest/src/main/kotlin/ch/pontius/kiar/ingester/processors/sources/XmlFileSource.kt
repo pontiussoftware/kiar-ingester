@@ -1,20 +1,14 @@
 package ch.pontius.kiar.ingester.processors.sources
 
-import ch.pontius.kiar.api.model.config.mappings.EntityMapping
 import ch.pontius.kiar.ingester.parsing.xml.XmlParsingContext
 import ch.pontius.kiar.ingester.processors.ProcessingContext
-import ch.pontius.kiar.ingester.processors.transformers.InstitutionTransformer
 import ch.pontius.kiar.ingester.solrj.Field
 import ch.pontius.kiar.ingester.solrj.setField
-import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.channelFlow
 import kotlinx.coroutines.flow.flowOn
-import kotlinx.coroutines.flow.onCompletion
 import kotlinx.coroutines.runBlocking
-import org.apache.logging.log4j.LogManager
 import org.apache.solr.common.SolrInputDocument
 import org.xml.sax.SAXException
 import java.nio.file.Files
@@ -26,9 +20,9 @@ import javax.xml.parsers.SAXParserFactory
  * A [Source] for a single XML file. This is, for example, used by culture.web.
  *
  * @author Ralph Gasser
- * @version 1.1.1
+ * @version 1.2.0
  */
-class XmlFileSource(private val file: Path, private val config: EntityMapping): Source<SolrInputDocument> {
+class XmlFileSource(private val file: Path): Source<SolrInputDocument> {
     /**
      * Creates and returns a [Flow] for this [XmlFileSource].
      *
@@ -39,9 +33,10 @@ class XmlFileSource(private val file: Path, private val config: EntityMapping): 
         val factory: SAXParserFactory = SAXParserFactory.newInstance()
         val saxParser: SAXParser = factory.newSAXParser()
         Files.newInputStream(this@XmlFileSource.file).use { input ->
-            val parser = XmlParsingContext(this@XmlFileSource.config, context) { doc ->
+            val mapping = context.jobTemplate.mapping ?: throw IllegalArgumentException("No entity mapping for job with ID ${context.jobId} found.")
+            val parser = XmlParsingContext(mapping, context) { doc ->
                 runBlocking {
-                    doc.setField(Field.PARTICIPANT, context.participant)
+                    doc.setField(Field.PARTICIPANT, context.jobTemplate.participantName)
                     if (context.aborted) throw InterruptedException("XML parsing was aborted by user.")
                     channel.send(doc)
                 }

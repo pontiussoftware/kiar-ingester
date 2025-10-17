@@ -1,7 +1,8 @@
 package ch.pontius.kiar.ingester.processors.transformers
 
 import ch.pontius.kiar.api.model.config.image.ImageDeployment
-import ch.pontius.kiar.api.model.config.image.ImageFormat.*
+import ch.pontius.kiar.api.model.config.image.ImageFormat.JPEG
+import ch.pontius.kiar.api.model.config.image.ImageFormat.PNG
 import ch.pontius.kiar.api.model.job.JobLog
 import ch.pontius.kiar.api.model.job.JobLogContext
 import ch.pontius.kiar.api.model.job.JobLogLevel
@@ -14,13 +15,17 @@ import com.sksamuel.scrimage.nio.ImageWriter
 import com.sksamuel.scrimage.nio.JpegWriter
 import com.sksamuel.scrimage.nio.PngWriter
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.flowOn
+import kotlinx.coroutines.flow.onCompletion
+import kotlinx.coroutines.flow.onEach
 import org.apache.solr.common.SolrInputDocument
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
-import java.nio.file.*
+import java.nio.file.Files
+import java.nio.file.Paths
+import java.nio.file.StandardCopyOption
 import java.util.*
-import kotlin.Comparator
 
 /**
  * A [Transformer] to operates on [SolrInputDocument]s, extracts raw image files, obtains a smaller preview and stores it.
@@ -28,9 +33,9 @@ import kotlin.Comparator
  * The [SolrInputDocument] is updated to contain the path to the new file.
  *
  * @author Ralph Gasser
- * @version 1.5.1
+ * @version 1.6.0
  */
-class ImageDeployment(override val input: Source<SolrInputDocument>, private val deployments: List<ImageDeployment>, private val test: Boolean = false): Transformer<SolrInputDocument, SolrInputDocument> {
+class ImageDeployment(override val input: Source<SolrInputDocument>): Transformer<SolrInputDocument, SolrInputDocument> {
 
     companion object {
         /** The [Logger] instance used by this [ImageDeployment]. */
@@ -41,19 +46,24 @@ class ImageDeployment(override val input: Source<SolrInputDocument>, private val
      * Returns a [Flow] of this [ImageDeployment].
      */
     override fun toFlow(context: ProcessingContext): Flow<SolrInputDocument> {
-        /** The temporary directory to deploy images to. */
+        /* Obtain deployment configurations; Skip everything, if configuration is missing. */
+        val deployments = context.jobTemplate.config?.deployments ?: emptyList()
+        if (deployments.isEmpty()) {
+            LOGGER.warn("No image deployment configurations were found.")
+            return this.input.toFlow(context)
+        }
 
-        /* Prepare directories. */
+        /* The temporary directory to deploy images to. */
         val writers = mutableMapOf<ImageDeployment, ImageWriter>()
-        for (deployment in this.deployments) {
+        for (deployment in deployments) {
             val deployTo = Paths.get(deployment.path)
             if (!Files.exists(deployTo)) {
                 throw IllegalArgumentException("Directory $deployTo does not exist!")
             }
 
             /* Create the necessary directories. */
-            Files.createDirectories(deployTo.resolve(context.participant).resolve(deployment.name))
-            Files.createDirectories(deployTo.resolve(context.participant).resolve("${deployment.name}~tmp"))
+            Files.createDirectories(deployTo.resolve(context.jobTemplate.participantName).resolve(deployment.name))
+            Files.createDirectories(deployTo.resolve(context.jobTemplate.participantName).resolve("${deployment.name}~tmp"))
 
             /* Prepare writers. */
             writers[deployment] = when (deployment.format) {
@@ -69,11 +79,11 @@ class ImageDeployment(override val input: Source<SolrInputDocument>, private val
                 var counter = 1
                 for (provider in providers) {
                     val original = provider.open() ?: continue
-                    for (deployment in this@ImageDeployment.deployments) {
+                    for (deployment in deployments) {
                         val imageName = "${it.uuid()}_%03d.jpg".format(counter)
                         val deployTo = Paths.get(deployment.path)
-                        val actual = deployTo.resolve(context.participant).resolve(deployment.name).resolve(imageName)
-                        val tmp = deployTo.resolve(context.participant).resolve("${deployment.name}~tmp").resolve(imageName)
+                        val actual = deployTo.resolve(context.jobTemplate.participantName).resolve(deployment.name).resolve(imageName)
+                        val tmp = deployTo.resolve(context.jobTemplate.participantName).resolve("${deployment.name}~tmp").resolve(imageName)
                         LOGGER.info("Deploying image (jobId = {}, docId = {}) {}.", context.jobId, it.uuid(), imageName)
 
                         /* Check size of image. If it's too small, issue a warning; otherwise, resize it. */
@@ -87,7 +97,7 @@ class ImageDeployment(override val input: Source<SolrInputDocument>, private val
                         }
 
                         /* Perform conversion. */
-                        if (this@ImageDeployment.test || ImageHandler.store(resized, original.metadata, writers[deployment]!!, tmp)) {
+                        if (context.test || ImageHandler.store(resized, original.metadata, writers[deployment]!!, tmp)) {
                             if (deployment.server == null) {
                                 it.addField(deployment.name, deployTo.relativize(actual).toString())
                             } else {
@@ -108,11 +118,11 @@ class ImageDeployment(override val input: Source<SolrInputDocument>, private val
                 it.setField(Field.IMAGECOUNT, 0)
             }
         }.onCompletion { e ->
-            for (deployment in this@ImageDeployment.deployments) {
+            for (deployment in deployments) {
                 try {
-                    val dst = Paths.get(deployment.path).resolve(context.participant).resolve(deployment.name)
-                    val tmp = Paths.get(deployment.path).resolve(context.participant).resolve("${deployment.name}~tmp")
-                    val bak = Paths.get(deployment.path).resolve(context.participant).resolve("${deployment.name}~bak")
+                    val dst = Paths.get(deployment.path).resolve(context.jobTemplate.participantName).resolve(deployment.name)
+                    val tmp = Paths.get(deployment.path).resolve(context.jobTemplate.participantName).resolve("${deployment.name}~tmp")
+                    val bak = Paths.get(deployment.path).resolve(context.jobTemplate.participantName).resolve("${deployment.name}~bak")
                     if (e != null) {
                         /* Case 1: Cleanup after error. */
                         Files.walk(tmp).sorted(Comparator.reverseOrder()).forEach { Files.deleteIfExists(it) }
