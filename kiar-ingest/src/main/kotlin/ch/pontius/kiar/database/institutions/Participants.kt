@@ -14,8 +14,11 @@ import org.jetbrains.exposed.v1.jdbc.select
  * @version 1.0.0
  */
 object Participants: IntIdTable("participants") {
-    /** The name of the [Institutions] entry. */
+    /** The name of the [Participants] entry. */
     val name = varchar("name", 255).uniqueIndex()
+
+    /** An optional description of the [Participants] entry. */
+    val description = text("description")
 
     /** Timestamp of creation of the [Participants] entry. */
     val created = timestamp("created").defaultExpression(CurrentTimestamp)
