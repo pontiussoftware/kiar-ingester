@@ -10,7 +10,7 @@ import {
   RightStatement
 } from "../../../../openapi";
 import {MAT_DIALOG_DATA, MatDialogRef} from "@angular/material/dialog";
-import {combineLatestWith, map, Observable, shareReplay} from "rxjs";
+import {combineLatestWith, first, map, Observable, shareReplay} from "rxjs";
 import {MatSnackBar, MatSnackBarConfig} from "@angular/material/snack-bar";
 
 @Component({
@@ -82,11 +82,6 @@ export class InstitutionDialogComponent {
     /* Get list of available participants. */
     this.participants = this.config.getListParticipants().pipe(shareReplay(1, 30000))
 
-    /*  Get list of available collections. */
-    this.config.getListSolrCollections().pipe(
-        map(collections => collections.filter(c => c.type == 'OBJECT'))
-    ).subscribe(c => this.allCollections.push(...c))
-
     /* Get masterdata. */
     this.rightStatements = this.masterdata.getListRightStatements().pipe(shareReplay(1))
     this.cantons = this.masterdata.getListCantons().pipe(shareReplay(1))
@@ -104,6 +99,11 @@ export class InstitutionDialogComponent {
     if (this.formControl.valid) {
       let availableCollections: Array<string> = []
       let selectedCollections: Array<string> = []
+
+      this.collections.forEach(collection => {
+        const available = this.availableCollections.find(collection => collection.name == collection.name)
+        if (available) {}
+      })
 
       this.availableCollectionsForms.forEach((c, i) => {
         if (c.value == true) {
@@ -190,9 +190,10 @@ export class InstitutionDialogComponent {
    * @private
    */
   private reload(id: number) {
-    this.config.getListSolrConfiguration().pipe(
-        map(c => c.flatMap(c => c.collections).filter(c => c.type == 'OBJECT')),
-        combineLatestWith(this.institution.getInstitution(id))
+    this.config.getListSolrCollections().pipe(
+        map(c => c.filter(c => c.type == 'OBJECT')),
+        combineLatestWith(this.institution.getInstitution(id)),
+        first()
     ).subscribe({
       next: ([collections, institution]) => {
         /* Update form control. */

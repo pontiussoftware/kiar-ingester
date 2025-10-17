@@ -24,8 +24,8 @@
       <mat-label i18n="@@LabelCanton">Canton</mat-label>
       <mat-select formControlName="canton">
         @for (canton of (cantons | async); track canton) {
-          <mat-option [value]="canton.longName">
-            {{ canton.longName }}
+          <mat-option [value]="canton">
+            {{ canton }}
           </mat-option>
         }
       </mat-select>
