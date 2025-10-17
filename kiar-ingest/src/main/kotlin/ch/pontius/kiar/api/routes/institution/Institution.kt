@@ -58,7 +58,13 @@ fun getListInstitutions(ctx: Context) {
     val page = ctx.queryParam("page")?.toIntOrNull() ?: 0
     val pageSize = ctx.queryParam("pageSize")?.toIntOrNull() ?: 50
     val order = ctx.queryParam("order")?.lowercase() ?: "name"
-    val orderDir = ctx.queryParam("orderDir")?.uppercase()?.let { SortOrder.valueOf(it) } ?: SortOrder.ASC
+    val orderDir = ctx.queryParam("orderDir")?.uppercase()?.let {
+        try {
+            SortOrder.valueOf(it)
+        } catch (_: Throwable) {
+            null
+        }
+    } ?: SortOrder.ASC
     val filter = ctx.queryParam("filter")
     val (total, results) = transaction {
 
@@ -438,7 +444,7 @@ fun postUploadImageForInstitution(ctx: Context) {
             /* Open image. */
             val image = try {
                 ImmutableImage.loader().fromStream(f.content())
-            } catch (e: IOException) {
+            } catch (_: IOException) {
                 throw ErrorStatusException(400, "Uploaded image file could not be opened due to unhandled exception.")
             }
 
@@ -465,7 +471,7 @@ fun postUploadImageForInstitution(ctx: Context) {
 
                     /* Write image. */
                     ImageHandler.store(scaled, image.metadata, JpegWriter.Default, path)
-                }  catch (e: IOException) {
+                }  catch (_: IOException) {
                     throw ErrorStatusException(500, "Could not deploy image due to unhandled exception.")
                 }
             }

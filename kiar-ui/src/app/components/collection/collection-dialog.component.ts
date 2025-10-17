@@ -1,8 +1,8 @@
 import {Component, ElementRef, Inject, ViewChild} from "@angular/core";
 import {FormArray, FormControl, FormGroup, Validators} from "@angular/forms";
-import {CollectionService, InstitutionService, ObjectCollection,} from "../../../../openapi";
+import {CollectionService, Institution, InstitutionService, ObjectCollection,} from "../../../../openapi";
 import {MAT_DIALOG_DATA, MatDialogRef} from "@angular/material/dialog";
-import {Observable, shareReplay} from "rxjs";
+import {combineLatest, first, map, Observable, shareReplay} from "rxjs";
 import {MatSnackBar, MatSnackBarConfig} from "@angular/material/snack-bar";
 
 @Component({
@@ -17,7 +17,7 @@ export class CollectionDialogComponent {
   public formControl: FormGroup
 
   /** An {@link Observable} of available participants. */
-  public readonly institutionNames: Observable<Array<String>>
+  public readonly institutions: Observable<Array<Institution>>
 
   /** List of images that should be displayed. */
   public images: Array<string> = []
@@ -39,7 +39,7 @@ export class CollectionDialogComponent {
       name: new FormControl(null, [Validators.required, Validators.minLength(5)]),
       displayName: new FormControl(null, [Validators.required, Validators.minLength(5)]),
       description: new FormControl(null, [Validators.required]),
-      institutionName: new FormControl(null, [Validators.required]),
+      institution: new FormControl<Institution | null>(null, [Validators.required]),
       publish: new FormControl(true, [Validators.required]),
       filters: new FormArray([
           new FormControl(null, [Validators.required]),
@@ -47,7 +47,11 @@ export class CollectionDialogComponent {
     })
 
     /* Get list of available participants. */
-    this.institutionNames = this.institutionService.getInstitutionNames().pipe(shareReplay(1, 30000))
+    this.institutions = this.institutionService.getInstitutions(0, 1000).pipe(
+        first(),
+        map(r => r.results),
+        shareReplay(1)
+    )
 
     /* Reload institution data. */
     if (this.collectionId) {
@@ -89,7 +93,7 @@ export class CollectionDialogComponent {
         name: this.formControl.get('name')?.value,
         displayName: this.formControl.get('displayName')?.value,
         description: this.formControl.get('description')?.value,
-        institutionName: this.formControl.get('institutionName')?.value,
+        institution: this.formControl.get('institution')?.value,
         publish: this.formControl.get('publish')?.value,
         filters: this.filters.map(f => f.value),
         images: [],
@@ -146,13 +150,13 @@ export class CollectionDialogComponent {
    * @param id The ID of the collection to reload.
    */
   private reload(id: number) {
-    this.collectionService.getCollection(id).subscribe({
-      next: (collection: ObjectCollection) => {
+    combineLatest([this.collectionService.getCollection(id), this.institutions]).subscribe({
+      next: ([collection, institutions]) => {
         /* Update form control. */
         this.formControl.get('name')?.setValue(collection.name)
         this.formControl.get('displayName')?.setValue(collection.displayName)
         this.formControl.get('description')?.setValue(collection.description)
-        this.formControl.get('institutionName')?.setValue(collection.institution?.name)
+        this.formControl.get('institution')?.setValue(institutions.find(i => i.id === collection.institution?.id))
         this.formControl.get('publish')?.setValue(collection.publish)
 
         /* Update filters. */

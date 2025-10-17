@@ -2,11 +2,9 @@ package ch.pontius.kiar.database.collections
 
 import ch.pontius.kiar.api.model.collection.CollectionId
 import ch.pontius.kiar.api.model.collection.ObjectCollection
-import ch.pontius.kiar.api.model.user.User
-import ch.pontius.kiar.api.model.user.UserId
 import ch.pontius.kiar.database.institutions.Institutions
 import ch.pontius.kiar.database.institutions.Institutions.toInstitution
-import ch.pontius.kiar.database.institutions.Users
+import ch.pontius.kiar.database.institutions.Participants
 import kotlinx.serialization.json.Json
 import org.jetbrains.exposed.v1.core.ReferenceOption
 import org.jetbrains.exposed.v1.core.ResultRow
@@ -16,7 +14,7 @@ import org.jetbrains.exposed.v1.javatime.CurrentTimestamp
 import org.jetbrains.exposed.v1.javatime.timestamp
 import org.jetbrains.exposed.v1.jdbc.selectAll
 import org.jetbrains.exposed.v1.json.json
-import java.util.UUID
+import java.util.*
 
 /**
  * A [IntIdTable] that holds information about [Collections].
@@ -62,7 +60,7 @@ object Collections: IntIdTable("collections") {
      *
      * @param id The [ObjectCollection]'s [CollectionId].
      */
-    fun getById(collectionId: CollectionId) = (Collections innerJoin Institutions)
+    fun getById(collectionId: CollectionId) = (Collections innerJoin Institutions innerJoin Participants)
         .selectAll()
         .where { id eq collectionId }
         .map { it.toObjectCollection() }

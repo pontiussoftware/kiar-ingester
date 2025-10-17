@@ -10,31 +10,24 @@ import ch.pontius.kiar.api.model.user.Role
 import ch.pontius.kiar.database.collections.Collections
 import ch.pontius.kiar.database.collections.Collections.toObjectCollection
 import ch.pontius.kiar.database.config.ImageDeployments
-import ch.pontius.kiar.database.config.ImageDeployments.toImageDeployment
 import ch.pontius.kiar.database.config.SolrCollections
+import ch.pontius.kiar.database.institutions.Institutions
 import ch.pontius.kiar.database.institutions.InstitutionsSolrCollections
-import ch.pontius.kiar.utilities.extensions.currentUser
+import ch.pontius.kiar.database.institutions.Participants
 import ch.pontius.kiar.utilities.ImageHandler
+import ch.pontius.kiar.utilities.extensions.currentUser
 import ch.pontius.kiar.utilities.extensions.parseBodyOrThrow
 import com.sksamuel.scrimage.ImmutableImage
 import com.sksamuel.scrimage.nio.JpegWriter
-import io.javalin.http.BadRequestResponse
 import io.javalin.http.Context
 import io.javalin.openapi.*
 import org.jetbrains.exposed.v1.core.eq
 import org.jetbrains.exposed.v1.core.innerJoin
 import org.jetbrains.exposed.v1.core.like
 import org.jetbrains.exposed.v1.core.or
-import org.jetbrains.exposed.v1.jdbc.andWhere
-import org.jetbrains.exposed.v1.jdbc.deleteWhere
-import org.jetbrains.exposed.v1.jdbc.insert
-import org.jetbrains.exposed.v1.jdbc.insertAndGetId
-import org.jetbrains.exposed.v1.jdbc.select
-import org.jetbrains.exposed.v1.jdbc.selectAll
+import org.jetbrains.exposed.v1.jdbc.*
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
-import org.jetbrains.exposed.v1.jdbc.update
 import java.io.IOException
-import java.lang.Error
 import java.nio.file.Files
 import java.nio.file.Paths
 import java.nio.file.StandardOpenOption
@@ -63,7 +56,7 @@ fun getListCollections(ctx: Context) {
     val pageSize = ctx.queryParam("pageSize")?.toIntOrNull() ?: 50
     val filter = ctx.queryParam("filter")?.lowercase()
     val (total, result) = transaction {
-        val query = Collections.selectAll()
+        val query = (Collections innerJoin Institutions innerJoin Participants).selectAll()
         if (filter != null) {
             query.andWhere {
                 (Collections.name like "$filter%") or  (Collections.displayName like "$filter%")

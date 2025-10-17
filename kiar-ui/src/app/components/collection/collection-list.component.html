@@ -60,7 +60,7 @@
   <!-- Institution Column -->
   <ng-container matColumnDef="institutionName" i18n="@@LabelInstitution">
         <th mat-header-cell *matHeaderCellDef> Institution</th>
-        <td mat-cell *matCellDef="let element"> {{ element.institutionName }}</td>
+        <td mat-cell *matCellDef="let element"> {{ element?.institution?.name }}</td>
     </ng-container>
 
   <!-- Publish Column -->

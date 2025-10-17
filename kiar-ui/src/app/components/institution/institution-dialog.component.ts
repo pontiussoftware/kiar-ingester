@@ -100,11 +100,6 @@ export class InstitutionDialogComponent {
       let availableCollections: Array<string> = []
       let selectedCollections: Array<string> = []
 
-      this.collections.forEach(collection => {
-        const available = this.availableCollections.find(collection => collection.name == collection.name)
-        if (available) {}
-      })
-
       this.availableCollectionsForms.forEach((c, i) => {
         if (c.value == true) {
           availableCollections.push(this.allCollections[i].name)
