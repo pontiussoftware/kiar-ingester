@@ -18,8 +18,8 @@ export class AddJobTemplateDialogComponent {
       type: new FormControl(JobType.KIAR, [Validators.required]),
       startAutomatically: new FormControl(false),
       participantName: new FormControl('', [Validators.required]),
-      entityMappingName: new FormControl('', [Validators.required]),
-      solrConfigName: new FormControl('', [Validators.required]),
+      mapping: new FormControl<EntityMapping | null>(null, [Validators.required]),
+      config: new FormControl<ApacheSolrConfig | null>(null, [Validators.required]),
   })
 
   /** An {@link Observable} of available {@link JobTemplate}. */
@@ -36,9 +36,9 @@ export class AddJobTemplateDialogComponent {
 
   constructor(private config: ConfigService, private dialogRef: MatDialogRef<AddJobTemplateDialogComponent>) {
       this.mappings = this.config.getListEntityMappings().pipe(shareReplay(1))
-    this.solr = this.config.getListSolrConfiguration().pipe(shareReplay(1))
-    this.types = this.config.getListJobTemplateTypes().pipe(shareReplay(1))
-    this.participants = this.config.getListParticipants().pipe(shareReplay(1))
+      this.solr = this.config.getListSolrConfiguration().pipe(shareReplay(1))
+      this.types = this.config.getListJobTemplateTypes().pipe(shareReplay(1))
+      this.participants = this.config.getListParticipants().pipe(shareReplay(1))
   }
 
   /**
@@ -52,12 +52,8 @@ export class AddJobTemplateDialogComponent {
         type: this.formControl.get('type')?.value as JobType,
         startAutomatically: this.formControl.get('startAutomatically')?.value,
         participantName: this.formControl.get('participantName')?.value,
-        mapping: {
-          name: this.formControl.get('entityMappingName')?.value
-        } as EntityMapping,
-        config: {
-            name: this.formControl.get('solrConfigName')?.value
-        } as ApacheSolrConfig,
+        mapping: this.formControl.get('mapping')?.value,
+        config: this.formControl.get('config')?.value,
         transformers: [],
           createdAt: -1,
           changedAt: -1
