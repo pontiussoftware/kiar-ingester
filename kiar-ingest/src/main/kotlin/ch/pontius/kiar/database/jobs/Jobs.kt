@@ -30,10 +30,10 @@ import org.jetbrains.exposed.v1.jdbc.selectAll
 object Jobs: IntIdTable("jobs") {
 
     /** The [JobTemplates] entry this [Jobs] entry is derived from. */
-    val templateId = reference("template_id", JobTemplates,  onDelete = ReferenceOption.SET_NULL).nullable()
+    val templateId = reference("template_id", JobTemplates, onDelete = ReferenceOption.SET_NULL).nullable()
 
     /** The [Users] entry this [Jobs] entry belongs to. */
-    val userId = reference("user_id", Users,  onDelete = ReferenceOption.SET_NULL).nullable()
+    val userId = reference("user_id", Users, onDelete = ReferenceOption.SET_NULL).nullable()
 
     /** The name of the [Jobs] entry. */
     val name = varchar("name", 255).uniqueIndex()

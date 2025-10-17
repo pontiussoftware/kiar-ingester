@@ -25,7 +25,7 @@ import org.jetbrains.exposed.v1.jdbc.selectAll
  */
 object JobTemplates: IntIdTable("jobs_templates") {
     /** A reference to a [Participants] entry, a [JobTemplates] belongs to. */
-    val participantId = reference("participant_id", Participants,ReferenceOption.CASCADE)
+    val participantId = reference("participant_id", Participants,ReferenceOption.RESTRICT)
 
     /** Reference to the [EntityMappings] entry a [JobTemplates] entry employs. */
     val entityMappingId = reference("entity_mapping_id", EntityMappings, ReferenceOption.RESTRICT)
