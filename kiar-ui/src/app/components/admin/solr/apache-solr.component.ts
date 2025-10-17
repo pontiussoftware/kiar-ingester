@@ -19,7 +19,6 @@ import {MatSnackBar, MatSnackBarConfig} from "@angular/material/snack-bar";
     standalone: false
 })
 export class ApacheSolrComponent implements AfterViewInit{
-
   /** An {@link Observable} of the mapping ID that is being inspected by this {@link EntityMappingComponent}. */
   public readonly solrId: Observable<number>
 
@@ -36,8 +35,8 @@ export class ApacheSolrComponent implements AfterViewInit{
   public formControl = new FormGroup({
     name: new FormControl('', [Validators.required]),
     description: new FormControl(''),
-    server: new FormControl('', [Validators.required, Validators.pattern('((https|http)://)?([\\da-z.-]+)\\.([a-z.]{2,6})[/\\w .-]*/?')]),
-    publicServer: new FormControl('', [Validators.pattern('((https|http)://)?([\\da-z.-]+)\\.([a-z.]{2,6})[/\\w .-]*/?')]),
+    server: new FormControl('', [Validators.required]),
+    publicServer: new FormControl('',),
     username: new FormControl(''),
     password: new FormControl(''),
     collections: new FormArray(this.collections),
