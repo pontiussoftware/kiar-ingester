@@ -32,6 +32,7 @@ import org.jetbrains.exposed.v1.jdbc.transactions.TransactionManager
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 import java.nio.file.Path
 import java.nio.file.Paths
+import java.sql.Connection
 import kotlin.system.exitProcess
 
 fun main(args: Array<String>) {
@@ -50,8 +51,10 @@ fun main(args: Array<String>) {
     val store = initializeDatabase(src)
 
     /* Initializes destination the SQLite database and make it default. */
-    val database = Database.connect("jdbc:sqlite:$dst", driver = "org.sqlite.JDBC")
+    val database = Database.connect("jdbc:sqlite:$dst?foreign_keys=on;", driver = "org.sqlite.JDBC")
     TransactionManager.defaultDatabase = database
+    TransactionManager.manager.defaultIsolationLevel = Connection.TRANSACTION_SERIALIZABLE
+
 
     /* Initialize schema. */
     Schema.initialize(database)

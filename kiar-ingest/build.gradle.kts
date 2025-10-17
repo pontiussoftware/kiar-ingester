@@ -2,6 +2,7 @@ val bcryptVersion: String by project
 val caffeineVersion: String by project
 val cliktVersion: String by project
 val commonsImagingVersion: String by project
+val exposedVersion: String by project
 val javalinVersion: String by project
 val jlineVersion: String by project
 val jsonPathVersion: String by project
@@ -11,8 +12,9 @@ val log4jVersion: String by project
 val picnicVersion: String by project
 val poiVersion: String by project
 val scrimageVersion: String by project
-val solrjVersion: String by project
 val slf4jVersion: String by project
+val solrjVersion: String by project
+val sqliteVersion: String by project
 
 
 plugins {
@@ -85,11 +87,11 @@ dependencies {
     kapt("io.javalin.community.openapi:openapi-annotation-processor:$javalinVersion")
 
     /** SQLite + Kotlin Exposed */
-    implementation("org.xerial:sqlite-jdbc:3.50.3.0")
-    implementation("org.jetbrains.exposed:exposed-core:1.0.0-rc-2")
-    implementation("org.jetbrains.exposed:exposed-jdbc:1.0.0-rc-2")
-    implementation("org.jetbrains.exposed:exposed-java-time:1.0.0-rc-2")
-    implementation("org.jetbrains.exposed:exposed-json:1.0.0-rc-2")
+    implementation("org.xerial:sqlite-jdbc:${sqliteVersion}")
+    implementation("org.jetbrains.exposed:exposed-core:${exposedVersion}")
+    implementation("org.jetbrains.exposed:exposed-jdbc:${exposedVersion}")
+    implementation("org.jetbrains.exposed:exposed-java-time:${exposedVersion}")
+    implementation("org.jetbrains.exposed:exposed-json:${exposedVersion}")
 
     /** CLI. */
     implementation("com.github.ajalt.clikt:clikt:$cliktVersion")

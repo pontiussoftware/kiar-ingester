@@ -12,8 +12,11 @@ import ch.pontius.kiar.tasks.RemoveInputFilesTask
 import ch.pontius.kiar.utilities.KotlinxJsonMapper
 import io.javalin.Javalin
 import io.javalin.http.staticfiles.Location
-import io.javalin.openapi.*
-import io.javalin.openapi.plugin.*
+import io.javalin.openapi.OpenApiInfo
+import io.javalin.openapi.plugin.DefinitionConfiguration
+import io.javalin.openapi.plugin.OpenApiPlugin
+import io.javalin.openapi.plugin.OpenApiPluginConfiguration
+import io.javalin.openapi.plugin.SecurityComponentConfiguration
 import io.javalin.openapi.plugin.swagger.SwaggerConfiguration
 import io.javalin.openapi.plugin.swagger.SwaggerPlugin
 import kotlinx.serialization.json.Json
@@ -22,6 +25,7 @@ import org.jetbrains.exposed.v1.jdbc.transactions.TransactionManager
 import java.io.FileNotFoundException
 import java.nio.file.Files
 import java.nio.file.Paths
+import java.sql.Connection
 import java.util.*
 import kotlin.system.exitProcess
 
@@ -36,8 +40,9 @@ fun main(args: Array<String>) {
         System.setProperty("log4j.saveDirectory", config.logPath.toString()) /* Set log path for Log4j2. */
 
         /* Initializes the SQLite database and make it default. */
-        val database = Database.connect("jdbc:sqlite:${config.dbPath}", driver = "org.sqlite.JDBC")
+        val database = Database.connect("jdbc:sqlite:${config.dbPath}?foreign_keys=on;", driver = "org.sqlite.JDBC")
         TransactionManager.defaultDatabase = database
+        TransactionManager.manager.defaultIsolationLevel = Connection.TRANSACTION_SERIALIZABLE
 
         /* Check and initialize the schema. */
         if (!Schema.check(database)) {
@@ -97,7 +102,7 @@ private fun loadConfig(path: String): Config {
  * @param config The program [Config].
  * @return [Javalin]
  */
-private fun initializeWebserver(server: IngesterServer, config: Config) = Javalin.create() { c ->
+private fun initializeWebserver(server: IngesterServer, config: Config) = Javalin.create { c ->
     /* Configure static routes for SPA. */
     c.staticFiles.add{
         it.directory = "html/browser/"
