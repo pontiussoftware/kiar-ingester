@@ -10,17 +10,16 @@ import ch.pontius.kiar.database.institutions.Institutions
 import ch.pontius.kiar.database.institutions.InstitutionsSolrCollections
 import ch.pontius.kiar.ingester.processors.ProcessingContext
 import ch.pontius.kiar.ingester.processors.sources.Source
+import ch.pontius.kiar.ingester.solrj.*
 import ch.pontius.kiar.ingester.solrj.Constants.FIELD_NAME_PARTICIPANT
 import ch.pontius.kiar.ingester.solrj.Constants.SYSTEM_FIELDS
-import ch.pontius.kiar.ingester.solrj.Field
-import ch.pontius.kiar.ingester.solrj.get
-import ch.pontius.kiar.ingester.solrj.getAll
-import ch.pontius.kiar.ingester.solrj.has
-import ch.pontius.kiar.ingester.solrj.setField
 import com.jayway.jsonpath.InvalidPathException
 import com.jayway.jsonpath.JsonPath
 import com.jayway.jsonpath.PathNotFoundException
-import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.onCompletion
+import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.flow.onStart
 import org.apache.logging.log4j.LogManager
 import org.apache.solr.client.solrj.SolrServerException
 import org.apache.solr.client.solrj.impl.Http2SolrClient
@@ -31,8 +30,7 @@ import org.jetbrains.exposed.v1.core.eq
 import org.jetbrains.exposed.v1.jdbc.select
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 import java.io.IOException
-import java.util.Date
-import java.util.UUID
+import java.util.*
 
 /**
  * A [Sink] that processes [SolrInputDocument]s and ingests them into Apache Solr.
@@ -77,8 +75,6 @@ class ApacheSolrSink(override val input: Source<SolrInputDocument>, private val 
 
         /* Initializes the document validators. */
         this.initializeValidators(client)
-
-
 
         /* Return flow. */
         return this@ApacheSolrSink.input.toFlow(context).onStart {
@@ -145,10 +141,11 @@ class ApacheSolrSink(override val input: Source<SolrInputDocument>, private val 
             } else {
                 context.log(JobLog(null, null, null, JobLogContext.SYSTEM, JobLogLevel.SEVERE, "Failed to ingest document, because UUID is missing."))
             }
-
+        }.onCompletion {
             /* Finalize ingest for all collections. */
             this@ApacheSolrSink.finalizeIngest(client, context)
-        }.onCompletion {
+
+            /* Close client. */
             client.close()
         }
     }
