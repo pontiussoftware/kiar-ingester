@@ -107,6 +107,7 @@ object Institutions : IntIdTable("institutions") {
      */
     fun ResultRow.toInstitution() = Institution(
         id = this[id].value,
+        uuid = this[uuid].toString(),
         name = this[name],
         participantName = this[Participants.name],
         displayName = this[displayName],

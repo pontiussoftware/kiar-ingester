@@ -106,7 +106,7 @@ export class InstitutionListComponent implements AfterViewInit  {
   public synchronize(collection: ApacheSolrCollection) {
     if (!collection.id) return;
     this.institutionService.postSynchronizeInstitutions(collection.id).subscribe({
-      next: (value) =>  this.snackBar.open(`Successfully synchronised institutions with Apache Solr backend (${collection.name}.`, "Dismiss", { duration: 2000 } as MatSnackBarConfig),
+      next: (value) =>  this.snackBar.open(`Successfully synchronised institutions with Apache Solr backend (${collection.name}).`, "Dismiss", { duration: 2000 } as MatSnackBarConfig),
       error: (err) => this.snackBar.open(`Error occurred while synchronising institutions with Apache Solr backend (${collection.name}): ${err?.error?.description}.`, "Dismiss", { duration: 2000 } as MatSnackBarConfig),
     })
   }

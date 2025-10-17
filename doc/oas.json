@@ -181,24 +181,15 @@
         "summary" : "Synchronizes object collections with an Apache Solr backend.",
         "operationId" : "postSynchronizeCollections",
         "parameters" : [ {
-          "name" : "solr",
+          "name" : "collectionId",
           "in" : "query",
-          "description" : "Name of the Apache Solr configuration to use.",
+          "description" : "The ID  of the Apache Solr configuration to use.",
           "required" : true,
           "deprecated" : false,
           "allowEmptyValue" : false,
           "schema" : {
-            "type" : "string"
-          }
-        }, {
-          "name" : "collection",
-          "in" : "query",
-          "description" : "The name of the collection to synchronize with.",
-          "required" : true,
-          "deprecated" : false,
-          "allowEmptyValue" : false,
-          "schema" : {
-            "type" : "string"
+            "type" : "integer",
+            "format" : "int32"
           }
         } ],
         "responses" : {
@@ -5086,7 +5077,7 @@
           },
           "logEntries" : {
             "type" : "integer",
-            "format" : "int32"
+            "format" : "int64"
           },
           "createdAt" : {
             "type" : "integer",

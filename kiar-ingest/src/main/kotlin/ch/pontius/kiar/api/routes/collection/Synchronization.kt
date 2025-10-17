@@ -12,13 +12,14 @@ import ch.pontius.kiar.database.config.SolrCollections
 import ch.pontius.kiar.database.config.SolrConfigs
 import ch.pontius.kiar.database.config.SolrConfigs.toSolr
 import ch.pontius.kiar.database.institutions.Institutions
-import ch.pontius.kiar.database.institutions.Institutions.toInstitution
+import ch.pontius.kiar.database.institutions.Participants
 import ch.pontius.kiar.ingester.solrj.Constants
 import com.sksamuel.scrimage.ImmutableImage
 import io.javalin.http.Context
 import io.javalin.openapi.*
 import org.apache.logging.log4j.LogManager
 import org.apache.solr.client.solrj.impl.Http2SolrClient
+import org.apache.solr.client.solrj.response.UpdateResponse
 import org.apache.solr.common.SolrInputDocument
 import org.jetbrains.exposed.v1.core.and
 import org.jetbrains.exposed.v1.core.eq
@@ -36,8 +37,7 @@ private val LOGGER = LogManager.getLogger()
     operationId = "postSynchronizeCollections",
     tags = ["Collection"],
     queryParams = [
-        OpenApiParam(name = "solr", type = String::class, description = "Name of the Apache Solr configuration to use.", required = true),
-        OpenApiParam(name = "collection", type = String::class, description = "The name of the collection to synchronize with.", required = true)
+        OpenApiParam(name = "collectionId", type = Int::class, description = "The ID  of the Apache Solr configuration to use.", required = true),
     ],
     responses = [
         OpenApiResponse("200", [OpenApiContent(SuccessStatus::class)]),
@@ -48,18 +48,16 @@ private val LOGGER = LogManager.getLogger()
     ]
 )
 fun postSyncCollections(ctx: Context) {
-    val configName = ctx.queryParam("solr") ?: throw ErrorStatusException(400, "Query parameter 'solr' is required.")
-    val collectionName = ctx.queryParam("collection") ?: throw ErrorStatusException(400, "Query parameter 'collectionName' is required.")
-
-    val (config, collections) = transaction {
-        val config = (SolrConfigs innerJoin SolrCollections).select(SolrConfigs.columns).where {
-            (SolrConfigs.name eq configName) and (SolrCollections.name eq collectionName) and (SolrCollections.type eq CollectionType.COLLECTION)
+    val collectionId = ctx.queryParam("collectionId")?.toIntOrNull() ?: throw ErrorStatusException(400, "Query parameter 'collectionId' is required.")
+    val (config, collectionName, collections) = transaction {
+        val (collectionName, config) = (SolrConfigs innerJoin SolrCollections).select(SolrConfigs.columns + SolrCollections.name).where {
+            (SolrCollections.id eq collectionId)  and (SolrCollections.type eq CollectionType.COLLECTION)
         }.map {
-            it.toSolr()
-        }.firstOrNull() ?: throw ErrorStatusException(404, "Apache Solr config with name '$configName' for collection '$collectionName' could not be found.")
+            it[SolrCollections.name] to it.toSolr()
+        }.firstOrNull() ?: throw ErrorStatusException(404, "Apache Solr config with ID $collectionId  could not be found.")
 
-        val collections = (Collections innerJoin Institutions).selectAll().where { Collections.publish eq true }.map { it.toObjectCollection() }
-        config to collections
+        val collections = (Collections innerJoin Institutions innerJoin Participants).selectAll().where { Collections.publish eq true }.map { it.toObjectCollection() }
+        Triple(config, collectionName, collections)
     }
 
     /* Perform actual synchronization. */
@@ -86,8 +84,8 @@ private fun synchronise(config: ApacheSolrConfig, collection: String, collection
     httpBuilder.build().use { client ->
         try {
             /* Delete all existing entries. */
-            var response = client.deleteByQuery(collection, "*:*")
-            if (response.status == 0) {
+            var response: UpdateResponse? = null // client.deleteByQuery(collection, "*:*")
+            if (response?.status == 0) {
                 LOGGER.info("Purged collection (collection = {}).", collection)
             } else {
                 LOGGER.error("Failed to purge collection (collection = {}).", collection)
@@ -96,7 +94,7 @@ private fun synchronise(config: ApacheSolrConfig, collection: String, collection
             /* Map documents and add them. */
             val documents = collections.map { collection ->
                 val doc = SolrInputDocument()
-                doc.setField(Constants.FIELD_NAME_UUID, collection.id)
+                doc.setField(Constants.FIELD_NAME_UUID, collection.uuid)
                 doc.setField(Constants.FIELD_NAME_PARTICIPANT, collection.institution?.participantName)
                 doc.setField(Constants.FIELD_NAME_CANTON, collection.institution?.canton)
                 doc.setField(Constants.FIELD_NAME_DISPLAY, collection.displayName)
@@ -120,7 +118,7 @@ private fun synchronise(config: ApacheSolrConfig, collection: String, collection
                             }
                             doc.addField("${deployment.name}height_", image.height)
                             doc.addField("${deployment.name}width_", image.width)
-                        } catch (e: Throwable) {
+                        } catch (_: Throwable) {
                             LOGGER.error("Failed to load image from path: $path")
                         }
                     }

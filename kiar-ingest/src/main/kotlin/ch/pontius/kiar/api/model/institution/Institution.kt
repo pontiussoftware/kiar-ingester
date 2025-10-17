@@ -14,6 +14,7 @@ typealias InstitutionId = Int
 @Serializable
 data class Institution(
     val id: InstitutionId? = null,
+    val uuid: String? = null,
     val name: String,
     val displayName: String,
     val participantName: String,

@@ -1,4 +1,4 @@
-# @kiar-openapi/api@1.0.1-SNAPSHOT.202510171011
+# @kiar-openapi/api@1.0.1-SNAPSHOT.202510171612
 
 API for the KIAR Dashboard.
 
@@ -24,7 +24,7 @@ Navigate to the folder of your consuming project and run one of next commands.
 _published:_
 
 ```console
-npm install @kiar-openapi/api@1.0.1-SNAPSHOT.202510171011 --save
+npm install @kiar-openapi/api@1.0.1-SNAPSHOT.202510171612 --save
 ```
 
 _without publishing (not recommended):_

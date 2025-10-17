@@ -458,27 +458,21 @@ export class CollectionService extends BaseService {
 
     /**
      * Synchronizes object collections with an Apache Solr backend.
-     * @param solr Name of the Apache Solr configuration to use.
-     * @param collection The name of the collection to synchronize with.
+     * @param collectionId The ID  of the Apache Solr configuration to use.
      * @param observe set whether or not to return the data Observable as the body, response or events. defaults to returning the body.
      * @param reportProgress flag to report request and response progress.
      */
-    public postSynchronizeCollections(solr: string, collection: string, observe?: 'body', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext, transferCache?: boolean}): Observable<SuccessStatus>;
-    public postSynchronizeCollections(solr: string, collection: string, observe?: 'response', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext, transferCache?: boolean}): Observable<HttpResponse<SuccessStatus>>;
-    public postSynchronizeCollections(solr: string, collection: string, observe?: 'events', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext, transferCache?: boolean}): Observable<HttpEvent<SuccessStatus>>;
-    public postSynchronizeCollections(solr: string, collection: string, observe: any = 'body', reportProgress: boolean = false, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext, transferCache?: boolean}): Observable<any> {
-        if (solr === null || solr === undefined) {
-            throw new Error('Required parameter solr was null or undefined when calling postSynchronizeCollections.');
-        }
-        if (collection === null || collection === undefined) {
-            throw new Error('Required parameter collection was null or undefined when calling postSynchronizeCollections.');
+    public postSynchronizeCollections(collectionId: number, observe?: 'body', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext, transferCache?: boolean}): Observable<SuccessStatus>;
+    public postSynchronizeCollections(collectionId: number, observe?: 'response', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext, transferCache?: boolean}): Observable<HttpResponse<SuccessStatus>>;
+    public postSynchronizeCollections(collectionId: number, observe?: 'events', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext, transferCache?: boolean}): Observable<HttpEvent<SuccessStatus>>;
+    public postSynchronizeCollections(collectionId: number, observe: any = 'body', reportProgress: boolean = false, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext, transferCache?: boolean}): Observable<any> {
+        if (collectionId === null || collectionId === undefined) {
+            throw new Error('Required parameter collectionId was null or undefined when calling postSynchronizeCollections.');
         }
 
         let localVarQueryParameters = new HttpParams({encoder: this.encoder});
         localVarQueryParameters = this.addToHttpParams(localVarQueryParameters,
-          <any>solr, 'solr');
-        localVarQueryParameters = this.addToHttpParams(localVarQueryParameters,
-          <any>collection, 'collection');
+          <any>collectionId, 'collectionId');
 
         let localVarHeaders = this.defaultHeaders;
 
