@@ -9,16 +9,11 @@ import ch.pontius.kiar.database.config.AttributeMappings.toAttributeMapping
 import ch.pontius.kiar.database.config.EntityMappings
 import ch.pontius.kiar.database.config.EntityMappings.toEntityMapping
 import ch.pontius.kiar.utilities.extensions.parseBodyOrThrow
-import io.javalin.http.BadRequestResponse
 import io.javalin.http.Context
 import io.javalin.openapi.*
 import org.jetbrains.exposed.v1.core.eq
-import org.jetbrains.exposed.v1.jdbc.deleteWhere
-import org.jetbrains.exposed.v1.jdbc.insert
-import org.jetbrains.exposed.v1.jdbc.insertAndGetId
-import org.jetbrains.exposed.v1.jdbc.selectAll
+import org.jetbrains.exposed.v1.jdbc.*
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
-import org.jetbrains.exposed.v1.jdbc.update
 import java.time.Instant
 
 @OpenApi(
@@ -193,8 +188,10 @@ private fun saveAttributeMappings(entityMappingId: EntityMappingId, attributes: 
     /* Re-add attributes. */
     for (a in attributes) {
         AttributeMappings.insert { insert ->
+            insert[AttributeMappings.entityMappingId] = entityMappingId
             insert[AttributeMappings.src] = a.source
             insert[AttributeMappings.destination] = a.destination
+            insert[AttributeMappings.parser] = a.parser
             insert[AttributeMappings.required] = a.required
             insert[AttributeMappings.multiValued] = a.multiValued
             insert[AttributeMappings.parameters] = a.parameters
