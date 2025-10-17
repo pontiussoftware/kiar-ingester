@@ -17,9 +17,9 @@ import org.jetbrains.exposed.v1.jdbc.select
  * @author Ralph Gasser
  * @version 1.0.0
  */
-object SolrCollections: IntIdTable("solr_collection") {
+object SolrCollections: IntIdTable("solr_collections") {
     /** Reference to the [SolrConfigs] entry a [SolrCollections] belongs to. */
-    val solrInstanceId = reference("solr_instance_id", SolrConfigs, ReferenceOption.CASCADE)
+    val solrInstanceId = reference("solr_instance_id", SolrConfigs, ReferenceOption.CASCADE, onUpdate = ReferenceOption.CASCADE)
 
     /** The name of the [SolrCollections] entry. */
     val name = varchar("name", 255).uniqueIndex()

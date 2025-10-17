@@ -1,6 +1,8 @@
 package ch.pontius.kiar.database.institutions
 
 import ch.pontius.kiar.database.config.SolrCollections
+import ch.pontius.kiar.database.institutions.InstitutionsSolrCollections.institutionId
+import ch.pontius.kiar.database.institutions.InstitutionsSolrCollections.solrCollectionId
 import org.jetbrains.exposed.v1.core.ReferenceOption
 import org.jetbrains.exposed.v1.core.Table
 import org.jetbrains.exposed.v1.javatime.CurrentTimestamp
@@ -14,10 +16,10 @@ import org.jetbrains.exposed.v1.javatime.timestamp
  */
 object InstitutionsSolrCollections : Table("institutions_solr_collections") {
     /** Reference to the [Institutions] entry a [InstitutionsSolrCollections] belongs. */
-    val institutionId = reference("institution_id", Institutions,  onDelete = ReferenceOption.CASCADE)
+    val institutionId = reference("institution_id", Institutions, onDelete = ReferenceOption.CASCADE, onUpdate = ReferenceOption.CASCADE)
 
     /** Reference to the [SolrCollections] entry a [InstitutionsSolrCollections] configures. */
-    val solrCollectionId = reference("solr_collection_id", SolrCollections,  onDelete = ReferenceOption.CASCADE)
+    val solrCollectionId = reference("solr_collection_id", SolrCollections, onDelete = ReferenceOption.CASCADE, onUpdate = ReferenceOption.CASCADE)
 
     /** Flag indicating that the [SolrCollections] entry is available for an [Institutions] entry. */
     val available = bool("available").default(true)

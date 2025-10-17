@@ -16,7 +16,7 @@ import org.jetbrains.exposed.v1.jdbc.select
  * @author Ralph Gasser
  * @version 1.0.0
  */
-object SolrConfigs: IntIdTable("solr_config") {
+object SolrConfigs: IntIdTable("solr_configs") {
     /** The name of a [SolrConfigs] entry. */
     val name = varchar("name", 255).uniqueIndex()
 

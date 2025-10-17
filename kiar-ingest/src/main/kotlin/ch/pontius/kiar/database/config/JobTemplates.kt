@@ -25,13 +25,13 @@ import org.jetbrains.exposed.v1.jdbc.selectAll
  */
 object JobTemplates: IntIdTable("jobs_templates") {
     /** A reference to a [Participants] entry, a [JobTemplates] belongs to. */
-    val participantId = reference("participant_id", Participants,ReferenceOption.RESTRICT)
+    val participantId = reference("participant_id", Participants,ReferenceOption.RESTRICT, onUpdate = ReferenceOption.CASCADE)
 
     /** Reference to the [EntityMappings] entry a [JobTemplates] entry employs. */
-    val entityMappingId = reference("entity_mapping_id", EntityMappings, ReferenceOption.RESTRICT)
+    val entityMappingId = reference("entity_mapping_id", EntityMappings, ReferenceOption.RESTRICT, onUpdate = ReferenceOption.CASCADE)
 
     /** Reference to the [SolrConfigs] entry a [JobTemplates] entry employs. */
-    val solrId = reference("solr_config_id", SolrConfigs, ReferenceOption.RESTRICT)
+    val solrId = reference("solr_config_id", SolrConfigs, ReferenceOption.RESTRICT, onUpdate = ReferenceOption.CASCADE)
 
     /** The name of the [JobTemplates] entry. */
     val name = varchar("name", 255).uniqueIndex()
