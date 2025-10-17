@@ -5,15 +5,10 @@ import ch.pontius.kiar.api.model.config.templates.JobType
 import ch.pontius.kiar.config.Config
 import ch.pontius.kiar.database.config.ImageDeployments
 import ch.pontius.kiar.database.config.ImageDeployments.toImageDeployment
-import ch.pontius.kiar.database.config.JobTemplates
 import ch.pontius.kiar.ingester.processors.sinks.ApacheSolrSink
 import ch.pontius.kiar.ingester.processors.sinks.DummySink
 import ch.pontius.kiar.ingester.processors.sinks.Sink
-import ch.pontius.kiar.ingester.processors.sources.ExcelFileSource
-import ch.pontius.kiar.ingester.processors.sources.JsonFileSource
-import ch.pontius.kiar.ingester.processors.sources.KiarFileSource
-import ch.pontius.kiar.ingester.processors.sources.Source
-import ch.pontius.kiar.ingester.processors.sources.XmlFileSource
+import ch.pontius.kiar.ingester.processors.sources.*
 import ch.pontius.kiar.ingester.processors.transformers.ImageDeployment
 import kotlinx.serialization.Serializable
 import org.apache.solr.common.SolrInputDocument
@@ -54,7 +49,7 @@ data class Job(
     var error: Long = 0L,
 
     /** The number of [JobLog] entries for this [Job]. */
-    var logEntries: Int = 0,
+    var logEntries: Long = 0,
 
     /** Timestamp of this [Job]'s creation. */
     val createdAt: Long,

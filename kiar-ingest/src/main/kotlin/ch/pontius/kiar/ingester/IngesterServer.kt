@@ -11,7 +11,10 @@ import ch.pontius.kiar.database.jobs.Jobs
 import ch.pontius.kiar.ingester.processors.ProcessingContext
 import ch.pontius.kiar.ingester.watcher.FileWatcher
 import kotlinx.coroutines.*
-import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.flow.onCompletion
+import kotlinx.coroutines.flow.onStart
+import kotlinx.coroutines.flow.takeWhile
 import org.apache.logging.log4j.LogManager
 import org.apache.logging.log4j.Logger
 import org.jetbrains.exposed.v1.core.eq
@@ -157,11 +160,6 @@ class IngesterServer(val config: Config) {
                     update[status] = JobStatus.SCHEDULED
                     update[modified] = Instant.now()
                 }
-            }
-        }.onEach {
-            /* Flush logs every once in a while. */
-            if (context.logSize() >= 5000) {
-                context.flushLogs()
             }
         }.takeWhile {
             !context.aborted

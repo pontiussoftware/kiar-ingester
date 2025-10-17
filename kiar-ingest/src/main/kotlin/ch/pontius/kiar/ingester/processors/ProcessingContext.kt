@@ -81,7 +81,7 @@ class ProcessingContext(
         this.buffer.add(log)
 
         /* Process event. */
-        when(log.level) {
+        when (log.level) {
             JobLogLevel.WARNING -> LOGGER.info(log.description)
             JobLogLevel.VALIDATION -> {
                 LOGGER.warn(log.description)
@@ -93,10 +93,12 @@ class ProcessingContext(
                 LOGGER.error(log.description)
             }
         }
-    }
 
-    /** Returns the size of the current log. */
-    fun logSize(): Int = this.buffer.size
+        /* Flush logs. */
+        if (this.buffer.size > 100) {
+            this.flushLogs()
+        }
+    }
 
     /**
      * Flushes all [JobLog]s to the database.
@@ -106,7 +108,7 @@ class ProcessingContext(
     fun flushLogs() = transaction {
         this@ProcessingContext.buffer.removeIf { log ->
             JobLogs.insert {
-                it[JobLogs.documentId] = log.documentId?.let { UUID.fromString(it) }
+                it[JobLogs.documentId] = log.documentId?.let { str -> UUID.fromString(str) }
                 it[JobLogs.context] = log.context
                 it[JobLogs.level] = log.level
                 it[JobLogs.description] = log.description

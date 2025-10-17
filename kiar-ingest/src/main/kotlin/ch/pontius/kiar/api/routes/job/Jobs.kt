@@ -118,7 +118,11 @@ fun getInactiveJobs(ctx: Context) {
             }
         }
 
-        query.count() to query.orderBy(Jobs.modified, SortOrder.DESC).offset((page * pageSize).toLong()).limit(pageSize).map { it.toJob() }
+        query.count() to query.orderBy(Jobs.modified, SortOrder.DESC).offset((page * pageSize).toLong()).limit(pageSize).map {
+            val job = it.toJob()
+            val count = JobLogs.selectAll().where { JobLogs.jobId eq job.id!! }.count()
+            job.copy(logEntries = count)
+        }
     }
 
     /* Return results. */
