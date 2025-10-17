@@ -7,6 +7,7 @@ import ch.pontius.kiar.api.model.user.PaginatedUserResult
 import ch.pontius.kiar.api.model.user.Role
 import ch.pontius.kiar.api.model.user.User
 import ch.pontius.kiar.database.institutions.Institutions
+import ch.pontius.kiar.database.institutions.Participants
 import ch.pontius.kiar.database.institutions.Users
 import ch.pontius.kiar.database.institutions.Users.toUser
 import ch.pontius.kiar.utilities.extensions.SALT
@@ -47,7 +48,7 @@ fun getListUsers(ctx: Context) {
     val page = ctx.queryParam("page")?.toIntOrNull() ?: 0
     val pageSize = ctx.queryParam("pageSize")?.toIntOrNull() ?: 50
     val order = ctx.queryParam("order")?.lowercase() ?: "name"
-    val orderDir = ctx.queryParam("orderDir")?.lowercase() ?: "asc"
+    val orderDir = SortOrder.valueOf(ctx.queryParam("orderDir")?.uppercase() ?: "ASC")
 
     val (total, users) = transaction {
         val total = Users.selectAll().count()
@@ -56,8 +57,8 @@ fun getListUsers(ctx: Context) {
             "inactive" -> Users.inactive
             else -> Users.name
         }
-        val users = (Users leftJoin Institutions).selectAll()
-            .orderBy(order, SortOrder.valueOf(orderDir.uppercase()) )
+        val users = (Users leftJoin Institutions leftJoin Participants).selectAll()
+            .orderBy(order, orderDir)
             .offset((page * pageSize).toLong())
             .limit(pageSize)
             .map { it.toUser() }
