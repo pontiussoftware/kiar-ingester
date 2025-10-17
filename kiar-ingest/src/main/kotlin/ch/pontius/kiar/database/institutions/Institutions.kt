@@ -115,6 +115,8 @@ object Institutions : IntIdTable("institutions") {
         city = this[city],
         zip = this[zip],
         canton = this[canton],
+        longitude = this[longitude],
+        latitude = this[latitude],
         email = this[email],
         homepage = this[homepage],
         publish = this[publish],
