@@ -1,5 +1,5 @@
 import {AfterViewInit, Component} from "@angular/core";
-import {catchError, map, mergeMap, Observable, of, shareReplay} from "rxjs";
+import {catchError, firstValueFrom, map, mergeMap, Observable, of, shareReplay} from "rxjs";
 import {FormArray, FormControl, FormGroup, Validators} from "@angular/forms";
 import {
   ApacheSolrConfig,
@@ -50,8 +50,8 @@ export class JobTemplateComponent implements AfterViewInit {
     description: new FormControl(''),
     type: new FormControl('', [Validators.required]),
     participantName: new FormControl(''),
-    solrConfigName: new FormControl(''),
-    entityMappingName: new FormControl(''),
+    config: new FormControl<ApacheSolrConfig | null>(null),
+    mapping: new FormControl<EntityMapping | null>(null),
     startAutomatically: new FormControl(false),
     transformers: this.transformers
   })
@@ -220,12 +220,10 @@ export class JobTemplateComponent implements AfterViewInit {
       type: this.formControl.get('type')?.value as JobType,
       startAutomatically: this.formControl.get('startAutomatically')?.value,
       participantName: this.formControl.get('participantName')?.value,
-      config: {
-        name: this.formControl.get('solrConfigName')?.value
-      } as ApacheSolrConfig,
-      mapping: {
-        name: this.formControl.get('entityMappingName')?.value
-      } as EntityMapping,
+      config: this.formControl.get('config')?.value,
+      mapping: this.formControl.get('mapping')?.value,
+      createdAt: -1,
+      changedAt: -1,
       transformers: this.transformers.controls.map(transformer => {
         let map = new Map<string,string>;
         (transformer.get('parameters') as FormArray)?.controls?.forEach(param => {
@@ -246,22 +244,22 @@ export class JobTemplateComponent implements AfterViewInit {
    *
    * @param template The {@link JobTemplate} to apply.
    */
-  private updateForm(template: JobTemplate) {
-    this.formControl.controls['name'].setValue(template?.name || '');
-    this.formControl.controls['description'].setValue(template?.description || '');
-    this.formControl.controls['type'].setValue(template?.type || '');
-    this.formControl.controls['participantName'].setValue(template?.participantName || '');
-    this.formControl.controls['solrConfigName'].setValue(template?.config?.name || '');
-    this.formControl.controls['entityMappingName'].setValue(template?.mapping?.name || '');
-    this.formControl.controls['startAutomatically'].setValue(template?.startAutomatically || false);
+  private async updateForm(template: JobTemplate) {
+    this.formControl.controls['name'].setValue(template?.name ?? '');
+    this.formControl.controls['description'].setValue(template?.description ?? '');
+    this.formControl.controls['type'].setValue(template?.type ?? '');
+    this.formControl.controls['participantName'].setValue(template?.participantName ?? '');
+    this.formControl.controls['config'].setValue(await firstValueFrom(this.solr.pipe(map( s => s.find(s => s.id === template.config?.id)))) ?? null);
+    this.formControl.controls['mapping'].setValue(await firstValueFrom(this.mappings.pipe(map( s => s.find(s => s.id === template.mapping?.id)))) ?? null);
+    this.formControl.controls['startAutomatically'].setValue(template?.startAutomatically ?? false);
 
     this.transformers.clear()
     for (let transformer of (template?.transformers || [])) {
       this.transformers.push(new FormGroup({
         type: new FormControl(transformer.type , [Validators.required]),
         parameters: new FormArray(Object.entries(transformer.parameters).map(p => new FormGroup({
-          key: new FormControl(p[0] || ''),
-          value: new FormControl(p[1] || '')
+          key: new FormControl(p[0] ?? ''),
+          value: new FormControl(p[1] ?? '')
         })))
       }))
     }

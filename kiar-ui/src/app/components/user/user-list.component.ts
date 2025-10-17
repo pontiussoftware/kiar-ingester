@@ -1,6 +1,6 @@
 import {AfterViewInit, Component, ViewChild} from "@angular/core";
 import {ConfigService, User, UserService} from "../../../../openapi";
-import { Observable, tap} from "rxjs";
+import {Observable, tap} from "rxjs";
 import {MatPaginator} from "@angular/material/paginator";
 import {MatSort} from "@angular/material/sort";
 import {MatSnackBar, MatSnackBarConfig} from "@angular/material/snack-bar";
