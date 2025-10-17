@@ -11,6 +11,7 @@ import ch.pontius.kiar.database.config.SolrConfigs
 import ch.pontius.kiar.database.config.SolrConfigs.toSolr
 import ch.pontius.kiar.database.institutions.Institutions
 import ch.pontius.kiar.database.institutions.Institutions.toInstitution
+import ch.pontius.kiar.database.institutions.Participants
 import ch.pontius.kiar.ingester.solrj.Constants
 import io.javalin.http.Context
 import io.javalin.openapi.*
@@ -45,13 +46,13 @@ private val LOGGER = LogManager.getLogger()
 fun postSyncInstitutions(ctx: Context) {
     val collectionId = ctx.queryParam("collectionId")?.toIntOrNull() ?: throw ErrorStatusException(400, "Query parameter 'collectionId' is required.")
     val (config, collectionName, institutions) = transaction {
-        val (collectionName, config) = (SolrConfigs innerJoin SolrCollections).select(SolrConfigs.columns).where {
+        val (collectionName, config) = (SolrConfigs innerJoin SolrCollections).select(SolrConfigs.columns + SolrCollections.name).where {
             (SolrCollections.id eq collectionId) and (SolrCollections.type eq CollectionType.MUSEUM)
         }.map {
             it[SolrCollections.name] to it.toSolr()
         }.firstOrNull() ?: throw ErrorStatusException(404, "Apache Solr config for collection with ID $collectionId could not be found.")
 
-        val institutions = Institutions.selectAll().where { Institutions.publish eq true }.map { it.toInstitution() }
+        val institutions = (Institutions innerJoin Participants).selectAll().where { Institutions.publish eq true }.map { it.toInstitution() }
         Triple(config,collectionName, institutions)
     }
 
@@ -80,7 +81,7 @@ private fun synchronise(config: ApacheSolrConfig, collection: String, institutio
         try {
             /* Delete all existing entries. */
             var response = client.deleteByQuery(collection, "*:*")
-            if (response.status == 0) {
+            if (response?.status == 0) {
                 LOGGER.info("Purged collection (collection = {}).", collection)
             } else {
                 LOGGER.error("Failed to purge collection (collection = {}).", collection)
