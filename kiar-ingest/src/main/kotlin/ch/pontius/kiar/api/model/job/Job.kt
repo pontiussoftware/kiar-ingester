@@ -1,10 +1,17 @@
 package ch.pontius.kiar.api.model.job
 
+import ch.pontius.kiar.api.model.config.solr.CollectionType
 import ch.pontius.kiar.api.model.config.templates.JobTemplate
 import ch.pontius.kiar.api.model.config.templates.JobType
 import ch.pontius.kiar.config.Config
+import ch.pontius.kiar.database.config.AttributeMappings
+import ch.pontius.kiar.database.config.AttributeMappings.toAttributeMapping
 import ch.pontius.kiar.database.config.ImageDeployments
 import ch.pontius.kiar.database.config.ImageDeployments.toImageDeployment
+import ch.pontius.kiar.database.config.SolrCollections
+import ch.pontius.kiar.database.config.SolrCollections.toSolrCollection
+import ch.pontius.kiar.database.config.Transformers
+import ch.pontius.kiar.database.config.Transformers.toTransformerConfig
 import ch.pontius.kiar.ingester.processors.sinks.ApacheSolrSink
 import ch.pontius.kiar.ingester.processors.sinks.DummySink
 import ch.pontius.kiar.ingester.processors.sinks.Sink
@@ -12,6 +19,7 @@ import ch.pontius.kiar.ingester.processors.sources.*
 import ch.pontius.kiar.ingester.processors.transformers.ImageDeployment
 import kotlinx.serialization.Serializable
 import org.apache.solr.common.SolrInputDocument
+import org.jetbrains.exposed.v1.core.and
 import org.jetbrains.exposed.v1.core.eq
 import org.jetbrains.exposed.v1.jdbc.selectAll
 
@@ -70,9 +78,18 @@ data class Job(
      * @return [Sink] representing the pipeline.
      */
     fun toPipeline(config: Config, test: Boolean = false): Sink<SolrInputDocument> {
-        val template = this.template ?: throw IllegalStateException("Failed to generated execution pipeline for job ${this.id}: Missing template.")
-        val mapping = template.mapping ?: throw IllegalStateException("Failed to generated execution pipeline for job ${this.id}: Missing entity mapping.")
-        val solrConfig = template.config ?: throw IllegalStateException("Failed to generated execution pipeline for job ${this.id}: Missing Apache Solr configuration.")
+        val template = this.template?.let {
+            val transformers = Transformers.selectAll().where { Transformers.jobTemplateId eq it.id }.map { it.toTransformerConfig() }
+            it.copy(transformers = transformers)
+        } ?: throw IllegalStateException("Failed to generated execution pipeline for job ${this.id}: Missing template.")
+        val mapping = template.mapping?.let {
+            val attributes = AttributeMappings.selectAll().where { AttributeMappings.entityMappingId eq it.id }.map { it.toAttributeMapping() }
+            it.copy(attributes = attributes)
+        } ?: throw IllegalStateException("Failed to generated execution pipeline for job ${this.id}: Missing entity mapping.")
+        val solrConfig = template.config?.let {
+            val collections = SolrCollections.selectAll().where { (SolrCollections.solrInstanceId eq it.id) and (SolrCollections.type eq CollectionType.OBJECT) }.map { it.toSolrCollection() }
+            it.copy(collections = collections)
+        } ?: throw IllegalStateException("Failed to generated execution pipeline for job ${this.id}: Missing Apache Solr configuration.")
 
         /* Generate file source. */
         val sourcePath = config.ingestPath.resolve(template.participantName).resolve("${this.id}.job")
