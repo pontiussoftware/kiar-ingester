@@ -35,6 +35,9 @@ import java.nio.file.Paths
 import java.sql.Connection
 import kotlin.system.exitProcess
 
+/**
+ * A simple migration routine to move KIAR database from Xodus to SQLite.
+ */
 fun main(args: Array<String>) {
     /* Sanity check; is path available. */
     if (args.size != 2) {
@@ -94,6 +97,8 @@ fun main(args: Array<String>) {
             }
         }
     }
+
+    print("Migration from $src (Xodus) to $dst (SQLite) successful.")
 }
 
 /**
