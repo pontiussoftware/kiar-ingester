@@ -1,8 +1,8 @@
 package ch.pontius.kiar.api.routes
 
 import ch.pontius.kiar.api.model.status.ErrorStatusException
-import ch.pontius.kiar.utilities.extensions.SESSION_USER_ID
 import ch.pontius.kiar.database.institutions.Users
+import ch.pontius.kiar.utilities.extensions.SESSION_USER_ID
 import io.javalin.http.Context
 import io.javalin.http.Handler
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
@@ -23,7 +23,7 @@ class DatabaseAccessManager(): Handler {
             val userId = ctx.sessionAttribute<Int>(SESSION_USER_ID) ?: throw ErrorStatusException(401, "Unknown user: You cannot access this resource.")
             try {
                 Users.getById(userId) ?: throw ErrorStatusException(401, "Access denied! Unknown or inactive user.")
-            } catch (e: Throwable) {
+            } catch (_: Throwable) {
                 throw ErrorStatusException(500, "Access denied! Error while verifying user.")
             }
         }

@@ -6,6 +6,7 @@ import ch.pontius.kiar.api.model.job.JobStatus
 import ch.pontius.kiar.config.Config
 import ch.pontius.kiar.database.config.JobTemplates
 import ch.pontius.kiar.database.config.JobTemplates.toJobTemplate
+import ch.pontius.kiar.database.institutions.Participants
 import ch.pontius.kiar.database.jobs.Jobs
 import ch.pontius.kiar.ingester.processors.ProcessingContext
 import ch.pontius.kiar.ingester.watcher.FileWatcher
@@ -17,7 +18,6 @@ import org.jetbrains.exposed.v1.core.eq
 import org.jetbrains.exposed.v1.jdbc.selectAll
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 import org.jetbrains.exposed.v1.jdbc.update
-import java.lang.IllegalStateException
 import java.nio.file.Path
 import java.time.Instant
 import java.util.concurrent.ConcurrentHashMap
@@ -81,7 +81,7 @@ class IngesterServer(val config: Config) {
     init {
         transaction {
             /* Install file watchers for jobs that should be started automatically. */
-            JobTemplates.selectAll().where { JobTemplates.startAutomatically eq true }.map { it.toJobTemplate() }.forEach {
+            (JobTemplates innerJoin Participants).selectAll().where { JobTemplates.startAutomatically eq true }.map { it.toJobTemplate() }.forEach {
                 this@IngesterServer.scheduleWatcher(it.id!!, this@IngesterServer.config.ingestPath.resolve(it.participantName).resolve("${it.name}.${it.type.suffix}"))
             }
 

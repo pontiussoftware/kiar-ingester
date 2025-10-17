@@ -2,7 +2,6 @@ package ch.pontius.kiar.database.config
 
 import ch.pontius.kiar.api.model.config.solr.ApacheSolrCollection
 import ch.pontius.kiar.api.model.config.solr.CollectionType
-import ch.pontius.kiar.database.institutions.Institutions
 import org.jetbrains.exposed.v1.core.ReferenceOption
 import org.jetbrains.exposed.v1.core.ResultRow
 import org.jetbrains.exposed.v1.core.dao.id.IntIdTable
@@ -46,7 +45,7 @@ object SolrCollections: IntIdTable("solr_collection") {
      * @param name The name to lookup
      * @return [SolrCollections] [id] or null, if no entry exists.
      */
-    fun idByName(name: String) = Institutions.select(id).where { SolrCollections.name eq name}.map { it[id] }.firstOrNull()
+    fun idByName(name: String) = SolrCollections.select(id).where { SolrCollections.name eq name}.map { it[id] }.firstOrNull()
 
     /**
      * Converts this [ResultRow] into an [ApacheSolrCollection].

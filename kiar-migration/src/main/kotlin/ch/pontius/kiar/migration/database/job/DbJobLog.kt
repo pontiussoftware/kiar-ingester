@@ -24,7 +24,11 @@ class DbJobLog(entity: Entity) : XdEntity(entity) {
                     it[jobId] = Jobs.idByName(dbJobLog.job.name) ?: throw IllegalStateException("Could not find job template with name '${dbJobLog.job.name}'.")
                     it[context] = JobLogContext.valueOf(dbJobLog.context.description)
                     it[level] = JobLogLevel.valueOf(dbJobLog.level.description)
-                    it[documentId] = UUID.fromString(dbJobLog.documentId)
+                    it[documentId] = try {
+                        UUID.fromString(dbJobLog.documentId)
+                    } catch (_: Exception) {
+                        null
+                    }
                     it[collectionId] = dbJobLog.collectionId
                     it[description] = dbJobLog.description
                 }

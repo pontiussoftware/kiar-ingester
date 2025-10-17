@@ -62,7 +62,7 @@ object Users : IntIdTable("users") {
      * @param inactive If true, inactive [Users] will be returned as well.
      */
     fun getById(id: UserId, inactive: Boolean = false) = transaction {
-        val query = (Users innerJoin Institutions).selectAll().where { (Users.id eq id) }
+        val query = (Users leftJoin Institutions).selectAll().where { (Users.id eq id) }
         if (!inactive) {
             query.andWhere { Users.inactive eq false }
         }
