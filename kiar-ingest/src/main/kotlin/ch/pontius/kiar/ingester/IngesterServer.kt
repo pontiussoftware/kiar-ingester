@@ -18,6 +18,7 @@ import kotlinx.coroutines.flow.takeWhile
 import org.apache.logging.log4j.LogManager
 import org.apache.logging.log4j.Logger
 import org.jetbrains.exposed.v1.core.eq
+import org.jetbrains.exposed.v1.core.or
 import org.jetbrains.exposed.v1.jdbc.selectAll
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 import org.jetbrains.exposed.v1.jdbc.update
@@ -89,7 +90,7 @@ class IngesterServer(val config: Config) {
             }
 
             /* Mark jobs that are still running as interrupted. */
-            Jobs.update({ Jobs.status eq JobStatus.RUNNING }) { update ->
+            Jobs.update({ (Jobs.status eq JobStatus.RUNNING) or (Jobs.status eq JobStatus.SCHEDULED)}) { update ->
                 update[status] = JobStatus.INTERRUPTED
                 update[modified] = Instant.now()
             }
