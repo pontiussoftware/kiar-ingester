@@ -18,7 +18,7 @@ object Participants: IntIdTable("participants") {
     val name = varchar("name", 255).uniqueIndex()
 
     /** An optional description of the [Participants] entry. */
-    val description = text("description")
+    val description = text("description").nullable()
 
     /** Timestamp of creation of the [Participants] entry. */
     val created = timestamp("created").defaultExpression(CurrentTimestamp)
