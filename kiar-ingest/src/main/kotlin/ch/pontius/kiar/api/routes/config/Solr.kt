@@ -18,7 +18,9 @@ import ch.pontius.kiar.utilities.extensions.withSuffix
 import io.javalin.http.Context
 import io.javalin.openapi.*
 import org.jetbrains.exposed.v1.core.SortOrder
+import org.jetbrains.exposed.v1.core.and
 import org.jetbrains.exposed.v1.core.eq
+import org.jetbrains.exposed.v1.core.notInList
 import org.jetbrains.exposed.v1.jdbc.*
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 import java.time.Instant
@@ -216,19 +218,29 @@ fun deleteSolrConfig(ctx: Context) {
  */
 private fun mergeCollections(solrConfigId: SolrConfigId, collections: List<ApacheSolrCollection>) {
     /* Delete all existing entries. */
-    SolrCollections.deleteWhere { SolrCollections.solrInstanceId eq solrConfigId }
+    SolrCollections.deleteWhere { (SolrCollections.solrInstanceId eq solrConfigId) and (SolrCollections.id notInList (collections.mapNotNull { it.id }))}
 
-    /* Re-create entries. */
+    /* Insert or update entries. */
     for (c in collections) {
-        SolrCollections.insert { collection ->
-            if (c.id != null) collection[SolrCollections.id] = c.id
-            collection[SolrCollections.solrInstanceId] = solrConfigId
-            collection[SolrCollections.name] = c.name
-            collection[SolrCollections.displayName] = c.displayName
-            collection[SolrCollections.type] = c.type
-            collection[SolrCollections.selector] = c.selector
-            collection[SolrCollections.deleteBeforeIngest] = c.deleteBeforeIngest
-            collection[SolrCollections.oai] = c.oai
+        if (c.id != null) {
+            SolrCollections.update({ SolrCollections.id eq c.id}) { update ->
+                update[SolrCollections.name] = c.name
+                update[SolrCollections.displayName] = c.displayName
+                update[SolrCollections.type] = c.type
+                update[SolrCollections.selector] = c.selector
+                update[SolrCollections.deleteBeforeIngest] = c.deleteBeforeIngest
+                update[SolrCollections.oai] = c.oai
+            }
+        } else {
+            SolrCollections.insert { insert ->
+                insert[SolrCollections.solrInstanceId] = solrConfigId
+                insert[SolrCollections.name] = c.name
+                insert[SolrCollections.displayName] = c.displayName
+                insert[SolrCollections.type] = c.type
+                insert[SolrCollections.selector] = c.selector
+                insert[SolrCollections.deleteBeforeIngest] = c.deleteBeforeIngest
+                insert[SolrCollections.oai] = c.oai
+            }
         }
     }
 }

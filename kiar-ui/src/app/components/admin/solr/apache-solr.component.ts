@@ -133,6 +133,7 @@ export class ApacheSolrComponent implements AfterViewInit{
    */
   public addCollection() {
     this.collections.push(new FormGroup({
+      id: new FormControl<number | null>(null, [Validators.required]),
       displayName: new FormControl('', [Validators.required]),
       name: new FormControl('', [Validators.required]),
       type: new FormControl('', [Validators.required]),
@@ -206,6 +207,7 @@ export class ApacheSolrComponent implements AfterViewInit{
     this.collections.length = 0
     for (let collection of (solr?.collections || [])) {
       this.collections.push(new FormGroup({
+        id: new FormControl(collection.id ?? null, [Validators.required]),
         displayName: new FormControl(collection.displayName ?? '', [Validators.required]),
         name: new FormControl(collection.name ?? '', [Validators.required]),
         type: new FormControl(collection.type ?? '', [Validators.required]),
@@ -244,6 +246,7 @@ export class ApacheSolrComponent implements AfterViewInit{
       password: this.formControl.get('password')?.value,
       collections: this.collections.map((collection) => {
         return {
+          id: collection.get('id')?.value,
           displayName: collection.get('displayName')?.value,
           name: collection.get('name')?.value,
           type: collection.get('type')?.value,
