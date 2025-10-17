@@ -5,10 +5,10 @@ import ch.pontius.kiar.api.model.status.ErrorStatus
 import ch.pontius.kiar.api.model.status.ErrorStatusException
 import ch.pontius.kiar.api.model.status.SuccessStatus
 import ch.pontius.kiar.api.model.user.Role
-import ch.pontius.kiar.utilities.extensions.currentUser
 import ch.pontius.kiar.config.Config
 import ch.pontius.kiar.database.jobs.Jobs
 import ch.pontius.kiar.ingester.IngesterServer
+import ch.pontius.kiar.utilities.extensions.currentUser
 import io.javalin.http.Context
 import io.javalin.openapi.*
 import org.jetbrains.exposed.v1.core.eq
@@ -46,7 +46,7 @@ fun upload(ctx: Context, config: Config) {
     /* Obtain and check Job. */
     val jobId = ctx.pathParam("id").toIntOrNull() ?: throw ErrorStatusException(400, "Malformed job ID.")
     val first = ctx.queryParam("first")?.toBoolean() ?: false
-    val last = ctx.queryParam("last")?.toBoolean() ?: false
+    ctx.queryParam("last")?.toBoolean() ?: false
     val participant = transaction {
         val job = Jobs.getById(jobId) ?: throw ErrorStatusException(404, "Job with ID $jobId could not be found.")
 
@@ -185,7 +185,7 @@ fun abortJob(ctx: Context, server: IngesterServer) {
         }
 
         /* Check if job is still active. */
-        if (job.status in setOf(JobStatus.CREATED, JobStatus.HARVESTED, JobStatus.INGESTED, JobStatus.RUNNING)) {
+        if (job.status !in setOf(JobStatus.CREATED, JobStatus.HARVESTED, JobStatus.INGESTED, JobStatus.RUNNING)) {
             throw ErrorStatusException(400, "Job with ID $jobId could not be aborted because it is already inactive.")
         }
         Jobs.update({ Jobs.id eq jobId }) { update ->
