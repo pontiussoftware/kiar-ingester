@@ -108,6 +108,7 @@ class ProcessingContext(
     fun flushLogs() = transaction {
         this@ProcessingContext.buffer.removeIf { log ->
             JobLogs.insert {
+                it[JobLogs.jobId] = this@ProcessingContext.jobId
                 it[JobLogs.documentId] = log.documentId?.let { str -> UUID.fromString(str) }
                 it[JobLogs.context] = log.context
                 it[JobLogs.level] = log.level
