@@ -8,6 +8,7 @@ import ch.pontius.kiar.api.model.job.JobLogLevel
 import ch.pontius.kiar.database.config.SolrCollections
 import ch.pontius.kiar.database.institutions.Institutions
 import ch.pontius.kiar.database.institutions.InstitutionsSolrCollections
+import ch.pontius.kiar.database.publication.Records
 import ch.pontius.kiar.ingester.processors.ProcessingContext
 import ch.pontius.kiar.ingester.processors.sources.Source
 import ch.pontius.kiar.ingester.solrj.*
@@ -19,13 +20,13 @@ import com.jayway.jsonpath.PathNotFoundException
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.onCompletion
 import kotlinx.coroutines.flow.onEach
-import kotlinx.coroutines.flow.onStart
 import org.apache.logging.log4j.LogManager
 import org.apache.solr.client.solrj.SolrServerException
 import org.apache.solr.client.solrj.request.schema.SchemaRequest
 import org.apache.solr.common.SolrInputDocument
 import org.jetbrains.exposed.v1.core.and
 import org.jetbrains.exposed.v1.core.eq
+import org.jetbrains.exposed.v1.jdbc.insert
 import org.jetbrains.exposed.v1.jdbc.select
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 import java.io.IOException
@@ -72,9 +73,7 @@ class ApacheSolrSink(override val input: Source<SolrInputDocument>): Sink<SolrIn
         this.initializeValidators(context, allCollections)
 
         /* Return flow. */
-        return this@ApacheSolrSink.input.toFlow(context).onStart {
-            this@ApacheSolrSink.prepareIngest(context,allCollections)
-        }.onEach { doc ->
+        return this@ApacheSolrSink.input.toFlow(context).onEach { doc ->
             val uuid = doc.get<String>(Field.UUID)
             if (uuid != null) {
                 /* Set last change field. */
@@ -117,15 +116,19 @@ class ApacheSolrSink(override val input: Source<SolrInputDocument>): Sink<SolrIn
                             }
                         }
 
-                        /* Ingest object. */
+                        /* Validate and stage object. */
                         val validated = this@ApacheSolrSink.validate(collection.name, uuid, doc, context) ?: continue
-                        val response = context.solrClient.add(collection.name, validated)
-                        if (response.status == 0) {
-                            LOGGER.info("Ingested document (jobId = {}, collection = {}, docId = {}).", context.jobId, collection, uuid)
-                        } else {
-                            LOGGER.error("Failed to ingest document (jobId = ${context.jobId}, docId = $uuid).")
-                            context.log(JobLog(null, uuid, collection.name, JobLogContext.SYSTEM, JobLogLevel.ERROR, "Failed to ingest document due to an Apache Solr error (status = ${response.status})."))
+                        transaction(context.stagingDatabase) {
+                            Records.insert { insert ->
+                                insert[Records.uuid] = UUID.fromString(uuid)
+                                insert[Records.collection] = collection.name
+                                insert[Records.institution] = validated.get<String>(Field.INSTITUTION)!!
+                                insert[Records.designation] = validated.get<String>(Field.DESIGNATION)!!
+                                insert[Records.local_number] = validated.get<String>(Field.INVENTORY_NUMBER)!!
+                                insert[Records.document] = validated
+                            }
                         }
+
                     } catch (e: Throwable) {
                         context.log(JobLog(null, uuid, collection.name, JobLogContext.SYSTEM, JobLogLevel.SEVERE, "Failed to ingest document due to exception: ${e.message}."))
                     }

@@ -185,7 +185,7 @@ fun abortJob(ctx: Context, server: IngesterServer) {
         }
 
         /* Check if job is still active. */
-        if (job.status !in setOf(JobStatus.CREATED, JobStatus.HARVESTED, JobStatus.SCHEDULED, JobStatus.INGESTED, JobStatus.RUNNING)) {
+        if (job.status !in setOf(JobStatus.CREATED, JobStatus.HARVESTED, JobStatus.SCHEDULED, JobStatus.INGESTED, JobStatus.INTERRUPTED, JobStatus.RUNNING)) {
             throw ErrorStatusException(400, "Job with ID $jobId could not be aborted because it is already inactive.")
         }
         Jobs.update({ Jobs.id eq jobId }) { update ->

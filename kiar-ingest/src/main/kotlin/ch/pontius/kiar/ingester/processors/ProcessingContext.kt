@@ -4,23 +4,16 @@ import ch.pontius.kiar.api.model.config.templates.JobTemplate
 import ch.pontius.kiar.api.model.institution.Institution
 import ch.pontius.kiar.api.model.job.JobLog
 import ch.pontius.kiar.api.model.job.JobLogLevel
-import ch.pontius.kiar.database.config.*
-import ch.pontius.kiar.database.config.AttributeMappings.toAttributeMapping
-import ch.pontius.kiar.database.config.ImageDeployments.toImageDeployment
-import ch.pontius.kiar.database.config.JobTemplates.toJobTemplate
-import ch.pontius.kiar.database.config.SolrCollections.toSolrCollection
-import ch.pontius.kiar.database.config.Transformers.toTransformerConfig
+import ch.pontius.kiar.config.Config
 import ch.pontius.kiar.database.institutions.Institutions
 import ch.pontius.kiar.database.institutions.Institutions.toInstitution
 import ch.pontius.kiar.database.institutions.Participants
 import ch.pontius.kiar.database.jobs.JobLogs
 import ch.pontius.kiar.database.jobs.Jobs
+import ch.pontius.kiar.database.publication.Records
 import org.apache.logging.log4j.LogManager
 import org.apache.solr.client.solrj.impl.Http2SolrClient
-import org.jetbrains.exposed.v1.core.eq
-import org.jetbrains.exposed.v1.jdbc.insert
-import org.jetbrains.exposed.v1.jdbc.select
-import org.jetbrains.exposed.v1.jdbc.selectAll
+import org.jetbrains.exposed.v1.jdbc.*
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 import java.io.Closeable
 import java.util.*
@@ -33,7 +26,7 @@ import java.util.concurrent.atomic.AtomicLong
  * @author Ralph Gasser
  * @version 1.2.0
  */
-class ProcessingContext(val jobId: Int, val test: Boolean = false): Closeable {
+class ProcessingContext(val jobId: Int, val config: Config, val test: Boolean = false): Closeable {
 
     companion object {
         private val LOGGER = LogManager.getLogger()
@@ -57,26 +50,7 @@ class ProcessingContext(val jobId: Int, val test: Boolean = false): Closeable {
     /** The [JobTemplate] backing this [ProcessingContext]. This property is lazily loaded, cached and re-used. */
     val jobTemplate: JobTemplate by lazy {
         transaction {
-            val template = (Jobs innerJoin JobTemplates innerJoin SolrConfigs innerJoin EntityMappings)
-                .select(JobTemplates.columns + SolrConfigs.columns + EntityMappings.columns)
-                .where { Jobs.id eq this@ProcessingContext.jobId }
-                .map { it.toJobTemplate() }
-                .firstOrNull() ?: throw IllegalStateException("Failed to obtain job template for job with ID ${this@ProcessingContext.jobId}.")
-
-            /* Obtain Apache Solr Configuration with collections. */
-            val solr = template.config ?: throw IllegalStateException("Failed to obtain Apache Solr configuration for job with ID ${this@ProcessingContext.jobId}.")
-            val collections = SolrCollections.selectAll().where { SolrCollections.solrInstanceId eq solr.id }.map { it.toSolrCollection() }
-            val deployments = ImageDeployments.selectAll().where { ImageDeployments.solrInstanceId eq solr.id }.map { it.toImageDeployment() }
-
-            /* Obtain entity mapping. */
-            val mapping = template.mapping ?: throw IllegalStateException("Failed to obtain entity mapping configuration for job with ID ${this@ProcessingContext.jobId}.")
-            val attributes = AttributeMappings.selectAll().where { AttributeMappings.entityMappingId eq mapping.id }.map { it.toAttributeMapping() }
-
-            /* Obtain transformers. */
-            val transformers = Transformers.selectAll().where { Transformers.jobTemplateId eq template.id }.map { it.toTransformerConfig() }
-
-            /* Return copy of template. */
-            template.copy(transformers = transformers, config = solr.copy(collections = collections, deployments = deployments), mapping = mapping.copy(attributes = attributes))
+            Jobs.getById(this@ProcessingContext.jobId)?.template ?: throw IllegalStateException("Failed to obtain job template for job with ID ${this@ProcessingContext.jobId}.")
         }
     }
 
@@ -91,6 +65,20 @@ class ProcessingContext(val jobId: Int, val test: Boolean = false): Closeable {
         }
         /* Prepare Apache Solr client. */
         httpBuilder.build()
+    }
+
+    /** The staging database [Database]. */
+    val stagingDatabase: Database by lazy {
+        val database = Database.connect("jdbc:sqlite:${this.config.ingestPath.resolve("staging-${this.jobTemplate.participantName}.sqlite")}", driver = "org.sqlite.JDBC")
+        transaction(database) {
+            val exists = SchemaUtils.listTables().map { it.split(".").last() }.contains(Records.nameInDatabaseCase())
+            if (!exists) {
+                SchemaUtils.create(Records)
+            } else {
+                Records.deleteAll()
+            }
+        }
+        database
     }
 
     /** A [Map] of [Institution.name] to [Institution]. */
@@ -164,7 +152,7 @@ class ProcessingContext(val jobId: Int, val test: Boolean = false): Closeable {
     fun flushLogs() = transaction {
         this@ProcessingContext.buffer.removeIf { log ->
             JobLogs.insert {
-                it[JobLogs.jobId] = this.jobId
+                it[JobLogs.jobId] = this@ProcessingContext.jobId
                 it[JobLogs.documentId] = log.documentId?.let { str -> UUID.fromString(str) }
                 it[JobLogs.context] = log.context
                 it[JobLogs.level] = log.level
@@ -179,9 +167,7 @@ class ProcessingContext(val jobId: Int, val test: Boolean = false): Closeable {
      */
     override fun close() {
         /* Close staging database and Apache Solr Client (if necessary). */
-        if (!this.test) {
-            this.solrClient.close()
-        }
+        this.solrClient.close()
 
         /* Flush remaining logs. */
         this.flushLogs()

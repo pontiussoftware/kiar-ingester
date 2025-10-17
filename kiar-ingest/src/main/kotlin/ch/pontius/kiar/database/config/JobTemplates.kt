@@ -3,8 +3,12 @@ package ch.pontius.kiar.database.config
 import ch.pontius.kiar.api.model.config.templates.JobTemplate
 import ch.pontius.kiar.api.model.config.templates.JobTemplateId
 import ch.pontius.kiar.api.model.config.templates.JobType
+import ch.pontius.kiar.database.config.AttributeMappings.toAttributeMapping
 import ch.pontius.kiar.database.config.EntityMappings.toEntityMapping
+import ch.pontius.kiar.database.config.ImageDeployments.toImageDeployment
+import ch.pontius.kiar.database.config.SolrCollections.toSolrCollection
 import ch.pontius.kiar.database.config.SolrConfigs.toSolr
+import ch.pontius.kiar.database.config.Transformers.toTransformerConfig
 import ch.pontius.kiar.database.institutions.Institutions
 import ch.pontius.kiar.database.institutions.Participants
 import org.jetbrains.exposed.v1.core.ReferenceOption
@@ -65,11 +69,31 @@ object JobTemplates: IntIdTable("jobs_templates") {
      * @param templateId The [JobTemplateId] to look for.
      * @return Resulting [JobTemplate] or null
      */
-    fun getById(templateId: JobTemplateId) = (JobTemplates innerJoin EntityMappings innerJoin SolrConfigs innerJoin Participants)
-        .selectAll()
-        .where { id eq templateId }
-        .map { it.toJobTemplate() }
-        .firstOrNull()
+    fun getById(templateId: JobTemplateId): JobTemplate? {
+        val template = (JobTemplates innerJoin EntityMappings innerJoin SolrConfigs innerJoin Participants)
+            .selectAll()
+            .where { id eq templateId }
+            .map { it.toJobTemplate() }
+            .firstOrNull()
+
+        /* Abort, if template was not found. */
+        if (template == null) return null
+
+        /* Obtain Apache Solr Configuration with collections. */
+        val solr = template.config ?: throw IllegalStateException("Failed to obtain Apache Solr configuration for template with ID ${template.id}.")
+        val collections = SolrCollections.selectAll().where { SolrCollections.solrInstanceId eq solr.id }.map { it.toSolrCollection() }
+        val deployments = ImageDeployments.selectAll().where { ImageDeployments.solrInstanceId eq solr.id }.map { it.toImageDeployment() }
+
+        /* Obtain entity mapping. */
+        val mapping = template.mapping ?: throw IllegalStateException("Failed to obtain entity mapping configuration for job with ID ${template.id}.")
+        val attributes = AttributeMappings.selectAll().where { AttributeMappings.entityMappingId eq mapping.id }.map { it.toAttributeMapping() }
+
+        /* Obtain transformers. */
+        val transformers = Transformers.selectAll().where { Transformers.jobTemplateId eq template.id }.map { it.toTransformerConfig() }
+
+        /* Return copy of template. */
+        return template.copy(transformers = transformers, config = solr.copy(collections = collections, deployments = deployments), mapping = mapping.copy(attributes = attributes))
+    }
 
     /**
      * Converts this [ResultRow] into an [JobTemplate].

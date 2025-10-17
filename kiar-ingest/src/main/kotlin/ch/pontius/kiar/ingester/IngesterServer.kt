@@ -128,6 +128,7 @@ class IngesterServer(val config: Config) {
      * Schedules the [Job] with the given name.
      *
      * @param jobId The ID of the job to schedule.
+     * @param test Whether the Job should only be run as test (i.e., no pushing to Apache Solr)
      */
     fun scheduleJob(jobId: JobId, test: Boolean = false) {
         /* Step 1: Perform sanity checks and create pipeline. */
@@ -150,7 +151,7 @@ class IngesterServer(val config: Config) {
         }
 
         /* Step 2: Create processing context. */
-        val context = ProcessingContext(jobId)
+        val context = ProcessingContext(jobId, this.config, test)
         this.activeJobs[jobId] = context
 
         /* Step 3: Create flow. */

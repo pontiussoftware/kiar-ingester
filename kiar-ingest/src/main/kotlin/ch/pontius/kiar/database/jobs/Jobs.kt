@@ -4,11 +4,8 @@ import ch.pontius.kiar.api.model.job.Job
 import ch.pontius.kiar.api.model.job.JobId
 import ch.pontius.kiar.api.model.job.JobSource
 import ch.pontius.kiar.api.model.job.JobStatus
-import ch.pontius.kiar.database.config.EntityMappings
 import ch.pontius.kiar.database.config.JobTemplates
 import ch.pontius.kiar.database.config.JobTemplates.toJobTemplate
-import ch.pontius.kiar.database.config.SolrConfigs
-import ch.pontius.kiar.database.institutions.Participants
 import ch.pontius.kiar.database.institutions.Users
 import org.jetbrains.exposed.v1.core.ReferenceOption
 import org.jetbrains.exposed.v1.core.ResultRow
@@ -80,11 +77,22 @@ object Jobs: IntIdTable("jobs") {
      * @param jobId The [JobId] to look for.
      * @return Resulting [Job] or null
      */
-    fun getById(jobId: JobId) = (Jobs innerJoin JobTemplates innerJoin EntityMappings innerJoin SolrConfigs innerJoin Participants)
-        .selectAll()
-        .where { id eq jobId }
-        .map { it.toJob() }
-        .firstOrNull()
+    fun getById(jobId: JobId): Job? {
+        val result = Jobs
+            .selectAll()
+            .where { id eq jobId }
+            .map { it[templateId]?.value to it.toJob() }
+            .firstOrNull()
+
+        /* Abort, if job was not found. */
+        if (result == null) return null
+
+        /* Enrich template if available. */
+        if (result.first == null) return result.second
+
+        /* Return copy of template. */
+        return result.second.copy(template = JobTemplates.getById(result.first!!))
+    }
 
     /**
      * Converts this [ResultRow] into an [Job].
@@ -94,7 +102,7 @@ object Jobs: IntIdTable("jobs") {
     fun ResultRow.toJob() = Job(
         id = this[id].value,
         name = this[name],
-        template = this.getOrNull(JobTemplates.id).let { this.toJobTemplate() },
+        template = this.getOrNull(JobTemplates.id)?.let { this.toJobTemplate() },
         status = this[status],
         source = this[src],
         processed = this[processed],
