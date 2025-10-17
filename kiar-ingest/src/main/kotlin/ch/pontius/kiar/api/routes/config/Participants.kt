@@ -52,7 +52,7 @@ fun createParticipants(ctx: Context) {
     val participantName = ctx.pathParam("name")
     transaction {
         Participants.insert {
-            it[name] = Participants.name
+            it[name] = participantName
         }
     }
     ctx.json(SuccessStatus("Participant '$participantName' created successfully."))
