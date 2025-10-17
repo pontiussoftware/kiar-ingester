@@ -96,7 +96,7 @@ fun getActiveJobs(ctx: Context, server: IngesterServer) {
         OpenApiResponse("500", [OpenApiContent(ErrorStatus::class)])
     ]
 )
-fun getInactiveJobs(ctx: Context, server: IngesterServer) {
+fun getInactiveJobs(ctx: Context) {
     val page = ctx.queryParam("page")?.toIntOrNull() ?: 0
     val pageSize = ctx.queryParam("pageSize")?.toIntOrNull() ?: 50
 

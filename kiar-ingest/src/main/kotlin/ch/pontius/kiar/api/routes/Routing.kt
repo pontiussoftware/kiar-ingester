@@ -99,7 +99,7 @@ fun configureApiRoutes(server: IngesterServer, config: Config) {
         post("jobs", { ctx -> createJob(ctx) }, Role.ADMINISTRATOR, Role.MANAGER)
         path("jobs") {
             get("active", { ctx -> getActiveJobs(ctx, server) }, Role.ADMINISTRATOR, Role.MANAGER, Role.VIEWER )
-            get("inactive",  { ctx -> getInactiveJobs(ctx, server) }, Role.ADMINISTRATOR, Role.MANAGER, Role.VIEWER )
+            get("inactive",  { ctx -> getInactiveJobs(ctx) }, Role.ADMINISTRATOR, Role.MANAGER, Role.VIEWER )
             delete("{id}",  { ctx -> abortJob(ctx, server) }, Role.ADMINISTRATOR, Role.MANAGER )
             path("{id}") {
                 put("upload",  { ctx -> upload(ctx, config) }, Role.ADMINISTRATOR, Role.MANAGER )
