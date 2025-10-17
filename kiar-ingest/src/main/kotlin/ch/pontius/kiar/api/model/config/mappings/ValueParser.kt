@@ -19,5 +19,6 @@ enum class ValueParser {
     COORD_WGS84,
     COORD_LV95,
     IMAGE_FILE,
+    IMAGE_URL,
     IMAGE_MPLUS;
 }
