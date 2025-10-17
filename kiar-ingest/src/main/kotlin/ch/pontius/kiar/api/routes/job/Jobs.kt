@@ -1,13 +1,6 @@
 package ch.pontius.kiar.api.routes.job
 
-import ch.pontius.kiar.api.model.job.CreateJobRequest
-import ch.pontius.kiar.api.model.job.Job
-import ch.pontius.kiar.api.model.job.JobLogContext
-import ch.pontius.kiar.api.model.job.JobLogLevel
-import ch.pontius.kiar.api.model.job.JobSource
-import ch.pontius.kiar.api.model.job.JobStatus
-import ch.pontius.kiar.api.model.job.PaginatedJobLogResult
-import ch.pontius.kiar.api.model.job.PaginatedJobResult
+import ch.pontius.kiar.api.model.job.*
 import ch.pontius.kiar.api.model.status.ErrorStatus
 import ch.pontius.kiar.api.model.status.ErrorStatusException
 import ch.pontius.kiar.api.model.status.SuccessStatus
@@ -19,20 +12,13 @@ import ch.pontius.kiar.database.jobs.JobLogs
 import ch.pontius.kiar.database.jobs.JobLogs.toJobLog
 import ch.pontius.kiar.database.jobs.Jobs
 import ch.pontius.kiar.database.jobs.Jobs.toJob
-import ch.pontius.kiar.utilities.extensions.currentUser
 import ch.pontius.kiar.ingester.IngesterServer
+import ch.pontius.kiar.utilities.extensions.currentUser
 import ch.pontius.kiar.utilities.extensions.parseBodyOrThrow
 import io.javalin.http.Context
 import io.javalin.openapi.*
-import org.jetbrains.exposed.v1.core.Op
-import org.jetbrains.exposed.v1.core.eq
-import org.jetbrains.exposed.v1.core.inList
-import org.jetbrains.exposed.v1.core.inSubQuery
-import org.jetbrains.exposed.v1.jdbc.andWhere
-import org.jetbrains.exposed.v1.jdbc.deleteWhere
-import org.jetbrains.exposed.v1.jdbc.insertAndGetId
-import org.jetbrains.exposed.v1.jdbc.select
-import org.jetbrains.exposed.v1.jdbc.selectAll
+import org.jetbrains.exposed.v1.core.*
+import org.jetbrains.exposed.v1.jdbc.*
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 import java.time.Instant
 
@@ -76,7 +62,7 @@ fun getActiveJobs(ctx: Context, server: IngesterServer) {
             }
         }
 
-        query.count() to query.orderBy(Jobs.modified).offset((page * pageSize).toLong()).limit(pageSize).map {
+        query.count() to query.orderBy(Jobs.modified, SortOrder.DESC).offset((page * pageSize).toLong()).limit(pageSize).map {
             val job = it.toJob()
             val context = server.getContext(job.id!!)
             if (context != null) {
@@ -132,7 +118,7 @@ fun getInactiveJobs(ctx: Context, server: IngesterServer) {
             }
         }
 
-        query.count() to query.orderBy(Jobs.modified).offset((page * pageSize).toLong()).limit(pageSize).map { it.toJob() }
+        query.count() to query.orderBy(Jobs.modified, SortOrder.DESC).offset((page * pageSize).toLong()).limit(pageSize).map { it.toJob() }
     }
 
     /* Return results. */
