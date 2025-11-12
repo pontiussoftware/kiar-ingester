@@ -8,7 +8,7 @@ typealias SolrCollectionId = Int
  * Configuration regarding an Apache Solr collection.
  *
  * @author Ralph Gasser
- * @version 1.1.0
+ * @version 1.2.0
  */
 @Serializable
 data class ApacheSolrCollection(
@@ -27,9 +27,12 @@ data class ApacheSolrCollection(
     /** A list of keywords that maps incoming objects to a [ApacheSolrConfig] based on the content of the _output_ field. */
     val selector: String?,
 
-    /** Flag indicating, that collection can be harvested via OAI-PMH. */
+    /** Flag indicating, that [ApacheSolrCollection] can be harvested via OAI-PMH. */
     val oai: Boolean = false,
 
-    /** Flag indicating, that collection should be purged before starting an import. */
+    /** Flag indicating, that [ApacheSolrCollection] can be queried via SRU. */
+    val sru: Boolean = false,
+
+    /** Flag indicating, that [ApacheSolrCollection] should be purged before starting an import. */
     val deleteBeforeIngest: Boolean = true
 )

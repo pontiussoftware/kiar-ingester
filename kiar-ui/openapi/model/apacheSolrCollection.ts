@@ -17,6 +17,7 @@ export interface ApacheSolrCollection {
     type: CollectionType;
     selector?: string | null;
     oai: boolean;
+    sru: boolean;
     deleteBeforeIngest: boolean;
 }
 export namespace ApacheSolrCollection {

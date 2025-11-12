@@ -12,6 +12,7 @@ import {Canton} from './canton';
 
 export interface Institution { 
     id?: number | null;
+    uuid?: string | null;
     name: string;
     displayName: string;
     participantName: string;

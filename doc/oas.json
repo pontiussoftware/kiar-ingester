@@ -4732,7 +4732,7 @@
       },
       "ValueParser" : {
         "type" : "string",
-        "enum" : [ "UUID", "STRING", "MULTISTRING", "DATE", "INTEGER", "DOUBLE", "COORD_WGS84", "COORD_LV95", "IMAGE_FILE", "IMAGE_MPLUS" ]
+        "enum" : [ "UUID", "STRING", "MULTISTRING", "DATE", "INTEGER", "DOUBLE", "COORD_WGS84", "COORD_LV95", "IMAGE_FILE", "IMAGE_URL", "IMAGE_MPLUS" ]
       },
       "ApacheSolrCollection" : {
         "type" : "object",
@@ -4760,11 +4760,14 @@
           "oai" : {
             "type" : "boolean"
           },
+          "sru" : {
+            "type" : "boolean"
+          },
           "deleteBeforeIngest" : {
             "type" : "boolean"
           }
         },
-        "required" : [ "name", "type", "oai", "deleteBeforeIngest" ]
+        "required" : [ "name", "type", "oai", "sru", "deleteBeforeIngest" ]
       },
       "ApacheSolrConfig" : {
         "type" : "object",
@@ -4907,6 +4910,10 @@
           "id" : {
             "type" : "integer",
             "format" : "int32",
+            "nullable" : true
+          },
+          "uuid" : {
+            "type" : "string",
             "nullable" : true
           },
           "name" : {

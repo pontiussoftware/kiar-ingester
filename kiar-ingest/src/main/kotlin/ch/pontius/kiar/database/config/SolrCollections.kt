@@ -33,8 +33,11 @@ object SolrCollections: IntIdTable("solr_collections") {
     /** The optional selector for the [SolrCollections] entry. */
     val selector = varchar("selector", 255).nullable()
 
-    /** Flag indicating, that the [SolrCollections] entry should be exposed via OAI. */
+    /** Flag indicating, that the [SolrCollections] entry should be exposed via OAI endpoint. */
     val oai = bool("oai").default(false)
+
+    /** Flag indicating, that the [SolrCollections] entry should be exposed via SRU endpoint. */
+    val sru = bool("sru").default(false)
 
     /** Flag indicating, that the [SolrCollections] entry should be deleted before ingest starts. */
     val deleteBeforeIngest = bool("delete_before_ingest").default(false)
@@ -59,6 +62,7 @@ object SolrCollections: IntIdTable("solr_collections") {
         type = this[type],
         selector = this[selector],
         oai = this[oai],
+        sru = this[sru],
         deleteBeforeIngest = this[deleteBeforeIngest]
     )
 }

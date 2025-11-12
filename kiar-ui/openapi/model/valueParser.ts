@@ -19,6 +19,7 @@ export const ValueParser = {
     COORD_WGS84: 'COORD_WGS84',
     COORD_LV95: 'COORD_LV95',
     IMAGE_FILE: 'IMAGE_FILE',
+    IMAGE_URL: 'IMAGE_URL',
     IMAGE_MPLUS: 'IMAGE_MPLUS'
 } as const;
 export type ValueParser = typeof ValueParser[keyof typeof ValueParser];

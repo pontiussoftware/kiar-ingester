@@ -134,6 +134,7 @@
         <th>Type</th>
         <th>Selector</th>
         <th>OAI-PMH</th>
+        <th>SRU</th>
       </tr>
     </thead>
     @for (e of collections; track e; let i = $index) {
@@ -174,6 +175,9 @@
         <td>
           <mat-checkbox type="text" formControlName="oai"/>
         </td>
+      <td>
+          <mat-checkbox type="text" formControlName="sru"/>
+      </td>
       </tr>
     }
   </table>

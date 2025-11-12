@@ -230,6 +230,7 @@ private fun mergeCollections(solrConfigId: SolrConfigId, collections: List<Apach
                 update[SolrCollections.selector] = c.selector
                 update[SolrCollections.deleteBeforeIngest] = c.deleteBeforeIngest
                 update[SolrCollections.oai] = c.oai
+                update[SolrCollections.sru] = c.sru
             }
         } else {
             SolrCollections.insert { insert ->
@@ -240,6 +241,7 @@ private fun mergeCollections(solrConfigId: SolrConfigId, collections: List<Apach
                 insert[SolrCollections.selector] = c.selector
                 insert[SolrCollections.deleteBeforeIngest] = c.deleteBeforeIngest
                 insert[SolrCollections.oai] = c.oai
+                insert[SolrCollections.sru] = c.sru
             }
         }
     }
@@ -266,7 +268,6 @@ private fun mergeDeployments(solrConfigId: SolrConfigId, deployments: List<Image
             deployment[ImageDeployments.server] = d.server?.withSuffix("/")
             deployment[ImageDeployments.path] = d.path
             deployment[ImageDeployments.maxSize] = d.maxSize
-
         }
     }
 }
