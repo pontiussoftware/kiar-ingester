@@ -1,8 +1,7 @@
 package ch.pontius.kiar.ingester
 
 import ch.pontius.kiar.api.model.config.templates.JobTemplateId
-import ch.pontius.kiar.api.model.job.JobId
-import ch.pontius.kiar.api.model.job.JobStatus
+import ch.pontius.kiar.api.model.job.*
 import ch.pontius.kiar.config.Config
 import ch.pontius.kiar.database.config.JobTemplates
 import ch.pontius.kiar.database.config.JobTemplates.toJobTemplate
@@ -11,6 +10,7 @@ import ch.pontius.kiar.database.jobs.Jobs
 import ch.pontius.kiar.ingester.processors.ProcessingContext
 import ch.pontius.kiar.ingester.watcher.FileWatcher
 import kotlinx.coroutines.*
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.onCompletion
 import kotlinx.coroutines.flow.onStart
@@ -155,47 +155,67 @@ class IngesterServer(val config: Config) {
         this.activeJobs[jobId] = context
 
         /* Step 3: Create flow. */
-        val flow = job.toPipeline(this@IngesterServer.config).toFlow(context).onStart {
-            transaction {
-                Jobs.update({ Jobs.id eq jobId }) { update ->
-                    update[status] = JobStatus.RUNNING
-                    update[modified] = Instant.now()
+        val flow = try {
+            job.toPipeline(this@IngesterServer.config).toFlow(context).onStart {
+                transaction {
+                    Jobs.update({ Jobs.id eq jobId }) { update ->
+                        update[status] = JobStatus.RUNNING
+                        update[modified] = Instant.now()
+                    }
                 }
-            }
-        }.takeWhile {
-            !context.aborted
-        }.onCompletion { e ->
-            /* Remove job from list of active jobs. */
-            this@IngesterServer.activeJobs.remove(jobId)
+            }.takeWhile {
+                !context.aborted
+            }.onCompletion { e ->
+                /* Remove job from list of active jobs. */
+                this@IngesterServer.activeJobs.remove(jobId)
 
-            /* Store information about finished job. */
-            transaction {
-                Jobs.update({ Jobs.id eq jobId }) { update ->
-                    if (e != null) {
-                        LOGGER.error("Data ingest (ID = $jobId, test = ${test}) failed: ${e.printStackTrace()}")
-                        update[status] = JobStatus.FAILED
-                    } else if (context.aborted) {
-                        LOGGER.warn("Data ingest (ID = $jobId, test = ${test}) was aborted by user!")
-                        update[status] = JobStatus.ABORTED
-                    } else {
-                        LOGGER.info("Data ingest (ID = $jobId, test = ${test}) completed successfully!")
-                        if (test) {
-                            update[status] = JobStatus.HARVESTED
+                /* Store information about finished job. */
+                transaction {
+                    Jobs.update({ Jobs.id eq jobId }) { update ->
+                        if (e != null) {
+                            LOGGER.error("Data ingest (ID = $jobId, test = ${test}) failed: ${e.printStackTrace()}")
+                            update[status] = JobStatus.FAILED
+                        } else if (context.aborted) {
+                            LOGGER.warn("Data ingest (ID = $jobId, test = ${test}) was aborted by user!")
+                            update[status] = JobStatus.ABORTED
                         } else {
-                            update[status] = JobStatus.INGESTED
+                            LOGGER.info("Data ingest (ID = $jobId, test = ${test}) completed successfully!")
+                            if (test) {
+                                update[status] = JobStatus.HARVESTED
+                            } else {
+                                update[status] = JobStatus.INGESTED
+                            }
                         }
+
+                        /* Update job with collected metrics. */
+                        update[processed] = context.processed
+                        update[error] = context.error
+                        update[skipped] = context.skipped
+                        update[modified] = Instant.now()
                     }
 
-                    /* Update job with collected metrics. */
-                    update[processed] = context.processed
-                    update[error] = context.error
-                    update[skipped] = context.skipped
+                    /* Close context. */
+                    context.close()
+                }
+            }
+        } catch (e: Throwable) {
+            LOGGER.error("Failed to create job (ID = $jobId, test = ${test}) due to exception.", e)
+            context.log(JobLog(
+                jobId = jobId,
+                null,
+                null,
+                JobLogContext.SYSTEM,
+                JobLogLevel.SEVERE,
+                "Failed to create job (ID = $jobId, test = ${test}) due to exception: ${e.message}."
+            ))
+            transaction {
+                Jobs.update({ Jobs.id eq jobId }) { update ->
+                    update[status] = JobStatus.FAILED
                     update[modified] = Instant.now()
                 }
-
-                /* Close context. */
                 context.close()
             }
+            return
         }
 
         /* Step 4: Schedule job for execution. */
