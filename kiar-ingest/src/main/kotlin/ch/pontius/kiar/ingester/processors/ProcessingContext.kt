@@ -10,10 +10,10 @@ import ch.pontius.kiar.database.institutions.Institutions.toInstitution
 import ch.pontius.kiar.database.institutions.Participants
 import ch.pontius.kiar.database.jobs.JobLogs
 import ch.pontius.kiar.database.jobs.Jobs
-import ch.pontius.kiar.database.publication.Records
 import org.apache.logging.log4j.LogManager
 import org.apache.solr.client.solrj.impl.Http2SolrClient
-import org.jetbrains.exposed.v1.jdbc.*
+import org.jetbrains.exposed.v1.jdbc.insert
+import org.jetbrains.exposed.v1.jdbc.selectAll
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 import java.io.Closeable
 import java.util.*
@@ -65,20 +65,6 @@ class ProcessingContext(val jobId: Int, val config: Config, val test: Boolean = 
         }
         /* Prepare Apache Solr client. */
         httpBuilder.build()
-    }
-
-    /** The staging database [Database]. */
-    val stagingDatabase: Database by lazy {
-        val database = Database.connect("jdbc:sqlite:${this.config.ingestPath.resolve("staging-${this.jobTemplate.participantName}.sqlite")}", driver = "org.sqlite.JDBC")
-        transaction(database) {
-            val exists = SchemaUtils.listTables().map { it.split(".").last() }.contains(Records.nameInDatabaseCase())
-            if (!exists) {
-                SchemaUtils.create(Records)
-            } else {
-                Records.deleteAll()
-            }
-        }
-        database
     }
 
     /** A [Map] of [Institution.name] to [Institution]. */
