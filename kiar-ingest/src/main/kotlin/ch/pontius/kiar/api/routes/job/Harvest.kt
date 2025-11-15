@@ -46,7 +46,7 @@ fun upload(ctx: Context, config: Config) {
     /* Obtain and check Job. */
     val jobId = ctx.pathParam("id").toIntOrNull() ?: throw ErrorStatusException(400, "Malformed job ID.")
     val first = ctx.queryParam("first")?.toBoolean() ?: false
-    ctx.queryParam("last")?.toBoolean() ?: false
+    val last = ctx.queryParam("last")?.toBoolean() ?: false
     val participant = transaction {
         val job = Jobs.getById(jobId) ?: throw ErrorStatusException(404, "Job with ID $jobId could not be found.")
 
@@ -93,12 +93,13 @@ fun upload(ctx: Context, config: Config) {
         }
     }
 
-    /* Update Job status. */
-    transaction {
-        Jobs.update({ Jobs.id eq jobId }) { update ->
-            update[status] = JobStatus.HARVESTED
-            update[modified] = Instant.now()
-
+    /* Update Job status if this was the last chunk */
+    if (last) {
+        transaction {
+            Jobs.update({ Jobs.id eq jobId }) { update ->
+                update[status] = JobStatus.HARVESTED
+                update[modified] = Instant.now()
+            }
         }
     }
 
