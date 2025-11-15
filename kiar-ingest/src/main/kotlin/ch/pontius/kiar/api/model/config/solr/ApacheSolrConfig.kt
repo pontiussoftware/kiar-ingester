@@ -1,7 +1,6 @@
 package ch.pontius.kiar.api.model.config.solr
 
 import ch.pontius.kiar.api.model.config.image.ImageDeployment
-import ch.pontius.kiar.config.CollectionConfig
 import kotlinx.serialization.Serializable
 
 typealias SolrConfigId = Int
@@ -41,7 +40,7 @@ data class ApacheSolrConfig(
     /** Timestamp of this [ApacheSolrConfig]'s last change. */
     val changedAt: Long? = null,
 
-    /** A list of [CollectionConfig] for this [ApacheSolrConfig]. */
+    /** A list of [ApacheSolrCollection] for this [ApacheSolrConfig]. */
     val collections: List<ApacheSolrCollection> = emptyList(),
 
     /** A list of [ImageDeployment] for this [ApacheSolrConfig]. */

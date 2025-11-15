@@ -156,7 +156,7 @@ class IngesterServer(val config: Config) {
 
         /* Step 3: Create flow. */
         val flow = try {
-            job.toPipeline(this@IngesterServer.config).toFlow(context).onStart {
+            job.toPipeline(this@IngesterServer.config, test).toFlow(context).onStart {
                 transaction {
                     Jobs.update({ Jobs.id eq jobId }) { update ->
                         update[status] = JobStatus.RUNNING

@@ -3,8 +3,8 @@ package ch.pontius.kiar.api.model.job
 import ch.pontius.kiar.api.model.config.templates.JobTemplate
 import ch.pontius.kiar.api.model.config.templates.JobType
 import ch.pontius.kiar.config.Config
-import ch.pontius.kiar.ingester.processors.ProcessingContext
 import ch.pontius.kiar.ingester.processors.sinks.ApacheSolrSink
+import ch.pontius.kiar.ingester.processors.sinks.DummySink
 import ch.pontius.kiar.ingester.processors.sinks.Sink
 import ch.pontius.kiar.ingester.processors.sources.*
 import ch.pontius.kiar.ingester.processors.transformers.ImageDeployment
@@ -63,10 +63,10 @@ data class Job(
      * Requires an ongoing transactional context!
      *
      * @param config The KIAR tools [Config] object.
-     * @param context The [ProcessingContext] for which to create the pipeline
+     * @param test Flag indicating, that this is a test run.
      * @return [Sink] representing the pipeline.
      */
-    fun toPipeline(config: Config): Sink<SolrInputDocument> {
+    fun toPipeline(config: Config, test: Boolean): Sink<SolrInputDocument> {
         require(this.template != null) { "Job template is required in order to construct a processing pipeline." }
 
         /* Generate file source. */
@@ -88,6 +88,10 @@ data class Job(
         root = ImageDeployment(root)
 
         /* Return ApacheSolrSink. */
-        return ApacheSolrSink(root)
+        return if (test) {
+            DummySink(root)
+        } else {
+            ApacheSolrSink(root)
+        }
     }
 }
