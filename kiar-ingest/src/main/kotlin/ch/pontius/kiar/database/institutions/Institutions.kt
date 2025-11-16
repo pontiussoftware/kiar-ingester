@@ -20,11 +20,12 @@ import java.util.*
  * @version 1.0.0
  */
 object Institutions : IntIdTable("institutions") {
-    /** The name of the [Institutions] entry. */
-    val name = varchar("name", 255).uniqueIndex()
 
     /** The unique identifier of a [Collections] entry. */
     val uuid = uuid("uuid").uniqueIndex().clientDefault { UUID.randomUUID() }
+
+    /** The name of the [Institutions] entry. */
+    val name = varchar("name", 255).uniqueIndex()
 
     /** The display name of the [Institutions] entry. */
     val displayName = varchar("display_name", 255)
