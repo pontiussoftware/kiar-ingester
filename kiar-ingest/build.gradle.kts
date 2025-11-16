@@ -1,15 +1,12 @@
 val bcryptVersion: String by project
 val caffeineVersion: String by project
-val cliktVersion: String by project
 val commonsImagingVersion: String by project
 val exposedVersion: String by project
 val javalinVersion: String by project
-val jlineVersion: String by project
 val jsonPathVersion: String by project
 val kotlinCoroutines: String by project
 val kotlinSerialization: String by project
 val log4jVersion: String by project
-val picnicVersion: String by project
 val poiVersion: String by project
 val scrimageVersion: String by project
 val slf4jVersion: String by project
@@ -92,11 +89,5 @@ dependencies {
     implementation("org.jetbrains.exposed:exposed-jdbc:${exposedVersion}")
     implementation("org.jetbrains.exposed:exposed-java-time:${exposedVersion}")
     implementation("org.jetbrains.exposed:exposed-json:${exposedVersion}")
-
-    /** CLI. */
-    implementation("com.github.ajalt.clikt:clikt:$cliktVersion")
-    implementation("org.jline:jline:$jlineVersion")
-    implementation("org.jline:jline-terminal-jna:$jlineVersion")
-    implementation("com.jakewharton.picnic:picnic:$picnicVersion")
 }
 
