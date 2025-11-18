@@ -45,7 +45,7 @@ subprojects {
     group = "ch.pontius.kiar"
 
     /* Our current version, on dev branch this should always be release+1-SNAPSHOT */
-    version = "1.3.0"
+    version = "1.3.1"
 
     tasks {
         compileKotlin {
