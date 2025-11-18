@@ -7,12 +7,14 @@ import ch.pontius.kiar.api.routes.institution.*
 import ch.pontius.kiar.api.routes.job.*
 import ch.pontius.kiar.api.routes.masterdata.*
 import ch.pontius.kiar.api.routes.oai.getOaiPmh
+import ch.pontius.kiar.api.routes.oai.getSruSearch
 import ch.pontius.kiar.api.routes.oai.postOaiPmh
 import ch.pontius.kiar.api.routes.session.*
 import ch.pontius.kiar.api.routes.user.*
 import ch.pontius.kiar.config.Config
 import ch.pontius.kiar.ingester.IngesterServer
-import ch.pontius.kiar.oai.OaiServer
+import ch.pontius.kiar.servers.oai.OaiServer
+import ch.pontius.kiar.servers.sru.SruServer
 import createEntityMapping
 import deleteEntityMapping
 import getEntityMapping
@@ -146,9 +148,9 @@ fun configureApiRoutes(server: IngesterServer, config: Config) {
 
         /* Endpoints related to OAI-PMH. */
         path("{collection}") {
-            val oai = OaiServer()
-            get("oai-pmh") { ctx -> getOaiPmh(ctx, oai) }
-            post("oai-pmh") { ctx -> postOaiPmh(ctx, oai) }
+            get("oai-pmh") { ctx -> getOaiPmh(ctx, OaiServer()) }
+            post("oai-pmh") { ctx -> postOaiPmh(ctx, OaiServer()) }
+            get("sru") { ctx -> getSruSearch(ctx, SruServer()) }
         }
     }
 }

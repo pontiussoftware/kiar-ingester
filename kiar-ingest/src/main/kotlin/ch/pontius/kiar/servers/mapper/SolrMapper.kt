@@ -1,19 +1,18 @@
-package ch.pontius.kiar.oai.mapper
+package ch.pontius.kiar.servers.mapper
 
-import ch.pontius.kiar.oai.Formats
 import org.apache.solr.common.SolrDocument
 import org.w3c.dom.Document
 import org.w3c.dom.Element
 import org.w3c.dom.Node
 
 /**
- * [OAIMapper] implementation that maps to the OAI Apache Solr format.
+ * [Mapper] implementation that maps to the OAI Apache Solr format.
  *
  * @author Ralph Gasser
  * @version 1.0.0
  */
-object OAISolrMapper: OAIMapper {
-    /** The [OAIDCMapper] returns the [Formats.SOLR] format. */
+object SolrMapper: Mapper {
+    /** The [DCMapper] returns the [Formats.SOLR] format. */
     override val format: Formats = Formats.SOLR
 
     /**

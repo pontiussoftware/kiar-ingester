@@ -1,17 +1,18 @@
-package ch.pontius.kiar.oai
+package ch.pontius.kiar.servers.oai
 
+import ch.pontius.kiar.api.model.config.solr.ApacheSolrConfig
 import ch.pontius.kiar.api.model.config.solr.CollectionType
 import ch.pontius.kiar.database.config.SolrCollections
-import ch.pontius.kiar.database.config.SolrCollections.toSolrCollection
 import ch.pontius.kiar.database.config.SolrConfigs
 import ch.pontius.kiar.database.config.SolrConfigs.toSolr
-import ch.pontius.kiar.oai.Verbs.*
+import ch.pontius.kiar.servers.oai.Verbs.*
 import ch.pontius.kiar.ingester.parsing.xml.XmlDocumentParser
 import ch.pontius.kiar.ingester.solrj.Field
 import ch.pontius.kiar.ingester.solrj.uuid
-import ch.pontius.kiar.oai.mapper.OAIMapper
+import ch.pontius.kiar.servers.mapper.Formats
+import ch.pontius.kiar.servers.mapper.Mapper
+import ch.pontius.kiar.solr.SolrClientProvider
 import com.github.benmanes.caffeine.cache.Caffeine
-import com.github.benmanes.caffeine.cache.RemovalListener
 import io.javalin.http.Context
 import io.javalin.http.HandlerType
 import org.apache.solr.client.solrj.SolrQuery
@@ -19,11 +20,9 @@ import org.apache.solr.client.solrj.impl.Http2SolrClient
 import org.jetbrains.exposed.v1.core.and
 import org.jetbrains.exposed.v1.core.eq
 import org.jetbrains.exposed.v1.jdbc.select
-import org.jetbrains.exposed.v1.jdbc.selectAll
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 import org.w3c.dom.Document
 import org.w3c.dom.Element
-import java.io.Closeable
 import java.text.DateFormat
 import java.text.ParseException
 import java.text.SimpleDateFormat
@@ -40,11 +39,11 @@ import javax.xml.parsers.DocumentBuilderFactory
  * See [OAI-PMH Protocol](https://www.openarchives.org/OAI/openarchivesprotocol.html) for more information.
  *
  * @author Ralph Gasser
- * @version 1.1.0
+ * @version 1.2.0
  */
-class OaiServer(): Closeable {
-
+class OaiServer() {
     companion object {
+        /** The page size for the OAI endpoint. */
         const val PAGE_SIZE = 100
 
         /** The simple date format used for queries. */
@@ -55,16 +54,23 @@ class OaiServer(): Closeable {
     private val documentBuilder: DocumentBuilder = DocumentBuilderFactory.newInstance().newDocumentBuilder()
 
     /** A [ConcurrentHashMap] of [Http2SolrClient] used by this [OaiServer] to fetch data. */
-    private val clients = Caffeine.newBuilder().expireAfterWrite(Duration.ofHours(12)).removalListener(RemovalListener<String, Http2SolrClient> { key, value, cause -> value?.close() }).build<String, Http2SolrClient>().asMap()
+    private val tokens = Caffeine.newBuilder().expireAfterWrite(Duration.ofMinutes(60)).build<String, Pair<Int, Mapper>>().asMap()
 
-    /** A [ConcurrentHashMap] of [Http2SolrClient] used by this [OaiServer] to fetch data. */
-    private val tokens = Caffeine.newBuilder().expireAfterWrite(Duration.ofMinutes(60)).build<String, Pair<Int, OAIMapper>>().asMap()
+    /** A cache of [Http2SolrClient]s used by this data ingest server. */
+    private val collections = Caffeine.newBuilder().expireAfterWrite(Duration.ofHours(12)).build<String, ApacheSolrConfig?> { collection ->
+        transaction {
+            (SolrCollections innerJoin SolrConfigs).select(SolrConfigs.columns)
+                .where { (SolrCollections.name eq collection) and (SolrCollections.type eq CollectionType.OBJECT) and (SolrCollections.oai eq true)}
+                .map { it.toSolr() }
+                .firstOrNull()
+        }
+    }
 
     /** The [DateFormat] used by this [OaiServer]. */
     private val responseDateFormat = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'")
 
     init {
-        responseDateFormat.timeZone = TimeZone.getTimeZone("UTC")
+        this.responseDateFormat.timeZone = TimeZone.getTimeZone("UTC")
     }
 
     /**
@@ -85,7 +91,7 @@ class OaiServer(): Closeable {
         /* Extract OAI verb from query parameters. */
         val verb = parameters["verb"] ?: return handleError("badVerb", "Missing verb.")
         val verbParsed = try {
-            Verbs.valueOf(verb.uppercase())
+            valueOf(verb.uppercase())
         } catch (_: IllegalArgumentException) {
             return handleError("badVerb", "Illegal OAI verb '${verb}'.")
         }
@@ -165,7 +171,8 @@ class OaiServer(): Closeable {
         query.start = 0
 
         /* Execute query. */
-        val client = getOrLoadClient(collection)
+        val config = this.collections[collection] ?: throw IllegalArgumentException("Collection '$collection' not found or not configured for OAI-PMH.")
+        val client = SolrClientProvider.clientForConfig(config)
         val response = client.query(collection, query)
 
         /* Construct response document. */
@@ -224,7 +231,8 @@ class OaiServer(): Closeable {
         val mapper = Formats.entries.find { it.prefix == prefix }?.toMapper() ?: return handleError("cannotDisseminateFormat", "Unsupported metadata prefix '$prefix'.")
 
         /* Obtain client and query for entry. */
-        val client = getOrLoadClient(collection)
+        val config = this.collections[collection] ?: throw IllegalArgumentException("Collection '$collection' not found or not configured for OAI-PMH.")
+        val client = SolrClientProvider.clientForConfig(config)
         val response = try {
             client.getById(collection, identifier) ?: return handleError("idDoesNotExist", "The provided identifier '${identifier}' does not exist.")
         } catch (_: Throwable) {
@@ -308,7 +316,8 @@ class OaiServer(): Closeable {
         query.rows = PAGE_SIZE
 
         /* Execute query. */
-        val client = getOrLoadClient(collection)
+        val config = this.collections[collection] ?: throw IllegalArgumentException("Collection '$collection' not found or not configured for OAI-PMH.")
+        val client = SolrClientProvider.clientForConfig(config)
         val response = client.query(collection, query)
 
         /* Construct response document. */
@@ -407,7 +416,8 @@ class OaiServer(): Closeable {
         query.rows = PAGE_SIZE
 
         /* Execute query. */
-        val client = getOrLoadClient(collection)
+        val config = this.collections[collection] ?: throw IllegalArgumentException("Collection '$collection' not found or not configured for OAI-PMH.")
+        val client = SolrClientProvider.clientForConfig(config)
         val response = client.query(collection, query)
         if (response.results.numFound == 0L) {
             return handleError("noRecordsMatch", "No records match the query.")
@@ -448,30 +458,6 @@ class OaiServer(): Closeable {
         /* Store resumption token. */
         return doc
     }
-
-    /**
-     * Loads the configuration for the Apache Solr client.
-     */
-    private fun getOrLoadClient(collection: String): Http2SolrClient {
-        val config = transaction {
-            (SolrCollections innerJoin SolrConfigs).select(SolrConfigs.columns)
-                .where { (SolrCollections.name eq collection) and (SolrCollections.type eq CollectionType.OBJECT) and (SolrCollections.oai eq true) }
-                .map { it.toSolr() }
-                .firstOrNull()
-        } ?: throw IllegalArgumentException("Apache Solr collection '$collection' does not exist.")
-
-        return this.clients.computeIfAbsent(config.name) {
-            /* Prepare builder */
-            var httpBuilder = Http2SolrClient.Builder(config.server)
-            httpBuilder.useHttp1_1(true)
-            if (config.username != null && config.password != null) {
-                httpBuilder = httpBuilder.withBasicAuthCredentials(config.username, config.password)
-            }
-            /* Prepare Apache Solr client. */
-            httpBuilder.build()
-        }
-    }
-
 
     /**
      * Generates an empty OAI-PMH response document.
@@ -517,14 +503,5 @@ class OaiServer(): Closeable {
         rootElement.appendChild(verbElement)
 
         return verbElement
-    }
-
-    /**
-     * Closes this OaiServer.
-     */
-    override fun close() {
-        for (client in this.clients.values) {
-            client.close()
-        }
     }
 }

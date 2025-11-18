@@ -1,6 +1,6 @@
 package ch.pontius.kiar.api.routes.oai
 
-import ch.pontius.kiar.oai.OaiServer
+import ch.pontius.kiar.servers.oai.OaiServer
 import io.javalin.http.Context
 import io.javalin.openapi.*
 import io.javalin.openapi.OpenApiParam

@@ -1,4 +1,4 @@
-package ch.pontius.kiar.oai.mapper
+package ch.pontius.kiar.servers.mapper
 
 import ch.pontius.kiar.api.model.institution.Institution
 import ch.pontius.kiar.database.institutions.Institutions
@@ -6,7 +6,7 @@ import ch.pontius.kiar.ingester.solrj.Field
 import ch.pontius.kiar.ingester.solrj.get
 import ch.pontius.kiar.ingester.solrj.getAll
 import ch.pontius.kiar.ingester.solrj.has
-import ch.pontius.kiar.oai.Formats
+import ch.pontius.kiar.servers.mapper.Formats
 import org.apache.solr.common.SolrDocument
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 import org.w3c.dom.Element
@@ -14,12 +14,12 @@ import org.w3c.dom.Node
 import java.time.LocalDate
 
 /**
- * [OAIMapper] implementation that maps to the Europeana Data Model (EDM).
+ * [Mapper] implementation that maps to the Europeana Data Model (EDM).
  *
  * @author Ralph Gasser
  * @version 1.0.1
  */
-class EDMMapper(): OAIMapper {
+class EDMMapper(): Mapper {
 
     companion object {
 

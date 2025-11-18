@@ -1,22 +1,21 @@
-package ch.pontius.kiar.oai.mapper
+package ch.pontius.kiar.servers.mapper
 
 import ch.pontius.kiar.ingester.solrj.Field
 import ch.pontius.kiar.ingester.solrj.get
 import ch.pontius.kiar.ingester.solrj.getAll
 import ch.pontius.kiar.ingester.solrj.has
-import ch.pontius.kiar.oai.Formats
 import org.apache.solr.common.SolrDocument
 import org.w3c.dom.Element
 import org.w3c.dom.Node
 
 /**
- * [OAIMapper] implementation that maps to the OAI DC format.
+ * [Mapper] implementation that maps to the OAI DC format.
  *
  * @author Ralph Gasser
  * @version 1.0.0
  */
-object OAIDCMapper: OAIMapper {
-    /** The [OAIDCMapper] returns the [Formats.OAI_DC] format. */
+object DCMapper: Mapper {
+    /** The [DCMapper] returns the [Formats.OAI_DC] format. */
     override val format: Formats = Formats.OAI_DC
 
     /**
@@ -26,7 +25,7 @@ object OAIDCMapper: OAIMapper {
      * @param document The [SolrDocument] to map.
      */
     override fun map(appendTo: Node, document: SolrDocument) {
-        val element = this.emptyEdm(appendTo)
+        val element = this.emptyElement(appendTo)
         val doc = appendTo.ownerDocument
 
         /* Map inventory number(s)* */
@@ -81,6 +80,16 @@ object OAIDCMapper: OAIMapper {
                 this.textContent = creator
             })
         }
+
+        /* Add image links. */
+        val previews = document.getAll<String>(Field.PREVIEW)
+        if (previews.isNotEmpty()) {
+            previews.forEach { url ->
+                element.appendChild(doc.createElement("dc:identifier").apply {
+                    this.textContent = url
+                })
+            }
+        }
     }
 
     /**
@@ -89,12 +98,11 @@ object OAIDCMapper: OAIMapper {
     * @param appendTo [Node] to which the EDM element should be appended.
     * @return [Element] representing the EDM element.
     */
-    private fun emptyEdm(appendTo: Node): Element {
+    private fun emptyElement(appendTo: Node): Element {
         val doc = appendTo.ownerDocument
 
         /* Create RDF element. */
-        val dcElement = doc.createElement("oai_dc:dc")
-        dcElement.setAttributeNS("http://www.w3.org/2000/xmlns/", "xmlns:oai_dc", "http://www.openarchives.org/OAI/2.0/oai_dc/")
+        val dcElement = doc.createElement("dc")
         dcElement.setAttributeNS("http://www.w3.org/2000/xmlns/", "xmlns:dc", "http://purl.org/dc/elements/1.1/")
         appendTo.appendChild(dcElement)
 

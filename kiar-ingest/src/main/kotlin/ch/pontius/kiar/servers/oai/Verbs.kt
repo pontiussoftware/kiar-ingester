@@ -1,4 +1,4 @@
-package ch.pontius.kiar.oai
+package ch.pontius.kiar.servers.oai
 
 /**
  * Enumeration of OAI-PMH verbs.
