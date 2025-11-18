@@ -1,4 +1,4 @@
-package ch.pontius.kiar.api.routes.oai
+package ch.pontius.kiar.api.routes.publication
 
 import ch.pontius.kiar.servers.sru.SruServer
 import io.javalin.http.Context
@@ -17,7 +17,7 @@ import javax.xml.transform.stream.StreamResult
     methods = [HttpMethod.GET],
     summary = "An endpoint that provides SRU search for the specified collection.",
     operationId = "getSru",
-    tags = ["SRU"],
+    tags = ["SRU", "Publication"],
     queryParams = [
         OpenApiParam(name = "query", type = String::class, description = "The query string.", required = true),
         OpenApiParam(name = "maximumRecords", type = Int::class, description = "Number of records to return per page.", required = true),

@@ -1,4 +1,4 @@
-package ch.pontius.kiar.api.routes.oai
+package ch.pontius.kiar.api.routes.publication
 
 import ch.pontius.kiar.servers.oai.OaiServer
 import io.javalin.http.Context
@@ -14,7 +14,7 @@ import javax.xml.transform.stream.StreamResult
     methods = [HttpMethod.GET],
     summary = "An endpoint that provides OAI-PMH harvesting for the specified collection.",
     operationId = "getOaiPmh",
-    tags = ["OAI"],
+    tags = ["OAI", "Publication"],
     queryParams = [
         OpenApiParam(name = "verb", type = String::class, description = "The OAI-PMH verb.", required = true),
         OpenApiParam(name = "identifier", type = String::class, description = "The identifier to harvest (used for GetRecord ).", required = false),
@@ -47,7 +47,7 @@ fun getOaiPmh(ctx: Context, server: OaiServer) {
     methods = [HttpMethod.POST],
     summary = "An endpoint that provides OAI-PMH harvesting for the specified collection.",
     operationId = "postOaiPmh",
-    tags = ["OAI"],
+    tags = ["OAI", "Publication"],
     requestBody = OpenApiRequestBody(
         content = [
             OpenApiContent(mimeType ="application/x-www-form-urlencoded", type = "object", properties = [

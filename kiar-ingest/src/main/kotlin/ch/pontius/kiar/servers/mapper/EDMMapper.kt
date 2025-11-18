@@ -6,7 +6,6 @@ import ch.pontius.kiar.ingester.solrj.Field
 import ch.pontius.kiar.ingester.solrj.get
 import ch.pontius.kiar.ingester.solrj.getAll
 import ch.pontius.kiar.ingester.solrj.has
-import ch.pontius.kiar.servers.mapper.Formats
 import org.apache.solr.common.SolrDocument
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 import org.w3c.dom.Element

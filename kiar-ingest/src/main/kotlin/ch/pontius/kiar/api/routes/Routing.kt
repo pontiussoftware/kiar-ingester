@@ -6,9 +6,9 @@ import ch.pontius.kiar.api.routes.config.*
 import ch.pontius.kiar.api.routes.institution.*
 import ch.pontius.kiar.api.routes.job.*
 import ch.pontius.kiar.api.routes.masterdata.*
-import ch.pontius.kiar.api.routes.oai.getOaiPmh
-import ch.pontius.kiar.api.routes.oai.getSruSearch
-import ch.pontius.kiar.api.routes.oai.postOaiPmh
+import ch.pontius.kiar.api.routes.publication.getOaiPmh
+import ch.pontius.kiar.api.routes.publication.getSruSearch
+import ch.pontius.kiar.api.routes.publication.postOaiPmh
 import ch.pontius.kiar.api.routes.session.*
 import ch.pontius.kiar.api.routes.user.*
 import ch.pontius.kiar.config.Config
