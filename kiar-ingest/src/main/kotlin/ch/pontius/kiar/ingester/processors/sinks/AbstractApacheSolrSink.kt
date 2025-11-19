@@ -9,8 +9,7 @@ import ch.pontius.kiar.database.institutions.Institutions
 import ch.pontius.kiar.database.institutions.InstitutionsSolrCollections
 import ch.pontius.kiar.ingester.processors.ProcessingContext
 import ch.pontius.kiar.ingester.processors.sources.Source
-import ch.pontius.kiar.ingester.solrj.Constants.FIELD_NAME_PARTICIPANT
-import ch.pontius.kiar.ingester.solrj.Constants.SYSTEM_FIELDS
+import ch.pontius.kiar.ingester.solrj.Field
 import org.apache.solr.client.solrj.request.schema.SchemaRequest
 import org.apache.solr.common.SolrInputDocument
 import org.jetbrains.exposed.v1.core.and
@@ -25,7 +24,7 @@ import java.util.*
  * A [Sink] that processes [SolrInputDocument]s and and provides basic functions to validate and ingest them into Apache Solr.
  *
  * @author Ralph Gasser
- * @version 1.4.0
+ * @version 1.4.1
  */
 abstract class AbstractApacheSolrSink(override val input: Source<SolrInputDocument>): Sink<SolrInputDocument> {
     companion object {
@@ -53,6 +52,7 @@ abstract class AbstractApacheSolrSink(override val input: Source<SolrInputDocume
      * @param collections The [List] of available [ApacheSolrCollection]s
      */
     protected fun initializeValidators(context: ProcessingContext, collections: List<ApacheSolrCollection>) {
+        /** Set of system fields to ignore upon ingest. */
         for (c in collections) {
             /* Prepare HTTP client builder. */
             val copyFields = SchemaRequest.CopyFields().process(context.solrClient, c.name).copyFields.map { it["dest"] }.toSet()
@@ -60,7 +60,7 @@ abstract class AbstractApacheSolrSink(override val input: Source<SolrInputDocume
 
             /* List of dynamic fixed. */
             val fields = SchemaRequest.Fields().process(context.solrClient, c.name).fields.mapNotNull { f ->
-                if (f["name"] !in copyFields && f["name"] !in SYSTEM_FIELDS) {
+                if (f["name"] != "_version_" && f["name"] != "_random_" && f["name"] !in copyFields) {
                     FieldValidator.Regular(f["name"] as String, f["required"] as? Boolean ?: false, f["multiValued"] as? Boolean ?: false, f.contains("default"))
                 } else {
                     null
@@ -131,7 +131,7 @@ abstract class AbstractApacheSolrSink(override val input: Source<SolrInputDocume
     protected fun prepareIngest(context: ProcessingContext, collections: List<ApacheSolrCollection>) {
         for (c in collections) {
             LOGGER.info("Purging collection (name = ${context.jobTemplate.participantName}, collection = $c).")
-            val response = context.solrClient.deleteByQuery(c.name, "$FIELD_NAME_PARTICIPANT:${context.jobTemplate.participantName}")
+            val response = context.solrClient.deleteByQuery(c.name, "${Field.PARTICIPANT.name}:${context.jobTemplate.participantName}")
             if (response.status != 0) {
                 LOGGER.error("Purge of collection failed (name = ${context.jobTemplate.participantName}, collection = $c). Aborting...")
                 throw IllegalArgumentException("Data ingest (name = ${context.jobTemplate.participantName}, collection = $c) failed because delete before import could not be executed.")
