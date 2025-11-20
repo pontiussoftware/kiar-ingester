@@ -131,7 +131,7 @@ abstract class AbstractApacheSolrSink(override val input: Source<SolrInputDocume
     protected fun prepareIngest(context: ProcessingContext, collections: List<ApacheSolrCollection>) {
         for (c in collections) {
             LOGGER.info("Purging collection (name = ${context.jobTemplate.participantName}, collection = $c).")
-            val response = context.solrClient.deleteByQuery(c.name, "${Field.PARTICIPANT.name}:${context.jobTemplate.participantName}")
+            val response = context.solrClient.deleteByQuery(c.name, "${Field.PARTICIPANT.solr}:${context.jobTemplate.participantName}")
             if (response.status != 0) {
                 LOGGER.error("Purge of collection failed (name = ${context.jobTemplate.participantName}, collection = $c). Aborting...")
                 throw IllegalArgumentException("Data ingest (name = ${context.jobTemplate.participantName}, collection = $c) failed because delete before import could not be executed.")
