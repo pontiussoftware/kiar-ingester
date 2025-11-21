@@ -11,11 +11,8 @@ import ch.pontius.kiar.database.config.SolrConfigs.toSolr
 import ch.pontius.kiar.database.config.Transformers.toTransformerConfig
 import ch.pontius.kiar.database.institutions.Institutions
 import ch.pontius.kiar.database.institutions.Participants
-import org.jetbrains.exposed.v1.core.ReferenceOption
-import org.jetbrains.exposed.v1.core.ResultRow
-import org.jetbrains.exposed.v1.core.Table
+import org.jetbrains.exposed.v1.core.*
 import org.jetbrains.exposed.v1.core.dao.id.IntIdTable
-import org.jetbrains.exposed.v1.core.eq
 import org.jetbrains.exposed.v1.javatime.CurrentTimestamp
 import org.jetbrains.exposed.v1.javatime.timestamp
 import org.jetbrains.exposed.v1.jdbc.select
@@ -89,7 +86,10 @@ object JobTemplates: IntIdTable("jobs_templates") {
         val attributes = AttributeMappings.selectAll().where { AttributeMappings.entityMappingId eq mapping.id }.map { it.toAttributeMapping() }
 
         /* Obtain transformers. */
-        val transformers = Transformers.selectAll().where { Transformers.jobTemplateId eq template.id }.map { it.toTransformerConfig() }
+        val transformers = Transformers.selectAll()
+            .where { Transformers.jobTemplateId eq template.id }
+            .orderBy(Transformers.order, SortOrder.ASC)
+            .map { it.toTransformerConfig() }
 
         /* Return copy of template. */
         return template.copy(transformers = transformers, config = solr.copy(collections = collections, deployments = deployments), mapping = mapping.copy(attributes = attributes))
