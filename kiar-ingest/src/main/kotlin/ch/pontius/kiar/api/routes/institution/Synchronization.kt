@@ -12,7 +12,8 @@ import ch.pontius.kiar.database.config.SolrConfigs.toSolr
 import ch.pontius.kiar.database.institutions.Institutions
 import ch.pontius.kiar.database.institutions.Institutions.toInstitution
 import ch.pontius.kiar.database.institutions.Participants
-import ch.pontius.kiar.ingester.solrj.Constants
+import ch.pontius.kiar.ingester.solrj.Field
+import ch.pontius.kiar.ingester.solrj.setField
 import io.javalin.http.Context
 import io.javalin.openapi.*
 import org.apache.logging.log4j.LogManager
@@ -90,10 +91,10 @@ private fun synchronise(config: ApacheSolrConfig, collection: String, institutio
             /* Map documents and add them. */
             val documents = institutions.map { institution ->
                 val doc = SolrInputDocument()
-                doc.setField(Constants.FIELD_NAME_UUID, institution.uuid)
-                doc.setField(Constants.FIELD_NAME_PARTICIPANT, institution.participantName)
-                doc.setField(Constants.FIELD_NAME_CANTON, institution.canton)
-                doc.setField(Constants.FIELD_NAME_DISPLAY, institution.displayName)
+                doc.setField(Field.UUID, institution.uuid ?: throw IllegalArgumentException("Institution UUID is required."))
+                doc.setField(Field.PARTICIPANT, institution.participantName)
+                doc.setField(Field.CANTON, institution.canton)
+                doc.setField(Field.DISPLAY, institution.displayName)
                 if (institution.isil != null) doc.setField("isil", institution.isil)
                 doc.setField("name", institution.name)
                 doc.setField("name_s", institution.name)

@@ -13,7 +13,8 @@ import ch.pontius.kiar.database.config.SolrConfigs
 import ch.pontius.kiar.database.config.SolrConfigs.toSolr
 import ch.pontius.kiar.database.institutions.Institutions
 import ch.pontius.kiar.database.institutions.Participants
-import ch.pontius.kiar.ingester.solrj.Constants
+import ch.pontius.kiar.ingester.solrj.Field
+import ch.pontius.kiar.ingester.solrj.setField
 import com.sksamuel.scrimage.ImmutableImage
 import io.javalin.http.Context
 import io.javalin.openapi.*
@@ -84,8 +85,8 @@ private fun synchronise(config: ApacheSolrConfig, collection: String, collection
     httpBuilder.build().use { client ->
         try {
             /* Delete all existing entries. */
-            var response: UpdateResponse? = null // client.deleteByQuery(collection, "*:*")
-            if (response?.status == 0) {
+            var response: UpdateResponse = client.deleteByQuery(collection, "*:*")
+            if (response.status == 0) {
                 LOGGER.info("Purged collection (collection = {}).", collection)
             } else {
                 LOGGER.error("Failed to purge collection (collection = {}).", collection)
@@ -94,12 +95,12 @@ private fun synchronise(config: ApacheSolrConfig, collection: String, collection
             /* Map documents and add them. */
             val documents = collections.map { collection ->
                 val doc = SolrInputDocument()
-                doc.setField(Constants.FIELD_NAME_UUID, collection.uuid)
-                doc.setField(Constants.FIELD_NAME_PARTICIPANT, collection.institution?.participantName)
-                doc.setField(Constants.FIELD_NAME_CANTON, collection.institution?.canton)
-                doc.setField(Constants.FIELD_NAME_DISPLAY, collection.displayName)
+                doc.setField(Field.UUID, collection.uuid ?: throw IllegalArgumentException("Collection UUID is required."))
+                doc.setField(Field.PARTICIPANT, collection.institution?.participantName ?: throw IllegalArgumentException("Collection participant is required."))
+                doc.setField(Field.CANTON, collection.institution.canton.shortName)
+                doc.setField(Field.DISPLAY, collection.displayName)
                 doc.setField("name", collection.name)
-                doc.setField("institution", collection.institution?.name)
+                doc.setField("institution", collection.institution.name)
                 collection.filters.forEach {
                     doc.addField("filters", it)
                 }

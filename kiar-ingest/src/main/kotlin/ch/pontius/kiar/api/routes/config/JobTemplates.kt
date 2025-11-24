@@ -1,9 +1,9 @@
 package ch.pontius.kiar.api.routes.config
 
-import ch.pontius.kiar.api.model.status.ErrorStatus
 import ch.pontius.kiar.api.model.config.templates.JobTemplate
 import ch.pontius.kiar.api.model.config.templates.JobTemplateId
 import ch.pontius.kiar.api.model.config.transformers.TransformerConfig
+import ch.pontius.kiar.api.model.status.ErrorStatus
 import ch.pontius.kiar.api.model.status.ErrorStatusException
 import ch.pontius.kiar.api.model.status.SuccessStatus
 import ch.pontius.kiar.api.model.user.Role
@@ -14,20 +14,14 @@ import ch.pontius.kiar.database.config.SolrConfigs
 import ch.pontius.kiar.database.config.Transformers
 import ch.pontius.kiar.database.institutions.Institutions
 import ch.pontius.kiar.database.institutions.Participants
-import ch.pontius.kiar.utilities.extensions.currentUser
 import ch.pontius.kiar.ingester.IngesterServer
+import ch.pontius.kiar.utilities.extensions.currentUser
 import ch.pontius.kiar.utilities.extensions.parseBodyOrThrow
 import io.javalin.http.Context
 import io.javalin.openapi.*
 import org.jetbrains.exposed.v1.core.eq
-import org.jetbrains.exposed.v1.jdbc.andWhere
-import org.jetbrains.exposed.v1.jdbc.deleteWhere
-import org.jetbrains.exposed.v1.jdbc.insert
-import org.jetbrains.exposed.v1.jdbc.insertAndGetId
-import org.jetbrains.exposed.v1.jdbc.select
-import org.jetbrains.exposed.v1.jdbc.selectAll
+import org.jetbrains.exposed.v1.jdbc.*
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
-import org.jetbrains.exposed.v1.jdbc.update
 import java.time.Instant
 
 @OpenApi(
@@ -59,7 +53,7 @@ fun listJobTemplates(ctx: Context) {
             if (participantId != null) {
                 query.andWhere { JobTemplates.participantId eq participantId }
             } else {
-                return@transaction emptyList<JobTemplate>()
+                return@transaction emptyList()
             }
         }
 
@@ -251,10 +245,11 @@ fun deleteJobTemplate(ctx: Context, server: IngesterServer) {
  */
 private fun saveTransformers(jobTemplateId: JobTemplateId, transformers: List<TransformerConfig>) {
     Transformers.deleteWhere { Transformers.jobTemplateId eq jobTemplateId }
-    for (t in transformers) {
+    for ((i, t) in transformers.withIndex()) {
         Transformers.insert { insert ->
             insert[Transformers.jobTemplateId] = jobTemplateId
             insert[type] = t.type
+            insert[order] = i
             insert[parameters] = t.parameters
         }
     }

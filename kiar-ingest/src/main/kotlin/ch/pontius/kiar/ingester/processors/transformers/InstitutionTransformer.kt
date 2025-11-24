@@ -76,7 +76,7 @@ class InstitutionTransformer(override val input: Source<SolrInputDocument>): Tra
                 doc.setField(Field.PARTICIPANT, entry.participantName)
             }
             if (!doc.has(Field.CANTON)) {
-                doc.setField(Field.CANTON, entry.canton.name)
+                doc.setField(Field.CANTON, entry.canton.longName)
             }
             if (!doc.has(Field.INSTITUTION_EMAIL)) {
                 doc.setField(Field.INSTITUTION_EMAIL, entry.email)
