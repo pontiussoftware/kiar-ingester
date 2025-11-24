@@ -54,7 +54,7 @@ class OaiServer() {
     private val documentBuilder: DocumentBuilder = DocumentBuilderFactory.newInstance().newDocumentBuilder()
 
     /** A [ConcurrentHashMap] of [Http2SolrClient] used by this [OaiServer] to fetch data. */
-    private val tokens = Caffeine.newBuilder().expireAfterAccess(Duration.ofMinutes(60)).build<String, Pair<Int, Mapper>>().asMap()
+    private val tokens = Caffeine.newBuilder().expireAfterAccess(Duration.ofMinutes(60)).build<String, Triple<Int, String?, Mapper>>().asMap()
 
     /** A cache of [Http2SolrClient]s used by this data ingest server. */
     private val collections = Caffeine.newBuilder().expireAfterWrite(Duration.ofHours(12)).build<String, ApacheSolrConfig?> { collection ->
@@ -270,7 +270,17 @@ class OaiServer() {
     private fun handleListRecords(collection: String, parameters: Map<String,String>): Document {
         /* Parse request. */
         val token = parameters["resumptionToken"]
-        val set = parameters["set"]
+
+        /* Determine start, set and mapper to use. */
+        val (start, set, mapper) = if (token != null) {
+            this.tokens[token] ?: return handleError("badResumptionToken", "Invalid resumption token.")
+        } else {
+            val prefix = parameters["metadataPrefix"] ?: return handleError("badArgument", "Missing metadata prefix.")
+            val mapper = Formats.entries.find { it.prefix == prefix }?.toMapper() ?: return handleError("cannotDisseminateFormat", "Unsupported metadata prefix '$prefix'.")
+            Triple(0, parameters["set"], mapper)
+        }
+
+        /* Parse dates. */
         val from = parameters["from"]?.let {
             try {
                 GRANULARITY_FORMAT.parse(it)
@@ -284,15 +294,6 @@ class OaiServer() {
             } catch (_: ParseException) {
                 return handleError("badArgument", "Malformed 'until'.")
             }
-        }
-
-        /* Determine start and mapper to use. */
-        val (start, mapper) = if (token != null) {
-            this.tokens[token] ?: return handleError("badResumptionToken", "Invalid resumption token.")
-        } else {
-            val prefix = parameters["metadataPrefix"] ?: return handleError("badArgument", "Missing metadata prefix.")
-            val mapper = Formats.entries.find { it.prefix == prefix }?.toMapper() ?: return handleError("cannotDisseminateFormat", "Unsupported metadata prefix '$prefix'.")
-            0 to mapper
         }
 
         /* Prepare Apache Solr query. */
@@ -348,7 +349,7 @@ class OaiServer() {
         if (response.results.numFound > lastElement) {
             /* Update resumption token. */
             val newToken = UUID.randomUUID().toString()
-            this.tokens[newToken] = lastElement to mapper
+            this.tokens[newToken] = Triple(lastElement, set, mapper)
 
             /* Include new token in response. */
             val resumptionTokenElement = doc.createElement("resumptionToken")
@@ -372,15 +373,14 @@ class OaiServer() {
     private fun handleListIdentifiers(collection: String, parameters: Map<String,String>): Document {
         /* Parse request. */
         val token = parameters["resumptionToken"]
-        val set = parameters["set"]
 
-        /* Determine start and mapper to use. */
-        val (start, mapper) = if (token != null) {
+        /* Determine start, set and mapper to use. */
+        val (start, set, mapper) = if (token != null) {
             this.tokens[token] ?: return handleError("badResumptionToken", "Invalid resumption token.")
         } else {
             val prefix = parameters["metadataPrefix"] ?: return handleError("badArgument", "Missing metadata prefix.")
             val mapper = Formats.entries.find { it.prefix == prefix }?.toMapper() ?: return handleError("cannotDisseminateFormat", "Unsupported metadata prefix '$prefix'.")
-            0 to mapper
+            Triple(0, parameters["set"], mapper)
         }
 
         /* Parse optional start and end date. */
@@ -445,7 +445,7 @@ class OaiServer() {
         if (response.results.numFound > lastElement) {
             /* Update resumption token. */
             val newToken = UUID.randomUUID().toString()
-            this.tokens[newToken] = lastElement to mapper
+            this.tokens[newToken] = Triple(lastElement, set, mapper)
 
             /* Include new token in response. */
             val resumptionTokenElement = doc.createElement("resumptionToken")
