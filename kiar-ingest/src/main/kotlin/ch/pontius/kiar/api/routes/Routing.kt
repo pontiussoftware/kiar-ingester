@@ -25,13 +25,17 @@ import updateEntityMapping
 /**
  * Configures all the API routes.
  *
- * @param server The [IngesterServer] instance.
  * @param config The program [Config].
  */
-fun configureApiRoutes(server: IngesterServer, config: Config) {
-    /** Path to API related functionality. */
+fun configureApiRoutes(config: Config) {
+    /* Initializes the IngestServer. */
+    val server = IngesterServer(config)
+    val oaiServer = OaiServer()
+    val sruServer = SruServer()
+
+    /* Path to API related functionality. */
     path("api") {
-        /** All paths related to session, login and logout handling. */
+        /* All paths related to session, login and logout handling. */
         path("session") {
             post("login") { ctx -> login(ctx) }
             get("logout", { ctx -> logout(ctx) }, Role.ADMINISTRATOR, Role.VIEWER, Role.MANAGER)
@@ -146,11 +150,11 @@ fun configureApiRoutes(server: IngesterServer, config: Config) {
             delete("{id}",  { ctx -> deleteEntityMapping(ctx) }, Role.ADMINISTRATOR )
         }
 
-        /* Endpoints related to OAI-PMH. */
+        /* Endpoints related to OAI-PMH and SRU. */
         path("{collection}") {
-            get("oai-pmh") { ctx -> getOaiPmh(ctx, OaiServer()) }
-            post("oai-pmh") { ctx -> postOaiPmh(ctx, OaiServer()) }
-            get("sru") { ctx -> getSruSearch(ctx, SruServer()) }
+            get("oai-pmh") { ctx -> getOaiPmh(ctx, oaiServer) }
+            post("oai-pmh") { ctx -> postOaiPmh(ctx, oaiServer) }
+            get("sru") { ctx -> getSruSearch(ctx, sruServer) }
         }
     }
 }

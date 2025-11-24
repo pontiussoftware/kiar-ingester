@@ -5,12 +5,12 @@ import ch.pontius.kiar.api.model.config.solr.CollectionType
 import ch.pontius.kiar.database.config.SolrCollections
 import ch.pontius.kiar.database.config.SolrConfigs
 import ch.pontius.kiar.database.config.SolrConfigs.toSolr
-import ch.pontius.kiar.servers.oai.Verbs.*
 import ch.pontius.kiar.ingester.parsing.xml.XmlDocumentParser
 import ch.pontius.kiar.ingester.solrj.Field
 import ch.pontius.kiar.ingester.solrj.uuid
 import ch.pontius.kiar.servers.mapper.Formats
 import ch.pontius.kiar.servers.mapper.Mapper
+import ch.pontius.kiar.servers.oai.Verbs.*
 import ch.pontius.kiar.solr.SolrClientProvider
 import com.github.benmanes.caffeine.cache.Caffeine
 import io.javalin.http.Context
@@ -54,7 +54,7 @@ class OaiServer() {
     private val documentBuilder: DocumentBuilder = DocumentBuilderFactory.newInstance().newDocumentBuilder()
 
     /** A [ConcurrentHashMap] of [Http2SolrClient] used by this [OaiServer] to fetch data. */
-    private val tokens = Caffeine.newBuilder().expireAfterWrite(Duration.ofMinutes(60)).build<String, Pair<Int, Mapper>>().asMap()
+    private val tokens = Caffeine.newBuilder().expireAfterAccess(Duration.ofMinutes(60)).build<String, Pair<Int, Mapper>>().asMap()
 
     /** A cache of [Http2SolrClient]s used by this data ingest server. */
     private val collections = Caffeine.newBuilder().expireAfterWrite(Duration.ofHours(12)).build<String, ApacheSolrConfig?> { collection ->

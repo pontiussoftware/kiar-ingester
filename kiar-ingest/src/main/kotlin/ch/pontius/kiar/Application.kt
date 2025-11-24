@@ -6,7 +6,6 @@ import ch.pontius.kiar.api.routes.DatabaseAccessManager
 import ch.pontius.kiar.api.routes.configureApiRoutes
 import ch.pontius.kiar.config.Config
 import ch.pontius.kiar.database.Schema
-import ch.pontius.kiar.ingester.IngesterServer
 import ch.pontius.kiar.utilities.KotlinxJsonMapper
 import io.javalin.Javalin
 import io.javalin.http.staticfiles.Location
@@ -47,12 +46,9 @@ fun main(args: Array<String>) {
             Schema.initialize(database)
         }
 
-        /* Initializes the IngestServer. */
-        val server = IngesterServer(config)
-
         /* Start Javalin web-server (if configured). */
         if (config.web) {
-            initializeWebserver(server, config).start(config.webPort)
+            initializeWebserver(config).start(config.webPort)
         }
     } catch (e: Throwable) {
         System.err.println("Failed to start IngesterServer due to error:")
@@ -90,11 +86,10 @@ private fun loadConfig(path: String): Config {
 /**
  * Initializes and returns the [Database] based on the provided [Config].
  *
- * @param server The [IngesterServer] instance.
  * @param config The program [Config].
  * @return [Javalin]
  */
-private fun initializeWebserver(server: IngesterServer, config: Config) = Javalin.create { c ->
+private fun initializeWebserver(config: Config) = Javalin.create { c ->
     /* Configure static routes for SPA. */
     c.staticFiles.add{
         it.directory = "html/browser/"
@@ -104,7 +99,7 @@ private fun initializeWebserver(server: IngesterServer, config: Config) = Javali
 
     /* Configure routes. */
     c.router.apiBuilder {
-        configureApiRoutes(server, config)
+        configureApiRoutes(config)
     }
 
     /* We use Kotlinx serialization for de-/serialization. */
