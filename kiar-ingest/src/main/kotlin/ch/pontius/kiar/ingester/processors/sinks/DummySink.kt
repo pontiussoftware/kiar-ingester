@@ -10,23 +10,28 @@ import ch.pontius.kiar.ingester.solrj.*
 import com.jayway.jsonpath.InvalidPathException
 import com.jayway.jsonpath.JsonPath
 import com.jayway.jsonpath.PathNotFoundException
+import io.github.oshai.kotlinlogging.KLogger
+import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.onEach
 import org.apache.solr.common.SolrInputDocument
 import java.util.*
 
+/** The [KLogger] instance for [DummySink]. */
+private val logger: KLogger = KotlinLogging.logger {}
+
 /**
  * A dummy [Sink] implementation used for debugging.
  *
  * @author Ralph Gasser
- * @version 1.0.0
+ * @version 1.0.1
  */
 class DummySink(input: Source<SolrInputDocument>): AbstractApacheSolrSink(input) {
     override fun toFlow(context: ProcessingContext): Flow<SolrInputDocument> {
         /* List of collections this [ApacheSolrSink] processes. */
         val collections = context.jobTemplate.config?.collections?.filter { it.type == CollectionType.OBJECT } ?: emptyList()
         if (collections.isEmpty()) {
-            LOGGER.warn("No data collections for ingest found.")
+            logger.warn { "No data collections for ingest found." }
             return this@DummySink.input.toFlow(context)
         }
 
@@ -47,7 +52,7 @@ class DummySink(input: Source<SolrInputDocument>): AbstractApacheSolrSink(input)
                     try {
                         /* Apply per-institution collection filter. */
                         if (this@DummySink.institutions[doc.get<String>(Field.INSTITUTION)]?.contains(collection.name) != true) {
-                            LOGGER.debug("Skipping document due to institution not publishing to per-institution filter (jobId = {}, collection = {}, docId = {}).", context.jobId, collection, uuid)
+                            logger.debug { "Skipping document due to institution not publishing to per-institution filter (jobId = ${context.jobId}, collection = $collection, docId = $uuid)." }
                             continue
                         }
 
@@ -55,7 +60,7 @@ class DummySink(input: Source<SolrInputDocument>): AbstractApacheSolrSink(input)
                         if (doc.has(Field.PUBLISH_TO)) {
                             doc.getAll<String>(Field.PUBLISH_TO)
                             if (!collections.contains(collection)) {
-                                LOGGER.debug("Skipping document due to institution not publishing to per-object filter (jobId = {}, collection = {}, docId = {}).", context.jobId, collection, uuid)
+                                logger.debug { "Skipping document due to institution not publishing to per-object filter (jobId = ${context.jobId}, collection = $collection, docId = $uuid)." }
                                 continue
                             }
                         }
@@ -65,14 +70,14 @@ class DummySink(input: Source<SolrInputDocument>): AbstractApacheSolrSink(input)
                             val map = doc.fieldNames.associateWith { doc.getFieldValue(it) }
                             try {
                                 if (JsonPath.parse(listOf(map)).read<List<*>>("$[?(${collection.selector})])").isEmpty()) {
-                                    LOGGER.debug("Skipping document due to selector; no match (jobId = {}, collection = {}, docId = {}).", context.jobId, collection, uuid)
+                                    logger.debug { "Skipping document due to selector; no match (jobId = ${context.jobId}, collection = $collection, docId = $uuid)." }
                                     continue
                                 }
                             } catch (_: PathNotFoundException) {
-                                LOGGER.warn("Skipping document due to selector; path not found (jobId = {}, collection = {}, docId = {}).", context.jobId, collection, uuid)
+                                logger.warn { "Skipping document due to selector; path not found (jobId = ${context.jobId}, collection = $collection, docId = $uuid)." }
                                 continue
                             }  catch (_: InvalidPathException) {
-                                LOGGER.warn("Skipping document due to selector; invalid path (jobId = {}, collection = {}, docId = {}).", context.jobId, collection, uuid)
+                                logger.warn { "Skipping document due to selector; invalid path (jobId = ${context.jobId}, collection = $collection, docId = $uuid)." }
                                 continue
                             }
                         }
