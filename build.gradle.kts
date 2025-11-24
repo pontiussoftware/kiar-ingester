@@ -3,13 +3,13 @@ import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 
 plugins {
     /* Kotlin JVM version. */
-    kotlin("jvm") version "2.2.20"
+    kotlin("jvm") version "2.2.21"
 
     /* Kotlinx serialization plugin. */
-    id("org.jetbrains.kotlin.plugin.serialization") version "2.2.20"
+    id("org.jetbrains.kotlin.plugin.serialization") version "2.2.21"
 
     /* OpenAPI Generator for Frontend internal API generation. */
-    id ("org.openapi.generator") version "7.16.0"
+    id ("org.openapi.generator") version "7.17.0"
 
     /* Download plugin to load OAS. */
     id ("de.undercouch.download") version "5.6.0"
@@ -45,7 +45,7 @@ subprojects {
     group = "ch.pontius.kiar"
 
     /* Our current version, on dev branch this should always be release+1-SNAPSHOT */
-    version = "1.3.1"
+    version = "1.4.0"
 
     tasks {
         compileKotlin {
