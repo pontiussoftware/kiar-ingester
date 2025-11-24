@@ -10,7 +10,8 @@ import ch.pontius.kiar.database.institutions.Institutions.toInstitution
 import ch.pontius.kiar.database.institutions.Participants
 import ch.pontius.kiar.database.jobs.JobLogs
 import ch.pontius.kiar.database.jobs.Jobs
-import org.apache.logging.log4j.LogManager
+import io.github.oshai.kotlinlogging.KLogger
+import io.github.oshai.kotlinlogging.KotlinLogging
 import org.apache.solr.client.solrj.impl.Http2SolrClient
 import org.jetbrains.exposed.v1.jdbc.insert
 import org.jetbrains.exposed.v1.jdbc.selectAll
@@ -20,17 +21,16 @@ import java.util.*
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicLong
 
+/** The [KLogger] instance for [ProcessingContext]. */
+private val logger: KLogger = KotlinLogging.logger {}
+
 /**
  * A [ProcessingContext] that captures contextual information about a running job.
  *
  * @author Ralph Gasser
- * @version 1.2.0
+ * @version 1.2.1
  */
 class ProcessingContext(val jobId: Int, val config: Config, val test: Boolean = false): Closeable {
-
-    companion object {
-        private val LOGGER = LogManager.getLogger()
-    }
 
     /** Number of items processed in this [ProcessingContext]. */
     private val _processed = AtomicLong(0L)
@@ -112,15 +112,15 @@ class ProcessingContext(val jobId: Int, val config: Config, val test: Boolean = 
 
         /* Process event. */
         when (log.level) {
-            JobLogLevel.WARNING -> LOGGER.info(log.description)
+            JobLogLevel.WARNING -> logger.info { log.description }
             JobLogLevel.VALIDATION -> {
-                LOGGER.warn(log.description)
+                logger.warn { log.description }
                 this._skipped.incrementAndGet()
             }
             JobLogLevel.ERROR,
             JobLogLevel.SEVERE -> {
                 this._error.incrementAndGet()
-                LOGGER.error(log.description)
+                logger.error { log.description }
             }
         }
 

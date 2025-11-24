@@ -9,7 +9,6 @@ import ch.pontius.kiar.ingester.processors.sources.Source
 import ch.pontius.kiar.ingester.solrj.*
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.filter
-import org.apache.logging.log4j.LogManager
 import org.apache.solr.common.SolrInputDocument
 
 /**
@@ -17,14 +16,9 @@ import org.apache.solr.common.SolrInputDocument
  * with a present [Institution] and participant and c) enriches verified documents with meta information that can be derived from the [Institution].
  *
  * @author Ralph Gasser
- * @version 1.2.0
+ * @version 1.2.1
  */
 class InstitutionTransformer(override val input: Source<SolrInputDocument>): Transformer<SolrInputDocument, SolrInputDocument> {
-
-    companion object {
-        private val LOGGER = LogManager.getLogger(InstitutionTransformer::class.java)
-    }
-
     /**
      * Converts this [InstitutionTransformer] to a [Flow]
      *
@@ -36,8 +30,7 @@ class InstitutionTransformer(override val input: Source<SolrInputDocument>): Tra
             /* Fetch institution field from document. */
             val uuid = doc.get<String>(Field.UUID)
             if (uuid == null) {
-                LOGGER.error("Failed to verify document: Field 'uuid' is missing (jobId = {}, participantId = {}, docId = {}).", context.jobId, context.jobTemplate.participantName, uuid)
-                context.log(JobLog(null, null, null, JobLogContext.METADATA, JobLogLevel.VALIDATION, "Field 'uuid' is missing."))
+                context.log(JobLog(null, null, null, JobLogContext.METADATA, JobLogLevel.VALIDATION, "Failed to verify document: Field 'uuid' is missing."))
                 return@filter false
             }
 
@@ -47,7 +40,6 @@ class InstitutionTransformer(override val input: Source<SolrInputDocument>): Tra
                 /* We can now try to derive the institution from the participant. */
                 val institution = context.institutions.values.singleOrNull { it.participantName == context.jobTemplate.participantName }
                 if (institution == null) {
-                    LOGGER.warn("Failed to verify document: Field institution could not be derived from participant (jobId = {}, participantId = {}, docId = {}).", context.jobId, context.jobTemplate.participantName, uuid)
                     context.log(JobLog(null, uuid, null, JobLogContext.METADATA, JobLogLevel.VALIDATION, "Field 'institution' could not be derived from '_participant_'."))
                     return@filter false
                 }
@@ -58,8 +50,7 @@ class InstitutionTransformer(override val input: Source<SolrInputDocument>): Tra
             /* Fetch corresponding database entry. */
             val entry = context.institutions[institutionName]
             if (entry == null) {
-                LOGGER.warn("Failed to verify document: Institution '$institutionName' is unknown (jobId = {}, participantId = {}, docId = {}).", context.jobId, context.jobTemplate.participantName, uuid)
-                context.log(JobLog(null, uuid, null, JobLogContext.METADATA, JobLogLevel.VALIDATION, "Failed to verify document: Institution '$institutionName'."))
+                context.log(JobLog(null, uuid, null, JobLogContext.METADATA, JobLogLevel.VALIDATION, "Failed to verify document: Institution '$institutionName' is unknown."))
                 return@filter false
             }
 
@@ -67,7 +58,6 @@ class InstitutionTransformer(override val input: Source<SolrInputDocument>): Tra
             val collectionName = doc.asString(Field.COLLECTION)
             if (collectionName == null) {
                 doc.setField(Field.COLLECTION, institutionName)
-                LOGGER.warn("Collection name not specified; using institution name instead (jobId = {}, participantId = {}, docId = {}).", context.jobId, context.jobTemplate.participantName, uuid)
                 context.log(JobLog(null, uuid, null, JobLogContext.METADATA, JobLogLevel.WARNING, "Collection not specified; using institution name instead."))
             }
 

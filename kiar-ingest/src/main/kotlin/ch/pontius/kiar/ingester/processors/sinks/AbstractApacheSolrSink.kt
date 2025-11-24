@@ -10,28 +10,27 @@ import ch.pontius.kiar.database.institutions.InstitutionsSolrCollections
 import ch.pontius.kiar.ingester.processors.ProcessingContext
 import ch.pontius.kiar.ingester.processors.sources.Source
 import ch.pontius.kiar.ingester.solrj.Field
+import io.github.oshai.kotlinlogging.KLogger
+import io.github.oshai.kotlinlogging.KotlinLogging
 import org.apache.solr.client.solrj.request.schema.SchemaRequest
 import org.apache.solr.common.SolrInputDocument
 import org.jetbrains.exposed.v1.core.and
 import org.jetbrains.exposed.v1.core.eq
 import org.jetbrains.exposed.v1.jdbc.select
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
-import org.slf4j.Logger
-import org.slf4j.LoggerFactory
 import java.util.*
+
+/** The [KLogger] instance for [AbstractApacheSolrSink]. */
+private val logger: KLogger = KotlinLogging.logger {}
 
 /**
  * A [Sink] that processes [SolrInputDocument]s and and provides basic functions to validate and ingest them into Apache Solr.
  *
  * @author Ralph Gasser
- * @version 1.4.1
+ * @version 1.4.2
  */
 abstract class AbstractApacheSolrSink(override val input: Source<SolrInputDocument>): Sink<SolrInputDocument> {
-    companion object {
-        val LOGGER: Logger = LoggerFactory.getLogger(AbstractApacheSolrSink::class.java)!!
-    }
-
-    /** [FieldValidator] for the different collections. */
+     /** [FieldValidator] for the different collections. */
     protected val validators = HashMap<String,List<FieldValidator>>()
 
     /** A [Map] of institution names to selected collections. */
@@ -130,13 +129,13 @@ abstract class AbstractApacheSolrSink(override val input: Source<SolrInputDocume
      */
     protected fun prepareIngest(context: ProcessingContext, collections: List<ApacheSolrCollection>) {
         for (c in collections) {
-            LOGGER.info("Purging collection (name = ${context.jobTemplate.participantName}, collection = $c).")
+            logger.info { "Purging collection (name = ${context.jobTemplate.participantName}, collection = $c)." }
             val response = context.solrClient.deleteByQuery(c.name, "${Field.PARTICIPANT.solr}:${context.jobTemplate.participantName}")
             if (response.status != 0) {
-                LOGGER.error("Purge of collection failed (name = ${context.jobTemplate.participantName}, collection = $c). Aborting...")
+                logger.warn { "Purge of collection failed (name = ${context.jobTemplate.participantName}, collection = $c). Aborting..." }
                 throw IllegalArgumentException("Data ingest (name = ${context.jobTemplate.participantName}, collection = $c) failed because delete before import could not be executed.")
             }
-            LOGGER.info("Purge of collection successful (name = ${context.jobTemplate.participantName}, collection = $c).")
+            logger.info {  "Purge of collection successful (name = ${context.jobTemplate.participantName}, collection = $c)." }
         }
     }
 
@@ -148,16 +147,16 @@ abstract class AbstractApacheSolrSink(override val input: Source<SolrInputDocume
      */
     protected fun commit(context: ProcessingContext, collections: List<ApacheSolrCollection>) {
         for (c in collections) {
-            LOGGER.info("Data ingest (name = ${context.jobId}, collection = $c) completed; committing...")
+            logger.info {  "Data ingest (name = ${context.jobId}, collection = $c) completed; committing..." }
             try {
                 val response = context.solrClient.commit(c.name)
                 if (response.status == 0) {
-                    LOGGER.info("Data ingest (name = ${context.jobTemplate.participantName}, collection = $c) committed successfully.")
+                    logger.info { "Data ingest (name = ${context.jobTemplate.participantName}, collection = $c) committed successfully." }
                 } else {
-                    LOGGER.warn("Failed to commit data ingest (name = ${context.jobTemplate.participantName}, collection = $c).")
+                    logger.warn { "Failed to commit data ingest (name = ${context.jobTemplate.participantName}, collection = $c)." }
                 }
             } catch (e: Throwable) {
-                LOGGER.error("Failed to finalize data ingest due to server error (name = ${context.jobTemplate.participantName}, collection = $c. Rolling back...", e)
+                logger.error(e) { "Failed to finalize data ingest due to server error (name = ${context.jobTemplate.participantName}, collection = $c. Rolling back..." }
                 context.solrClient.rollback(c.name)
             }
         }
@@ -171,16 +170,16 @@ abstract class AbstractApacheSolrSink(override val input: Source<SolrInputDocume
      */
     protected fun abort(context: ProcessingContext, collections: List<ApacheSolrCollection>) {
         for (c in collections) {
-            LOGGER.info("Data ingest (name = ${context.jobId}, collection = $c) completed with error; rolling back...")
+            logger.info { "Data ingest (name = ${context.jobId}, collection = $c) completed with error; rolling back..." }
             try {
                 val response = context.solrClient.rollback(c.name)
                 if (response.status == 0) {
-                    LOGGER.info("Data ingest (name = ${context.jobTemplate.participantName}, collection = $c) rolled back successfully.")
+                    logger.info { "Data ingest (name = ${context.jobTemplate.participantName}, collection = $c) rolled back successfully." }
                 } else {
-                    LOGGER.warn("Failed to rollback data ingest (name = ${context.jobTemplate.participantName}, collection = $c).")
+                    logger.warn { "Failed to rollback data ingest (name = ${context.jobTemplate.participantName}, collection = $c)." }
                 }
             } catch (e: Throwable) {
-                LOGGER.error("Failed to rollback data ingest due to server error (name = ${context.jobTemplate.participantName}, collection = $c.", e)
+                logger.error(e) { "Failed to rollback data ingest due to server error (name = ${context.jobTemplate.participantName}, collection = $c." }
             }
         }
     }

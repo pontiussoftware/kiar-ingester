@@ -7,8 +7,6 @@ import ch.pontius.kiar.api.routes.configureApiRoutes
 import ch.pontius.kiar.config.Config
 import ch.pontius.kiar.database.Schema
 import ch.pontius.kiar.ingester.IngesterServer
-import ch.pontius.kiar.tasks.PurgeJobLogTask
-import ch.pontius.kiar.tasks.RemoveInputFilesTask
 import ch.pontius.kiar.utilities.KotlinxJsonMapper
 import io.javalin.Javalin
 import io.javalin.http.staticfiles.Location
@@ -26,7 +24,6 @@ import java.io.FileNotFoundException
 import java.nio.file.Files
 import java.nio.file.Paths
 import java.sql.Connection
-import java.util.*
 import kotlin.system.exitProcess
 
 
@@ -57,11 +54,6 @@ fun main(args: Array<String>) {
         if (config.web) {
             initializeWebserver(server, config).start(config.webPort)
         }
-
-        /* Schedule timer tasks. */
-        val timer = Timer("Task scheduler")
-        timer.scheduleAtFixedRate(PurgeJobLogTask(config), 5000, 86400000)
-        timer.scheduleAtFixedRate(RemoveInputFilesTask(config), 5000, 86400000)
     } catch (e: Throwable) {
         System.err.println("Failed to start IngesterServer due to error:")
         System.err.println(e.printStackTrace())

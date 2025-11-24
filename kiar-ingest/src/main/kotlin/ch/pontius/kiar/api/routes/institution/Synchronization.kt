@@ -14,9 +14,10 @@ import ch.pontius.kiar.database.institutions.Institutions.toInstitution
 import ch.pontius.kiar.database.institutions.Participants
 import ch.pontius.kiar.ingester.solrj.Field
 import ch.pontius.kiar.ingester.solrj.setField
+import io.github.oshai.kotlinlogging.KLogger
+import io.github.oshai.kotlinlogging.KotlinLogging
 import io.javalin.http.Context
 import io.javalin.openapi.*
-import org.apache.logging.log4j.LogManager
 import org.apache.solr.client.solrj.impl.Http2SolrClient
 import org.apache.solr.common.SolrInputDocument
 import org.jetbrains.exposed.v1.core.and
@@ -25,7 +26,8 @@ import org.jetbrains.exposed.v1.jdbc.select
 import org.jetbrains.exposed.v1.jdbc.selectAll
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 
-private val LOGGER = LogManager.getLogger()
+/** The [KLogger] instance for synchronization endpoint. */
+private val logger: KLogger = KotlinLogging.logger {}
 
 @OpenApi(
     path = "/api/institutions/synchronize",
@@ -83,9 +85,9 @@ private fun synchronise(config: ApacheSolrConfig, collection: String, institutio
             /* Delete all existing entries. */
             var response = client.deleteByQuery(collection, "*:*")
             if (response?.status == 0) {
-                LOGGER.info("Purged collection (collection = {}).", collection)
+                logger.info { "Purged collection (collection = $collection)." }
             } else {
-                LOGGER.error("Failed to purge collection (collection = {}).", collection)
+                logger.error {"Failed to purge collection (collection = $collection)." }
             }
 
             /* Map documents and add them. */
@@ -126,17 +128,17 @@ private fun synchronise(config: ApacheSolrConfig, collection: String, institutio
             /* Add documents. */
             response = client.add(collection, documents)
             if (response.status == 0) {
-                LOGGER.debug("Ingested {} documents (collection = {}).", documents.size, collection)
+                logger.debug { "Ingested ${documents.size}  documents (collection = $collection)." }
             } else {
-                LOGGER.error("Failed to ingest documents (collection = {}).", collection)
+                logger.error { "Failed to ingest documents (collection = $collection)." }
             }
 
             /* Commit changes. */
             response = client.commit(collection)
             if (response.status == 0) {
-                LOGGER.info("Committed {} documents (collection = {}).", documents.size, collection)
+                logger.info { "Committed ${documents.size} documents (collection = $collection)." }
             } else {
-                LOGGER.error("Failed to commit documents (collection = {}).", collection)
+                logger.error {"Failed to commit documents (collection = $collection)." }
             }
         } catch (e: Throwable) {
             throw ErrorStatusException(500, "Error occurred while trying to purge Apache Solr collection: ${e.message}")

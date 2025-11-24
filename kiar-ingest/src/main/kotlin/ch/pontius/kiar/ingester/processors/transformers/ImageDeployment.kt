@@ -14,18 +14,21 @@ import ch.pontius.kiar.utilities.ImageHandler
 import com.sksamuel.scrimage.nio.ImageWriter
 import com.sksamuel.scrimage.nio.JpegWriter
 import com.sksamuel.scrimage.nio.PngWriter
+import io.github.oshai.kotlinlogging.KLogger
+import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.onCompletion
 import kotlinx.coroutines.flow.onEach
 import org.apache.solr.common.SolrInputDocument
-import org.slf4j.Logger
-import org.slf4j.LoggerFactory
 import java.nio.file.Files
 import java.nio.file.Paths
 import java.nio.file.StandardCopyOption
 import java.util.*
+
+/** The [KLogger] instance for [ImageDeployment]. */
+private val logger: KLogger = KotlinLogging.logger {}
 
 /**
  * A [Transformer] to operates on [SolrInputDocument]s, extracts raw image files, obtains a smaller preview and stores it.
@@ -33,15 +36,9 @@ import java.util.*
  * The [SolrInputDocument] is updated to contain the path to the new file.
  *
  * @author Ralph Gasser
- * @version 1.6.0
+ * @version 1.6.1
  */
 class ImageDeployment(override val input: Source<SolrInputDocument>): Transformer<SolrInputDocument, SolrInputDocument> {
-
-    companion object {
-        /** The [Logger] instance used by this [ImageDeployment]. */
-        private val LOGGER : Logger = LoggerFactory.getLogger(ImageDeployment::class.java)
-    }
-
     /**
      * Returns a [Flow] of this [ImageDeployment].
      */
@@ -49,7 +46,7 @@ class ImageDeployment(override val input: Source<SolrInputDocument>): Transforme
         /* Obtain deployment configurations; Skip everything, if configuration is missing. */
         val deployments = context.jobTemplate.config?.deployments ?: emptyList()
         if (deployments.isEmpty()) {
-            LOGGER.warn("No image deployment configurations were found.")
+            logger.warn { "No image deployment configurations were found." }
             return this.input.toFlow(context)
         }
 
@@ -84,7 +81,7 @@ class ImageDeployment(override val input: Source<SolrInputDocument>): Transforme
                         val deployTo = Paths.get(deployment.path)
                         val actual = deployTo.resolve(context.jobTemplate.participantName).resolve(deployment.name).resolve(imageName)
                         val tmp = deployTo.resolve(context.jobTemplate.participantName).resolve("${deployment.name}~tmp").resolve(imageName)
-                        LOGGER.info("Deploying image (jobId = {}, docId = {}) {}.", context.jobId, it.uuid(), imageName)
+                        logger.info {"Deploying image '$imageName' (jobId = ${context.jobId}, docId = ${it.uuid()})." }
 
                         /* Check size of image. If it's too small, issue a warning; otherwise, resize it. */
                         val resized = when {
@@ -139,7 +136,7 @@ class ImageDeployment(override val input: Source<SolrInputDocument>): Transforme
                     }
                 } catch (e: Throwable) {
                     context.log(JobLog(context.jobId, null, null, JobLogContext.RESOURCE, JobLogLevel.ERROR, "Failed to finalize image deployment due to error. Please contact the administrator."))
-                    LOGGER.error("Failed to finalize image deployment '${deployment.name}'.", e)
+                    logger.error(e) { "Failed to finalize image deployment '${deployment.name}' due to exception." }
                 }
             }
         }.flowOn(Dispatchers.IO)

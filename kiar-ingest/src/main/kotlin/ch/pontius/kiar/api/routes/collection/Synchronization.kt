@@ -16,9 +16,10 @@ import ch.pontius.kiar.database.institutions.Participants
 import ch.pontius.kiar.ingester.solrj.Field
 import ch.pontius.kiar.ingester.solrj.setField
 import com.sksamuel.scrimage.ImmutableImage
+import io.github.oshai.kotlinlogging.KLogger
+import io.github.oshai.kotlinlogging.KotlinLogging
 import io.javalin.http.Context
 import io.javalin.openapi.*
-import org.apache.logging.log4j.LogManager
 import org.apache.solr.client.solrj.impl.Http2SolrClient
 import org.apache.solr.client.solrj.response.UpdateResponse
 import org.apache.solr.common.SolrInputDocument
@@ -29,7 +30,8 @@ import org.jetbrains.exposed.v1.jdbc.selectAll
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 import java.nio.file.Paths
 
-private val LOGGER = LogManager.getLogger()
+/** The [KLogger] instance for synchronization endpoint. */
+private val logger: KLogger = KotlinLogging.logger {}
 
 @OpenApi(
     path = "/api/collections/synchronize",
@@ -87,9 +89,9 @@ private fun synchronise(config: ApacheSolrConfig, collection: String, collection
             /* Delete all existing entries. */
             var response: UpdateResponse = client.deleteByQuery(collection, "*:*")
             if (response.status == 0) {
-                LOGGER.info("Purged collection (collection = {}).", collection)
+                logger.info { "Purged collection (collection = $collection)." }
             } else {
-                LOGGER.error("Failed to purge collection (collection = {}).", collection)
+                logger.error {"Failed to purge collection (collection = $collection)." }
             }
 
             /* Map documents and add them. */
@@ -119,8 +121,8 @@ private fun synchronise(config: ApacheSolrConfig, collection: String, collection
                             }
                             doc.addField("${deployment.name}height_", image.height)
                             doc.addField("${deployment.name}width_", image.width)
-                        } catch (_: Throwable) {
-                            LOGGER.error("Failed to load image from path: $path")
+                        } catch (e: Throwable) {
+                            logger.error(e) { "Failed to load image from path: $path" }
                         }
                     }
                 }
@@ -130,17 +132,17 @@ private fun synchronise(config: ApacheSolrConfig, collection: String, collection
             /* Add documents. */
             response = client.add(collection, documents)
             if (response.status == 0) {
-                LOGGER.debug("Ingested {} documents (collection = {}).", documents.size, collection)
+                logger.debug { "Ingested ${documents.size} documents (collection = $collection)." }
             } else {
-                LOGGER.error("Failed to ingest documents (collection = {}).", collection)
+                logger.error { "Failed to ingest documents (collection = $collection)." }
             }
 
             /* Commit changes. */
             response = client.commit(collection)
             if (response.status == 0) {
-                LOGGER.info("Committed {} documents (collection = {}).", documents.size, collection)
+                logger.info { "Committed ${documents.size} documents (collection = $collection)." }
             } else {
-                LOGGER.error("Failed to commit documents (collection = {}).", collection)
+                logger.error { "Failed to commit documents (collection = $collection)." }
             }
         } catch (e: Throwable) {
             throw ErrorStatusException(500, "Error occurred while trying to purge Apache Solr collection: ${e.message}")

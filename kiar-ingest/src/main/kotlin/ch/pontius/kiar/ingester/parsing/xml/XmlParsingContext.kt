@@ -3,7 +3,8 @@ package ch.pontius.kiar.ingester.parsing.xml
 import ch.pontius.kiar.api.model.config.mappings.AttributeMapping
 import ch.pontius.kiar.api.model.config.mappings.EntityMapping
 import ch.pontius.kiar.ingester.processors.ProcessingContext
-import org.apache.logging.log4j.LogManager
+import io.github.oshai.kotlinlogging.KLogger
+import io.github.oshai.kotlinlogging.KotlinLogging
 import org.apache.solr.common.SolrInputDocument
 import org.w3c.dom.Document
 import org.w3c.dom.Element
@@ -14,6 +15,8 @@ import org.xml.sax.helpers.DefaultHandler
 import javax.xml.parsers.DocumentBuilder
 import javax.xml.parsers.DocumentBuilderFactory
 
+/** The [KLogger] instance for [XmlParsingContext]. */
+private val logger: KLogger = KotlinLogging.logger {}
 
 /**
  * A [XmlParsingContext] used to parse and map XML files to [SolrInputDocument]s.
@@ -21,13 +24,9 @@ import javax.xml.parsers.DocumentBuilderFactory
  * Processing of the individual [SolrInputDocument] is provided by a callback method.
  *
  * @author Ralph Gasser
- * @version 1.2.2
+ * @version 1.2.3
  */
 class XmlParsingContext(config: EntityMapping, private val context: ProcessingContext, private val callback: (SolrInputDocument) -> Unit): DefaultHandler() {
-    companion object {
-        private val LOGGER = LogManager.getLogger()
-    }
-
     /** Internal [StringBuffer] used for buffering raw characters during XML parsing. */
     private var buffer = StringBuffer()
 
@@ -84,7 +83,7 @@ class XmlParsingContext(config: EntityMapping, private val context: ProcessingCo
         /* Flush old document (if needed). */
         if (this.xpath == this.newDocumentOn) {
             if (this.error) {
-                LOGGER.warn("Skipping document due to parse error.")
+                logger.warn { "Skipping document due to parse error." }
                 this.error = false /* Clear error flag when new document starts. */
             } else {
                 val doc = SolrInputDocument()
@@ -122,7 +121,7 @@ class XmlParsingContext(config: EntityMapping, private val context: ProcessingCo
      * @param e [SAXParseException]
      */
     override fun error(e: SAXParseException) {
-        LOGGER.error("SAX parse error encountered while parsing document: ${e.message}.")
+        logger.error(e) { "SAX parse error encountered while parsing document: ${e.message}." }
         this.error = true
     }
 
@@ -134,7 +133,7 @@ class XmlParsingContext(config: EntityMapping, private val context: ProcessingCo
     override fun fatalError(e: SAXParseException) {
         /* Convert invalid characters to recoverable error. */
         if (e.message?.endsWith(" is an invalid XML character.") == true) {
-            LOGGER.error("Encountered invalid character while parsing XML: ${e.message}.")
+            logger.error(e) { "Encountered invalid character while parsing XML: ${e.message}." }
             this.error = true
             return
         }

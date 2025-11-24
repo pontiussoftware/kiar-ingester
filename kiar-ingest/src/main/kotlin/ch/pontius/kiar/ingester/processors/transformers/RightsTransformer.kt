@@ -7,22 +7,23 @@ import ch.pontius.kiar.api.model.masterdata.RightStatement
 import ch.pontius.kiar.ingester.processors.ProcessingContext
 import ch.pontius.kiar.ingester.processors.sources.Source
 import ch.pontius.kiar.ingester.solrj.*
+import ch.pontius.kiar.servers.sru.SruServer
+import io.github.oshai.kotlinlogging.KLogger
+import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.filter
-import org.apache.logging.log4j.LogManager
 import org.apache.solr.common.SolrInputDocument
+
+/** The [KLogger] instance for [SruServer]. */
+private val logger: KLogger = KotlinLogging.logger {}
 
 /**
  * A [Transformer] that enriches incoming [SolrInputDocument]s with rights information.
  *
  * @author Ralph Gasser
- * @version 1.1.0
+ * @version 1.1.1
  */
 class RightsTransformer(override val input: Source<SolrInputDocument>): Transformer<SolrInputDocument, SolrInputDocument> {
-
-    companion object {
-        private val LOGGER = LogManager.getLogger(InstitutionTransformer::class.java)
-    }
 
     /** [MutableMap] of [RightStatement] entries. */
     private val rights = RightStatement.DEFAULT.associateBy { it.shortName }.toMutableMap()
@@ -48,7 +49,7 @@ class RightsTransformer(override val input: Source<SolrInputDocument>): Transfor
         /* Fetch UUID field from document. */
         val uuid = doc.get<String>(Field.UUID)
         if (uuid == null) {
-            LOGGER.error("Failed to verify document: Field 'uuid' is missing (jobId = {}, participantId = {}, docId = {}).", context.jobId, context.jobTemplate.participantName, uuid)
+            logger.error { "Failed to verify document: Field 'uuid' is missing (jobId = ${context.jobId}, participantId = ${context.jobTemplate.participantName}, docId = $uuid)." }
             context.log(JobLog(null, null, null, JobLogContext.METADATA, JobLogLevel.VALIDATION, "Document skipped: Field 'uuid' is missing."))
             return@filter false
         }
@@ -62,7 +63,7 @@ class RightsTransformer(override val input: Source<SolrInputDocument>): Transfor
             val value = doc.asString(Field.RIGHTS_STATEMENT)
             val entry = this@RightsTransformer.rights[value]
             if (entry == null) {
-                LOGGER.warn("Failed to verify document: Rights statement '$value' is unknown (jobId = {}, participantId = {}, docId = {}).", context.jobId, context.jobTemplate.participantName, uuid)
+                logger.warn { "Failed to verify document: Rights statement '$value' is unknown (jobId = ${context.jobId}, participantId = ${context.jobTemplate.participantName}, docId = $uuid)." }
                 context.log(JobLog(null, uuid, null, JobLogContext.METADATA, JobLogLevel.VALIDATION, "Document skipped: Rights statement '$value' is unknown."))
                 return@filter false
             }

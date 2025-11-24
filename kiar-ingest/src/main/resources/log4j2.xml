@@ -23,5 +23,8 @@
     <Logger name="ch.pontius.kiar" level="debug" additivity="false">
       <AppenderRef ref="FILE"/>
     </Logger>
+    <Logger name="ch.pontius.kiar" level="error" additivity="true">
+      <AppenderRef ref="STDOUT"/>
+    </Logger>
   </Loggers>
 </Configuration>

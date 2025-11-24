@@ -8,26 +8,26 @@ import ch.pontius.kiar.ingester.solrj.addField
 import ch.pontius.kiar.ingester.solrj.setField
 import ch.pontius.kiar.kiar.KiarFile
 import com.sksamuel.scrimage.ImmutableImage
+import io.github.oshai.kotlinlogging.KLogger
+import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.channelFlow
 import kotlinx.coroutines.flow.flowOn
-import org.apache.logging.log4j.LogManager
 import org.apache.solr.common.SolrInputDocument
-import java.io.IOException
 import java.nio.file.Path
+
+
+/** The [KLogger] instance for [KiarFileSource]. */
+private val logger: KLogger = KotlinLogging.logger {}
 
 /**
  * A [Source] for a KIAR file, as delivered by mainly smaller museums.
  *
  * @author Ralph Gasser
- * @version 1.2.0
+ * @version 1.2.1
  */
 class KiarFileSource(private val file: Path, private val skipResources: Boolean = false): Source<SolrInputDocument> {
-    companion object {
-        private val LOGGER = LogManager.getLogger()
-    }
-
     /**
      * Creates and returns a [Flow] for this [KiarFileSource].
      *
@@ -75,8 +75,8 @@ class KiarFileSource(private val file: Path, private val skipResources: Boolean 
             this.entry.openResource(this.index).use {
                 ImmutableImage.loader().fromStream(it)
             }
-        } catch (e: IOException) {
-            LOGGER.warn("Failed to decode image ${this.index} from KIAR entry ${entry.uuid}. An exception occurred: ${e.message}")
+        } catch (e: Throwable) {
+            logger.error(e) { "Failed to decode image ${this.index} from KIAR entry ${entry.uuid} due to exception." }
             null
         }
     }

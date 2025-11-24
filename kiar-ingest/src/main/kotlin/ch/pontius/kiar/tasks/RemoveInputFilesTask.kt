@@ -2,9 +2,8 @@ package ch.pontius.kiar.tasks
 
 import ch.pontius.kiar.config.Config
 import ch.pontius.kiar.database.institutions.Participants
-import org.apache.logging.log4j.LogManager
-import org.apache.logging.log4j.Logger
-import org.jetbrains.exposed.v1.core.eq
+import io.github.oshai.kotlinlogging.KLogger
+import io.github.oshai.kotlinlogging.KotlinLogging
 import org.jetbrains.exposed.v1.jdbc.select
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 import java.io.IOException
@@ -14,18 +13,16 @@ import java.util.*
 import java.util.stream.Collectors
 
 
+/** The [KLogger] instance for [RemoveInputFilesTask]. */
+private val logger: KLogger = KotlinLogging.logger {}
+
 /**
  * A simple [TimerTask] used to schedule the removal of old input files.
  *
  * @author Ralph Gasser
- * @version 1.1.0
+ * @version 1.1.1
  */
 class RemoveInputFilesTask(private val config: Config): TimerTask() {
-    companion object {
-        /** The [Logger] used by this [RemoveInputFilesTask]. */
-        private val LOGGER: Logger = LogManager.getLogger()
-    }
-
     override fun run() {
         var deleted = 0L
 
@@ -50,7 +47,7 @@ class RemoveInputFilesTask(private val config: Config): TimerTask() {
                             Files.delete(files[i])
                             deleted++
                         } catch (e: IOException) {
-                            LOGGER.error("Failed to delete file ${files[i]}.", e)
+                            logger.error(e) {"Failed to delete file ${files[i]}." }
                         }
                     }
                 }
@@ -59,7 +56,7 @@ class RemoveInputFilesTask(private val config: Config): TimerTask() {
 
         /* Log action. */
         if (deleted > 0L) {
-            LOGGER.info("Removed $deleted old input files.")
+            logger.info { "Removed $deleted old input files." }
         }
     }
 }

@@ -3,6 +3,8 @@ package ch.pontius.kiar.utilities
 import com.sksamuel.scrimage.ImmutableImage
 import com.sksamuel.scrimage.metadata.ImageMetadata
 import com.sksamuel.scrimage.nio.ImageWriter
+import io.github.oshai.kotlinlogging.KLogger
+import io.github.oshai.kotlinlogging.KotlinLogging
 import org.apache.commons.imaging.Imaging
 import org.apache.commons.imaging.formats.jpeg.JpegImageMetadata
 import org.apache.commons.imaging.formats.jpeg.exif.ExifRewriter
@@ -13,25 +15,21 @@ import org.apache.commons.imaging.formats.jpeg.iptc.PhotoshopApp13Data
 import org.apache.commons.imaging.formats.tiff.constants.TiffTagConstants
 import org.apache.commons.imaging.formats.tiff.write.TiffOutputSet
 import org.apache.commons.io.output.ByteArrayOutputStream
-import org.slf4j.Logger
-import org.slf4j.LoggerFactory
-import java.io.IOException
 import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.StandardOpenOption
 import java.util.*
 
+/** The [KLogger] instance for [ImageHandler]. */
+private val logger: KLogger = KotlinLogging.logger {}
+
 /**
  * A utility object that provides methods to handle images.
  *
  * @author Ralph Gasser
- * @version 1.0.0
+ * @version 1.0.1
  */
 object ImageHandler {
-
-    /** The [Logger] instance used by this [ImageHandler]. */
-    private val LOGGER: Logger = LoggerFactory.getLogger(ImageHandler::class.java)
-
     /**
      * Stores the provided [ImmutableImage] under the provided [Path]. Also makes sure, that selected image metadata is transferred.
      *
@@ -146,8 +144,8 @@ object ImageHandler {
             it.write(output)
         }
         true
-    } catch (e: IOException) {
-        LOGGER.error("Failed to save image $path due to IO exception: ${e.message}")
+    } catch (e: Throwable) {
+        logger.error(e) { "Failed to store image $path due to exception." }
         false
     }
 }

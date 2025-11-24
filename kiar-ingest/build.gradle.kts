@@ -5,6 +5,7 @@ val exposedVersion: String by project
 val javalinVersion: String by project
 val jsonPathVersion: String by project
 val kotlinCoroutines: String by project
+val kotlinLoggingVersion: String by project
 val kotlinSerialization: String by project
 val log4jVersion: String by project
 val poiVersion: String by project
@@ -61,6 +62,7 @@ dependencies {
     implementation("org.apache.logging.log4j:log4j-core:$log4jVersion")
     implementation("org.apache.logging.log4j:log4j-slf4j2-impl:$log4jVersion")
     implementation("org.slf4j:slf4j-api:$slf4jVersion")
+    implementation("io.github.oshai:kotlin-logging-jvm:${kotlinLoggingVersion}")
 
     /** JSON path. */
     implementation("com.jayway.jsonpath:json-path:$jsonPathVersion")
