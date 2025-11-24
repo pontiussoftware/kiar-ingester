@@ -52,9 +52,9 @@ class FileImageValueParser(override val mapping: AttributeMapping): ValueParser<
 
         /* Read file. */
         if (this.mapping.multiValued) {
-            into.addField(mapping.destination, FileImageProvider(into.uuidOrNull(), path, context))
+            into.addField(this.mapping.destination, FileImageProvider(into.uuidOrNull(), path, context))
         } else {
-            into.setField(mapping.destination, FileImageProvider(into.uuidOrNull(), path, context))
+            into.setField(this.mapping.destination, FileImageProvider(into.uuidOrNull(), path, context))
         }
     }
 }
