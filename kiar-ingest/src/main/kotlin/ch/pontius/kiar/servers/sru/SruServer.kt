@@ -9,9 +9,10 @@ import ch.pontius.kiar.ingester.parsing.xml.XmlDocumentParser
 import ch.pontius.kiar.servers.mapper.DCMapper
 import ch.pontius.kiar.solr.SolrClientProvider
 import com.github.benmanes.caffeine.cache.Caffeine
+import io.github.oshai.kotlinlogging.KLogger
+import io.github.oshai.kotlinlogging.KotlinLogging
 import io.javalin.http.Context
 import org.apache.solr.client.solrj.SolrQuery
-import org.apache.solr.client.solrj.impl.Http2SolrClient
 import org.jetbrains.exposed.v1.core.and
 import org.jetbrains.exposed.v1.core.eq
 import org.jetbrains.exposed.v1.jdbc.select
@@ -21,6 +22,9 @@ import org.w3c.dom.Element
 import java.time.Duration
 import javax.xml.parsers.DocumentBuilder
 import javax.xml.parsers.DocumentBuilderFactory
+
+/** The [KLogger] instance for [SruServer]. */
+private val logger: KLogger = KotlinLogging.logger {}
 
 /**
  * A simple SRU (Search / Retrieval via URL) server.
@@ -32,7 +36,7 @@ class SruServer {
     /** The [DocumentBuilder] instance used by this [XmlDocumentParser]. */
     private val documentBuilder: DocumentBuilder = DocumentBuilderFactory.newInstance().newDocumentBuilder()
 
-    /** A cache of [Http2SolrClient]s used by this data ingest server. */
+    /** A cache of [ApacheSolrConfig]s used by this [SruServer]. */
     private val collections = Caffeine.newBuilder().expireAfterWrite(Duration.ofHours(12)).build<String, ApacheSolrConfig?> { collection ->
         transaction {
             (SolrCollections innerJoin SolrConfigs).select(SolrConfigs.columns)
@@ -53,33 +57,38 @@ class SruServer {
         val collection = ctx.pathParam("collection")
         val config = this.collections[collection] ?: throw IllegalArgumentException("Collection '$collection' not found or not configured for SRU.")
 
+        /* Construct response document. */
+        val root = this.documentBuilder.generateResponse()
+        val doc = root.ownerDocument
+
         /* Read remaining parameters. */
         val query = ctx.queryParam("query") ?: "*"
         val pageSize = ctx.queryParam("maximumRecords")?.toIntOrNull() ?: 100
         val pageIndex = ctx.queryParam("startRecord")?.toIntOrNull() ?: 1
 
-        /* Prepare Apache Solr query. */
-        val solrQuery = SolrQuery("_fulltext_:$query")
-        solrQuery.start = pageIndex
-        solrQuery.rows = pageSize
+        try {
+            /* Prepare Apache Solr query. */
+            val solrQuery = SolrQuery("_fulltext_:$query")
+            solrQuery.start = pageIndex
+            solrQuery.rows = pageSize
 
-        /* Prepare client. */
-        val client = SolrClientProvider.clientForConfig(config)
-        val response = client.query(collection, solrQuery)
+            /* Prepare client. */
+            val client = SolrClientProvider.clientForConfig(config)
+            val response = client.query(collection, solrQuery)
 
-        /* Construct response document. */
-        val root = this.documentBuilder.generateResponse()
-        val doc = root.ownerDocument
+            /* Process results. */
+            for (document in response.results) {
+                val recordElement = doc.createElement("zs:record")
+                root.appendChild(recordElement)
 
-        /* Process results. */
-        for (document in response.results) {
-            val recordElement = doc.createElement("zs:record")
-            root.appendChild(recordElement)
+                /* Map and append metadata. */
+                val metadataElement = doc.createElement("zs:recordData")
+                DCMapper.map(metadataElement, document)
+                recordElement.appendChild(metadataElement)
+            }
 
-            /* Map and append metadata. */
-            val metadataElement = doc.createElement("zs:recordData")
-            DCMapper.map(metadataElement, document)
-            recordElement.appendChild(metadataElement)
+        } catch (e: Throwable) {
+            logger.error(e) { "Error processing SRU request for collection '$collection' (q = $query): ${e.message}" }
         }
 
         /* Return document. */
