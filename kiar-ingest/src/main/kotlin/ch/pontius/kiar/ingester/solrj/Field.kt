@@ -122,13 +122,13 @@ enum class Field(val solr: String, val required: Boolean = false, val multiValue
 
     /* Dating (description, from, to). */
 
-    /** */
+    /** Textual description of the dating information. */
     DATING("datierung_beschreibung", false),
 
-    /** */
+    /** From date of the dating information. */
     DATING_FROM("datierung_von", false),
 
-    /** */
+    /** To date of the dating information. */
     DATING_TO("datierung_bis", false),
 
     /* Classifications. */

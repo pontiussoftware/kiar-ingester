@@ -56,6 +56,13 @@ object DCMapper: Mapper {
             })
         }
 
+        /* Map dating information. */
+        if (document.has(Field.DATING)) {
+            element.appendChild(doc.createElement("dc:date").apply {
+                this.textContent = document.get<String>(Field.DATING)
+            })
+        }
+
         /* Add artist and creators. */
         document.getAll<String>(Field.ARTIST).forEach { artist ->
             element.appendChild(doc.createElement("dc:creator").apply {
