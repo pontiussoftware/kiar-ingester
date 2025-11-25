@@ -33,6 +33,11 @@ object DCMapper: Mapper {
             this.textContent = document.get<String>(Field.INVENTORY_NUMBER)
         })
 
+        /* Map direct link */
+        element.appendChild(doc.createElement("dc:identifier").apply {
+            this.textContent = "https://www.kimnet.ch/objects/${document.get<String>(Field.UUID)}"
+        })
+
         /* Map source language. */
         element.appendChild(doc.createElement("dc:language").apply {
             val language = document.get<String>(Field.LANGUAGE) ?: "Deutsch"
@@ -89,13 +94,11 @@ object DCMapper: Mapper {
         }
 
         /* Add image links. */
-        val previews = document.getAll<String>(Field.PREVIEW)
-        if (previews.isNotEmpty()) {
-            previews.forEach { url ->
-                element.appendChild(doc.createElement("dc:identifier").apply {
-                    this.textContent = url
-                })
-            }
+        val previewUrl = document.getAll<String>(Field.PREVIEW).firstOrNull()
+        if (previewUrl != null) {
+            element.appendChild(doc.createElement("dc:identifier").apply {
+                this.textContent = previewUrl
+            })
         }
     }
 
