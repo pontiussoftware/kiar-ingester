@@ -30,7 +30,7 @@ private val logger: KLogger = KotlinLogging.logger {}
  * A simple SRU (Search / Retrieval via URL) server.
  *
  * @author Ralph Gasser
- * @version 1.0.0
+ * @version 1.0.1
  */
 class SruServer {
     /** The [DocumentBuilder] instance used by this [XmlDocumentParser]. */
@@ -57,50 +57,52 @@ class SruServer {
         val collection = ctx.pathParam("collection")
         val config = this.collections[collection] ?: throw IllegalArgumentException("Collection '$collection' not found or not configured for SRU.")
 
-        /* Construct response document. */
-        val root = this.documentBuilder.generateResponse()
-        val doc = root.ownerDocument
-
         /* Read remaining parameters. */
         val query = ctx.queryParam("query") ?: "*"
         val pageSize = ctx.queryParam("maximumRecords")?.toIntOrNull() ?: 100
-        val pageIndex = ctx.queryParam("startRecord")?.toIntOrNull() ?: 1
+        val startRecord = ctx.queryParam("startRecord")?.toIntOrNull() ?: 1
 
-        try {
+        val response = try {
             /* Prepare Apache Solr query. */
             val solrQuery = SolrQuery("_fulltext_:$query")
-            solrQuery.start = pageIndex
+            solrQuery.start = startRecord
             solrQuery.rows = pageSize
 
             /* Prepare client. */
             val client = SolrClientProvider.clientForConfig(config)
             val response = client.query(collection, solrQuery)
 
+            /* Prepare response. */
+            val root = this.documentBuilder.generateResponse(response.results.numFound)
+
             /* Process results. */
-            for (document in response.results) {
-                val recordElement = doc.createElement("zs:record")
+            for ((index, document) in response.results.withIndex()) {
+                val recordElement = root.ownerDocument.createElement("zs:record")
+                recordElement.appendChild(root.ownerDocument.createElement("zs:recordPosition").apply { textContent = (startRecord + index).toString() })
                 root.appendChild(recordElement)
 
                 /* Map and append metadata. */
-                val metadataElement = doc.createElement("zs:recordData")
+                val metadataElement = root.ownerDocument.createElement("zs:recordData")
                 DCMapper.map(metadataElement, document)
                 recordElement.appendChild(metadataElement)
             }
-
+            root
         } catch (e: Throwable) {
             logger.error(e) { "Error processing SRU request for collection '$collection' (q = $query): ${e.message}" }
+            this.documentBuilder.generateResponse(0)
         }
 
         /* Return document. */
-        return doc
+        return response.ownerDocument
     }
 
     /**
      * Generates an empty SRU response document.
      *
+     * @param numHits The total number of hits in the response.
      * @return [Pair] of [Document] and root [Element]
      */
-    private fun DocumentBuilder.generateResponse(): Element {
+    private fun DocumentBuilder.generateResponse(numHits: Long): Element {
         /* Construct response document. */
         val doc = this.newDocument()
 
@@ -109,6 +111,10 @@ class SruServer {
         rootElement.setAttributeNS("http://www.w3.org/2000/xmlns/", "xmlns:zs", "http://www.loc.gov/zing/srw/")
         rootElement.setAttributeNS("http://www.w3.org/2000/xmlns/", "xmlns:dc", "http://purl.org/dc/elements/1.1/")
         doc.appendChild(rootElement)
+
+        /* Append number of records. */
+        rootElement.appendChild(doc.createElement("zs:numberOfRecords").apply { textContent = numHits.toString() })
+        rootElement.appendChild(doc.createElement("zs:version").apply { textContent = "1.2" })
 
         /* Append response date. */
         val records = doc.createElement("zs:records")
