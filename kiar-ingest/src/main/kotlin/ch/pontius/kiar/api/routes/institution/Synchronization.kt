@@ -6,6 +6,8 @@ import ch.pontius.kiar.api.model.institution.Institution
 import ch.pontius.kiar.api.model.status.ErrorStatus
 import ch.pontius.kiar.api.model.status.ErrorStatusException
 import ch.pontius.kiar.api.model.status.SuccessStatus
+import ch.pontius.kiar.database.config.ImageDeployments
+import ch.pontius.kiar.database.config.ImageDeployments.toImageDeployment
 import ch.pontius.kiar.database.config.SolrCollections
 import ch.pontius.kiar.database.config.SolrConfigs
 import ch.pontius.kiar.database.config.SolrConfigs.toSolr
@@ -49,17 +51,24 @@ private val logger: KLogger = KotlinLogging.logger {}
 fun postSyncInstitutions(ctx: Context) {
     val collectionId = ctx.queryParam("collectionId")?.toIntOrNull() ?: throw ErrorStatusException(400, "Query parameter 'collectionId' is required.")
     val (config, collectionName, institutions) = transaction {
+        /* Fetch collection + Solr configuration. */
         val (collectionName, config) = (SolrConfigs innerJoin SolrCollections).select(SolrConfigs.columns + SolrCollections.name).where {
             (SolrCollections.id eq collectionId) and (SolrCollections.type eq CollectionType.MUSEUM)
         }.map {
             it[SolrCollections.name] to it.toSolr()
         }.firstOrNull() ?: throw ErrorStatusException(404, "Apache Solr config for collection with ID $collectionId could not be found.")
 
+        /* Fetch image deployments. */
+        val deployments = ImageDeployments.selectAll().where { ImageDeployments.solrInstanceId eq config.id!! }.map { it.toImageDeployment() }
+
+        /* Fetch institutions. */
         val institutions = (Institutions innerJoin Participants).selectAll().where { Institutions.publish eq true }.map { it.toInstitution() }
-        Triple(config,collectionName, institutions)
+
+        /* Return triple. */
+        Triple(config.copy(deployments = deployments),collectionName, institutions)
     }
 
-    /* Perform actual synchronisation. */
+    /* Perform actual synchronization. */
     synchronise(config, collectionName, institutions)
 
     /* Return success status. */
@@ -68,10 +77,10 @@ fun postSyncInstitutions(ctx: Context) {
 
 
 /**
- * Handles the actual synchronisation logic.
+ * Handles the actual synchronization logic.
  *
- * @param collection The [ApacheSolrConfig] that specifies the server to synchronise with.
- * @param collection The name of the collection to synchronise with.
+ * @param collection The [ApacheSolrConfig] that specifies the server to synchronize with.
+ * @param collection The name of the collection to synchronize with.
  * @param institutions The [List] of [Institution] to add.
  */
 private fun synchronise(config: ApacheSolrConfig, collection: String, institutions: List<Institution>) {
