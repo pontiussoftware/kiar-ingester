@@ -33,42 +33,12 @@ object DCMapper: Mapper {
             this.textContent = document.get<String>(Field.INVENTORY_NUMBER)
         })
 
-        /* Map direct link */
-        element.appendChild(doc.createElement("dc:identifier").apply {
-            this.textContent = "https://www.kimnet.ch/objects/${document.get<String>(Field.UUID)}"
-        })
-
-        /* Map source language. */
-        element.appendChild(doc.createElement("dc:language").apply {
-            val language = document.get<String>(Field.LANGUAGE) ?: "Deutsch"
-            this.textContent = language
-        })
-
-        /* Map source institution. */
-        element.appendChild(doc.createElement("dc:source").apply {
-            this.textContent = document.get<String>(Field.INSTITUTION)
-        })
-
         /* Map source title. */
         element.appendChild(doc.createElement("dc:title").apply {
             this.textContent = document.get<String>(Field.DISPLAY)
         })
 
-        /* Map description. */
-        if (document.has(Field.DESCRIPTION)) {
-            element.appendChild(doc.createElement("dc:description").apply {
-                this.textContent = document.get<String>(Field.DESCRIPTION)
-            })
-        }
-
-        /* Map dating information. */
-        if (document.has(Field.DATING)) {
-            element.appendChild(doc.createElement("dc:date").apply {
-                this.textContent = document.get<String>(Field.DATING)
-            })
-        }
-
-        /* Add artist and creators. */
+        /* Add artists and creators. */
         document.getAll<String>(Field.ARTIST).forEach { artist ->
             element.appendChild(doc.createElement("dc:creator").apply {
                 this.textContent = artist
@@ -93,11 +63,35 @@ object DCMapper: Mapper {
             })
         }
 
+        /* Map dating information. */
+        if (document.has(Field.DATING)) {
+            element.appendChild(doc.createElement("dc:date").apply {
+                this.textContent = document.get<String>(Field.DATING)
+            })
+        }
+
+        /* Map source institution. */
+        element.appendChild(doc.createElement("dc:source").apply {
+            this.textContent = document.get<String>(Field.INSTITUTION)
+        })
+
+        /* Map direct link */
+        element.appendChild(doc.createElement("dc:identifier").apply {
+            this.textContent = "https://www.kimnet.ch/objects/${document.get<String>(Field.UUID)}"
+        })
+
         /* Add image links. */
         val previewUrl = document.getAll<String>(Field.PREVIEW).firstOrNull()
         if (previewUrl != null) {
             element.appendChild(doc.createElement("dc:identifier").apply {
                 this.textContent = previewUrl
+            })
+        }
+
+        /* Map description. */
+        if (document.has(Field.DESCRIPTION)) {
+            element.appendChild(doc.createElement("dc:description").apply {
+                this.textContent = document.get<String>(Field.DESCRIPTION)
             })
         }
     }
