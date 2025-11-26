@@ -70,11 +70,6 @@ object DCMapper: Mapper {
             })
         }
 
-        /* Map source institution. */
-        element.appendChild(doc.createElement("dc:source").apply {
-            this.textContent = document.get<String>(Field.INSTITUTION)
-        })
-
         /* Map direct link */
         element.appendChild(doc.createElement("dc:identifier").apply {
             this.textContent = "https://www.kimnet.ch/objects/${document.get<String>(Field.UUID)}"
@@ -85,13 +80,6 @@ object DCMapper: Mapper {
         if (previewUrl != null) {
             element.appendChild(doc.createElement("dc:identifier").apply {
                 this.textContent = previewUrl
-            })
-        }
-
-        /* Map description. */
-        if (document.has(Field.DESCRIPTION)) {
-            element.appendChild(doc.createElement("dc:description").apply {
-                this.textContent = document.get<String>(Field.DESCRIPTION)
             })
         }
     }
