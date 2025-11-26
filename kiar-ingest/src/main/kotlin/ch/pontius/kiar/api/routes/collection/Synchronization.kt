@@ -8,10 +8,13 @@ import ch.pontius.kiar.api.model.status.ErrorStatusException
 import ch.pontius.kiar.api.model.status.SuccessStatus
 import ch.pontius.kiar.database.collections.Collections
 import ch.pontius.kiar.database.collections.Collections.toObjectCollection
+import ch.pontius.kiar.database.config.ImageDeployments
+import ch.pontius.kiar.database.config.ImageDeployments.toImageDeployment
 import ch.pontius.kiar.database.config.SolrCollections
 import ch.pontius.kiar.database.config.SolrConfigs
 import ch.pontius.kiar.database.config.SolrConfigs.toSolr
 import ch.pontius.kiar.database.institutions.Institutions
+import ch.pontius.kiar.database.institutions.Institutions.toInstitution
 import ch.pontius.kiar.database.institutions.Participants
 import ch.pontius.kiar.ingester.solrj.Field
 import ch.pontius.kiar.ingester.solrj.setField
@@ -59,8 +62,14 @@ fun postSyncCollections(ctx: Context) {
             it[SolrCollections.name] to it.toSolr()
         }.firstOrNull() ?: throw ErrorStatusException(404, "Apache Solr config with ID $collectionId  could not be found.")
 
+        /* Fetch image deployments. */
+        val deployments = ImageDeployments.selectAll().where { ImageDeployments.solrInstanceId eq config.id!! }.map { it.toImageDeployment() }
+
+        /* Fetch collections. */
         val collections = (Collections innerJoin Institutions innerJoin Participants).selectAll().where { Collections.publish eq true }.map { it.toObjectCollection() }
-        Triple(config, collectionName, collections)
+
+        /* Return triple. */
+        Triple(config.copy(deployments = deployments), collectionName, collections)
     }
 
     /* Perform actual synchronization. */
