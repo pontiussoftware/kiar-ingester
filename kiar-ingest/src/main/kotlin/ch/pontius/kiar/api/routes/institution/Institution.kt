@@ -421,9 +421,9 @@ fun postUploadImageForInstitution(ctx: Context) {
 
     /* Start transaction */
     transaction {
-        val institution = Institutions.selectAll().where { Institutions.id eq institutionId }.map { it.toInstitution() }.firstOrNull() ?: throw ErrorStatusException(404, "No Institution with ID $institutionId found.")
+        val institution = (Institutions innerJoin Participants).selectAll().where { Institutions.id eq institutionId }.map { it.toInstitution() }.firstOrNull() ?: throw ErrorStatusException(404, "No Institution with ID $institutionId found.")
         val deployments = ImageDeployments.selectAll().where {
-            ImageDeployments.solrInstanceId inSubQuery (InstitutionsSolrCollections innerJoin SolrCollections innerJoin SolrConfigs).select(SolrConfigs.id).where{
+            ImageDeployments.solrInstanceId inSubQuery (InstitutionsSolrCollections innerJoin SolrCollections innerJoin SolrConfigs).select(SolrConfigs.id).where {
                 (InstitutionsSolrCollections.institutionId) eq institutionId and (InstitutionsSolrCollections.selected eq true)
             }
         }.map {
