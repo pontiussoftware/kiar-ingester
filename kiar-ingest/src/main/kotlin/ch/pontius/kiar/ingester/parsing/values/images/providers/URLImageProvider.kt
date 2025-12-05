@@ -24,7 +24,8 @@ class URLImageProvider(private val uuid: String?, private val url: URL, private 
     override fun open(): ImmutableImage? = try {
         /* Set up basic authentication and open connection. */
         val connection = url.openConnection() as HttpURLConnection
-        connection.connectTimeout = 10000 /* Do not wait longer than 10 seconds for connection. */
+        connection.connectTimeout = 5000 /* Do not wait longer than 5 seconds for connection. */
+        connection.readTimeout = 30000 /* Do not wait longer than 30 seconds for reading data. */
         try {
             if (this.username != null && this.password != null) {
                 connection.setRequestProperty("Authorization", "Basic " + Base64.getEncoder().encodeToString("${this.username}:${this.password}".toByteArray()))
