@@ -1,7 +1,6 @@
 package ch.pontius.kiar.api.routes.job
 
 import ch.pontius.kiar.api.model.job.JobStatus
-import ch.pontius.kiar.api.model.status.ErrorStatus
 import ch.pontius.kiar.api.model.status.ErrorStatusException
 import ch.pontius.kiar.api.model.status.SuccessStatus
 import ch.pontius.kiar.api.model.user.Role
@@ -9,44 +8,41 @@ import ch.pontius.kiar.config.Config
 import ch.pontius.kiar.database.jobs.Jobs
 import ch.pontius.kiar.ingester.IngesterServer
 import ch.pontius.kiar.utilities.extensions.currentUser
-import io.javalin.http.Context
-import io.javalin.openapi.*
 import org.jetbrains.exposed.v1.core.eq
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 import org.jetbrains.exposed.v1.jdbc.update
 import java.nio.file.Files
 import java.nio.file.StandardOpenOption
 import java.time.Instant
+import io.ktor.server.application.ApplicationCall
+import ch.pontius.kiar.api.openapi.*
+import io.ktor.server.response.respond
+import ch.pontius.kiar.utilities.extensions.pathParam
+import ch.pontius.kiar.utilities.extensions.queryParam
+import ch.pontius.kiar.utilities.extensions.uploadedFiles
 
 
-@OpenApi(
-    path = "/api/jobs/{id}/upload",
-    methods = [HttpMethod.PUT],
-    summary = "Uploads a file for the given job.",
-    operationId = "putUpload",
-    tags = ["Job"],
-    pathParams = [
-        OpenApiParam(name = "id", type = Int::class, description = "The ID of the Job for which a file should be uploaded.", required = true)
-    ],
-    queryParams = [
-        OpenApiParam(name = "first", description = "Set to 'true' if the submitted chunk is the first one.", required = false, type = Boolean::class),
-        OpenApiParam(name = "last", description = "Set to 'true' if the submitted chunk is the last one.", required = false, type = Boolean::class)
-    ],
-    requestBody = OpenApiRequestBody(content = [
-        OpenApiContent(mimeType = ContentType.FORM_DATA_MULTIPART, properties = [OpenApiContentProperty(name = "file", type = "string", format = "binary")])
-   ], description = "The uploaded KIAR file.", required = true),
-    responses = [
-        OpenApiResponse("200", [OpenApiContent(SuccessStatus::class)]),
-        OpenApiResponse("401", [OpenApiContent(ErrorStatus::class)]),
-        OpenApiResponse("403", [OpenApiContent(ErrorStatus::class)]),
-        OpenApiResponse("500", [OpenApiContent(ErrorStatus::class)])
-    ]
-)
-fun upload(ctx: Context, config: Config) {
+val uploadDoc: RouteDoc = {
+    operationId = "putUpload"
+    summary = "Uploads a file for the given job."
+    tags("Job")
+    parameters {
+        pathParam("id", "The ID of the Job for which a file should be uploaded.")
+        queryParam("first", "Set to 'true' if the submitted chunk is the first one.", BOOLEAN)
+        queryParam("last", "Set to 'true' if the submitted chunk is the last one.", BOOLEAN)
+    }
+    multipartFile("file", "The uploaded KIAR file.")
+    responses {
+        json<SuccessStatus>(200)
+        errors(401, 403, 500)
+    }
+}
+
+suspend fun upload(call: ApplicationCall, config: Config) {
     /* Obtain and check Job. */
-    val jobId = ctx.pathParam("id").toIntOrNull() ?: throw ErrorStatusException(400, "Malformed job ID.")
-    val first = ctx.queryParam("first")?.toBoolean() ?: false
-    val last = ctx.queryParam("last")?.toBoolean() ?: false
+    val jobId = call.pathParam("id").toIntOrNull() ?: throw ErrorStatusException(400, "Malformed job ID.")
+    val first = call.queryParam("first")?.toBoolean() ?: false
+    val last = call.queryParam("last")?.toBoolean() ?: false
     val participant = transaction {
         val job = Jobs.getById(jobId) ?: throw ErrorStatusException(404, "Job with ID $jobId could not be found.")
 
@@ -65,7 +61,7 @@ fun upload(ctx: Context, config: Config) {
     }
 
     /* Make sure that one file has been uploaded. */
-    val upload = ctx.uploadedFiles("file").firstOrNull() ?: throw ErrorStatusException(401, "Uploaded file is missing.")
+    val upload = call.uploadedFiles("file").firstOrNull() ?: throw ErrorStatusException(401, "Uploaded file is missing.")
 
     /* Create or re-use output file. TODO: In case of an error, we need a way to recover here. */
     val outputStream = if (first) {
@@ -75,7 +71,7 @@ fun upload(ctx: Context, config: Config) {
     }
 
     /* Upload the first file. */
-    outputStream.use { output ->
+    try { outputStream.use { output ->
         upload.content().use { input ->
             val buffer = ByteArray(5_000_000) /* 5 MB buffer. */
             var read = input.read(buffer)
@@ -91,6 +87,8 @@ fun upload(ctx: Context, config: Config) {
                 output.write(buffer, 0, read)
             } while (true)
         }
+    } } finally {
+        upload.delete()
     }
 
     /* Update Job status if this was the last chunk */
@@ -104,35 +102,30 @@ fun upload(ctx: Context, config: Config) {
     }
 
     /* Return success. */
-    ctx.json(SuccessStatus("KIAR file uploaded successfully."))
+    call.respond(SuccessStatus("KIAR file uploaded successfully."))
 }
 
-@OpenApi(
-    path = "/api/jobs/{id}/schedule",
-    methods = [HttpMethod.PUT],
-    summary = "Starts execution of a job.",
-    operationId = "putScheduleJob",
-    tags = ["Job"],
-    pathParams = [
-        OpenApiParam(name = "id", type = Int::class, description = "The ID of the Job that should be started.", required = true)
-    ],
-    queryParams = [
-        OpenApiParam(name = "test", type = Boolean::class, description = "True, if only a test-run should be executed.", required = false),
-    ],
-    responses = [
-        OpenApiResponse("200", [OpenApiContent(SuccessStatus::class)]),
-        OpenApiResponse("401", [OpenApiContent(ErrorStatus::class)]),
-        OpenApiResponse("403", [OpenApiContent(ErrorStatus::class)]),
-        OpenApiResponse("500", [OpenApiContent(ErrorStatus::class)])
-    ]
-)
-fun scheduleJob(ctx: Context, server: IngesterServer) {
-    val jobId = ctx.pathParam("id").toIntOrNull() ?: throw ErrorStatusException(400, "Malformed job ID.")
-    val test = ctx.queryParam("test")?.toBoolean() ?: false
+val scheduleJobDoc: RouteDoc = {
+    operationId = "putScheduleJob"
+    summary = "Starts execution of a job."
+    tags("Job")
+    parameters {
+        pathParam("id", "The ID of the Job that should be started.")
+        queryParam("test", "True, if only a test-run should be executed.", BOOLEAN)
+    }
+    responses {
+        json<SuccessStatus>(200)
+        errors(401, 403, 500)
+    }
+}
+
+suspend fun scheduleJob(call: ApplicationCall, server: IngesterServer) {
+    val jobId = call.pathParam("id").toIntOrNull() ?: throw ErrorStatusException(400, "Malformed job ID.")
+    val test = call.queryParam("test")?.toBoolean() ?: false
 
     /* Perform sanity checks. */
     transaction {
-        val currentUser = ctx.currentUser()
+        val currentUser = call.currentUser()
         val job = Jobs.getById(jobId) ?: throw ErrorStatusException(404, "Job with ID $jobId does not exist.")
 
         /* Check status of the job. */
@@ -150,32 +143,27 @@ fun scheduleJob(ctx: Context, server: IngesterServer) {
     server.scheduleJob(jobId, test)
 
     /* Return success. */
-    ctx.json(SuccessStatus("Job $jobId scheduled successfully."))
+    call.respond(SuccessStatus("Job $jobId scheduled successfully."))
 }
 
-@OpenApi(
-    path = "/api/jobs/{id}",
-    methods = [HttpMethod.DELETE],
-    summary = "Aborts a running job.",
-    operationId = "deleteAbortJob",
-    tags = ["Job"],
-    pathParams = [
-        OpenApiParam(name = "id", type = Int::class, description = "The ID of the Job that should be aborted.", required = true)
-    ],
-    responses = [
-        OpenApiResponse("200", [OpenApiContent(SuccessStatus::class)]),
-        OpenApiResponse("400", [OpenApiContent(ErrorStatus::class)]),
-        OpenApiResponse("401", [OpenApiContent(ErrorStatus::class)]),
-        OpenApiResponse("403", [OpenApiContent(ErrorStatus::class)]),
-        OpenApiResponse("404", [OpenApiContent(ErrorStatus::class)]),
-        OpenApiResponse("500", [OpenApiContent(ErrorStatus::class)])
-    ]
-)
-fun abortJob(ctx: Context, server: IngesterServer) {
-    val jobId = ctx.pathParam("id").toIntOrNull() ?: throw ErrorStatusException(400, "Malformed job ID.")
+val abortJobDoc: RouteDoc = {
+    operationId = "deleteAbortJob"
+    summary = "Aborts a running job."
+    tags("Job")
+    parameters {
+        pathParam("id", "The ID of the Job that should be aborted.")
+    }
+    responses {
+        json<SuccessStatus>(200)
+        errors(400, 401, 403, 404, 500)
+    }
+}
+
+suspend fun abortJob(call: ApplicationCall, server: IngesterServer) {
+    val jobId = call.pathParam("id").toIntOrNull() ?: throw ErrorStatusException(400, "Malformed job ID.")
 
     transaction {
-        val currentUser = ctx.currentUser()
+        val currentUser = call.currentUser()
         val job = Jobs.getById(jobId) ?: throw ErrorStatusException(404, "Job with ID $jobId could not be found.")
 
         /* Check if user's participant is the same as the one associated with the template. */
@@ -197,8 +185,8 @@ fun abortJob(ctx: Context, server: IngesterServer) {
 
     /* Inform ingest server that job should be terminated.*/
     if (!server.terminateJob(jobId)) {
-        ctx.json(SuccessStatus("Successfully updated status of job $jobId."))
+        call.respond(SuccessStatus("Successfully updated status of job $jobId."))
     } else {
-        ctx.json(SuccessStatus("Successfully terminated job $jobId."))
+        call.respond(SuccessStatus("Successfully terminated job $jobId."))
     }
 }

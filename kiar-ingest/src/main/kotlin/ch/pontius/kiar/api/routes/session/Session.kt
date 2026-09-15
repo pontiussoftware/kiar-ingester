@@ -3,23 +3,20 @@ package ch.pontius.kiar.api.routes.session
 import ch.pontius.kiar.api.model.session.LoginRequest
 import ch.pontius.kiar.api.model.session.SessionStatus
 import ch.pontius.kiar.api.model.user.User
-import ch.pontius.kiar.api.model.status.ErrorStatus
 import ch.pontius.kiar.api.model.status.ErrorStatusException
 import ch.pontius.kiar.api.model.status.SuccessStatus
 import ch.pontius.kiar.database.institutions.Users
 import ch.pontius.kiar.database.institutions.Users.toUser
 import ch.pontius.kiar.utilities.extensions.SALT
-import ch.pontius.kiar.utilities.extensions.SESSION_USER_ID
-import ch.pontius.kiar.utilities.extensions.SESSION_USER_NAME
+import ch.pontius.kiar.api.UserSession
+import io.ktor.server.sessions.get
+import io.ktor.server.sessions.sessions
 import ch.pontius.kiar.utilities.extensions.currentUser
 import ch.pontius.kiar.utilities.extensions.invalidateUser
-import ch.pontius.kiar.utilities.extensions.parseBodyOrThrow
+import ch.pontius.kiar.utilities.extensions.receiveOrThrow
 import ch.pontius.kiar.utilities.extensions.setUser
 import ch.pontius.kiar.utilities.extensions.validateEmail
 import ch.pontius.kiar.utilities.extensions.validatePassword
-import io.javalin.http.BadRequestResponse
-import io.javalin.http.Context
-import io.javalin.openapi.*
 import org.jetbrains.exposed.v1.core.and
 import org.jetbrains.exposed.v1.core.eq
 import org.jetbrains.exposed.v1.jdbc.selectAll
@@ -27,28 +24,28 @@ import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 import org.jetbrains.exposed.v1.jdbc.update
 import org.mindrot.jbcrypt.BCrypt
 import java.time.Instant
+import io.ktor.server.application.ApplicationCall
+import ch.pontius.kiar.api.openapi.*
+import io.ktor.server.response.respond
 
-@OpenApi(
-    path = "/api/session/login",
-    methods = [HttpMethod.POST],
-    summary = "Attempts a login using the credentials provided in the request body.",
-    operationId = "login",
-    tags = ["Session"],
-    requestBody = OpenApiRequestBody([OpenApiContent(LoginRequest::class)], required = true),
-    pathParams = [],
-    responses = [
-        OpenApiResponse("200", [OpenApiContent(SuccessStatus::class)]),
-        OpenApiResponse("400", [OpenApiContent(ErrorStatus::class)]),
-        OpenApiResponse("401", [OpenApiContent(ErrorStatus::class)]),
-        OpenApiResponse("500", [OpenApiContent(ErrorStatus::class)]),
-    ]
-)
-fun login(ctx: Context) {
-    val request = ctx.parseBodyOrThrow<LoginRequest>()
+val loginDoc: RouteDoc = {
+    operationId = "login"
+    summary = "Attempts a login using the credentials provided in the request body."
+    tags("Session")
+    jsonBody<LoginRequest>()
+    responses {
+        json<SuccessStatus>(200)
+        errors(400, 401, 500)
+    }
+}
+
+suspend fun login(call: ApplicationCall) {
+    val request = call.receiveOrThrow<LoginRequest>()
 
     /* Check if user is already logged-in.*/
-    if (ctx.sessionAttribute<String>(SESSION_USER_ID) != null && ctx.sessionAttribute<String>(SESSION_USER_NAME) == request.username) {
-        ctx.json(SuccessStatus("Already logged in."))
+    val session = call.sessions.get<UserSession>()
+    if (session != null && session.username == request.username) {
+        call.respond(SuccessStatus("Already logged in."))
         return
     }
 
@@ -63,85 +60,76 @@ fun login(ctx: Context) {
     if (!BCrypt.checkpw(request.password, user.password)) {
         throw ErrorStatusException(401, "The provided credentials are invalid.")
     } else {
-        ctx.setUser(user)
-        ctx.json(SuccessStatus("Login successful!"))
+        call.setUser(user)
+        call.respond(SuccessStatus("Login successful!"))
     }
 }
 
-@OpenApi(
-    path = "/api/session/logout",
-    methods = [HttpMethod.GET],
-    summary = "Performs a logout for the currently logged-in user.",
-    operationId = "logout",
-    tags = ["Session"],
-    pathParams = [],
-    responses = [
-        OpenApiResponse("200", [OpenApiContent(SuccessStatus::class)])
-    ]
-)
-fun logout(ctx: Context) {
-    ctx.invalidateUser()
-    ctx.json(SuccessStatus("Logout successful!"))
-}
-
-@OpenApi(
-    path = "/api/session/status",
-    methods = [HttpMethod.GET],
-    summary = "Checks and returns the status of the current session.",
-    operationId = "status",
-    tags = ["Session"],
-    pathParams = [],
-    responses = [
-        OpenApiResponse("200", [OpenApiContent(SessionStatus::class)]),
-        OpenApiResponse("403", [OpenApiContent(ErrorStatus::class)])
-    ]
-)
-fun status(ctx: Context) {
-    transaction {
-        val user = ctx.currentUser()
-        ctx.json(SessionStatus(user.username, user.role))
+val logoutDoc: RouteDoc = {
+    operationId = "logout"
+    summary = "Performs a logout for the currently logged-in user."
+    tags("Session")
+    responses {
+        json<SuccessStatus>(200)
     }
 }
 
+suspend fun logout(call: ApplicationCall) {
+    call.invalidateUser()
+    call.respond(SuccessStatus("Logout successful!"))
+}
 
-@OpenApi(
-    path = "/api/session/user",
-    methods = [HttpMethod.GET],
-    summary = "Returns information about the currently logged-in user.",
-    operationId = "getUser",
-    tags = ["Session"],
-    pathParams = [],
-    responses = [
-        OpenApiResponse("200", [OpenApiContent(User::class)]),
-        OpenApiResponse("403", [OpenApiContent(ErrorStatus::class)])
-    ]
-)
-fun getUser(ctx: Context) {
-    transaction {
-        val user = ctx.currentUser()
-        ctx.json(user)
+val statusDoc: RouteDoc = {
+    operationId = "status"
+    summary = "Checks and returns the status of the current session."
+    tags("Session")
+    responses {
+        json<SessionStatus>(200)
+        errors(403)
     }
 }
 
-@OpenApi(
-    path = "/api/session/user",
-    methods = [HttpMethod.PUT],
-    summary = "Updates the currently active user.",
-    operationId = "putUpdateCurrentUser",
-    tags = ["Session"],
-    requestBody = OpenApiRequestBody([OpenApiContent(User::class)], required = true),
-    pathParams = [],
-    responses = [
-        OpenApiResponse("200", [OpenApiContent(SessionStatus::class)]),
-        OpenApiResponse("400", [OpenApiContent(ErrorStatus::class)]),
-        OpenApiResponse("403", [OpenApiContent(ErrorStatus::class)])
-    ]
-)
-fun updateUser(ctx: Context) {
-    val request = ctx.parseBodyOrThrow<User>()
+suspend fun status(call: ApplicationCall) {
+    val user = transaction {
+        call.currentUser()
+    }
+    call.respond(SessionStatus(user.username, user.role))
+}
+
+
+val getUserDoc: RouteDoc = {
+    operationId = "getUser"
+    summary = "Returns information about the currently logged-in user."
+    tags("Session")
+    responses {
+        json<User>(200)
+        errors(403)
+    }
+}
+
+suspend fun getUser(call: ApplicationCall) {
+    val user = transaction {
+        call.currentUser()
+    }
+    call.respond(user)
+}
+
+val updateUserDoc: RouteDoc = {
+    operationId = "putUpdateCurrentUser"
+    summary = "Updates the currently active user."
+    tags("Session")
+    jsonBody<User>()
+    responses {
+        json<SessionStatus>(200)
+        errors(400, 403)
+    }
+}
+
+suspend fun updateUser(call: ApplicationCall) {
+    val request = call.receiveOrThrow<User>()
 
     transaction {
-        val user = ctx.currentUser()
+        val user = call.currentUser()
         if (user.id != request.id || user.username != request.username) {
             throw ErrorStatusException(400, "Provided user does not correspond with currently logged in user.")
         }
@@ -162,5 +150,5 @@ fun updateUser(ctx: Context) {
         }
     }
 
-    ctx.json(SuccessStatus("User ${request.username} updated successfully."))
+    call.respond(SuccessStatus("User ${request.username} updated successfully."))
 }

@@ -1,14 +1,15 @@
 package ch.pontius.kiar.api.model.user
 
-import io.javalin.security.RouteRole
+import kotlinx.serialization.Serializable
 
 /**
  * The [Role] a [User] can have.
  *
  * @author Ralph Gasser
- * @version 1.0.0
+ * @version 1.1.0
  */
-enum class Role: RouteRole {
+@Serializable
+enum class Role {
     ADMINISTRATOR,
     MANAGER,
     VIEWER;

@@ -3,7 +3,6 @@ package ch.pontius.kiar.api.routes.collection
 import ch.pontius.kiar.api.model.collection.ObjectCollection
 import ch.pontius.kiar.api.model.config.solr.ApacheSolrConfig
 import ch.pontius.kiar.api.model.config.solr.CollectionType
-import ch.pontius.kiar.api.model.status.ErrorStatus
 import ch.pontius.kiar.api.model.status.ErrorStatusException
 import ch.pontius.kiar.api.model.status.SuccessStatus
 import ch.pontius.kiar.database.collections.Collections
@@ -21,8 +20,6 @@ import ch.pontius.kiar.ingester.solrj.setField
 import com.sksamuel.scrimage.ImmutableImage
 import io.github.oshai.kotlinlogging.KLogger
 import io.github.oshai.kotlinlogging.KotlinLogging
-import io.javalin.http.Context
-import io.javalin.openapi.*
 import org.apache.solr.client.solrj.impl.Http2SolrClient
 import org.apache.solr.client.solrj.response.UpdateResponse
 import org.apache.solr.common.SolrInputDocument
@@ -32,29 +29,29 @@ import org.jetbrains.exposed.v1.jdbc.select
 import org.jetbrains.exposed.v1.jdbc.selectAll
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 import java.nio.file.Paths
+import io.ktor.server.application.ApplicationCall
+import ch.pontius.kiar.api.openapi.*
+import io.ktor.server.response.respond
+import ch.pontius.kiar.utilities.extensions.queryParam
 
 /** The [KLogger] instance for synchronization endpoint. */
 private val logger: KLogger = KotlinLogging.logger {}
 
-@OpenApi(
-    path = "/api/collections/synchronize",
-    methods = [HttpMethod.POST],
-    summary = "Synchronizes object collections with an Apache Solr backend.",
-    operationId = "postSynchronizeCollections",
-    tags = ["Collection"],
-    queryParams = [
-        OpenApiParam(name = "collectionId", type = Int::class, description = "The ID  of the Apache Solr configuration to use.", required = true),
-    ],
-    responses = [
-        OpenApiResponse("200", [OpenApiContent(SuccessStatus::class)]),
-        OpenApiResponse("401", [OpenApiContent(ErrorStatus::class)]),
-        OpenApiResponse("403", [OpenApiContent(ErrorStatus::class)]),
-        OpenApiResponse("404", [OpenApiContent(ErrorStatus::class)]),
-        OpenApiResponse("500", [OpenApiContent(ErrorStatus::class)])
-    ]
-)
-fun postSyncCollections(ctx: Context) {
-    val collectionId = ctx.queryParam("collectionId")?.toIntOrNull() ?: throw ErrorStatusException(400, "Query parameter 'collectionId' is required.")
+val postSyncCollectionsDoc: RouteDoc = {
+    operationId = "postSynchronizeCollections"
+    summary = "Synchronizes object collections with an Apache Solr backend."
+    tags("Collection")
+    parameters {
+        queryParam("collectionId", "The ID  of the Apache Solr configuration to use.", INT32, required = true)
+    }
+    responses {
+        json<SuccessStatus>(200)
+        errors(401, 403, 404, 500)
+    }
+}
+
+suspend fun postSyncCollections(call: ApplicationCall) {
+    val collectionId = call.queryParam("collectionId")?.toIntOrNull() ?: throw ErrorStatusException(400, "Query parameter 'collectionId' is required.")
     val (config, collectionName, collections) = transaction {
         val (collectionName, config) = (SolrConfigs innerJoin SolrCollections).select(SolrConfigs.columns + SolrCollections.name).where {
             (SolrCollections.id eq collectionId)  and (SolrCollections.type eq CollectionType.COLLECTION)
@@ -76,7 +73,7 @@ fun postSyncCollections(ctx: Context) {
     synchronise(config, collectionName, collections)
 
     /* Return success status. */
-    ctx.json(SuccessStatus("Successfully synchronized object collections."))
+    call.respond(SuccessStatus("Successfully synchronized object collections."))
 }
 
 

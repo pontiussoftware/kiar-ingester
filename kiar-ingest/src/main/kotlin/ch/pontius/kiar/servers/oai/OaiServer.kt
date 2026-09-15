@@ -13,8 +13,6 @@ import ch.pontius.kiar.servers.mapper.Mapper
 import ch.pontius.kiar.servers.oai.Verbs.*
 import ch.pontius.kiar.solr.SolrClientProvider
 import com.github.benmanes.caffeine.cache.Caffeine
-import io.javalin.http.Context
-import io.javalin.http.HandlerType
 import org.apache.solr.client.solrj.SolrQuery
 import org.apache.solr.client.solrj.impl.Http2SolrClient
 import org.jetbrains.exposed.v1.core.and
@@ -76,18 +74,11 @@ class OaiServer() {
     /**
      * Handles an OAI-PMH request.
      *
-     * @param ctx The Javalin [Context] object
+     * @param collection The name of the collection to harvest.
+     * @param parameters The request parameters (query parameters for GET, form parameters for POST).
      * @return [Document] representing the OAI-PMH response.
      */
-    fun handle(ctx: Context): Document {
-        /* Extract parameters. */
-        val parameters = when (ctx.method()) {
-            HandlerType.GET -> ctx.queryParamMap().map { it.key to it.value.first() }.toMap()
-            HandlerType.POST -> ctx.formParamMap().map { it.key to it.value.first() }.toMap()
-            else -> return handleError("badArgument", "Unsupported HTTP method.")
-        }
-        val collection = ctx.pathParam("collection")
-
+    fun handle(collection: String, parameters: Map<String, String>): Document {
         /* Extract OAI verb from query parameters. */
         val verb = parameters["verb"] ?: return handleError("badVerb", "Missing verb.")
         val verbParsed = try {

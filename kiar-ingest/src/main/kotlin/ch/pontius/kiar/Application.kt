@@ -1,21 +1,48 @@
 package ch.pontius.kiar
 
+import ch.pontius.kiar.api.UserSession
 import ch.pontius.kiar.api.model.status.ErrorStatus
 import ch.pontius.kiar.api.model.status.ErrorStatusException
-import ch.pontius.kiar.api.routes.DatabaseAccessManager
+import ch.pontius.kiar.api.openapi.KiarSchemaInference
+import ch.pontius.kiar.api.openapi.serializeOpenApiDoc
 import ch.pontius.kiar.api.routes.configureApiRoutes
 import ch.pontius.kiar.config.Config
 import ch.pontius.kiar.database.Schema
-import ch.pontius.kiar.utilities.KotlinxJsonMapper
-import io.javalin.Javalin
-import io.javalin.http.staticfiles.Location
-import io.javalin.openapi.OpenApiInfo
-import io.javalin.openapi.plugin.DefinitionConfiguration
-import io.javalin.openapi.plugin.OpenApiPlugin
-import io.javalin.openapi.plugin.OpenApiPluginConfiguration
-import io.javalin.openapi.plugin.SecurityComponentConfiguration
-import io.javalin.openapi.plugin.swagger.SwaggerConfiguration
-import io.javalin.openapi.plugin.swagger.SwaggerPlugin
+import ch.pontius.kiar.ingester.IngesterServer
+import ch.pontius.kiar.servers.oai.OaiServer
+import ch.pontius.kiar.servers.sru.SruServer
+import ch.pontius.kiar.utilities.CaffeineSessionStorage
+import io.ktor.http.ContentType
+import io.ktor.http.CookieEncoding
+import io.ktor.http.HttpMethod
+import io.ktor.http.HttpStatusCode
+import io.ktor.openapi.ApiKeySecurityScheme
+import io.ktor.openapi.OpenApiDoc
+import io.ktor.openapi.OpenApiInfo
+import io.ktor.openapi.ReferenceOr
+import io.ktor.openapi.SecuritySchemeIn
+import io.ktor.serialization.kotlinx.json.json
+import io.ktor.server.application.Application
+import io.ktor.server.application.install
+import io.ktor.server.engine.embeddedServer
+import io.ktor.server.http.content.singlePageApplication
+import io.ktor.server.netty.Netty
+import io.ktor.server.plugins.contentnegotiation.ContentNegotiation
+import io.ktor.server.plugins.cors.routing.CORS
+import io.ktor.server.plugins.statuspages.StatusPages
+import io.ktor.server.plugins.swagger.swaggerUI
+import io.ktor.server.response.respond
+import io.ktor.server.response.respondText
+import io.ktor.server.routing.Route
+import io.ktor.server.routing.get
+import io.ktor.server.routing.openapi.OpenApiDocSource
+import io.ktor.server.routing.openapi.hide
+import io.ktor.server.routing.routing
+import io.ktor.server.sessions.Sessions
+import io.ktor.server.sessions.cookie
+import io.ktor.utils.io.ExperimentalKtorApi
+import kotlinx.coroutines.CoroutineStart
+import kotlinx.coroutines.async
 import kotlinx.serialization.json.Json
 import org.jetbrains.exposed.v1.jdbc.Database
 import org.jetbrains.exposed.v1.jdbc.transactions.TransactionManager
@@ -23,8 +50,14 @@ import java.io.FileNotFoundException
 import java.nio.file.Files
 import java.nio.file.Paths
 import java.sql.Connection
+import java.time.Duration
 import kotlin.system.exitProcess
 
+/** The name of the session cookie. */
+const val SESSION_COOKIE = "SESSIONID"
+
+/** The name of the OpenAPI security scheme describing the session cookie. */
+const val SECURITY_SCHEME = "CookieAuth"
 
 /**
  * Entry point for KIAR Tools.
@@ -46,9 +79,9 @@ fun main(args: Array<String>) {
             Schema.initialize(database)
         }
 
-        /* Start Javalin web-server (if configured). */
+        /* Start Ktor web-server (if configured). */
         if (config.web) {
-            initializeWebserver(config).start(config.webPort)
+            embeddedServer(Netty, port = config.webPort) { kiar(config) }.start(wait = true)
         }
     } catch (e: Throwable) {
         System.err.println("Failed to start IngesterServer due to error:")
@@ -82,64 +115,94 @@ private fun loadConfig(path: String): Config {
     }
 }
 
-
 /**
- * Initializes and returns the [Database] based on the provided [Config].
+ * The Ktor [Application] module for the KIAR Dashboard API and SPA based on the provided [Config].
  *
  * @param config The program [Config].
- * @return [Javalin]
  */
-private fun initializeWebserver(config: Config) = Javalin.create { c ->
-    /* Configure static routes for SPA. */
-    c.staticFiles.add{
-        it.directory = "html/browser/"
-        it.location = Location.CLASSPATH
-    }
-    c.spaRoot.addFile("/", "html/browser/index.html")
-
-    /* Configure routes. */
-    c.router.apiBuilder {
-        configureApiRoutes(config)
-    }
+@OptIn(ExperimentalKtorApi::class)
+fun Application.kiar(config: Config) {
+    /* Initializes the IngestServer and the publication servers. */
+    val server = IngesterServer(config)
+    val oaiServer = OaiServer()
+    val sruServer = SruServer()
 
     /* We use Kotlinx serialization for de-/serialization. */
-    c.jsonMapper(KotlinxJsonMapper)
+    install(ContentNegotiation) {
+        json(Json { encodeDefaults = true })
+    }
 
-    /* Enable CORS. */
-    c.bundledPlugins.enableCors { cors ->
-        cors.addRule {
-            it.reflectClientOrigin = true // anyHost() has similar implications and might be used in production? I'm not sure how to cope with production and dev here simultaneously
-            it.allowCredentials = true
+    /* Server-side sessions identified by an opaque cookie. */
+    install(Sessions) {
+        cookie<UserSession>(SESSION_COOKIE, CaffeineSessionStorage(Duration.ofMinutes(30))) {
+            cookie.path = "/"
+            cookie.httpOnly = true
+            cookie.maxAgeInSeconds = null /* Session cookie (no Max-Age); the server-side session expires after 30 minutes of inactivity. */
+            cookie.encoding = CookieEncoding.RAW
+            cookie.extensions["SameSite"] = "Lax"
         }
     }
 
-    /* Registers Open API plugin. */
-    c.registerPlugin(OpenApiPlugin { openApiConfig: OpenApiPluginConfiguration ->
-        openApiConfig
-            .withDocumentationPath("/swagger-docs")
-            .withDefinitionConfiguration { version: String, openApiDefinition: DefinitionConfiguration ->
-                openApiDefinition
-                    .withInfo { openApiInfo: OpenApiInfo ->
-                        openApiInfo
-                            .title("KIAR Dashboard API")
-                            .version("1.0.1")
-                            .description("API for the KIAR Dashboard.")
-                            .contact("API Support", "https://support.kimnet.ch", "support@kimnet.ch")
-                    }
-                    .withSecurity { openApiSecurity: SecurityComponentConfiguration ->
-                        openApiSecurity.withCookieAuth("CookieAuth", "SESSIONID")
-                    }
-            }
-    })
+    /* Enable CORS: reflect the client origin and allow credentials. */
+    install(CORS) {
+        anyHost()
+        allowCredentials = true
+        allowNonSimpleContentTypes = true
+        allowMethod(HttpMethod.Put)
+        allowMethod(HttpMethod.Delete)
+        allowMethod(HttpMethod.Patch)
+        allowMethod(HttpMethod.Options)
+    }
 
-    /* Registers Swagger Plugin. */
-    c.registerPlugin(SwaggerPlugin { swaggerConfiguration: SwaggerConfiguration ->
-        swaggerConfiguration.documentationPath = "/swagger-docs"
-        swaggerConfiguration.uiPath = "/swagger-ui"
-    })
-}.beforeMatched(DatabaseAccessManager())
-.exception(ErrorStatusException::class.java) { e, ctx ->
-    ctx.status(e.code).json(ErrorStatus(e.code, e.message))
-}.exception(Exception::class.java) { e, ctx ->
-    ctx.status(500).json(ErrorStatus(500, "Internal server error: ${e.localizedMessage}"))
+    /* Map exceptions to ErrorStatus JSON. */
+    install(StatusPages) {
+        exception<ErrorStatusException> { call, e ->
+            call.respond(HttpStatusCode.fromValue(e.code), ErrorStatus(e.code, e.message))
+        }
+        exception<Throwable> { call, e ->
+            call.respond(HttpStatusCode.InternalServerError, ErrorStatus(500, "Internal server error: ${e.localizedMessage}"))
+        }
+    }
+
+    /* Configure routes. */
+    routing {
+        /* API routes. */
+        val api: Route = configureApiRoutes(config, server, oaiServer, sruServer)
+
+        /* OpenAPI document generated from the API routes. */
+        val source = OpenApiDocSource.Routing(
+            contentType = ContentType.Application.Json,
+            schemaInference = KiarSchemaInference,
+            securitySchemes = { mapOf(SECURITY_SCHEME to ReferenceOr.Value(ApiKeySecurityScheme(name = SESSION_COOKIE, `in` = SecuritySchemeIn.COOKIE))) },
+            serializeModel = ::serializeOpenApiDoc,
+            routes = { api.descendants() }
+        )
+        val info = OpenApiInfo(
+            title = "KIAR Dashboard API",
+            version = "1.0.1",
+            description = "API for the KIAR Dashboard.",
+            contact = OpenApiInfo.Contact(name = "API Support", url = "https://support.kimnet.ch", email = "support@kimnet.ch")
+        )
+        val document = this@kiar.async(start = CoroutineStart.LAZY) {
+            source.read(this@kiar, OpenApiDoc(info = info))
+        }
+        get("/swagger-docs") {
+            val doc = document.await()
+            call.respondText(doc.content, doc.contentType)
+        }.hide()
+
+        /* Swagger UI. */
+        swaggerUI("/swagger-ui") {
+            this.info = info
+            this.source = source
+            this.remotePath = "swagger-docs.json"
+        }
+
+        /* Static routes for SPA. */
+        singlePageApplication {
+            useResources = true
+            filesPath = "html/browser"
+            defaultPage = "index.html"
+        }
+    }
 }

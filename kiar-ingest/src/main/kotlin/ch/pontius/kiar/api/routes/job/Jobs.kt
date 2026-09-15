@@ -1,7 +1,6 @@
 package ch.pontius.kiar.api.routes.job
 
 import ch.pontius.kiar.api.model.job.*
-import ch.pontius.kiar.api.model.status.ErrorStatus
 import ch.pontius.kiar.api.model.status.ErrorStatusException
 import ch.pontius.kiar.api.model.status.SuccessStatus
 import ch.pontius.kiar.api.model.user.Role
@@ -14,39 +13,38 @@ import ch.pontius.kiar.database.jobs.Jobs
 import ch.pontius.kiar.database.jobs.Jobs.toJob
 import ch.pontius.kiar.ingester.IngesterServer
 import ch.pontius.kiar.utilities.extensions.currentUser
-import ch.pontius.kiar.utilities.extensions.parseBodyOrThrow
-import io.javalin.http.Context
-import io.javalin.openapi.*
+import ch.pontius.kiar.utilities.extensions.receiveOrThrow
 import org.jetbrains.exposed.v1.core.*
 import org.jetbrains.exposed.v1.jdbc.*
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 import java.time.Instant
+import io.ktor.server.application.ApplicationCall
+import ch.pontius.kiar.api.openapi.*
+import io.ktor.server.response.respond
+import ch.pontius.kiar.utilities.extensions.pathParam
+import ch.pontius.kiar.utilities.extensions.queryParam
 
-@OpenApi(
-    path = "/api/jobs/active",
-    methods = [HttpMethod.GET],
-    summary = "Retrieves all jobs that are currently active. Non-administrator users can only see Jobs that belong to them.",
-    operationId = "getActiveJobs",
-    tags = ["Job"],
-    pathParams = [],
-    queryParams = [
-        OpenApiParam(name = "page", type = Int::class, description = "The page index (zero-based) for pagination.", required = false),
-        OpenApiParam(name = "pageSize", type = Int::class, description = "The page size for pagination.", required = false)
-    ],
-    responses = [
-        OpenApiResponse("200", [OpenApiContent(PaginatedJobResult::class)]),
-        OpenApiResponse("401", [OpenApiContent(ErrorStatus::class)]),
-        OpenApiResponse("403", [OpenApiContent(ErrorStatus::class)]),
-        OpenApiResponse("500", [OpenApiContent(ErrorStatus::class)])
-    ]
-)
-fun getActiveJobs(ctx: Context, server: IngesterServer) {
-    val page = ctx.queryParam("page")?.toIntOrNull() ?: 0
-    val pageSize = ctx.queryParam("pageSize")?.toIntOrNull() ?: 50
+val getActiveJobsDoc: RouteDoc = {
+    operationId = "getActiveJobs"
+    summary = "Retrieves all jobs that are currently active. Non-administrator users can only see Jobs that belong to them."
+    tags("Job")
+    parameters {
+        queryParam("page", "The page index (zero-based) for pagination.", INT32)
+        queryParam("pageSize", "The page size for pagination.", INT32)
+    }
+    responses {
+        json<PaginatedJobResult>(200)
+        errors(401, 403, 500)
+    }
+}
+
+suspend fun getActiveJobs(call: ApplicationCall, server: IngesterServer) {
+    val page = call.queryParam("page")?.toIntOrNull() ?: 0
+    val pageSize = call.queryParam("pageSize")?.toIntOrNull() ?: 50
 
     /* Fetch jobs. */
     val (count, results) = transaction {
-        val currentUser = ctx.currentUser()
+        val currentUser = call.currentUser()
         val query = (Jobs innerJoin JobTemplates innerJoin Participants).selectAll().where {
             Jobs.status inList listOf(JobStatus.CREATED, JobStatus.HARVESTED, JobStatus.RUNNING, JobStatus.INTERRUPTED, JobStatus.SCHEDULED)
         }
@@ -75,34 +73,30 @@ fun getActiveJobs(ctx: Context, server: IngesterServer) {
     }
 
     /* Return results. */
-    ctx.json(PaginatedJobResult(count, page, pageSize, results))
+    call.respond(PaginatedJobResult(count, page, pageSize, results))
 }
 
-@OpenApi(
-    path = "/api/jobs/inactive",
-    methods = [HttpMethod.GET],
-    summary = "Retrieves all jobs that are currently inactive (job history). Non-administrator users can only see Jobs that belong to them.",
-    operationId = "getInactiveJobs",
-    queryParams = [
-        OpenApiParam(name = "page", type = Int::class, description = "The page index (zero-based) for pagination.", required = false),
-        OpenApiParam(name = "pageSize", type = Int::class, description = "The page size for pagination.", required = false)
-    ],
-    tags = ["Job"],
-    pathParams = [],
-    responses = [
-        OpenApiResponse("200", [OpenApiContent(PaginatedJobResult::class)]),
-        OpenApiResponse("401", [OpenApiContent(ErrorStatus::class)]),
-        OpenApiResponse("403", [OpenApiContent(ErrorStatus::class)]),
-        OpenApiResponse("500", [OpenApiContent(ErrorStatus::class)])
-    ]
-)
-fun getInactiveJobs(ctx: Context) {
-    val page = ctx.queryParam("page")?.toIntOrNull() ?: 0
-    val pageSize = ctx.queryParam("pageSize")?.toIntOrNull() ?: 50
+val getInactiveJobsDoc: RouteDoc = {
+    operationId = "getInactiveJobs"
+    summary = "Retrieves all jobs that are currently inactive (job history). Non-administrator users can only see Jobs that belong to them."
+    tags("Job")
+    parameters {
+        queryParam("page", "The page index (zero-based) for pagination.", INT32)
+        queryParam("pageSize", "The page size for pagination.", INT32)
+    }
+    responses {
+        json<PaginatedJobResult>(200)
+        errors(401, 403, 500)
+    }
+}
+
+suspend fun getInactiveJobs(call: ApplicationCall) {
+    val page = call.queryParam("page")?.toIntOrNull() ?: 0
+    val pageSize = call.queryParam("pageSize")?.toIntOrNull() ?: 50
 
     /* Fetch jobs. */
     val (count, results) = transaction {
-        val currentUser = ctx.currentUser()
+        val currentUser = call.currentUser()
         val query = (Jobs innerJoin JobTemplates innerJoin Participants).selectAll().where {
             Jobs.status inList listOf(JobStatus.ABORTED, JobStatus.FAILED, JobStatus.INGESTED)
         }
@@ -126,37 +120,32 @@ fun getInactiveJobs(ctx: Context) {
     }
 
     /* Return results. */
-    ctx.json(PaginatedJobResult(count, page, pageSize, results))
+    call.respond(PaginatedJobResult(count, page, pageSize, results))
 }
 
-@OpenApi(
-    path = "/api/jobs/{id}/logs",
-    methods = [HttpMethod.GET],
-    summary = "Retrieves the job log for the provided job ID.",
-    operationId = "getJobLog",
-    tags = ["Job"],
-    pathParams = [
-        OpenApiParam(name = "id", type = Int::class, description = "The ID of the Job for which the logs should be retrieved.", required = true)
-    ],
-    queryParams = [
-        OpenApiParam(name = "page", type = Int::class, description = "The page index (zero-based) for pagination.", required = false),
-        OpenApiParam(name = "pageSize", type = Int::class, description = "The page size  for pagination.", required = false) ,
-        OpenApiParam(name = "level", type = String::class, description = "A filter for the 'level' field.", required = false),
-        OpenApiParam(name = "context", type = String::class, description = "A filter for the 'context' field.", required = false),
-    ],
-    responses = [
-        OpenApiResponse("200", [OpenApiContent(PaginatedJobLogResult::class)]),
-        OpenApiResponse("401", [OpenApiContent(ErrorStatus::class)]),
-        OpenApiResponse("403", [OpenApiContent(ErrorStatus::class)]),
-        OpenApiResponse("500", [OpenApiContent(ErrorStatus::class)])
-    ]
-)
-fun getJobLogs(ctx: Context) {
-    val jobId = ctx.pathParam("id").toIntOrNull() ?: throw ErrorStatusException(400, "Malformed job ID.")
-    val page = ctx.queryParam("page")?.toIntOrNull() ?: 0
-    val pageSize = ctx.queryParam("pageSize")?.toIntOrNull() ?: 50
-    val level = ctx.queryParam("level")?.uppercase()?.let { JobLogLevel.valueOf(it) }
-    val context = ctx.queryParam("context")?.uppercase()?.let { JobLogContext.valueOf(it) }
+val getJobLogsDoc: RouteDoc = {
+    operationId = "getJobLog"
+    summary = "Retrieves the job log for the provided job ID."
+    tags("Job")
+    parameters {
+        pathParam("id", "The ID of the Job for which the logs should be retrieved.")
+        queryParam("page", "The page index (zero-based) for pagination.", INT32)
+        queryParam("pageSize", "The page size  for pagination.", INT32)
+        queryParam("level", "A filter for the 'level' field.")
+        queryParam("context", "A filter for the 'context' field.")
+    }
+    responses {
+        json<PaginatedJobLogResult>(200)
+        errors(401, 403, 500)
+    }
+}
+
+suspend fun getJobLogs(call: ApplicationCall) {
+    val jobId = call.pathParam("id").toIntOrNull() ?: throw ErrorStatusException(400, "Malformed job ID.")
+    val page = call.queryParam("page")?.toIntOrNull() ?: 0
+    val pageSize = call.queryParam("pageSize")?.toIntOrNull() ?: 50
+    val level = call.queryParam("level")?.uppercase()?.let { JobLogLevel.valueOf(it) }
+    val context = call.queryParam("context")?.uppercase()?.let { JobLogContext.valueOf(it) }
 
     /* Fetch job logs. */
     val (count, results) = transaction {
@@ -174,56 +163,47 @@ fun getJobLogs(ctx: Context) {
     }
 
     /* Return results. */
-    ctx.json(PaginatedJobLogResult(count, page, pageSize, results))
+    call.respond(PaginatedJobLogResult(count, page, pageSize, results))
 }
 
-@OpenApi(
-    path = "/api/jobs/{id}/logs",
-    methods = [HttpMethod.DELETE],
-    summary = "Purges the logs for the job with the provided ID.",
-    operationId = "deletePurgeJobLog",
-    tags = ["Job"],
-    pathParams = [
-        OpenApiParam(name = "id", type = Int::class, description = "The ID of the Job for which the logs should be pruged.", required = true)
-    ],
-    responses = [
-        OpenApiResponse("200", [OpenApiContent(PaginatedJobLogResult::class)]),
-        OpenApiResponse("401", [OpenApiContent(ErrorStatus::class)]),
-        OpenApiResponse("403", [OpenApiContent(ErrorStatus::class)]),
-        OpenApiResponse("500", [OpenApiContent(ErrorStatus::class)])
-    ]
-)
-fun purgeJobLogs(ctx: Context) {
-    val jobId = ctx.pathParam("id").toIntOrNull() ?: throw ErrorStatusException(400, "Malformed job ID.")
+val purgeJobLogsDoc: RouteDoc = {
+    operationId = "deletePurgeJobLog"
+    summary = "Purges the logs for the job with the provided ID."
+    tags("Job")
+    parameters {
+        pathParam("id", "The ID of the Job for which the logs should be pruged.")
+    }
+    responses {
+        json<PaginatedJobLogResult>(200)
+        errors(401, 403, 500)
+    }
+}
+
+suspend fun purgeJobLogs(call: ApplicationCall) {
+    val jobId = call.pathParam("id").toIntOrNull() ?: throw ErrorStatusException(400, "Malformed job ID.")
     val deleted = transaction {
         JobLogs.deleteWhere { JobLogs.jobId eq jobId }
     }
-    ctx.json(SuccessStatus("Logs for job $jobId purged successfully (count = $deleted)."))
+    call.respond(SuccessStatus("Logs for job $jobId purged successfully (count = $deleted)."))
 }
 
-@OpenApi(
-    path = "/api/jobs",
-    methods = [HttpMethod.POST],
-    summary = "Creates a new job.",
-    operationId = "postCreateJob",
-    tags = ["Job"],
-    requestBody = OpenApiRequestBody([OpenApiContent(CreateJobRequest::class)], required = true),
-    pathParams = [],
-    responses = [
-        OpenApiResponse("200", [OpenApiContent(Job::class)]),
-        OpenApiResponse("400", [OpenApiContent(ErrorStatus::class)]),
-        OpenApiResponse("401", [OpenApiContent(ErrorStatus::class)]),
-        OpenApiResponse("403", [OpenApiContent(ErrorStatus::class)]),
-        OpenApiResponse("404", [OpenApiContent(ErrorStatus::class)]),
-        OpenApiResponse("500", [OpenApiContent(ErrorStatus::class)])
-    ]
-)
-fun createJob(ctx: Context) {
-    val request = ctx.parseBodyOrThrow<CreateJobRequest>()
+val createJobDoc: RouteDoc = {
+    operationId = "postCreateJob"
+    summary = "Creates a new job."
+    tags("Job")
+    jsonBody<CreateJobRequest>()
+    responses {
+        json<Job>(200)
+        errors(400, 401, 403, 404, 500)
+    }
+}
+
+suspend fun createJob(call: ApplicationCall) {
+    val request = call.receiveOrThrow<CreateJobRequest>()
 
     /* Create new job. */
     val created = transaction {
-        val currentUser = ctx.currentUser()
+        val currentUser = call.currentUser()
         val template = JobTemplates.getById(request.templateId)
             ?: throw ErrorStatusException(404, "Job template with ID ${request.templateId} could not be found.")
 
@@ -262,5 +242,5 @@ fun createJob(ctx: Context) {
     }
 
     /* Return job object. */
-    ctx.json(created)
+    call.respond(created)
 }
