@@ -2,7 +2,8 @@ val bcryptVersion: String by project
 val caffeineVersion: String by project
 val commonsImagingVersion: String by project
 val exposedVersion: String by project
-val javalinVersion: String by project
+val gsonVersion: String by project
+val ktorVersion: String by project
 val jsonPathVersion: String by project
 val kotlinCoroutines: String by project
 val kotlinLoggingVersion: String by project
@@ -14,10 +15,6 @@ val slf4jVersion: String by project
 val solrjVersion: String by project
 val sqliteVersion: String by project
 
-
-plugins {
-    id("kotlin-kapt")
-}
 
 configurations {
     val frontendClasspath by creating {
@@ -67,6 +64,9 @@ dependencies {
     /** JSON path. */
     implementation("com.jayway.jsonpath:json-path:$jsonPathVersion")
 
+    /** Gson (used by the JSON ingest parsers). */
+    implementation("com.google.code.gson:gson:$gsonVersion")
+
     /** Kotlinx. */
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json-jvm:$kotlinSerialization")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core-jvm:$kotlinCoroutines")
@@ -78,12 +78,17 @@ dependencies {
     /** Apache Commons imaging for metadata processing. */
     implementation("org.apache.commons:commons-imaging:$commonsImagingVersion")
 
-    /** Javalin + Open API. */
-    implementation("io.javalin:javalin:$javalinVersion")
-    implementation("io.javalin.community.openapi:javalin-openapi-plugin:$javalinVersion")
-    implementation("io.javalin.community.openapi:javalin-swagger-plugin:$javalinVersion")
-    implementation("io.javalin.community.ssl:ssl-plugin:$javalinVersion")
-    kapt("io.javalin.community.openapi:openapi-annotation-processor:$javalinVersion")
+    /** Ktor server + OpenAPI. */
+    implementation(platform("io.ktor:ktor-bom:$ktorVersion"))
+    implementation("io.ktor:ktor-server-core")
+    implementation("io.ktor:ktor-server-netty")
+    implementation("io.ktor:ktor-server-content-negotiation")
+    implementation("io.ktor:ktor-serialization-kotlinx-json")
+    implementation("io.ktor:ktor-server-sessions")
+    implementation("io.ktor:ktor-server-status-pages")
+    implementation("io.ktor:ktor-server-cors")
+    implementation("io.ktor:ktor-server-routing-openapi")
+    implementation("io.ktor:ktor-server-swagger")
 
     /** SQLite + Kotlin Exposed */
     implementation("org.xerial:sqlite-jdbc:${sqliteVersion}")

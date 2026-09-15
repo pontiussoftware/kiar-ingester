@@ -3,10 +3,10 @@ import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 
 plugins {
     /* Kotlin JVM version. */
-    kotlin("jvm") version "2.2.21"
+    kotlin("jvm") version "2.4.20"
 
     /* Kotlinx serialization plugin. */
-    id("org.jetbrains.kotlin.plugin.serialization") version "2.2.21"
+    id("org.jetbrains.kotlin.plugin.serialization") version "2.4.20"
 
     /* OpenAPI Generator for Frontend internal API generation. */
     id ("org.openapi.generator") version "7.17.0"
@@ -45,7 +45,7 @@ subprojects {
     group = "ch.pontius.kiar"
 
     /* Our current version, on dev branch this should always be release+1-SNAPSHOT */
-    version = "1.4.1"
+    version = "1.5.0"
 
     tasks {
         compileKotlin {
@@ -68,7 +68,7 @@ subprojects {
 
 
 val fullOAS = "http://localhost:7070/swagger-docs"
-val oasFile = "${project.projectDir}/doc/oas.json"
+val oasFile = project.file("doc/oas.json").absolutePath.replace('\\', '/')
 
 openApiGenerate {
     generatorName.set("typescript-angular")

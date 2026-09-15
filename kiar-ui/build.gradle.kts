@@ -27,7 +27,7 @@ node {
  */
 val buildFrontend by tasks.registering(com.github.gradle.node.npm.task.NpxTask::class) {
     dependsOn(tasks.npmInstall)
-    command.value("@angular/cli@latest")
+    command.value("@angular/cli@20")
     args.value(listOf("build", "--configuration=production", "--output-path=build/dist"))
 }
 
