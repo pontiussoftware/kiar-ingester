@@ -7,7 +7,7 @@
  * https://openapi-generator.tech
  * Do not edit the class manually.
  */
-import {ImageFormat} from './imageFormat';
+import { ImageFormat } from './imageFormat';
 
 
 export interface ImageDeployment { 

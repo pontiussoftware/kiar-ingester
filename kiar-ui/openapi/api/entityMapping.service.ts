@@ -9,25 +9,29 @@
  */
 /* tslint:disable:no-unused-variable member-ordering */
 
-import {Inject, Injectable, Optional} from '@angular/core';
-import {HttpClient, HttpContext, HttpEvent, HttpResponse} from '@angular/common/http';
-import {Observable} from 'rxjs';
+import { Inject, Injectable, Optional }                      from '@angular/core';
+import { HttpClient, HttpHeaders, HttpParams,
+         HttpResponse, HttpEvent, HttpParameterCodec, HttpContext 
+        }       from '@angular/common/http';
+import { CustomHttpParameterCodec }                          from '../encoder';
+import { Observable }                                        from 'rxjs';
 
 // @ts-ignore
-import {EntityMapping} from '../model/entityMapping';
+import { EntityMapping } from '../model/entityMapping';
 // @ts-ignore
-import {ErrorStatus} from '../model/errorStatus';
+import { ErrorStatus } from '../model/errorStatus';
 // @ts-ignore
-import {MappingFormat} from '../model/mappingFormat';
+import { MappingFormat } from '../model/mappingFormat';
 // @ts-ignore
-import {SuccessStatus} from '../model/successStatus';
+import { SuccessStatus } from '../model/successStatus';
 // @ts-ignore
-import {ValueParser} from '../model/valueParser';
+import { ValueParser } from '../model/valueParser';
 
 // @ts-ignore
-import {BASE_PATH, COLLECTION_FORMATS} from '../variables';
-import {Configuration} from '../configuration';
-import {BaseService} from '../api.base.service';
+import { BASE_PATH, COLLECTION_FORMATS }                     from '../variables';
+import { Configuration }                                     from '../configuration';
+import { BaseService } from '../api.base.service';
+
 
 
 @Injectable({
@@ -41,6 +45,7 @@ export class EntityMappingService extends BaseService {
 
     /**
      * Deletes an existing entity mapping.
+     * @endpoint delete /api/mappings/{id}
      * @param id The ID of the entity mapping that should be deleted.
      * @param observe set whether or not to return the data Observable as the body, response or events. defaults to returning the body.
      * @param reportProgress flag to report request and response progress.
@@ -87,7 +92,7 @@ export class EntityMappingService extends BaseService {
                 ...(withCredentials ? { withCredentials } : {}),
                 headers: localVarHeaders,
                 observe: observe,
-                transferCache: localVarTransferCache,
+                ...(localVarTransferCache !== undefined ? { transferCache: localVarTransferCache } : {}),
                 reportProgress: reportProgress
             }
         );
@@ -95,6 +100,7 @@ export class EntityMappingService extends BaseService {
 
     /**
      * Retrieves all the details about an entity mapping.
+     * @endpoint get /api/mappings/{id}
      * @param id The ID of the entity mapping that should be retrieved.
      * @param observe set whether or not to return the data Observable as the body, response or events. defaults to returning the body.
      * @param reportProgress flag to report request and response progress.
@@ -141,7 +147,7 @@ export class EntityMappingService extends BaseService {
                 ...(withCredentials ? { withCredentials } : {}),
                 headers: localVarHeaders,
                 observe: observe,
-                transferCache: localVarTransferCache,
+                ...(localVarTransferCache !== undefined ? { transferCache: localVarTransferCache } : {}),
                 reportProgress: reportProgress
             }
         );
@@ -149,6 +155,7 @@ export class EntityMappingService extends BaseService {
 
     /**
      * Lists all available entity mappings.
+     * @endpoint get /api/mappings
      * @param observe set whether or not to return the data Observable as the body, response or events. defaults to returning the body.
      * @param reportProgress flag to report request and response progress.
      */
@@ -191,7 +198,7 @@ export class EntityMappingService extends BaseService {
                 ...(withCredentials ? { withCredentials } : {}),
                 headers: localVarHeaders,
                 observe: observe,
-                transferCache: localVarTransferCache,
+                ...(localVarTransferCache !== undefined ? { transferCache: localVarTransferCache } : {}),
                 reportProgress: reportProgress
             }
         );
@@ -199,6 +206,7 @@ export class EntityMappingService extends BaseService {
 
     /**
      * Lists all available entity mapping formats.
+     * @endpoint get /api/masterdata/mapping-formats
      * @param observe set whether or not to return the data Observable as the body, response or events. defaults to returning the body.
      * @param reportProgress flag to report request and response progress.
      */
@@ -241,7 +249,7 @@ export class EntityMappingService extends BaseService {
                 ...(withCredentials ? { withCredentials } : {}),
                 headers: localVarHeaders,
                 observe: observe,
-                transferCache: localVarTransferCache,
+                ...(localVarTransferCache !== undefined ? { transferCache: localVarTransferCache } : {}),
                 reportProgress: reportProgress
             }
         );
@@ -249,6 +257,7 @@ export class EntityMappingService extends BaseService {
 
     /**
      * Lists all available parses available for entity mapping.
+     * @endpoint get /api/masterdata/parsers
      * @param observe set whether or not to return the data Observable as the body, response or events. defaults to returning the body.
      * @param reportProgress flag to report request and response progress.
      */
@@ -291,7 +300,7 @@ export class EntityMappingService extends BaseService {
                 ...(withCredentials ? { withCredentials } : {}),
                 headers: localVarHeaders,
                 observe: observe,
-                transferCache: localVarTransferCache,
+                ...(localVarTransferCache !== undefined ? { transferCache: localVarTransferCache } : {}),
                 reportProgress: reportProgress
             }
         );
@@ -299,6 +308,7 @@ export class EntityMappingService extends BaseService {
 
     /**
      * Creates a new entity mapping.
+     * @endpoint post /api/mappings
      * @param entityMapping 
      * @param observe set whether or not to return the data Observable as the body, response or events. defaults to returning the body.
      * @param reportProgress flag to report request and response progress.
@@ -355,7 +365,7 @@ export class EntityMappingService extends BaseService {
                 ...(withCredentials ? { withCredentials } : {}),
                 headers: localVarHeaders,
                 observe: observe,
-                transferCache: localVarTransferCache,
+                ...(localVarTransferCache !== undefined ? { transferCache: localVarTransferCache } : {}),
                 reportProgress: reportProgress
             }
         );
@@ -363,6 +373,7 @@ export class EntityMappingService extends BaseService {
 
     /**
      * Updates an existing entity mapping.
+     * @endpoint put /api/mappings/{id}
      * @param id The ID of the entity mapping that should be updated.
      * @param entityMapping 
      * @param observe set whether or not to return the data Observable as the body, response or events. defaults to returning the body.
@@ -423,7 +434,7 @@ export class EntityMappingService extends BaseService {
                 ...(withCredentials ? { withCredentials } : {}),
                 headers: localVarHeaders,
                 observe: observe,
-                transferCache: localVarTransferCache,
+                ...(localVarTransferCache !== undefined ? { transferCache: localVarTransferCache } : {}),
                 reportProgress: reportProgress
             }
         );
