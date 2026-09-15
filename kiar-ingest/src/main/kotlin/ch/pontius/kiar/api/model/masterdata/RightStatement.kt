@@ -23,7 +23,7 @@ data class RightStatement private constructor(val shortName: String, val longNam
             RightStatement("CC BY-SA 4.0", "Creative Commons - Attribution, ShareAlike", "https://creativecommons.org/licenses/by-sa/4.0/"),
             RightStatement("CC BY-NC 4.0", "Creative Commons - Attribution, Non-Commercial", "https://creativecommons.org/licenses/by-nc/4.0/"),
             RightStatement("CC BY-ND 4.0", "Creative Commons - Attribution, No Derivatives", "https://creativecommons.org/licenses/by-nd/4.0/"),
-            RightStatement("CC BY-NC-SA 4.0", "Creative Commons - Attribution, Non-Commercial, ShareAlike", "https://creativecommons.org/licenses/by-nd/4.0/"),
+            RightStatement("CC BY-NC-SA 4.0", "Creative Commons - Attribution, Non-Commercial, ShareAlike", "https://creativecommons.org/licenses/by-nc-sa/4.0/"),
             RightStatement("CC BY-NC-ND 4.0", "Creative Commons - Attribution, Non-Commercial, No Derivatives", "https://creativecommons.org/licenses/by-nc-nd/4.0/")
         )
     }
