@@ -6,6 +6,7 @@ import ch.pontius.kiar.api.model.job.JobLogLevel
 import org.jetbrains.exposed.v1.core.ReferenceOption
 import org.jetbrains.exposed.v1.core.ResultRow
 import org.jetbrains.exposed.v1.core.Table
+import org.jetbrains.exposed.v1.core.java.javaUUID
 import org.jetbrains.exposed.v1.javatime.CurrentTimestamp
 import org.jetbrains.exposed.v1.javatime.timestamp
 
@@ -29,7 +30,7 @@ object JobLogs: Table("jobs_logs") {
     val context = enumerationByName("context", 16, JobLogContext::class)
 
     /** The ID of an Apache Solr document a [JobLogs] entry concerns. */
-    val documentId = uuid("document_id").nullable()
+    val documentId = javaUUID("document_id").nullable()
 
     /** The name of an Apache Solr colletion a [JobLogs] entry concerns. */
     val collectionId = varchar("collection_id", 128).nullable()

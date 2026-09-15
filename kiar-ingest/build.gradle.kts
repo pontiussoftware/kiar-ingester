@@ -46,7 +46,7 @@ dependencies {
 
     /** SolrJ. */
     implementation("org.apache.solr:solr-solrj:$solrjVersion")
-
+    implementation("org.apache.solr:solr-solrj-jetty:${solrjVersion}")
     /** Bcrypt */
     implementation("org.mindrot:jbcrypt:$bcryptVersion")
 

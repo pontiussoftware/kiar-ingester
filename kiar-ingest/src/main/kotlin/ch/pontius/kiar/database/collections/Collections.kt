@@ -10,6 +10,7 @@ import org.jetbrains.exposed.v1.core.ReferenceOption
 import org.jetbrains.exposed.v1.core.ResultRow
 import org.jetbrains.exposed.v1.core.dao.id.IntIdTable
 import org.jetbrains.exposed.v1.core.eq
+import org.jetbrains.exposed.v1.core.java.javaUUID
 import org.jetbrains.exposed.v1.javatime.CurrentTimestamp
 import org.jetbrains.exposed.v1.javatime.timestamp
 import org.jetbrains.exposed.v1.jdbc.selectAll
@@ -29,7 +30,7 @@ object Collections: IntIdTable("collections") {
     val institutionId = reference("institution_id", Institutions,  onDelete = ReferenceOption.CASCADE)
 
     /** The unique identifier of a [Collections] entry. */
-    val uuid = uuid("uuid").uniqueIndex().clientDefault { UUID.randomUUID() }
+    val uuid = javaUUID("uuid").uniqueIndex().clientDefault { UUID.randomUUID() }
 
     /** The name of an [Collections] entry. */
     val name = varchar("name", 255).uniqueIndex()

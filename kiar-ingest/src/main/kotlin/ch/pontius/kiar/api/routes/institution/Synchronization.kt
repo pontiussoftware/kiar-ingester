@@ -5,6 +5,7 @@ import ch.pontius.kiar.api.model.config.solr.CollectionType
 import ch.pontius.kiar.api.model.institution.Institution
 import ch.pontius.kiar.api.model.status.ErrorStatusException
 import ch.pontius.kiar.api.model.status.SuccessStatus
+import ch.pontius.kiar.api.openapi.*
 import ch.pontius.kiar.database.config.ImageDeployments
 import ch.pontius.kiar.database.config.ImageDeployments.toImageDeployment
 import ch.pontius.kiar.database.config.SolrCollections
@@ -15,19 +16,18 @@ import ch.pontius.kiar.database.institutions.Institutions.toInstitution
 import ch.pontius.kiar.database.institutions.Participants
 import ch.pontius.kiar.ingester.solrj.Field
 import ch.pontius.kiar.ingester.solrj.setField
+import ch.pontius.kiar.utilities.extensions.queryParam
 import io.github.oshai.kotlinlogging.KLogger
 import io.github.oshai.kotlinlogging.KotlinLogging
-import org.apache.solr.client.solrj.impl.Http2SolrClient
+import io.ktor.server.application.*
+import io.ktor.server.response.*
+import org.apache.solr.client.solrj.jetty.HttpJettySolrClient
 import org.apache.solr.common.SolrInputDocument
 import org.jetbrains.exposed.v1.core.and
 import org.jetbrains.exposed.v1.core.eq
 import org.jetbrains.exposed.v1.jdbc.select
 import org.jetbrains.exposed.v1.jdbc.selectAll
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
-import io.ktor.server.application.ApplicationCall
-import ch.pontius.kiar.api.openapi.*
-import io.ktor.server.response.respond
-import ch.pontius.kiar.utilities.extensions.queryParam
 
 /** The [KLogger] instance for synchronization endpoint. */
 private val logger: KLogger = KotlinLogging.logger {}
@@ -82,7 +82,7 @@ suspend fun postSyncInstitutions(call: ApplicationCall) {
  */
 private fun synchronise(config: ApacheSolrConfig, collection: String, institutions: List<Institution>) {
     /* Prepare HTTP client builder. */
-    var httpBuilder = Http2SolrClient.Builder(config.server)
+    var httpBuilder = HttpJettySolrClient.Builder(config.server)
     if (config.username != null && config.password != null) {
         httpBuilder = httpBuilder.withBasicAuthCredentials(config.username, config.password)
     }

@@ -12,7 +12,7 @@ import ch.pontius.kiar.database.jobs.JobLogs
 import ch.pontius.kiar.database.jobs.Jobs
 import io.github.oshai.kotlinlogging.KLogger
 import io.github.oshai.kotlinlogging.KotlinLogging
-import org.apache.solr.client.solrj.impl.Http2SolrClient
+import org.apache.solr.client.solrj.jetty.HttpJettySolrClient
 import org.jetbrains.exposed.v1.jdbc.insert
 import org.jetbrains.exposed.v1.jdbc.selectAll
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
@@ -54,12 +54,12 @@ class ProcessingContext(val jobId: Int, val config: Config, val test: Boolean = 
         }
     }
 
-    /** The [Http2SolrClient] instance used by this [ProcessingContext]. */
-    val solrClient: Http2SolrClient by lazy {
+    /** The [HttpJettySolrClient] instance used by this [ProcessingContext]. */
+    val solrClient: HttpJettySolrClient by lazy {
         val config = this.jobTemplate.config ?: throw IllegalStateException("Failed to obtain  Apache Solr configuration configuration for job with ID ${this.jobId}.")
 
         /* Prepare HTTP client builder. */
-        var httpBuilder = Http2SolrClient.Builder(config.server)
+        var httpBuilder = HttpJettySolrClient.Builder(config.server)
         if (config.username != null && config.password != null) {
             httpBuilder = httpBuilder.withBasicAuthCredentials(config.username, config.password)
         }

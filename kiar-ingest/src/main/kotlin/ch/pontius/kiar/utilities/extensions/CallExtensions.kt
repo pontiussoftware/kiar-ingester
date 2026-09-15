@@ -4,20 +4,14 @@ import ch.pontius.kiar.api.UserSession
 import ch.pontius.kiar.api.model.status.ErrorStatusException
 import ch.pontius.kiar.api.model.user.User
 import ch.pontius.kiar.database.institutions.Users
-import io.ktor.server.application.ApplicationCall
-import io.ktor.server.plugins.BadRequestException
+import io.ktor.http.content.*
+import io.ktor.server.application.*
+import io.ktor.server.plugins.*
 import io.ktor.server.plugins.ContentTransformationException
-import io.ktor.http.content.PartData
-import io.ktor.http.content.forEachPart
-import io.ktor.server.plugins.UnsupportedMediaTypeException
-import io.ktor.server.request.receive
-import io.ktor.server.routing.RoutingCall
-import io.ktor.server.request.receiveMultipart
-import io.ktor.utils.io.jvm.javaio.toInputStream
-import io.ktor.server.sessions.clear
-import io.ktor.server.sessions.get
-import io.ktor.server.sessions.sessions
-import io.ktor.server.sessions.set
+import io.ktor.server.request.*
+import io.ktor.server.routing.*
+import io.ktor.server.sessions.*
+import io.ktor.utils.io.jvm.javaio.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.SerializationException
@@ -153,7 +147,7 @@ suspend fun ApplicationCall.uploadedFiles(fieldName: String? = null): List<Uploa
                 files.add(UploadedFile(part.name, part.originalFileName, tmp))
             }
         } finally {
-            part.dispose()
+            part.release()
         }
     }
     return files

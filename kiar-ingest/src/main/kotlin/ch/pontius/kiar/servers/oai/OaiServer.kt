@@ -13,8 +13,7 @@ import ch.pontius.kiar.servers.mapper.Mapper
 import ch.pontius.kiar.servers.oai.Verbs.*
 import ch.pontius.kiar.solr.SolrClientProvider
 import com.github.benmanes.caffeine.cache.Caffeine
-import org.apache.solr.client.solrj.SolrQuery
-import org.apache.solr.client.solrj.impl.Http2SolrClient
+import org.apache.solr.client.solrj.request.SolrQuery
 import org.jetbrains.exposed.v1.core.and
 import org.jetbrains.exposed.v1.core.eq
 import org.jetbrains.exposed.v1.jdbc.select
@@ -39,7 +38,7 @@ import javax.xml.parsers.DocumentBuilderFactory
  * @author Ralph Gasser
  * @version 1.2.0
  */
-class OaiServer() {
+class OaiServer {
     companion object {
         /** The page size for the OAI endpoint. */
         const val PAGE_SIZE = 100
