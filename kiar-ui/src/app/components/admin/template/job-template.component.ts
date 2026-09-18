@@ -1,7 +1,7 @@
 import {AfterViewInit, Component, inject} from "@angular/core";
 import {toSignal} from "@angular/core/rxjs-interop";
 import {catchError, firstValueFrom, map, mergeMap, Observable, of, shareReplay} from "rxjs";
-import {FormArray, FormControl, FormGroup, Validators} from "@angular/forms";
+import {FormArray, FormControl, FormGroup, FormsModule, ReactiveFormsModule, Validators} from "@angular/forms";
 import {
   ApacheSolrConfig,
   ConfigService,
@@ -15,12 +15,18 @@ import {ActivatedRoute, Router} from "@angular/router";
 import {MatSnackBar, MatSnackBarConfig} from "@angular/material/snack-bar";
 import {TransformerDialogComponent} from "./transformer-dialog.component";
 import {MatDialog} from "@angular/material/dialog";
+import {MatFormField, MatInput, MatLabel} from "@angular/material/input";
+import {MatOption, MatSelect} from "@angular/material/select";
+import {MatCheckbox} from "@angular/material/checkbox";
+import {MatButton, MatIconButton, MatMiniFabButton} from "@angular/material/button";
+import {MatTooltip} from "@angular/material/tooltip";
+import {MatIcon} from "@angular/material/icon";
 
 @Component({
     selector: 'kiar-job-template-admin',
     templateUrl: './job-template.component.html',
     styleUrls: ['./job-template.component.scss'],
-    standalone: false
+    imports: [FormsModule, ReactiveFormsModule, MatFormField, MatLabel, MatInput, MatSelect, MatOption, MatCheckbox, MatButton, MatTooltip, MatMiniFabButton, MatIcon, MatIconButton]
 })
 export class JobTemplateComponent implements AfterViewInit {
   /** The {@link ConfigService} used to access application configuration (templates, mappings, Solr configurations, participants). */

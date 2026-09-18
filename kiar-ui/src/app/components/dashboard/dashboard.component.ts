@@ -7,12 +7,32 @@ import {MatSnackBar, MatSnackBarConfig} from "@angular/material/snack-bar";
 import {MatPaginator} from "@angular/material/paginator";
 import {JobHistoryDatasource} from "./job-history-datasource";
 import {JobCurrentDatasource} from "./job-current-datasource";
+import {MatIconButton, MatMiniFabButton} from "@angular/material/button";
+import {MatTooltip} from "@angular/material/tooltip";
+import {MatIcon} from "@angular/material/icon";
+import {MatTab, MatTabGroup} from "@angular/material/tabs";
+import {
+  MatCell,
+  MatCellDef,
+  MatColumnDef,
+  MatHeaderCell,
+  MatHeaderCellDef,
+  MatHeaderRow,
+  MatHeaderRowDef,
+  MatNoDataRow,
+  MatRow,
+  MatRowDef,
+  MatTable
+} from "@angular/material/table";
+import {RouterLink} from "@angular/router";
+import {MatProgressBar} from "@angular/material/progress-bar";
+import {DatePipe} from "@angular/common";
 
 @Component({
     selector: 'kiar-dashboard',
     templateUrl: './dashboard.component.html',
     styleUrls: ['./dashboard.component.scss'],
-    standalone: false
+    imports: [MatMiniFabButton, MatTooltip, MatIcon, MatTabGroup, MatTab, MatTable, MatColumnDef, MatHeaderCellDef, MatHeaderCell, MatCellDef, MatCell, MatIconButton, RouterLink, MatProgressBar, MatHeaderRowDef, MatHeaderRow, MatRowDef, MatRow, MatNoDataRow, MatPaginator, DatePipe]
 })
 export class DashboardComponent implements AfterViewInit, OnDestroy {
   /** The {@link MatDialog} service used to open dialogs. */

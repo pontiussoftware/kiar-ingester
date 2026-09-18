@@ -2,12 +2,13 @@ import {Component, computed, inject, input, linkedSignal, signal} from "@angular
 import {toObservable, toSignal} from "@angular/core/rxjs-interop";
 import {CollectionService} from "../../../../openapi";
 import {catchError, map, of, switchMap} from "rxjs";
+import {MatIcon} from "@angular/material/icon";
 
 @Component({
     selector: 'kiar-collection-image',
     templateUrl: 'collection-image.component.html',
     styleUrls: ['collection-image.component.scss'],
-    standalone: false
+    imports: [MatIcon]
 })
 export class CollectionImageComponent {
   /** The {@link CollectionService} used to access collection data. */

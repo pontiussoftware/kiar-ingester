@@ -1,16 +1,28 @@
 import {Component, inject} from "@angular/core";
 import {toSignal} from "@angular/core/rxjs-interop";
-import {FormArray, FormControl, FormGroup, Validators} from "@angular/forms";
+import {FormArray, FormControl, FormGroup, FormsModule, ReactiveFormsModule, Validators} from "@angular/forms";
 import {CollectionService, Institution, InstitutionService, ObjectCollection,} from "../../../../openapi";
-import {MAT_DIALOG_DATA, MatDialogRef} from "@angular/material/dialog";
+import {
+  MAT_DIALOG_DATA,
+  MatDialogActions,
+  MatDialogContent,
+  MatDialogRef,
+  MatDialogTitle
+} from "@angular/material/dialog";
 import {combineLatest, first, map, Observable, shareReplay} from "rxjs";
 import {MatSnackBar, MatSnackBarConfig} from "@angular/material/snack-bar";
+import {MatError, MatFormField, MatInput, MatLabel} from "@angular/material/input";
+import {MatOption, MatSelect} from "@angular/material/select";
+import {MatCheckbox} from "@angular/material/checkbox";
+import {MatButton, MatIconButton} from "@angular/material/button";
+import {MatIcon} from "@angular/material/icon";
+import {CollectionImageComponent} from "./collection-image.component";
 
 @Component({
     selector: 'kiar-collection-dialog',
     templateUrl: './collection-dialog.component.html',
     styleUrls: ['./collection-dialog.component.scss'],
-    standalone: false
+  imports: [MatDialogTitle, MatDialogContent, FormsModule, ReactiveFormsModule, MatFormField, MatLabel, MatInput, MatError, MatSelect, MatOption, MatCheckbox, MatIconButton, MatIcon, CollectionImageComponent, MatDialogActions, MatButton]
 })
 export class CollectionDialogComponent {
   /** The {@link InstitutionService} used to access institution data. */

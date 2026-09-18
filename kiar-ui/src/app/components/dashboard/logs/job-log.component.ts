@@ -3,13 +3,31 @@ import {toSignal} from "@angular/core/rxjs-interop";
 import {JobService} from "../../../../../openapi";
 import {JobLogDatasource} from "./job-log-datasource";
 import {map, tap} from "rxjs";
-import {ActivatedRoute} from "@angular/router";
+import {ActivatedRoute, RouterLink} from "@angular/router";
 import {MatPaginator} from "@angular/material/paginator";
+import {MatMiniFabButton} from "@angular/material/button";
+import {MatTooltip} from "@angular/material/tooltip";
+import {MatIcon} from "@angular/material/icon";
+import {MatButtonToggle, MatButtonToggleGroup} from "@angular/material/button-toggle";
+import {FormsModule} from "@angular/forms";
+import {
+  MatCell,
+  MatCellDef,
+  MatColumnDef,
+  MatHeaderCell,
+  MatHeaderCellDef,
+  MatHeaderRow,
+  MatHeaderRowDef,
+  MatNoDataRow,
+  MatRow,
+  MatRowDef,
+  MatTable
+} from "@angular/material/table";
 
 @Component({
     selector: 'kiar-job-log',
     templateUrl: 'job-log.component.html',
-    standalone: false
+    imports: [MatMiniFabButton, MatTooltip, RouterLink, MatIcon, MatButtonToggleGroup, FormsModule, MatButtonToggle, MatTable, MatColumnDef, MatHeaderCellDef, MatHeaderCell, MatCellDef, MatCell, MatHeaderRowDef, MatHeaderRow, MatRowDef, MatRow, MatNoDataRow, MatPaginator]
 })
 export class JobLogComponent implements AfterViewInit, OnInit {
   /** The {@link JobService} used to access and manage jobs. */

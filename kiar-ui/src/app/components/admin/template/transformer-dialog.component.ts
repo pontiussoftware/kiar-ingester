@@ -1,14 +1,25 @@
 import {Component, inject} from "@angular/core";
 import {toSignal} from "@angular/core/rxjs-interop";
-import {MAT_DIALOG_DATA, MatDialogRef} from "@angular/material/dialog";
+import {
+  MAT_DIALOG_DATA,
+  MatDialogActions,
+  MatDialogContent,
+  MatDialogRef,
+  MatDialogTitle
+} from "@angular/material/dialog";
 import {AttributeMappingDialogComponent} from "../mapping/attribute-mapping-dialog.component";
-import {FormArray, FormControl, FormGroup} from "@angular/forms";
+import {FormArray, FormControl, FormGroup, FormsModule, ReactiveFormsModule} from "@angular/forms";
 import {ConfigService, TransformerType} from "../../../../../openapi";
+import {MatFormField, MatInput, MatLabel} from "@angular/material/input";
+import {MatOption, MatSelect} from "@angular/material/select";
+import {MatButton, MatIconButton, MatMiniFabButton} from "@angular/material/button";
+import {MatTooltip} from "@angular/material/tooltip";
+import {MatIcon} from "@angular/material/icon";
 
 @Component({
     selector: 'transformer-dialog',
     templateUrl: 'transformer-dialog.component.html',
-    standalone: false
+  imports: [MatDialogTitle, MatDialogContent, FormsModule, ReactiveFormsModule, MatFormField, MatLabel, MatSelect, MatOption, MatMiniFabButton, MatTooltip, MatIcon, MatInput, MatIconButton, MatDialogActions, MatButton]
 })
 export class TransformerDialogComponent {
   /** The {@link MatDialogRef} used to interact with the dialog. */

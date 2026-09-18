@@ -4,16 +4,34 @@ import {ApacheSolrCollection, ConfigService, Institution, InstitutionService} fr
 import {map, Observable, tap} from "rxjs";
 import {MatPaginator} from "@angular/material/paginator";
 import {InstitutionDatasource} from "./institution-datasource";
-import {MatSort} from "@angular/material/sort";
+import {MatSort, MatSortHeader} from "@angular/material/sort";
 import {MatSnackBar, MatSnackBarConfig} from "@angular/material/snack-bar";
 import {MatDialog} from "@angular/material/dialog";
 import {InstitutionDialogComponent} from "./institution-dialog.component";
+import {MatIconButton, MatMiniFabButton} from "@angular/material/button";
+import {MatTooltip} from "@angular/material/tooltip";
+import {MatIcon} from "@angular/material/icon";
+import {MatMenu, MatMenuItem, MatMenuTrigger} from "@angular/material/menu";
+import {MatFormField, MatInput, MatLabel} from "@angular/material/input";
+import {
+  MatCell,
+  MatCellDef,
+  MatColumnDef,
+  MatHeaderCell,
+  MatHeaderCellDef,
+  MatHeaderRow,
+  MatHeaderRowDef,
+  MatRow,
+  MatRowDef,
+  MatTable
+} from "@angular/material/table";
+import {InstitutionImageComponent} from "./institution-image.component";
 
 @Component({
     selector: 'kiar-institution-list',
     templateUrl: './institution-list.component.html',
     styleUrls: ['./institution-list.component.scss'],
-    standalone: false
+    imports: [MatMiniFabButton, MatTooltip, MatIcon, MatMenuTrigger, MatMenu, MatMenuItem, MatFormField, MatLabel, MatInput, MatTable, MatSort, MatColumnDef, MatHeaderCellDef, MatHeaderCell, MatCellDef, MatCell, InstitutionImageComponent, MatSortHeader, MatIconButton, MatHeaderRowDef, MatHeaderRow, MatRowDef, MatRow, MatPaginator]
 })
 export class InstitutionListComponent implements AfterViewInit  {
   /** The {@link InstitutionService} used to access institution data. */

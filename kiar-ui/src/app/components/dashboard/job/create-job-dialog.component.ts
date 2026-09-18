@@ -1,15 +1,18 @@
 import {Component, inject} from "@angular/core";
 import {toSignal} from "@angular/core/rxjs-interop";
-import {FormControl, FormGroup} from "@angular/forms";
+import {FormControl, FormGroup, FormsModule, ReactiveFormsModule} from "@angular/forms";
 import {CreateJobRequest, Job, JobService, JobTemplate} from "../../../../../openapi";
 import {Observable, Observer} from "rxjs";
 import {MatSnackBar, MatSnackBarConfig} from "@angular/material/snack-bar";
-import {MatDialogRef} from "@angular/material/dialog";
+import {MatDialogActions, MatDialogContent, MatDialogRef, MatDialogTitle} from "@angular/material/dialog";
+import {MatFormField, MatInput, MatLabel} from "@angular/material/input";
+import {MatOption, MatSelect} from "@angular/material/select";
+import {MatButton} from "@angular/material/button";
 
 @Component({
     selector: 'create-job-dialog',
     templateUrl: 'create-job-dialog.component.html',
-    standalone: false
+  imports: [MatDialogTitle, MatDialogContent, FormsModule, ReactiveFormsModule, MatFormField, MatLabel, MatInput, MatSelect, MatOption, MatDialogActions, MatButton]
 })
 export class CreateJobDialogComponent {
   /** The {@link JobService} used to access and manage jobs. */

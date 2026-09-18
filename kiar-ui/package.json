@@ -30,6 +30,7 @@
     "@angular/localize": "21.2.x",
     "@types/jasmine": "3.10.x",
     "@types/node": "12.11.x",
+    "baseline-browser-mapping": "^2.11.25",
     "jasmine-core": "4.0.x",
     "typescript": "5.9.3"
   }

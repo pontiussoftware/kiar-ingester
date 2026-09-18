@@ -1,6 +1,6 @@
 import {Component, inject} from "@angular/core";
 import {toSignal} from "@angular/core/rxjs-interop";
-import {FormArray, FormControl, FormGroup, Validators} from "@angular/forms";
+import {FormArray, FormControl, FormGroup, FormsModule, ReactiveFormsModule, Validators} from "@angular/forms";
 import {
   ApacheSolrCollection,
   Canton,
@@ -10,15 +10,27 @@ import {
   MasterdataService,
   RightStatement
 } from "../../../../openapi";
-import {MAT_DIALOG_DATA, MatDialogRef} from "@angular/material/dialog";
+import {
+  MAT_DIALOG_DATA,
+  MatDialogActions,
+  MatDialogContent,
+  MatDialogRef,
+  MatDialogTitle
+} from "@angular/material/dialog";
 import {combineLatestWith, first, map} from "rxjs";
 import {MatSnackBar, MatSnackBarConfig} from "@angular/material/snack-bar";
+import {MatError, MatFormField, MatInput, MatLabel} from "@angular/material/input";
+import {MatOption, MatSelect} from "@angular/material/select";
+import {MatCheckbox} from "@angular/material/checkbox";
+import {MatTab, MatTabGroup} from "@angular/material/tabs";
+import {MatButton} from "@angular/material/button";
+import {MatIcon} from "@angular/material/icon";
 
 @Component({
     selector: 'kiar-add-institution-dialog',
     templateUrl: './institution-dialog.component.html',
     styleUrls: ['./institution-dialog.component.scss'],
-    standalone: false
+  imports: [MatDialogTitle, MatDialogContent, FormsModule, ReactiveFormsModule, MatFormField, MatLabel, MatInput, MatError, MatSelect, MatOption, MatCheckbox, MatTabGroup, MatTab, MatDialogActions, MatButton, MatIcon]
 })
 export class InstitutionDialogComponent {
   /** The {@link ConfigService} used to access application configuration (templates, mappings, Solr configurations, participants). */

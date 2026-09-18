@@ -8,12 +8,18 @@ import {MatSnackBar, MatSnackBarConfig} from "@angular/material/snack-bar";
 import {AddSolrConfigDialogComponent} from "./add-solr-config.dialog.component";
 import {AddJobTemplateDialogComponent} from "./add-job-template-dialog.component";
 import {AddParticipantDialogComponent} from "./add-participant-dialog.component";
+import {MatCard, MatCardContent, MatCardHeader, MatCardTitle} from "@angular/material/card";
+import {MatMiniFabButton} from "@angular/material/button";
+import {MatTooltip} from "@angular/material/tooltip";
+import {MatIcon} from "@angular/material/icon";
+import {MatList, MatListItem, MatListItemLine, MatListItemTitle} from "@angular/material/list";
+import {RouterLink} from "@angular/router";
 
 @Component({
     selector: 'kiar-admin-dashboard',
     templateUrl: './admin-dashboard.component.html',
     styleUrls: ['./admin-dashboard.component.scss'],
-    standalone: false
+    imports: [MatCard, MatCardHeader, MatCardTitle, MatMiniFabButton, MatTooltip, MatIcon, MatCardContent, MatList, MatListItem, RouterLink, MatListItemTitle, MatListItemLine]
 })
 export class AdminDashboardComponent implements AfterViewInit {
   /** The {@link ConfigService} used to access application configuration (templates, mappings, Solr configurations, participants). */

@@ -5,8 +5,7 @@ import {catchError, map, of, switchMap} from "rxjs";
 
 @Component({
     selector: 'app-institution-image',
-    template: '@if (imageUrl()) {<img [src]="imageUrl()" [width]="width()" [height]="height()" [style.object-fit]="\'contain\'" />}',
-    standalone: false
+    template: '@if (imageUrl()) {<img [src]="imageUrl()" [width]="width()" [height]="height()" [style.object-fit]="\'contain\'" />}'
 })
 export class InstitutionImageComponent {
   /** The {@link InstitutionService} used to access institution data. */

@@ -1,15 +1,18 @@
 import {AfterViewInit, Component, inject} from "@angular/core";
-import {FormControl, FormGroup, Validators} from "@angular/forms";
+import {FormControl, FormGroup, FormsModule, ReactiveFormsModule, Validators} from "@angular/forms";
 import {Role, SessionService, SessionStatus, User} from "../../../../../openapi";
 import {Observer} from "rxjs";
 import {MatSnackBar, MatSnackBarConfig} from "@angular/material/snack-bar";
 import {PASSWORD_VALIDATOR} from "../../../utilities/password";
+import {MatDialogActions, MatDialogContent, MatDialogTitle} from "@angular/material/dialog";
+import {MatError, MatFormField, MatInput, MatLabel} from "@angular/material/input";
+import {MatButton} from "@angular/material/button";
 
 @Component({
     selector: 'app-user-profile',
     templateUrl: './profile.component.html',
     styleUrls: ['./profile.component.scss'],
-    standalone: false
+    imports: [MatDialogTitle, MatDialogContent, FormsModule, ReactiveFormsModule, MatFormField, MatLabel, MatInput, MatError, MatDialogActions, MatButton]
 })
 export class ProfileComponent implements AfterViewInit {
   /** The {@link SessionService} used to access the current session. */

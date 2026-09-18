@@ -1,12 +1,14 @@
 import {Component, inject} from "@angular/core";
-import {FormControl, FormGroup, Validators} from "@angular/forms";
-import {MatDialogRef} from "@angular/material/dialog";
+import {FormControl, FormGroup, FormsModule, ReactiveFormsModule, Validators} from "@angular/forms";
+import {MatDialogActions, MatDialogContent, MatDialogRef, MatDialogTitle} from "@angular/material/dialog";
 import {ApacheSolrConfig} from "../../../../../openapi";
+import {MatFormField, MatInput, MatLabel} from "@angular/material/input";
+import {MatButton} from "@angular/material/button";
 
 @Component({
     selector: 'kiar-add-solr-config-dialog',
     templateUrl: './add-solr-config.dialog.component.html',
-    standalone: false
+  imports: [MatDialogTitle, MatDialogContent, FormsModule, ReactiveFormsModule, MatFormField, MatLabel, MatInput, MatDialogActions, MatButton]
 })
 export class AddSolrConfigDialogComponent {
   /** The {@link MatDialogRef} used to interact with and close this dialog. */

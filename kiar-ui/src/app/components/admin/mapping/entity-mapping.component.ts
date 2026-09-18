@@ -10,15 +10,21 @@ import {
 import {ActivatedRoute, Router} from "@angular/router";
 import {catchError, map, mergeMap, Observable, of} from "rxjs";
 import {MatSnackBar, MatSnackBarConfig} from "@angular/material/snack-bar";
-import {FormArray, FormControl, FormGroup, Validators} from "@angular/forms";
+import {FormArray, FormControl, FormGroup, FormsModule, ReactiveFormsModule, Validators} from "@angular/forms";
 import {MatDialog} from "@angular/material/dialog";
 import {AttributeMappingData, AttributeMappingDialogComponent} from "./attribute-mapping-dialog.component";
+import {MatFormField, MatInput, MatLabel} from "@angular/material/input";
+import {MatOption, MatSelect} from "@angular/material/select";
+import {MatButton, MatIconButton, MatMiniFabButton} from "@angular/material/button";
+import {MatTooltip} from "@angular/material/tooltip";
+import {MatIcon} from "@angular/material/icon";
+import {MatCheckbox} from "@angular/material/checkbox";
 
 @Component({
     selector: 'kiar-entity-mapping-admin',
     templateUrl: './entity-mapping.component.html',
     styleUrls: ['./entity-mapping.component.scss'],
-    standalone: false
+    imports: [FormsModule, ReactiveFormsModule, MatFormField, MatLabel, MatInput, MatSelect, MatOption, MatButton, MatTooltip, MatMiniFabButton, MatIcon, MatIconButton, MatCheckbox]
 })
 export class EntityMappingComponent implements AfterViewInit {
   /** The {@link EntityMappingService} used to access entity mappings, parsers and mapping formats. */

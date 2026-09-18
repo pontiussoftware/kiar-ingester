@@ -13,12 +13,31 @@ import {CollectionDatasource} from "./collection-datasource";
 import {MatSnackBar, MatSnackBarConfig} from "@angular/material/snack-bar";
 import {MatDialog} from "@angular/material/dialog";
 import {CollectionDialogComponent} from "./collection-dialog.component";
+import {MatIconButton, MatMiniFabButton} from "@angular/material/button";
+import {MatTooltip} from "@angular/material/tooltip";
+import {MatIcon} from "@angular/material/icon";
+import {MatMenu, MatMenuItem, MatMenuTrigger} from "@angular/material/menu";
+import {MatFormField, MatInput, MatLabel} from "@angular/material/input";
+import {
+  MatCell,
+  MatCellDef,
+  MatColumnDef,
+  MatHeaderCell,
+  MatHeaderCellDef,
+  MatHeaderRow,
+  MatHeaderRowDef,
+  MatRow,
+  MatRowDef,
+  MatTable
+} from "@angular/material/table";
+import {MatSort, MatSortHeader} from "@angular/material/sort";
+import {CollectionImageComponent} from "./collection-image.component";
 
 @Component({
     selector: 'kiar-collection-list',
     templateUrl: './collection-list.component.html',
     styleUrls: ['./collection-list.component.scss'],
-    standalone: false
+    imports: [MatMiniFabButton, MatTooltip, MatIcon, MatMenuTrigger, MatMenu, MatMenuItem, MatFormField, MatLabel, MatInput, MatTable, MatSort, MatColumnDef, MatHeaderCellDef, MatHeaderCell, MatCellDef, MatCell, CollectionImageComponent, MatSortHeader, MatIconButton, MatHeaderRowDef, MatHeaderRow, MatRowDef, MatRow, MatPaginator]
 })
 export class CollectionListComponent implements AfterViewInit  {
   /** The {@link CollectionService} used to access collection data. */

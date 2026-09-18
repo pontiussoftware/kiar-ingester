@@ -1,16 +1,26 @@
 import {Component, inject} from "@angular/core";
 import {toSignal} from "@angular/core/rxjs-interop";
-import {FormControl, FormGroup, Validators} from "@angular/forms";
+import {FormControl, FormGroup, FormsModule, ReactiveFormsModule, Validators} from "@angular/forms";
 import {first, map, tap} from "rxjs";
 import {Institution, InstitutionService, Role, User, UserService} from "../../../../openapi";
-import {MAT_DIALOG_DATA, MatDialogRef} from "@angular/material/dialog";
+import {
+  MAT_DIALOG_DATA,
+  MatDialogActions,
+  MatDialogContent,
+  MatDialogRef,
+  MatDialogTitle
+} from "@angular/material/dialog";
 import {PASSWORD_VALIDATOR} from "../../utilities/password";
+import {MatError, MatFormField, MatInput, MatLabel} from "@angular/material/input";
+import {MatOption, MatSelect} from "@angular/material/select";
+import {MatCheckbox} from "@angular/material/checkbox";
+import {MatButton} from "@angular/material/button";
 
 @Component({
     selector: 'kiar-user-dialog',
     templateUrl: './user-dialog.component.html',
     styleUrls: ['./user-dialog.component.scss'],
-    standalone: false
+  imports: [MatDialogTitle, MatDialogContent, FormsModule, ReactiveFormsModule, MatFormField, MatLabel, MatInput, MatError, MatSelect, MatOption, MatCheckbox, MatDialogActions, MatButton]
 })
 export class UserDialogComponent {
   /** The {@link UserService} used to load and edit user information. */

@@ -10,14 +10,20 @@ import {
   ImageFormat
 } from "../../../../../openapi";
 import {ActivatedRoute, Router} from "@angular/router";
-import {FormArray, FormControl, FormGroup, Validators} from "@angular/forms";
+import {FormArray, FormControl, FormGroup, FormsModule, ReactiveFormsModule, Validators} from "@angular/forms";
 import {MatSnackBar, MatSnackBarConfig} from "@angular/material/snack-bar";
+import {MatFormField, MatInput, MatLabel} from "@angular/material/input";
+import {MatButton, MatIconButton, MatMiniFabButton} from "@angular/material/button";
+import {MatTooltip} from "@angular/material/tooltip";
+import {MatIcon} from "@angular/material/icon";
+import {MatOption, MatSelect} from "@angular/material/select";
+import {MatCheckbox} from "@angular/material/checkbox";
 
 @Component({
     selector: 'kiar-apache-solr-admin',
     templateUrl: './apache-solr.component.html',
     styleUrls: ['./apache-solr.component.scss'],
-    standalone: false
+    imports: [FormsModule, ReactiveFormsModule, MatFormField, MatLabel, MatInput, MatButton, MatTooltip, MatMiniFabButton, MatIcon, MatIconButton, MatSelect, MatOption, MatCheckbox]
 })
 export class ApacheSolrComponent implements AfterViewInit{
   /** The {@link ApacheSolrService} used to load and edit Apache Solr configurations. */
