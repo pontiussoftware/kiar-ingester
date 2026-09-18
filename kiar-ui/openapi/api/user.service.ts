@@ -9,25 +9,29 @@
  */
 /* tslint:disable:no-unused-variable member-ordering */
 
-import {Inject, Injectable, Optional} from '@angular/core';
-import {HttpClient, HttpContext, HttpEvent, HttpParams, HttpResponse} from '@angular/common/http';
-import {Observable} from 'rxjs';
+import { Inject, Injectable, Optional }                      from '@angular/core';
+import { HttpClient, HttpHeaders, HttpParams,
+         HttpResponse, HttpEvent, HttpParameterCodec, HttpContext 
+        }       from '@angular/common/http';
+import { CustomHttpParameterCodec }                          from '../encoder';
+import { Observable }                                        from 'rxjs';
 
 // @ts-ignore
-import {ErrorStatus} from '../model/errorStatus';
+import { ErrorStatus } from '../model/errorStatus';
 // @ts-ignore
-import {PaginatedUserResult} from '../model/paginatedUserResult';
+import { PaginatedUserResult } from '../model/paginatedUserResult';
 // @ts-ignore
-import {Role} from '../model/role';
+import { Role } from '../model/role';
 // @ts-ignore
-import {SuccessStatus} from '../model/successStatus';
+import { SuccessStatus } from '../model/successStatus';
 // @ts-ignore
-import {User} from '../model/user';
+import { User } from '../model/user';
 
 // @ts-ignore
-import {BASE_PATH, COLLECTION_FORMATS} from '../variables';
-import {Configuration} from '../configuration';
-import {BaseService} from '../api.base.service';
+import { BASE_PATH, COLLECTION_FORMATS }                     from '../variables';
+import { Configuration }                                     from '../configuration';
+import { BaseService } from '../api.base.service';
+
 
 
 @Injectable({
@@ -41,6 +45,7 @@ export class UserService extends BaseService {
 
     /**
      * Deletes an existing user.
+     * @endpoint delete /api/users/{id}
      * @param id The ID of the user that should be deleted.
      * @param observe set whether or not to return the data Observable as the body, response or events. defaults to returning the body.
      * @param reportProgress flag to report request and response progress.
@@ -87,7 +92,7 @@ export class UserService extends BaseService {
                 ...(withCredentials ? { withCredentials } : {}),
                 headers: localVarHeaders,
                 observe: observe,
-                transferCache: localVarTransferCache,
+                ...(localVarTransferCache !== undefined ? { transferCache: localVarTransferCache } : {}),
                 reportProgress: reportProgress
             }
         );
@@ -95,6 +100,7 @@ export class UserService extends BaseService {
 
     /**
      * Lists all available roles.
+     * @endpoint get /api/users/roles
      * @param observe set whether or not to return the data Observable as the body, response or events. defaults to returning the body.
      * @param reportProgress flag to report request and response progress.
      */
@@ -137,7 +143,7 @@ export class UserService extends BaseService {
                 ...(withCredentials ? { withCredentials } : {}),
                 headers: localVarHeaders,
                 observe: observe,
-                transferCache: localVarTransferCache,
+                ...(localVarTransferCache !== undefined ? { transferCache: localVarTransferCache } : {}),
                 reportProgress: reportProgress
             }
         );
@@ -145,6 +151,7 @@ export class UserService extends BaseService {
 
     /**
      * Retrieves all users registered in the database.
+     * @endpoint get /api/users
      * @param page The page index (zero-based) for pagination.
      * @param pageSize The page size for pagination.
      * @param order The attribute to order by. Possible values are \&#39;name\&#39;, \&#39;email\&#39;, \&#39;inactive\&#39;.
@@ -202,7 +209,7 @@ export class UserService extends BaseService {
                 ...(withCredentials ? { withCredentials } : {}),
                 headers: localVarHeaders,
                 observe: observe,
-                transferCache: localVarTransferCache,
+                ...(localVarTransferCache !== undefined ? { transferCache: localVarTransferCache } : {}),
                 reportProgress: reportProgress
             }
         );
@@ -210,6 +217,7 @@ export class UserService extends BaseService {
 
     /**
      * Creates a new user.
+     * @endpoint post /api/users
      * @param user 
      * @param observe set whether or not to return the data Observable as the body, response or events. defaults to returning the body.
      * @param reportProgress flag to report request and response progress.
@@ -266,7 +274,7 @@ export class UserService extends BaseService {
                 ...(withCredentials ? { withCredentials } : {}),
                 headers: localVarHeaders,
                 observe: observe,
-                transferCache: localVarTransferCache,
+                ...(localVarTransferCache !== undefined ? { transferCache: localVarTransferCache } : {}),
                 reportProgress: reportProgress
             }
         );
@@ -274,6 +282,7 @@ export class UserService extends BaseService {
 
     /**
      * Updates an existing user.
+     * @endpoint put /api/users/{id}
      * @param id The ID of the user that should be updated.
      * @param user 
      * @param observe set whether or not to return the data Observable as the body, response or events. defaults to returning the body.
@@ -334,7 +343,7 @@ export class UserService extends BaseService {
                 ...(withCredentials ? { withCredentials } : {}),
                 headers: localVarHeaders,
                 observe: observe,
-                transferCache: localVarTransferCache,
+                ...(localVarTransferCache !== undefined ? { transferCache: localVarTransferCache } : {}),
                 reportProgress: reportProgress
             }
         );

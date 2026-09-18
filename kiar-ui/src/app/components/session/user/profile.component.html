@@ -1,49 +1,49 @@
-<h1 mat-dialog-title i18n="@@TitleUserProfile">User profile</h1>
+<h1 mat-dialog-title>{{ 'profile.title' | translate }}</h1>
 <div mat-dialog-content>
   <form [formGroup]="formControl">
     <mat-form-field [style.width]="'60%'">
-      <mat-label i18n="@@LabelPassword">Username:</mat-label>
-      <input type="text" matInput placeholder="Username" formControlName="username"  />
+      <mat-label>{{ 'common.label.username' | translate }}</mat-label>
+      <input type="text" matInput [placeholder]="'common.label.username' | translate" formControlName="username"  />
     </mat-form-field>
 
     <mat-form-field [style.width]="'40%'">
-      <mat-label i18n="@@LabelRole">Role:</mat-label>
-      <input type="text" matInput placeholder="Role" formControlName="role"/>
+      <mat-label>{{ 'common.label.role' | translate }}</mat-label>
+      <input type="text" matInput [placeholder]="'common.label.role' | translate" formControlName="role"/>
     </mat-form-field>
 
     <mat-form-field [style.width]="'100%'">
-      <mat-label i18n="@@LabelEmail">E-Mail:</mat-label>
-      <input type="email" matInput placeholder="E-Mail" formControlName="email"  />
+      <mat-label>{{ 'common.label.email' | translate }}</mat-label>
+      <input type="email" matInput [placeholder]="'common.label.email' | translate" formControlName="email"  />
       @if (formControl.get('email')?.hasError('email')) {
-        <mat-error>Not a valid e-mail address.</mat-error>
+        <mat-error>{{ 'profile.errors.invalidEmail' | translate }}</mat-error>
       }
     </mat-form-field>
 
     <mat-form-field [style.width]="'100%'">
-      <mat-label i18n="@@LabelInstitution">Institution:</mat-label>
-      <input type="text" matInput placeholder="Institution" formControlName="institution" />
+      <mat-label>{{ 'common.label.institution' | translate }}</mat-label>
+      <input type="text" matInput [placeholder]="'common.label.institution' | translate" formControlName="institution" />
     </mat-form-field>
 
     <div formGroupName="password">
       <mat-form-field [style.width]="'100%'">
-        <mat-label i18n="@@LabelPassword">Password:</mat-label>
-        <input type="password" matInput placeholder="Minimum of 8 characters" formControlName="passwordFirst" />
+        <mat-label>{{ 'common.label.password' | translate }}</mat-label>
+        <input type="password" matInput [placeholder]="'profile.placeholders.passwordMinLength' | translate" formControlName="passwordFirst" />
         @if (formControl.get('password')?.get('passwordFirst')?.hasError('minlength')) {
-          <mat-error>Password must have at least 8 characters.</mat-error>
+          <mat-error>{{ 'profile.errors.passwordTooShort' | translate }}</mat-error>
         }
       </mat-form-field>
 
       <mat-form-field [style.width]="'100%'">
-        <mat-label i18n="@@LabelPasswordRepeat">Password (repeat):</mat-label>
-        <input type="password" matInput placeholder="Minimum of 8 characters" formControlName="passwordSecond"  />
+        <mat-label>{{ 'common.label.passwordRepeat' | translate }}</mat-label>
+        <input type="password" matInput [placeholder]="'profile.placeholders.passwordMinLength' | translate" formControlName="passwordSecond"  />
         @if (formControl.get('password')?.hasError('notSame')) {
-          <mat-error>Passwords do not match.</mat-error>
+          <mat-error>{{ 'profile.errors.passwordMismatch' | translate }}</mat-error>
         }
       </mat-form-field>
     </div>
   </form>
 </div>
 <div mat-dialog-actions>
-  <button mat-flat-button color="primary" i18n="@@LabelUpdate" (click)="update()">Update</button>
-  <button mat-flat-button color="warn" i18n="@@LabelReload" (click)="reload()">Reload</button>
+  <button mat-flat-button color="primary" (click)="update()">{{ 'common.action.update' | translate }}</button>
+  <button mat-flat-button color="warn" (click)="reload()">{{ 'common.action.reload' | translate }}</button>
 </div>

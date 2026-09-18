@@ -16,31 +16,29 @@ import ch.pontius.kiar.database.institutions.Institutions
 import ch.pontius.kiar.database.institutions.Participants
 import ch.pontius.kiar.ingester.IngesterServer
 import ch.pontius.kiar.utilities.extensions.currentUser
-import ch.pontius.kiar.utilities.extensions.parseBodyOrThrow
-import io.javalin.http.Context
-import io.javalin.openapi.*
+import ch.pontius.kiar.utilities.extensions.receiveOrThrow
 import org.jetbrains.exposed.v1.core.eq
 import org.jetbrains.exposed.v1.jdbc.*
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 import java.time.Instant
+import io.ktor.server.application.ApplicationCall
+import ch.pontius.kiar.api.openapi.*
+import io.ktor.server.response.respond
+import ch.pontius.kiar.utilities.extensions.pathParam
 
-@OpenApi(
-    path = "/api/templates",
-    methods = [HttpMethod.GET],
-    summary = "Lists all available job templates.",
-    operationId = "getListJobTemplates",
-    tags = ["Config", "Job Template", "Job"],
-    pathParams = [],
-    responses = [
-        OpenApiResponse("200", [OpenApiContent(Array<JobTemplate>::class)]),
-        OpenApiResponse("401", [OpenApiContent(ErrorStatus::class)]),
-        OpenApiResponse("403", [OpenApiContent(ErrorStatus::class)]),
-        OpenApiResponse("500", [OpenApiContent(ErrorStatus::class)]),
-    ]
-)
-fun listJobTemplates(ctx: Context) {
+val listJobTemplatesDoc: RouteDoc = {
+    operationId = "getListJobTemplates"
+    summary = "Lists all available job templates."
+    tags("Config", "Job Template", "Job")
+    responses {
+        json<List<JobTemplate>>(200)
+        errors(401, 403, 500)
+    }
+}
+
+suspend fun listJobTemplates(call: ApplicationCall) {
     val templates = transaction {
-        val user = ctx.currentUser()
+        val user = call.currentUser()
         val query = (JobTemplates innerJoin Participants innerJoin SolrConfigs innerJoin EntityMappings).selectAll()
 
         if (user.role != Role.ADMINISTRATOR) {
@@ -61,27 +59,22 @@ fun listJobTemplates(ctx: Context) {
     }
 
     /* Return results. */
-    ctx.json(templates.toTypedArray())
+    call.respond(templates)
 }
 
-@OpenApi(
-    path = "/api/templates",
-    methods = [HttpMethod.POST],
-    summary = "Creates a new job template.",
-    operationId = "postCreateJobTemplate",
-    tags = ["Config", "Job Template"],
-    pathParams = [],
-    requestBody = OpenApiRequestBody([OpenApiContent(JobTemplate::class)], required = true),
-    responses = [
-        OpenApiResponse("200", [OpenApiContent(JobTemplate::class)]),
-        OpenApiResponse("400", [OpenApiContent(ErrorStatus::class)]),
-        OpenApiResponse("401", [OpenApiContent(ErrorStatus::class)]),
-        OpenApiResponse("403", [OpenApiContent(ErrorStatus::class)]),
-        OpenApiResponse("500", [OpenApiContent(ErrorStatus::class)]),
-    ]
-)
-fun createJobTemplate(ctx: Context, server: IngesterServer) {
-    val request = ctx.parseBodyOrThrow<JobTemplate>()
+val createJobTemplateDoc: RouteDoc = {
+    operationId = "postCreateJobTemplate"
+    summary = "Creates a new job template."
+    tags("Config", "Job Template")
+    jsonBody<JobTemplate>()
+    responses {
+        json<JobTemplate>(200)
+        errors(400, 401, 403, 500)
+    }
+}
+
+suspend fun createJobTemplate(call: ApplicationCall, server: IngesterServer) {
+    val request = call.receiveOrThrow<JobTemplate>()
     val created = transaction {
         val jobTemplateId = JobTemplates.insertAndGetId { insert ->
             insert[name] = request.name
@@ -110,59 +103,50 @@ fun createJobTemplate(ctx: Context, server: IngesterServer) {
     }
 
     /* Return created JSON. */
-    ctx.json(created)
+    call.respond(created)
 }
 
-@OpenApi(
-    path = "/api/templates/{id}",
-    methods = [HttpMethod.GET],
-    summary = "Deletes an existing job template.",
-    operationId = "getJobTemplate",
-    tags = ["Config", "Job Template"],
-    pathParams = [
-        OpenApiParam(name = "id", type = Int::class, description = "The ID of the job template to retrieve.", required = true)
-    ],
-    responses = [
-        OpenApiResponse("200", [OpenApiContent(JobTemplate::class)]),
-        OpenApiResponse("401", [OpenApiContent(ErrorStatus::class)]),
-        OpenApiResponse("403", [OpenApiContent(ErrorStatus::class)]),
-        OpenApiResponse("404", [OpenApiContent(ErrorStatus::class)]),
-        OpenApiResponse("500", [OpenApiContent(ErrorStatus::class)])
-    ]
-)
-fun getJobTemplate(ctx: Context) {
-    val templateId = ctx.pathParam("id").toIntOrNull() ?: throw ErrorStatusException(400, "Malformed job template ID.")
+val getJobTemplateDoc: RouteDoc = {
+    operationId = "getJobTemplate"
+    summary = "Deletes an existing job template."
+    tags("Config", "Job Template")
+    parameters {
+        pathParam("id", "The ID of the job template to retrieve.")
+    }
+    responses {
+        json<JobTemplate>(200)
+        errors(401, 403, 404, 500)
+    }
+}
+
+suspend fun getJobTemplate(call: ApplicationCall) {
+    val templateId = call.pathParam("id").toIntOrNull() ?: throw ErrorStatusException(400, "Malformed job template ID.")
     val template = transaction {
         val template =  JobTemplates.getById(templateId) ?: throw ErrorStatusException(404, "Job template with ID $templateId could not be found.")
         val transformers = Transformers.getByJobTemplateId(templateId)
         template.copy(transformers = transformers)
     }
-    ctx.json(template)
+    call.respond(template)
 }
 
-@OpenApi(
-    path = "/api/templates/{id}",
-    methods = [HttpMethod.PUT],
-    summary = "Updates an existing job template.",
-    operationId = "updateJobTemplate",
-    tags = ["Config", "Job Template"],
-    pathParams = [
-        OpenApiParam(name = "id", type = Int::class, description = "The ID of the job template that should be updated.", required = true)
-    ],
-    requestBody = OpenApiRequestBody([OpenApiContent(JobTemplate::class)], required = true),
-    responses = [
-        OpenApiResponse("200", [OpenApiContent(JobTemplate::class)]),
-        OpenApiResponse("400", [OpenApiContent(ErrorStatus::class)]),
-        OpenApiResponse("401", [OpenApiContent(ErrorStatus::class)]),
-        OpenApiResponse("403", [OpenApiContent(ErrorStatus::class)]),
-        OpenApiResponse("404", [OpenApiContent(ErrorStatus::class)]),
-        OpenApiResponse("500", [OpenApiContent(ErrorStatus::class)])
-    ]
-)
-fun updateJobTemplate(ctx: Context, server: IngesterServer) {
+val updateJobTemplateDoc: RouteDoc = {
+    operationId = "updateJobTemplate"
+    summary = "Updates an existing job template."
+    tags("Config", "Job Template")
+    parameters {
+        pathParam("id", "The ID of the job template that should be updated.")
+    }
+    jsonBody<JobTemplate>()
+    responses {
+        json<JobTemplate>(200)
+        errors(400, 401, 403, 404, 500)
+    }
+}
+
+suspend fun updateJobTemplate(call: ApplicationCall, server: IngesterServer) {
     /* Extract the ID and the request body. */
-    val templateId = ctx.pathParam("id").toIntOrNull() ?: throw ErrorStatusException(400, "Malformed job template ID.")
-    val request = ctx.parseBodyOrThrow<JobTemplate>()
+    val templateId = call.pathParam("id").toIntOrNull() ?: throw ErrorStatusException(400, "Malformed job template ID.")
+    val request = call.receiveOrThrow<JobTemplate>()
 
     /* Start transaction. */
     transaction {
@@ -196,28 +180,24 @@ fun updateJobTemplate(ctx: Context, server: IngesterServer) {
     }
 
     /* Returns updated object. */
-    ctx.json(request)
+    call.respond(request)
 }
 
-@OpenApi(
-    path = "/api/templates/{id}",
-    methods = [HttpMethod.DELETE],
-    summary = "Deletes an existing job template.",
-    operationId = "deleteJobTemplate",
-    tags = ["Config", "Job Template"],
-    pathParams = [
-        OpenApiParam(name = "id", type = Int::class, description = "The ID of the job template that should be deleted.", required = true)
-    ],
-    responses = [
-        OpenApiResponse("200", [OpenApiContent(SuccessStatus::class)]),
-        OpenApiResponse("401", [OpenApiContent(ErrorStatus::class)]),
-        OpenApiResponse("403", [OpenApiContent(ErrorStatus::class)]),
-        OpenApiResponse("404", [OpenApiContent(ErrorStatus::class)]),
-        OpenApiResponse("500", [OpenApiContent(ErrorStatus::class)])
-    ]
-)
-fun deleteJobTemplate(ctx: Context, server: IngesterServer) {
-    val templateId = ctx.pathParam("id").toIntOrNull() ?: throw ErrorStatusException(400, "Malformed job template ID.")
+val deleteJobTemplateDoc: RouteDoc = {
+    operationId = "deleteJobTemplate"
+    summary = "Deletes an existing job template."
+    tags("Config", "Job Template")
+    parameters {
+        pathParam("id", "The ID of the job template that should be deleted.")
+    }
+    responses {
+        json<SuccessStatus>(200)
+        errors(401, 403, 404, 500)
+    }
+}
+
+suspend fun deleteJobTemplate(call: ApplicationCall, server: IngesterServer) {
+    val templateId = call.pathParam("id").toIntOrNull() ?: throw ErrorStatusException(400, "Malformed job template ID.")
     var terminateWatcher = false
     val deleted = transaction {
         terminateWatcher = JobTemplates.select(JobTemplates.startAutomatically).where { JobTemplates.id eq templateId }.map { it[JobTemplates.startAutomatically] }.firstOrNull() ?: false
@@ -231,9 +211,9 @@ fun deleteJobTemplate(ctx: Context, server: IngesterServer) {
 
     /* Return status. */
     if (deleted > 0) {
-        ctx.json(SuccessStatus("Job template with ID $templateId  deleted successfully."))
+        call.respond(SuccessStatus("Job template with ID $templateId  deleted successfully."))
     } else {
-        ctx.json(ErrorStatus(404, "Job template with ID $templateId could not be deleted because it could not be found."))
+        call.respond(ErrorStatus(404, "Job template with ID $templateId could not be deleted because it could not be found."))
     }
 }
 

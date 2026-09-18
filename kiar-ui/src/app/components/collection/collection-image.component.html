@@ -1,16 +1,16 @@
-@if (imageUrl) {
-  @if (edit) {
-    <div class="image-container" (mouseenter)="showOverlay = true" (mouseleave)="showOverlay = false">
-      <img [src]="imageUrl" [width]="width" [height]="height" [style.object-fit]="'contain'" />
-      @if (showOverlay) {
-        <div class="overlay" (click)="delete()">
+@if (this.imageUrl()) {
+  @if (this.edit()) {
+    <div class="image-container" (mouseenter)="this.showOverlay.set(true)" (mouseleave)="this.showOverlay.set(false)">
+      <img [src]="this.imageUrl()" [width]="this.width()" [height]="this.height()" [style.object-fit]="'contain'" />
+      @if (this.showOverlay()) {
+        <div class="overlay" (click)="delete()" [title]="'collection.image.tooltips.delete' | translate" [attr.aria-label]="'collection.image.tooltips.delete' | translate">
           <mat-icon>delete</mat-icon>
         </div>
       }
     </div>
   } @else {
     <div class="image-container">
-      <img [src]="imageUrl" [width]="width" [height]="height" [style.object-fit]="'contain'" />
+      <img [src]="this.imageUrl()" [width]="this.width()" [height]="this.height()" [style.object-fit]="'contain'" />
     </div>
   }
 }

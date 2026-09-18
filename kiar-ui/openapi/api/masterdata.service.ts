@@ -9,31 +9,35 @@
  */
 /* tslint:disable:no-unused-variable member-ordering */
 
-import {Inject, Injectable, Optional} from '@angular/core';
-import {HttpClient, HttpContext, HttpEvent, HttpResponse} from '@angular/common/http';
-import {Observable} from 'rxjs';
+import { Inject, Injectable, Optional }                      from '@angular/core';
+import { HttpClient, HttpHeaders, HttpParams,
+         HttpResponse, HttpEvent, HttpParameterCodec, HttpContext 
+        }       from '@angular/common/http';
+import { CustomHttpParameterCodec }                          from '../encoder';
+import { Observable }                                        from 'rxjs';
 
 // @ts-ignore
-import {Canton} from '../model/canton';
+import { Canton } from '../model/canton';
 // @ts-ignore
-import {ErrorStatus} from '../model/errorStatus';
+import { ErrorStatus } from '../model/errorStatus';
 // @ts-ignore
-import {ImageFormat} from '../model/imageFormat';
+import { ImageFormat } from '../model/imageFormat';
 // @ts-ignore
-import {JobType} from '../model/jobType';
+import { JobType } from '../model/jobType';
 // @ts-ignore
-import {MappingFormat} from '../model/mappingFormat';
+import { MappingFormat } from '../model/mappingFormat';
 // @ts-ignore
-import {RightStatement} from '../model/rightStatement';
+import { RightStatement } from '../model/rightStatement';
 // @ts-ignore
-import {TransformerType} from '../model/transformerType';
+import { TransformerType } from '../model/transformerType';
 // @ts-ignore
-import {ValueParser} from '../model/valueParser';
+import { ValueParser } from '../model/valueParser';
 
 // @ts-ignore
-import {BASE_PATH, COLLECTION_FORMATS} from '../variables';
-import {Configuration} from '../configuration';
-import {BaseService} from '../api.base.service';
+import { BASE_PATH, COLLECTION_FORMATS }                     from '../variables';
+import { Configuration }                                     from '../configuration';
+import { BaseService } from '../api.base.service';
+
 
 
 @Injectable({
@@ -47,6 +51,7 @@ export class MasterdataService extends BaseService {
 
     /**
      * Lists all available cantons.
+     * @endpoint get /api/masterdata/cantons
      * @param observe set whether or not to return the data Observable as the body, response or events. defaults to returning the body.
      * @param reportProgress flag to report request and response progress.
      */
@@ -89,7 +94,7 @@ export class MasterdataService extends BaseService {
                 ...(withCredentials ? { withCredentials } : {}),
                 headers: localVarHeaders,
                 observe: observe,
-                transferCache: localVarTransferCache,
+                ...(localVarTransferCache !== undefined ? { transferCache: localVarTransferCache } : {}),
                 reportProgress: reportProgress
             }
         );
@@ -97,6 +102,7 @@ export class MasterdataService extends BaseService {
 
     /**
      * Lists all available formats available for image deployment.
+     * @endpoint get /api/masterdata/image-formats
      * @param observe set whether or not to return the data Observable as the body, response or events. defaults to returning the body.
      * @param reportProgress flag to report request and response progress.
      */
@@ -139,7 +145,7 @@ export class MasterdataService extends BaseService {
                 ...(withCredentials ? { withCredentials } : {}),
                 headers: localVarHeaders,
                 observe: observe,
-                transferCache: localVarTransferCache,
+                ...(localVarTransferCache !== undefined ? { transferCache: localVarTransferCache } : {}),
                 reportProgress: reportProgress
             }
         );
@@ -147,6 +153,7 @@ export class MasterdataService extends BaseService {
 
     /**
      * Lists all available job template types.
+     * @endpoint get /api/masterdata/job-types
      * @param observe set whether or not to return the data Observable as the body, response or events. defaults to returning the body.
      * @param reportProgress flag to report request and response progress.
      */
@@ -189,7 +196,7 @@ export class MasterdataService extends BaseService {
                 ...(withCredentials ? { withCredentials } : {}),
                 headers: localVarHeaders,
                 observe: observe,
-                transferCache: localVarTransferCache,
+                ...(localVarTransferCache !== undefined ? { transferCache: localVarTransferCache } : {}),
                 reportProgress: reportProgress
             }
         );
@@ -197,6 +204,7 @@ export class MasterdataService extends BaseService {
 
     /**
      * Lists all available entity mapping formats.
+     * @endpoint get /api/masterdata/mapping-formats
      * @param observe set whether or not to return the data Observable as the body, response or events. defaults to returning the body.
      * @param reportProgress flag to report request and response progress.
      */
@@ -239,7 +247,7 @@ export class MasterdataService extends BaseService {
                 ...(withCredentials ? { withCredentials } : {}),
                 headers: localVarHeaders,
                 observe: observe,
-                transferCache: localVarTransferCache,
+                ...(localVarTransferCache !== undefined ? { transferCache: localVarTransferCache } : {}),
                 reportProgress: reportProgress
             }
         );
@@ -247,6 +255,7 @@ export class MasterdataService extends BaseService {
 
     /**
      * Lists all available parses available for entity mapping.
+     * @endpoint get /api/masterdata/parsers
      * @param observe set whether or not to return the data Observable as the body, response or events. defaults to returning the body.
      * @param reportProgress flag to report request and response progress.
      */
@@ -289,7 +298,7 @@ export class MasterdataService extends BaseService {
                 ...(withCredentials ? { withCredentials } : {}),
                 headers: localVarHeaders,
                 observe: observe,
-                transferCache: localVarTransferCache,
+                ...(localVarTransferCache !== undefined ? { transferCache: localVarTransferCache } : {}),
                 reportProgress: reportProgress
             }
         );
@@ -297,6 +306,7 @@ export class MasterdataService extends BaseService {
 
     /**
      * Lists all available right statements.
+     * @endpoint get /api/masterdata/rightstatements
      * @param observe set whether or not to return the data Observable as the body, response or events. defaults to returning the body.
      * @param reportProgress flag to report request and response progress.
      */
@@ -339,7 +349,7 @@ export class MasterdataService extends BaseService {
                 ...(withCredentials ? { withCredentials } : {}),
                 headers: localVarHeaders,
                 observe: observe,
-                transferCache: localVarTransferCache,
+                ...(localVarTransferCache !== undefined ? { transferCache: localVarTransferCache } : {}),
                 reportProgress: reportProgress
             }
         );
@@ -347,6 +357,7 @@ export class MasterdataService extends BaseService {
 
     /**
      * Lists all available transformer types.
+     * @endpoint get /api/masterdata/transformers
      * @param observe set whether or not to return the data Observable as the body, response or events. defaults to returning the body.
      * @param reportProgress flag to report request and response progress.
      */
@@ -389,7 +400,7 @@ export class MasterdataService extends BaseService {
                 ...(withCredentials ? { withCredentials } : {}),
                 headers: localVarHeaders,
                 observe: observe,
-                transferCache: localVarTransferCache,
+                ...(localVarTransferCache !== undefined ? { transferCache: localVarTransferCache } : {}),
                 reportProgress: reportProgress
             }
         );

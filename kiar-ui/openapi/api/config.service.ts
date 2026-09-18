@@ -9,37 +9,41 @@
  */
 /* tslint:disable:no-unused-variable member-ordering */
 
-import {Inject, Injectable, Optional} from '@angular/core';
-import {HttpClient, HttpContext, HttpEvent, HttpResponse} from '@angular/common/http';
-import {Observable} from 'rxjs';
+import { Inject, Injectable, Optional }                      from '@angular/core';
+import { HttpClient, HttpHeaders, HttpParams,
+         HttpResponse, HttpEvent, HttpParameterCodec, HttpContext 
+        }       from '@angular/common/http';
+import { CustomHttpParameterCodec }                          from '../encoder';
+import { Observable }                                        from 'rxjs';
 
 // @ts-ignore
-import {ApacheSolrCollection} from '../model/apacheSolrCollection';
+import { ApacheSolrCollection } from '../model/apacheSolrCollection';
 // @ts-ignore
-import {ApacheSolrConfig} from '../model/apacheSolrConfig';
+import { ApacheSolrConfig } from '../model/apacheSolrConfig';
 // @ts-ignore
-import {EntityMapping} from '../model/entityMapping';
+import { EntityMapping } from '../model/entityMapping';
 // @ts-ignore
-import {ErrorStatus} from '../model/errorStatus';
+import { ErrorStatus } from '../model/errorStatus';
 // @ts-ignore
-import {ImageFormat} from '../model/imageFormat';
+import { ImageFormat } from '../model/imageFormat';
 // @ts-ignore
-import {JobTemplate} from '../model/jobTemplate';
+import { JobTemplate } from '../model/jobTemplate';
 // @ts-ignore
-import {JobType} from '../model/jobType';
+import { JobType } from '../model/jobType';
 // @ts-ignore
-import {MappingFormat} from '../model/mappingFormat';
+import { MappingFormat } from '../model/mappingFormat';
 // @ts-ignore
-import {SuccessStatus} from '../model/successStatus';
+import { SuccessStatus } from '../model/successStatus';
 // @ts-ignore
-import {TransformerType} from '../model/transformerType';
+import { TransformerType } from '../model/transformerType';
 // @ts-ignore
-import {ValueParser} from '../model/valueParser';
+import { ValueParser } from '../model/valueParser';
 
 // @ts-ignore
-import {BASE_PATH, COLLECTION_FORMATS} from '../variables';
-import {Configuration} from '../configuration';
-import {BaseService} from '../api.base.service';
+import { BASE_PATH, COLLECTION_FORMATS }                     from '../variables';
+import { Configuration }                                     from '../configuration';
+import { BaseService } from '../api.base.service';
+
 
 
 @Injectable({
@@ -53,6 +57,7 @@ export class ConfigService extends BaseService {
 
     /**
      * Deletes an existing entity mapping.
+     * @endpoint delete /api/mappings/{id}
      * @param id The ID of the entity mapping that should be deleted.
      * @param observe set whether or not to return the data Observable as the body, response or events. defaults to returning the body.
      * @param reportProgress flag to report request and response progress.
@@ -99,7 +104,7 @@ export class ConfigService extends BaseService {
                 ...(withCredentials ? { withCredentials } : {}),
                 headers: localVarHeaders,
                 observe: observe,
-                transferCache: localVarTransferCache,
+                ...(localVarTransferCache !== undefined ? { transferCache: localVarTransferCache } : {}),
                 reportProgress: reportProgress
             }
         );
@@ -107,6 +112,7 @@ export class ConfigService extends BaseService {
 
     /**
      * Deletes an existing job template.
+     * @endpoint delete /api/templates/{id}
      * @param id The ID of the job template that should be deleted.
      * @param observe set whether or not to return the data Observable as the body, response or events. defaults to returning the body.
      * @param reportProgress flag to report request and response progress.
@@ -153,7 +159,7 @@ export class ConfigService extends BaseService {
                 ...(withCredentials ? { withCredentials } : {}),
                 headers: localVarHeaders,
                 observe: observe,
-                transferCache: localVarTransferCache,
+                ...(localVarTransferCache !== undefined ? { transferCache: localVarTransferCache } : {}),
                 reportProgress: reportProgress
             }
         );
@@ -161,6 +167,7 @@ export class ConfigService extends BaseService {
 
     /**
      * Deletes and existing participant.
+     * @endpoint delete /api/participants/{id}
      * @param id The ID of the participant to delete.
      * @param observe set whether or not to return the data Observable as the body, response or events. defaults to returning the body.
      * @param reportProgress flag to report request and response progress.
@@ -207,7 +214,7 @@ export class ConfigService extends BaseService {
                 ...(withCredentials ? { withCredentials } : {}),
                 headers: localVarHeaders,
                 observe: observe,
-                transferCache: localVarTransferCache,
+                ...(localVarTransferCache !== undefined ? { transferCache: localVarTransferCache } : {}),
                 reportProgress: reportProgress
             }
         );
@@ -215,6 +222,7 @@ export class ConfigService extends BaseService {
 
     /**
      * Deletes an existing Apache Solr configuration.
+     * @endpoint delete /api/solr/{id}
      * @param id The ID of the Apache Solr configuration that should be deleted.
      * @param observe set whether or not to return the data Observable as the body, response or events. defaults to returning the body.
      * @param reportProgress flag to report request and response progress.
@@ -261,7 +269,7 @@ export class ConfigService extends BaseService {
                 ...(withCredentials ? { withCredentials } : {}),
                 headers: localVarHeaders,
                 observe: observe,
-                transferCache: localVarTransferCache,
+                ...(localVarTransferCache !== undefined ? { transferCache: localVarTransferCache } : {}),
                 reportProgress: reportProgress
             }
         );
@@ -269,6 +277,7 @@ export class ConfigService extends BaseService {
 
     /**
      * Retrieves all the details about an entity mapping.
+     * @endpoint get /api/mappings/{id}
      * @param id The ID of the entity mapping that should be retrieved.
      * @param observe set whether or not to return the data Observable as the body, response or events. defaults to returning the body.
      * @param reportProgress flag to report request and response progress.
@@ -315,7 +324,7 @@ export class ConfigService extends BaseService {
                 ...(withCredentials ? { withCredentials } : {}),
                 headers: localVarHeaders,
                 observe: observe,
-                transferCache: localVarTransferCache,
+                ...(localVarTransferCache !== undefined ? { transferCache: localVarTransferCache } : {}),
                 reportProgress: reportProgress
             }
         );
@@ -323,6 +332,7 @@ export class ConfigService extends BaseService {
 
     /**
      * Deletes an existing job template.
+     * @endpoint get /api/templates/{id}
      * @param id The ID of the job template to retrieve.
      * @param observe set whether or not to return the data Observable as the body, response or events. defaults to returning the body.
      * @param reportProgress flag to report request and response progress.
@@ -369,7 +379,7 @@ export class ConfigService extends BaseService {
                 ...(withCredentials ? { withCredentials } : {}),
                 headers: localVarHeaders,
                 observe: observe,
-                transferCache: localVarTransferCache,
+                ...(localVarTransferCache !== undefined ? { transferCache: localVarTransferCache } : {}),
                 reportProgress: reportProgress
             }
         );
@@ -377,6 +387,7 @@ export class ConfigService extends BaseService {
 
     /**
      * Lists all available entity mappings.
+     * @endpoint get /api/mappings
      * @param observe set whether or not to return the data Observable as the body, response or events. defaults to returning the body.
      * @param reportProgress flag to report request and response progress.
      */
@@ -419,7 +430,7 @@ export class ConfigService extends BaseService {
                 ...(withCredentials ? { withCredentials } : {}),
                 headers: localVarHeaders,
                 observe: observe,
-                transferCache: localVarTransferCache,
+                ...(localVarTransferCache !== undefined ? { transferCache: localVarTransferCache } : {}),
                 reportProgress: reportProgress
             }
         );
@@ -427,6 +438,7 @@ export class ConfigService extends BaseService {
 
     /**
      * Lists all available formats available for image deployment.
+     * @endpoint get /api/masterdata/image-formats
      * @param observe set whether or not to return the data Observable as the body, response or events. defaults to returning the body.
      * @param reportProgress flag to report request and response progress.
      */
@@ -469,7 +481,7 @@ export class ConfigService extends BaseService {
                 ...(withCredentials ? { withCredentials } : {}),
                 headers: localVarHeaders,
                 observe: observe,
-                transferCache: localVarTransferCache,
+                ...(localVarTransferCache !== undefined ? { transferCache: localVarTransferCache } : {}),
                 reportProgress: reportProgress
             }
         );
@@ -477,6 +489,7 @@ export class ConfigService extends BaseService {
 
     /**
      * Lists all available job template types.
+     * @endpoint get /api/masterdata/job-types
      * @param observe set whether or not to return the data Observable as the body, response or events. defaults to returning the body.
      * @param reportProgress flag to report request and response progress.
      */
@@ -519,7 +532,7 @@ export class ConfigService extends BaseService {
                 ...(withCredentials ? { withCredentials } : {}),
                 headers: localVarHeaders,
                 observe: observe,
-                transferCache: localVarTransferCache,
+                ...(localVarTransferCache !== undefined ? { transferCache: localVarTransferCache } : {}),
                 reportProgress: reportProgress
             }
         );
@@ -527,6 +540,7 @@ export class ConfigService extends BaseService {
 
     /**
      * Lists all available job templates.
+     * @endpoint get /api/templates
      * @param observe set whether or not to return the data Observable as the body, response or events. defaults to returning the body.
      * @param reportProgress flag to report request and response progress.
      */
@@ -569,7 +583,7 @@ export class ConfigService extends BaseService {
                 ...(withCredentials ? { withCredentials } : {}),
                 headers: localVarHeaders,
                 observe: observe,
-                transferCache: localVarTransferCache,
+                ...(localVarTransferCache !== undefined ? { transferCache: localVarTransferCache } : {}),
                 reportProgress: reportProgress
             }
         );
@@ -577,6 +591,7 @@ export class ConfigService extends BaseService {
 
     /**
      * Lists all available entity mapping formats.
+     * @endpoint get /api/masterdata/mapping-formats
      * @param observe set whether or not to return the data Observable as the body, response or events. defaults to returning the body.
      * @param reportProgress flag to report request and response progress.
      */
@@ -619,7 +634,7 @@ export class ConfigService extends BaseService {
                 ...(withCredentials ? { withCredentials } : {}),
                 headers: localVarHeaders,
                 observe: observe,
-                transferCache: localVarTransferCache,
+                ...(localVarTransferCache !== undefined ? { transferCache: localVarTransferCache } : {}),
                 reportProgress: reportProgress
             }
         );
@@ -627,6 +642,7 @@ export class ConfigService extends BaseService {
 
     /**
      * Lists all available parses available for entity mapping.
+     * @endpoint get /api/masterdata/parsers
      * @param observe set whether or not to return the data Observable as the body, response or events. defaults to returning the body.
      * @param reportProgress flag to report request and response progress.
      */
@@ -669,7 +685,7 @@ export class ConfigService extends BaseService {
                 ...(withCredentials ? { withCredentials } : {}),
                 headers: localVarHeaders,
                 observe: observe,
-                transferCache: localVarTransferCache,
+                ...(localVarTransferCache !== undefined ? { transferCache: localVarTransferCache } : {}),
                 reportProgress: reportProgress
             }
         );
@@ -677,6 +693,7 @@ export class ConfigService extends BaseService {
 
     /**
      * Lists all available participants.
+     * @endpoint get /api/participants
      * @param observe set whether or not to return the data Observable as the body, response or events. defaults to returning the body.
      * @param reportProgress flag to report request and response progress.
      */
@@ -719,7 +736,7 @@ export class ConfigService extends BaseService {
                 ...(withCredentials ? { withCredentials } : {}),
                 headers: localVarHeaders,
                 observe: observe,
-                transferCache: localVarTransferCache,
+                ...(localVarTransferCache !== undefined ? { transferCache: localVarTransferCache } : {}),
                 reportProgress: reportProgress
             }
         );
@@ -727,6 +744,7 @@ export class ConfigService extends BaseService {
 
     /**
      * Lists all available Apache Solr collections.
+     * @endpoint get /api/solr/collections
      * @param observe set whether or not to return the data Observable as the body, response or events. defaults to returning the body.
      * @param reportProgress flag to report request and response progress.
      */
@@ -769,7 +787,7 @@ export class ConfigService extends BaseService {
                 ...(withCredentials ? { withCredentials } : {}),
                 headers: localVarHeaders,
                 observe: observe,
-                transferCache: localVarTransferCache,
+                ...(localVarTransferCache !== undefined ? { transferCache: localVarTransferCache } : {}),
                 reportProgress: reportProgress
             }
         );
@@ -777,6 +795,7 @@ export class ConfigService extends BaseService {
 
     /**
      * Lists all available Apache Solr configurations.
+     * @endpoint get /api/solr
      * @param observe set whether or not to return the data Observable as the body, response or events. defaults to returning the body.
      * @param reportProgress flag to report request and response progress.
      */
@@ -819,7 +838,7 @@ export class ConfigService extends BaseService {
                 ...(withCredentials ? { withCredentials } : {}),
                 headers: localVarHeaders,
                 observe: observe,
-                transferCache: localVarTransferCache,
+                ...(localVarTransferCache !== undefined ? { transferCache: localVarTransferCache } : {}),
                 reportProgress: reportProgress
             }
         );
@@ -827,6 +846,7 @@ export class ConfigService extends BaseService {
 
     /**
      * Lists all available transformer types.
+     * @endpoint get /api/masterdata/transformers
      * @param observe set whether or not to return the data Observable as the body, response or events. defaults to returning the body.
      * @param reportProgress flag to report request and response progress.
      */
@@ -869,7 +889,7 @@ export class ConfigService extends BaseService {
                 ...(withCredentials ? { withCredentials } : {}),
                 headers: localVarHeaders,
                 observe: observe,
-                transferCache: localVarTransferCache,
+                ...(localVarTransferCache !== undefined ? { transferCache: localVarTransferCache } : {}),
                 reportProgress: reportProgress
             }
         );
@@ -877,6 +897,7 @@ export class ConfigService extends BaseService {
 
     /**
      * Retrieves all the details about an Apache Solr configuration.
+     * @endpoint get /api/solr/{id}
      * @param id The ID of the Apache Solr configuration that should be deleted.
      * @param observe set whether or not to return the data Observable as the body, response or events. defaults to returning the body.
      * @param reportProgress flag to report request and response progress.
@@ -923,7 +944,7 @@ export class ConfigService extends BaseService {
                 ...(withCredentials ? { withCredentials } : {}),
                 headers: localVarHeaders,
                 observe: observe,
-                transferCache: localVarTransferCache,
+                ...(localVarTransferCache !== undefined ? { transferCache: localVarTransferCache } : {}),
                 reportProgress: reportProgress
             }
         );
@@ -931,6 +952,7 @@ export class ConfigService extends BaseService {
 
     /**
      * Creates a new entity mapping.
+     * @endpoint post /api/mappings
      * @param entityMapping 
      * @param observe set whether or not to return the data Observable as the body, response or events. defaults to returning the body.
      * @param reportProgress flag to report request and response progress.
@@ -987,7 +1009,7 @@ export class ConfigService extends BaseService {
                 ...(withCredentials ? { withCredentials } : {}),
                 headers: localVarHeaders,
                 observe: observe,
-                transferCache: localVarTransferCache,
+                ...(localVarTransferCache !== undefined ? { transferCache: localVarTransferCache } : {}),
                 reportProgress: reportProgress
             }
         );
@@ -995,6 +1017,7 @@ export class ConfigService extends BaseService {
 
     /**
      * Creates a new job template.
+     * @endpoint post /api/templates
      * @param jobTemplate 
      * @param observe set whether or not to return the data Observable as the body, response or events. defaults to returning the body.
      * @param reportProgress flag to report request and response progress.
@@ -1051,7 +1074,7 @@ export class ConfigService extends BaseService {
                 ...(withCredentials ? { withCredentials } : {}),
                 headers: localVarHeaders,
                 observe: observe,
-                transferCache: localVarTransferCache,
+                ...(localVarTransferCache !== undefined ? { transferCache: localVarTransferCache } : {}),
                 reportProgress: reportProgress
             }
         );
@@ -1059,6 +1082,7 @@ export class ConfigService extends BaseService {
 
     /**
      * Creates a new participant.
+     * @endpoint post /api/participants/{name}
      * @param name The name of the new participant. Must be unique!
      * @param observe set whether or not to return the data Observable as the body, response or events. defaults to returning the body.
      * @param reportProgress flag to report request and response progress.
@@ -1105,7 +1129,7 @@ export class ConfigService extends BaseService {
                 ...(withCredentials ? { withCredentials } : {}),
                 headers: localVarHeaders,
                 observe: observe,
-                transferCache: localVarTransferCache,
+                ...(localVarTransferCache !== undefined ? { transferCache: localVarTransferCache } : {}),
                 reportProgress: reportProgress
             }
         );
@@ -1113,6 +1137,7 @@ export class ConfigService extends BaseService {
 
     /**
      * Creates a new Apache Solr configuration.
+     * @endpoint post /api/solr
      * @param apacheSolrConfig 
      * @param observe set whether or not to return the data Observable as the body, response or events. defaults to returning the body.
      * @param reportProgress flag to report request and response progress.
@@ -1169,7 +1194,7 @@ export class ConfigService extends BaseService {
                 ...(withCredentials ? { withCredentials } : {}),
                 headers: localVarHeaders,
                 observe: observe,
-                transferCache: localVarTransferCache,
+                ...(localVarTransferCache !== undefined ? { transferCache: localVarTransferCache } : {}),
                 reportProgress: reportProgress
             }
         );
@@ -1177,6 +1202,7 @@ export class ConfigService extends BaseService {
 
     /**
      * Updates an existing entity mapping.
+     * @endpoint put /api/mappings/{id}
      * @param id The ID of the entity mapping that should be updated.
      * @param entityMapping 
      * @param observe set whether or not to return the data Observable as the body, response or events. defaults to returning the body.
@@ -1237,7 +1263,7 @@ export class ConfigService extends BaseService {
                 ...(withCredentials ? { withCredentials } : {}),
                 headers: localVarHeaders,
                 observe: observe,
-                transferCache: localVarTransferCache,
+                ...(localVarTransferCache !== undefined ? { transferCache: localVarTransferCache } : {}),
                 reportProgress: reportProgress
             }
         );
@@ -1245,6 +1271,7 @@ export class ConfigService extends BaseService {
 
     /**
      * Updates an existing job template.
+     * @endpoint put /api/templates/{id}
      * @param id The ID of the job template that should be updated.
      * @param jobTemplate 
      * @param observe set whether or not to return the data Observable as the body, response or events. defaults to returning the body.
@@ -1305,7 +1332,7 @@ export class ConfigService extends BaseService {
                 ...(withCredentials ? { withCredentials } : {}),
                 headers: localVarHeaders,
                 observe: observe,
-                transferCache: localVarTransferCache,
+                ...(localVarTransferCache !== undefined ? { transferCache: localVarTransferCache } : {}),
                 reportProgress: reportProgress
             }
         );
@@ -1313,6 +1340,7 @@ export class ConfigService extends BaseService {
 
     /**
      * Updates an existing Apache Solr configuration.
+     * @endpoint put /api/solr/{id}
      * @param id The ID of the Apache Solr configuration that should be updated.
      * @param apacheSolrConfig 
      * @param observe set whether or not to return the data Observable as the body, response or events. defaults to returning the body.
@@ -1373,7 +1401,7 @@ export class ConfigService extends BaseService {
                 ...(withCredentials ? { withCredentials } : {}),
                 headers: localVarHeaders,
                 observe: observe,
-                transferCache: localVarTransferCache,
+                ...(localVarTransferCache !== undefined ? { transferCache: localVarTransferCache } : {}),
                 reportProgress: reportProgress
             }
         );

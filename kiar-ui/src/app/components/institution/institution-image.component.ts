@@ -1,36 +1,31 @@
-import {Component, Input, OnInit} from "@angular/core";
+import {Component, inject, input} from "@angular/core";
+import {toObservable, toSignal} from "@angular/core/rxjs-interop";
 import {InstitutionService} from "../../../../openapi";
-import {catchError, of} from "rxjs";
+import {catchError, map, of, switchMap} from "rxjs";
 
 @Component({
     selector: 'app-institution-image',
-    template: '@if (imageUrl) {<img [src]="imageUrl" [width]="width" [height]="height" [style.object-fit]="\'contain\'" />}',
-    standalone: false
+    template: '@if (imageUrl()) {<img [src]="imageUrl()" [width]="width()" [height]="height()" [style.object-fit]="\'contain\'" />}'
 })
-export class InstitutionImageComponent implements OnInit {
+export class InstitutionImageComponent {
+  /** The {@link InstitutionService} used to access institution data. */
+  private institutionService = inject(InstitutionService);
+
   /** The ID to fetch image for. */
-  @Input() institutionId!: number;
+  readonly institutionId = input.required<number>();
 
   /** The width of th image. */
-  @Input() width: number = 100;
+  readonly width = input<number>(100);
 
   /** The height of th image. */
-  @Input() height: number = 100;
+  readonly height = input<number>(100);
 
-  /** The generate image URL. */
-  public imageUrl: string | null = null;
-
-  constructor(private institutionService: InstitutionService) { }
-
-  public ngOnInit() {
-    this.institutionService.getInstitutionImage(this.institutionId).pipe(
-        catchError(err => of(null))
-    ).subscribe({
-      next: (imageData) => {
-        if (imageData) {
-          this.imageUrl = URL.createObjectURL(imageData)
-        }
-      }
-    });
-  }
+  /** The generated image URL; re-fetched whenever {@link institutionId} changes. */
+  public readonly imageUrl = toSignal(
+      toObservable(this.institutionId).pipe(
+          switchMap(id => this.institutionService.getInstitutionImage(id).pipe(catchError(() => of(null)))),
+          map(imageData => imageData ? URL.createObjectURL(imageData) : null)
+      ),
+      {initialValue: null}
+  );
 }

@@ -8,53 +8,46 @@ import ch.pontius.kiar.database.config.AttributeMappings
 import ch.pontius.kiar.database.config.AttributeMappings.toAttributeMapping
 import ch.pontius.kiar.database.config.EntityMappings
 import ch.pontius.kiar.database.config.EntityMappings.toEntityMapping
-import ch.pontius.kiar.utilities.extensions.parseBodyOrThrow
-import io.javalin.http.Context
-import io.javalin.openapi.*
+import ch.pontius.kiar.utilities.extensions.receiveOrThrow
 import org.jetbrains.exposed.v1.core.eq
 import org.jetbrains.exposed.v1.jdbc.*
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 import java.time.Instant
+import io.ktor.server.application.ApplicationCall
+import ch.pontius.kiar.api.openapi.*
+import io.ktor.server.response.respond
+import ch.pontius.kiar.utilities.extensions.pathParam
 
-@OpenApi(
-    path = "/api/mappings",
-    methods = [HttpMethod.GET],
-    summary = "Lists all available entity mappings.",
-    operationId = "getListEntityMappings",
-    tags = ["Config", "Entity Mapping"],
-    pathParams = [],
-    responses = [
-        OpenApiResponse("200", [OpenApiContent(Array<EntityMapping>::class)]),
-        OpenApiResponse("401", [OpenApiContent(ErrorStatus::class)]),
-        OpenApiResponse("403", [OpenApiContent(ErrorStatus::class)]),
-        OpenApiResponse("500", [OpenApiContent(ErrorStatus::class)]),
-    ]
-)
-fun listEntityMappings(ctx: Context) {
+val listEntityMappingsDoc: RouteDoc = {
+    operationId = "getListEntityMappings"
+    summary = "Lists all available entity mappings."
+    tags("Config", "Entity Mapping")
+    responses {
+        json<List<EntityMapping>>(200)
+        errors(401, 403, 500)
+    }
+}
+
+suspend fun listEntityMappings(call: ApplicationCall) {
     val mappings = transaction {
         EntityMappings.selectAll().map { it.toEntityMapping() }
     }
-    ctx.json(mappings.toTypedArray())
+    call.respond(mappings)
 }
 
-@OpenApi(
-    path = "/api/mappings",
-    methods = [HttpMethod.POST],
-    summary = "Creates a new entity mapping.",
-    operationId = "postCreateEntityMapping",
-    tags = ["Config", "Entity Mapping"],
-    pathParams = [],
-    requestBody = OpenApiRequestBody([OpenApiContent(EntityMapping::class)], required = true),
-    responses = [
-        OpenApiResponse("200", [OpenApiContent(EntityMapping::class)]),
-        OpenApiResponse("400", [OpenApiContent(ErrorStatus::class)]),
-        OpenApiResponse("401", [OpenApiContent(ErrorStatus::class)]),
-        OpenApiResponse("403", [OpenApiContent(ErrorStatus::class)]),
-        OpenApiResponse("500", [OpenApiContent(ErrorStatus::class)]),
-    ]
-)
-fun createEntityMapping(ctx: Context) {
-    val request = ctx.parseBodyOrThrow<EntityMapping>()
+val createEntityMappingDoc: RouteDoc = {
+    operationId = "postCreateEntityMapping"
+    summary = "Creates a new entity mapping."
+    tags("Config", "Entity Mapping")
+    jsonBody<EntityMapping>()
+    responses {
+        json<EntityMapping>(200)
+        errors(400, 401, 403, 500)
+    }
+}
+
+suspend fun createEntityMapping(call: ApplicationCall) {
+    val request = call.receiveOrThrow<EntityMapping>()
     val created = transaction {
         val entityMappingId = EntityMappings.insertAndGetId { insert ->
             insert[name] = request.name
@@ -68,28 +61,24 @@ fun createEntityMapping(ctx: Context) {
         /* Return copy of newly created mapping. */
         request.copy(id = entityMappingId)
     }
-    ctx.json(created)
+    call.respond(created)
 }
 
-@OpenApi(
-    path = "/api/mappings/{id}",
-    methods = [HttpMethod.GET],
-    summary = "Retrieves all the details about an entity mapping.",
-    operationId = "getEntityMapping",
-    tags = ["Config", "Entity Mapping"],
-    pathParams = [
-        OpenApiParam(name = "id", type = Int::class, description = "The ID of the entity mapping that should be retrieved.", required = true)
-    ],
-    responses = [
-        OpenApiResponse("200", [OpenApiContent(EntityMapping::class)]),
-        OpenApiResponse("401", [OpenApiContent(ErrorStatus::class)]),
-        OpenApiResponse("403", [OpenApiContent(ErrorStatus::class)]),
-        OpenApiResponse("404", [OpenApiContent(ErrorStatus::class)]),
-        OpenApiResponse("500", [OpenApiContent(ErrorStatus::class)])
-    ]
-)
-fun getEntityMapping(ctx: Context) {
-    val mappingId = ctx.pathParam("id").toIntOrNull() ?: throw ErrorStatusException(400, "Malformed mapping ID.")
+val getEntityMappingDoc: RouteDoc = {
+    operationId = "getEntityMapping"
+    summary = "Retrieves all the details about an entity mapping."
+    tags("Config", "Entity Mapping")
+    parameters {
+        pathParam("id", "The ID of the entity mapping that should be retrieved.")
+    }
+    responses {
+        json<EntityMapping>(200)
+        errors(401, 403, 404, 500)
+    }
+}
+
+suspend fun getEntityMapping(call: ApplicationCall) {
+    val mappingId = call.pathParam("id").toIntOrNull() ?: throw ErrorStatusException(400, "Malformed mapping ID.")
     val mapping = transaction {
         val mapping = EntityMappings.selectAll().where { EntityMappings.id eq mappingId }.map { it.toEntityMapping() }.firstOrNull()
             ?: throw ErrorStatusException(404, "Could not find entity mapping with ID $mappingId.")
@@ -100,32 +89,27 @@ fun getEntityMapping(ctx: Context) {
         /* Return copy. */
         mapping.copy(attributes = attributeMappings)
     }
-    ctx.json(mapping)
+    call.respond(mapping)
 }
 
-@OpenApi(
-    path = "/api/mappings/{id}",
-    methods = [HttpMethod.PUT],
-    summary = "Updates an existing entity mapping.",
-    operationId = "updateEntityMapping",
-    tags = ["Config", "Entity Mapping"],
-    pathParams = [
-        OpenApiParam(name = "id", type = Int::class, description = "The ID of the entity mapping that should be updated.", required = true)
-    ],
-    requestBody = OpenApiRequestBody([OpenApiContent(EntityMapping::class)], required = true),
-    responses = [
-        OpenApiResponse("200", [OpenApiContent(EntityMapping::class)]),
-        OpenApiResponse("400", [OpenApiContent(ErrorStatus::class)]),
-        OpenApiResponse("401", [OpenApiContent(ErrorStatus::class)]),
-        OpenApiResponse("403", [OpenApiContent(ErrorStatus::class)]),
-        OpenApiResponse("404", [OpenApiContent(ErrorStatus::class)]),
-        OpenApiResponse("500", [OpenApiContent(ErrorStatus::class)])
-    ]
-)
-fun updateEntityMapping(ctx: Context) {
+val updateEntityMappingDoc: RouteDoc = {
+    operationId = "updateEntityMapping"
+    summary = "Updates an existing entity mapping."
+    tags("Config", "Entity Mapping")
+    parameters {
+        pathParam("id", "The ID of the entity mapping that should be updated.")
+    }
+    jsonBody<EntityMapping>()
+    responses {
+        json<EntityMapping>(200)
+        errors(400, 401, 403, 404, 500)
+    }
+}
+
+suspend fun updateEntityMapping(call: ApplicationCall) {
     /* Extract the ID and the request body. */
-    val mappingId = ctx.pathParam("id").toIntOrNull() ?: throw ErrorStatusException(400, "Malformed mapping ID.")
-    val request = ctx.parseBodyOrThrow<EntityMapping>()
+    val mappingId = call.pathParam("id").toIntOrNull() ?: throw ErrorStatusException(400, "Malformed mapping ID.")
+    val request = call.receiveOrThrow<EntityMapping>()
 
     /* Start transaction. */
     transaction {
@@ -143,35 +127,31 @@ fun updateEntityMapping(ctx: Context) {
         saveAttributeMappings(mappingId, request.attributes)
     }
 
-    ctx.json(request)
+    call.respond(request)
 }
 
-@OpenApi(
-    path = "/api/mappings/{id}",
-    methods = [HttpMethod.DELETE],
-    summary = "Deletes an existing entity mapping.",
-    operationId = "deleteEntityMapping",
-    tags = ["Config", "Entity Mapping"],
-    pathParams = [
-        OpenApiParam(name = "id", type = Int::class, description = "The ID of the entity mapping that should be deleted.", required = true)
-    ],
-    responses = [
-        OpenApiResponse("200", [OpenApiContent(SuccessStatus::class)]),
-        OpenApiResponse("401", [OpenApiContent(ErrorStatus::class)]),
-        OpenApiResponse("403", [OpenApiContent(ErrorStatus::class)]),
-        OpenApiResponse("404", [OpenApiContent(ErrorStatus::class)]),
-        OpenApiResponse("500", [OpenApiContent(ErrorStatus::class)])
-    ]
-)
-fun deleteEntityMapping(ctx: Context) {
-    val mappingId = ctx.pathParam("id").toIntOrNull() ?: throw ErrorStatusException(400, "Malformed mapping ID.")
+val deleteEntityMappingDoc: RouteDoc = {
+    operationId = "deleteEntityMapping"
+    summary = "Deletes an existing entity mapping."
+    tags("Config", "Entity Mapping")
+    parameters {
+        pathParam("id", "The ID of the entity mapping that should be deleted.")
+    }
+    responses {
+        json<SuccessStatus>(200)
+        errors(401, 403, 404, 500)
+    }
+}
+
+suspend fun deleteEntityMapping(call: ApplicationCall) {
+    val mappingId = call.pathParam("id").toIntOrNull() ?: throw ErrorStatusException(400, "Malformed mapping ID.")
     val deleted = transaction {
         EntityMappings.deleteWhere { EntityMappings.id eq mappingId }
     }
     if (deleted > 0) {
-        ctx.json(SuccessStatus("Mapping with ID $mappingId deleted successfully."))
+        call.respond(SuccessStatus("Mapping with ID $mappingId deleted successfully."))
     } else {
-        ctx.json(ErrorStatus(404, "Mapping with ID $mappingId could not be deleted, because it does not exist."))
+        call.respond(ErrorStatus(404, "Mapping with ID $mappingId could not be deleted, because it does not exist."))
     }
 }
 

@@ -18,11 +18,9 @@ import ch.pontius.kiar.database.institutions.Participants
 import ch.pontius.kiar.utilities.Geocoding
 import ch.pontius.kiar.utilities.ImageHandler
 import ch.pontius.kiar.utilities.extensions.currentUser
-import ch.pontius.kiar.utilities.extensions.parseBodyOrThrow
+import ch.pontius.kiar.utilities.extensions.receiveOrThrow
 import com.sksamuel.scrimage.ImmutableImage
 import com.sksamuel.scrimage.nio.JpegWriter
-import io.javalin.http.Context
-import io.javalin.openapi.*
 import org.jetbrains.exposed.v1.core.*
 import org.jetbrains.exposed.v1.jdbc.*
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
@@ -30,42 +28,45 @@ import java.io.IOException
 import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.Paths
-import java.nio.file.StandardOpenOption
 import java.time.Instant
+import io.ktor.server.application.ApplicationCall
+import ch.pontius.kiar.api.openapi.*
+import io.ktor.server.response.respond
+import ch.pontius.kiar.utilities.extensions.pathParam
+import ch.pontius.kiar.utilities.extensions.queryParam
+import io.ktor.http.ContentType
+import io.ktor.server.http.content.LocalFileContent
+import ch.pontius.kiar.utilities.extensions.uploadedFiles
 
-@OpenApi(
-    path = "/api/institutions",
-    methods = [HttpMethod.GET],
-    summary = "Retrieves all institutions registered in the database.",
-    operationId = "getInstitutions",
-    tags = ["Institution"],
-    pathParams = [],
-    queryParams = [
-        OpenApiParam(name = "page", type = Int::class, description = "The page index (zero-based) for pagination.", required = false),
-        OpenApiParam(name = "pageSize", type = Int::class, description = "The page size for pagination.", required = false),
-        OpenApiParam(name = "order", type = String::class, description = "The attribute to order by. Possible values are 'name', 'city', 'zip', 'canton' and 'publish'.", required = false),
-        OpenApiParam(name = "orderDir", type = String::class, description = "The sort order. Possible values are 'asc' and 'desc'.", required = false),
-        OpenApiParam(name = "filter", type = String::class, description = "A user-defined filter to search for institutions.", required = false)
-   ],
-    responses = [
-        OpenApiResponse("200", [OpenApiContent(PaginatedInstitutionResult::class)]),
-        OpenApiResponse("401", [OpenApiContent(ErrorStatus::class)]),
-        OpenApiResponse("403", [OpenApiContent(ErrorStatus::class)]),
-        OpenApiResponse("500", [OpenApiContent(ErrorStatus::class)])
-    ]
-)
-fun getListInstitutions(ctx: Context) {
-    val page = ctx.queryParam("page")?.toIntOrNull() ?: 0
-    val pageSize = ctx.queryParam("pageSize")?.toIntOrNull() ?: 50
-    val order = ctx.queryParam("order")?.lowercase() ?: "name"
-    val orderDir = ctx.queryParam("orderDir")?.uppercase()?.let {
+val getListInstitutionsDoc: RouteDoc = {
+    operationId = "getInstitutions"
+    summary = "Retrieves all institutions registered in the database."
+    tags("Institution")
+    parameters {
+        queryParam("page", "The page index (zero-based) for pagination.", INT32)
+        queryParam("pageSize", "The page size for pagination.", INT32)
+        queryParam("order", "The attribute to order by. Possible values are 'name', 'city', 'zip', 'canton' and 'publish'.")
+        queryParam("orderDir", "The sort order. Possible values are 'asc' and 'desc'.")
+        queryParam("filter", "A user-defined filter to search for institutions.")
+    }
+    responses {
+        json<PaginatedInstitutionResult>(200)
+        errors(401, 403, 500)
+    }
+}
+
+suspend fun getListInstitutions(call: ApplicationCall) {
+    val page = call.queryParam("page")?.toIntOrNull() ?: 0
+    val pageSize = call.queryParam("pageSize")?.toIntOrNull() ?: 50
+    val order = call.queryParam("order")?.lowercase() ?: "name"
+    val orderDir = call.queryParam("orderDir")?.uppercase()?.let {
         try {
             SortOrder.valueOf(it)
         } catch (_: Throwable) {
             null
         }
     } ?: SortOrder.ASC
-    val filter = ctx.queryParam("filter")
+    val filter = call.queryParam("filter")
     val (total, results) = transaction {
 
         var query = (Institutions innerJoin Participants).selectAll()
@@ -87,52 +88,42 @@ fun getListInstitutions(ctx: Context) {
         /* Execute query and return paginated result. */
         query.count() to query.drop(page * pageSize).take(pageSize).asSequence().map { it.toInstitution() }.toList()
     }
-    ctx.json(PaginatedInstitutionResult(total, page, pageSize, results))
+    call.respond(PaginatedInstitutionResult(total, page, pageSize, results))
 }
 
-@OpenApi(
-    path = "/api/institutions/name",
-    methods = [HttpMethod.GET],
-    summary = "Retrieves all institution names registered in the database.",
-    operationId = "getInstitutionNames",
-    tags = ["Institution"],
-    pathParams = [],
-    queryParams = [],
-    responses = [
-        OpenApiResponse("200", [OpenApiContent(Array<String>::class)]),
-        OpenApiResponse("401", [OpenApiContent(ErrorStatus::class)]),
-        OpenApiResponse("403", [OpenApiContent(ErrorStatus::class)]),
-        OpenApiResponse("500", [OpenApiContent(ErrorStatus::class)])
-    ]
-)
-fun getListInstitutionNames(ctx: Context) {
+val getListInstitutionNamesDoc: RouteDoc = {
+    operationId = "getInstitutionNames"
+    summary = "Retrieves all institution names registered in the database."
+    tags("Institution")
+    responses {
+        json<List<String>>(200)
+        errors(401, 403, 500)
+    }
+}
+
+suspend fun getListInstitutionNames(call: ApplicationCall) {
     val list = transaction {
         Institutions.select(Institutions.name).map { it[Institutions.name] }.toTypedArray()
     }
-    ctx.json(list)
+    call.respond(list)
 }
 
-@OpenApi(
-    path = "/api/institutions/{id}",
-    methods = [HttpMethod.GET],
-    summary = "Gets information about an existing institution.",
-    operationId = "getInstitution",
-    tags = ["Institution"],
-    pathParams = [
-        OpenApiParam(name = "id", type = Int::class, description = "The ID of the institution that should be fetched.", required = true)
-    ],
-    responses = [
-        OpenApiResponse("200", [OpenApiContent(Institution::class)]),
-        OpenApiResponse("400", [OpenApiContent(ErrorStatus::class)]),
-        OpenApiResponse("401", [OpenApiContent(ErrorStatus::class)]),
-        OpenApiResponse("403", [OpenApiContent(ErrorStatus::class)]),
-        OpenApiResponse("404", [OpenApiContent(ErrorStatus::class)]),
-        OpenApiResponse("500", [OpenApiContent(ErrorStatus::class)])
-    ]
-)
+val getInstitutionDoc: RouteDoc = {
+    operationId = "getInstitution"
+    summary = "Gets information about an existing institution."
+    tags("Institution")
+    parameters {
+        pathParam("id", "The ID of the institution that should be fetched.")
+    }
+    responses {
+        json<Institution>(200)
+        errors(400, 401, 403, 404, 500)
+    }
+}
 
-fun getInstitution(ctx: Context) {
-    val institutionId = ctx.pathParam("id").toIntOrNull() ?: throw ErrorStatusException(400,"Malformed institution ID.")
+
+suspend fun getInstitution(call: ApplicationCall) {
+    val institutionId = call.pathParam("id").toIntOrNull() ?: throw ErrorStatusException(400,"Malformed institution ID.")
 
     /* Fetch institution */
     val institution = transaction {
@@ -158,28 +149,22 @@ fun getInstitution(ctx: Context) {
     }
 
     /* Return the institution object. */
-    ctx.json(institution)
+    call.respond(institution)
 }
 
-@OpenApi(
-    path = "/api/institutions",
-    methods = [HttpMethod.POST],
-    summary = "Creates a new institution.",
-    operationId = "postCreateInstitution",
-    tags = ["Institution"],
-    requestBody = OpenApiRequestBody([OpenApiContent(Institution::class)], required = true),
-    pathParams = [],
-    responses = [
-        OpenApiResponse("200", [OpenApiContent(SuccessStatus::class)]),
-        OpenApiResponse("400", [OpenApiContent(ErrorStatus::class)]),
-        OpenApiResponse("401", [OpenApiContent(ErrorStatus::class)]),
-        OpenApiResponse("403", [OpenApiContent(ErrorStatus::class)]),
-        OpenApiResponse("404", [OpenApiContent(ErrorStatus::class)]),
-        OpenApiResponse("500", [OpenApiContent(ErrorStatus::class)])
-    ]
-)
-fun postCreateInstitution(ctx: Context) {
-    val request = ctx.parseBodyOrThrow<Institution>()
+val postCreateInstitutionDoc: RouteDoc = {
+    operationId = "postCreateInstitution"
+    summary = "Creates a new institution."
+    tags("Institution")
+    jsonBody<Institution>()
+    responses {
+        json<SuccessStatus>(200)
+        errors(400, 401, 403, 404, 500)
+    }
+}
+
+suspend fun postCreateInstitution(call: ApplicationCall) {
+    val request = call.receiveOrThrow<Institution>()
 
     /* Create new institution. */
     val institution = transaction {
@@ -230,31 +215,26 @@ fun postCreateInstitution(ctx: Context) {
     }
 
     /* Return institution object. */
-    ctx.json(institution)
+    call.respond(institution)
 }
 
-@OpenApi(
-    path = "/api/institutions/{id}",
-    methods = [HttpMethod.PUT],
-    summary = "Updates an existing institution.",
-    operationId = "putUpdateInstitution",
-    tags = ["Institution"],
-    requestBody = OpenApiRequestBody([OpenApiContent(Institution::class)], required = true),
-    pathParams = [
-        OpenApiParam(name = "id", type = Int::class, description = "The ID of the institution that should be updated.", required = true)
-    ],
-    responses = [
-        OpenApiResponse("200", [OpenApiContent(SuccessStatus::class)]),
-        OpenApiResponse("400", [OpenApiContent(ErrorStatus::class)]),
-        OpenApiResponse("401", [OpenApiContent(ErrorStatus::class)]),
-        OpenApiResponse("403", [OpenApiContent(ErrorStatus::class)]),
-        OpenApiResponse("404", [OpenApiContent(ErrorStatus::class)]),
-        OpenApiResponse("500", [OpenApiContent(ErrorStatus::class)])
-    ]
-)
-fun putUpdateInstitution(ctx: Context) {
-    val institutionId = ctx.pathParam("id").toIntOrNull() ?: throw ErrorStatusException(400,"Malformed institution ID.")
-    val request = ctx.parseBodyOrThrow<Institution>()
+val putUpdateInstitutionDoc: RouteDoc = {
+    operationId = "putUpdateInstitution"
+    summary = "Updates an existing institution."
+    tags("Institution")
+    parameters {
+        pathParam("id", "The ID of the institution that should be updated.")
+    }
+    jsonBody<Institution>()
+    responses {
+        json<SuccessStatus>(200)
+        errors(400, 401, 403, 404, 500)
+    }
+}
+
+suspend fun putUpdateInstitution(call: ApplicationCall) {
+    val institutionId = call.pathParam("id").toIntOrNull() ?: throw ErrorStatusException(400,"Malformed institution ID.")
+    val request = call.receiveOrThrow<Institution>()
 
     /* Update existing institution object. */
     transaction {
@@ -265,7 +245,7 @@ fun putUpdateInstitution(ctx: Context) {
         }.firstOrNull() ?: throw ErrorStatusException(404,"Institution with ID $institutionId could not be found.")
 
         /* Make sure, that the current user can actually edit this institution. */
-        val currentUser = ctx.currentUser()
+        val currentUser = call.currentUser()
         if (currentUser.role != Role.ADMINISTRATOR && currentUser.institution?.name != institutionName) {
             throw ErrorStatusException(403, "Institution with ID $institutionId cannot be edited by current user.")
         }
@@ -326,32 +306,25 @@ fun putUpdateInstitution(ctx: Context) {
     }
 
     /* Return success status. */
-    ctx.json(SuccessStatus("Institution with ID $institutionId updated successfully."))
+    call.respond(SuccessStatus("Institution with ID $institutionId updated successfully."))
 }
 
-@OpenApi(
-    path = "/api/institutions/{id}/image",
-    methods = [HttpMethod.GET],
-    summary = "Gets the preview image for the provided institution.",
-    operationId = "getInstitutionImage",
-    tags = ["Institution"],
-    pathParams = [
-        OpenApiParam(name = "id", type = Int::class, description = "The ID of the institution the image should be retrieved for.", required = true)
-    ],
-    responses = [
-        OpenApiResponse("200", [
-            OpenApiContent(mimeType = "image/jpeg", type = "string", format = "binary"),
-            OpenApiContent(mimeType = "image/png", type = "string", format = "binary"),
-        ]),
-        OpenApiResponse("401", [OpenApiContent(ErrorStatus::class)]),
-        OpenApiResponse("403", [OpenApiContent(ErrorStatus::class)]),
-        OpenApiResponse("404", [OpenApiContent(ErrorStatus::class)]),
-        OpenApiResponse("500", [OpenApiContent(ErrorStatus::class)])
-    ]
-)
-fun getImageForInstitution(ctx: Context) {
+val getImageForInstitutionDoc: RouteDoc = {
+    operationId = "getInstitutionImage"
+    summary = "Gets the preview image for the provided institution."
+    tags("Institution")
+    parameters {
+        pathParam("id", "The ID of the institution the image should be retrieved for.")
+    }
+    responses {
+        image(200)
+        errors(401, 403, 404, 500)
+    }
+}
+
+suspend fun getImageForInstitution(call: ApplicationCall) {
     /* Obtain parameters. */
-    val institutionId = ctx.pathParam("id").toIntOrNull() ?: throw ErrorStatusException(400,"Malformed institution ID.")
+    val institutionId = call.pathParam("id").toIntOrNull() ?: throw ErrorStatusException(400,"Malformed institution ID.")
 
     /* Start transaction */
     val (imageName, deployment) = transaction {
@@ -382,45 +355,38 @@ fun getImageForInstitution(ctx: Context) {
     }
 
     /* Send back image. */
-    ctx.status(200)
-    when(deployment.format) {
-        ImageFormat.JPEG -> ctx.contentType("image/jpeg")
-        ImageFormat.PNG -> ctx.contentType("image/png")
+    val contentType = when(deployment.format) {
+        ImageFormat.JPEG -> ContentType.Image.JPEG
+        ImageFormat.PNG -> ContentType.Image.PNG
     }
-    ctx.result(Files.newInputStream(path, StandardOpenOption.READ))
+    call.respond(LocalFileContent(path.toFile(), contentType))
 }
 
-@OpenApi(
-    path = "/api/institutions/{id}/image",
-    methods = [HttpMethod.POST],
-    summary = "Posts a new image for the provided institution.",
-    operationId = "postInstitutionImage",
-    tags = ["Institution"],
-    pathParams = [
-        OpenApiParam(name = "id", type = Int::class, description = "The ID of the institution the image should be added to.", required = true)
-    ],
-    requestBody = OpenApiRequestBody(content = [
-        OpenApiContent(mimeType = ContentType.FORM_DATA_MULTIPART, properties = [OpenApiContentProperty(name = "image", type = "string", format = "binary")])
-    ], description = "The uploaded image file.", required = true),
-    responses = [
-        OpenApiResponse("200", [OpenApiContent(SuccessStatus::class)]),
-        OpenApiResponse("401", [OpenApiContent(ErrorStatus::class)]),
-        OpenApiResponse("403", [OpenApiContent(ErrorStatus::class)]),
-        OpenApiResponse("404", [OpenApiContent(ErrorStatus::class)]),
-        OpenApiResponse("500", [OpenApiContent(ErrorStatus::class)])
-    ]
-)
-fun postUploadImageForInstitution(ctx: Context) {
+val postUploadImageForInstitutionDoc: RouteDoc = {
+    operationId = "postInstitutionImage"
+    summary = "Posts a new image for the provided institution."
+    tags("Institution")
+    parameters {
+        pathParam("id", "The ID of the institution the image should be added to.")
+    }
+    multipartFile("image", "The uploaded image file.")
+    responses {
+        json<SuccessStatus>(200)
+        errors(401, 403, 404, 500)
+    }
+}
+
+suspend fun postUploadImageForInstitution(call: ApplicationCall) {
     /* Obtain parameters. */
-    val institutionId = ctx.pathParam("id").toIntOrNull() ?: throw ErrorStatusException(400,"Malformed institution ID.")
-    val files = ctx.uploadedFiles()
+    val institutionId = call.pathParam("id").toIntOrNull() ?: throw ErrorStatusException(400,"Malformed institution ID.")
+    val files = call.uploadedFiles()
     val delete = mutableListOf<Path>()
 
     /* Make sure that a file has been uploaded. */
     if (files.isEmpty()) throw ErrorStatusException(401, "Uploaded file is missing.")
 
     /* Start transaction */
-    transaction {
+    try { transaction {
         val institution = (Institutions innerJoin Participants).selectAll().where { Institutions.id eq institutionId }.map { it.toInstitution() }.firstOrNull() ?: throw ErrorStatusException(404, "No Institution with ID $institutionId found.")
         val deployments = ImageDeployments.selectAll().where {
             ImageDeployments.solrInstanceId inSubQuery (InstitutionsSolrCollections innerJoin SolrCollections innerJoin SolrConfigs).select(SolrConfigs.id).where {
@@ -440,10 +406,10 @@ fun postUploadImageForInstitution(ctx: Context) {
         val filename = "${institution.id}-${System.currentTimeMillis()}.jpg"
 
         /* Process images. */
-        for (f in ctx.uploadedFiles()) {
+        for (f in files) {
             /* Open image. */
             val image = try {
-                ImmutableImage.loader().fromStream(f.content())
+                f.content().use { ImmutableImage.loader().fromStream(it) }
             } catch (_: IOException) {
                 throw ErrorStatusException(400, "Uploaded image file could not be opened due to unhandled exception.")
             }
@@ -485,6 +451,8 @@ fun postUploadImageForInstitution(ctx: Context) {
             /* One image is enough. */
             break
         }
+    } } finally {
+        files.forEach { it.delete() }
     }
 
     /* Delete old files. */
@@ -495,32 +463,28 @@ fun postUploadImageForInstitution(ctx: Context) {
     }
 }
 
-@OpenApi(
-    path = "/api/institutions/{id}",
-    methods = [HttpMethod.DELETE],
-    summary = "Deletes an existing institution.",
-    operationId = "deleteInstitution",
-    tags = ["Institution"],
-    pathParams = [
-        OpenApiParam(name = "id", type = Int::class, description = "The ID of the institution that should be deleted.", required = true)
-    ],
-    responses = [
-        OpenApiResponse("200", [OpenApiContent(SuccessStatus::class)]),
-        OpenApiResponse("401", [OpenApiContent(ErrorStatus::class)]),
-        OpenApiResponse("403", [OpenApiContent(ErrorStatus::class)]),
-        OpenApiResponse("404", [OpenApiContent(ErrorStatus::class)]),
-        OpenApiResponse("500", [OpenApiContent(ErrorStatus::class)])
-    ]
-)
-fun deleteInstitution(ctx: Context) {
-    val institutionId = ctx.pathParam("id").toIntOrNull() ?: throw ErrorStatusException(400,"Malformed institution ID.")
+val deleteInstitutionDoc: RouteDoc = {
+    operationId = "deleteInstitution"
+    summary = "Deletes an existing institution."
+    tags("Institution")
+    parameters {
+        pathParam("id", "The ID of the institution that should be deleted.")
+    }
+    responses {
+        json<SuccessStatus>(200)
+        errors(401, 403, 404, 500)
+    }
+}
+
+suspend fun deleteInstitution(call: ApplicationCall) {
+    val institutionId = call.pathParam("id").toIntOrNull() ?: throw ErrorStatusException(400,"Malformed institution ID.")
     val deleted = transaction {
         Institutions.deleteWhere { Institutions.id eq institutionId }
     }
     if (deleted > 0) {
-        ctx.json(SuccessStatus("Institution with ID $institutionId deleted successfully."))
+        call.respond(SuccessStatus("Institution with ID $institutionId deleted successfully."))
     } else {
-        ctx.json(ErrorStatus(404, "Institution with ID $institutionId could not be deleted because it doesn't exist."))
+        call.respond(ErrorStatus(404, "Institution with ID $institutionId could not be deleted because it doesn't exist."))
     }
 }
 

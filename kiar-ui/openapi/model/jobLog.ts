@@ -7,8 +7,8 @@
  * https://openapi-generator.tech
  * Do not edit the class manually.
  */
-import {JobLogLevel} from './jobLogLevel';
-import {JobLogContext} from './jobLogContext';
+import { JobLogLevel } from './jobLogLevel';
+import { JobLogContext } from './jobLogContext';
 
 
 export interface JobLog { 

@@ -7,7 +7,7 @@
  * https://openapi-generator.tech
  * Do not edit the class manually.
  */
-import {Institution} from './institution';
+import { Institution } from './institution';
 
 
 export interface ObjectCollection { 
@@ -17,7 +17,7 @@ export interface ObjectCollection {
     displayName: string;
     publish: boolean;
     description: string;
-    institution?: Institution;
+    institution?: Institution | null;
     filters: Array<string>;
     images: Array<string>;
     createdAt?: number | null;

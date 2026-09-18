@@ -9,23 +9,27 @@
  */
 /* tslint:disable:no-unused-variable member-ordering */
 
-import {Inject, Injectable, Optional} from '@angular/core';
-import {HttpClient, HttpContext, HttpEvent, HttpParams, HttpResponse} from '@angular/common/http';
-import {Observable} from 'rxjs';
+import { Inject, Injectable, Optional }                      from '@angular/core';
+import { HttpClient, HttpHeaders, HttpParams,
+         HttpResponse, HttpEvent, HttpParameterCodec, HttpContext 
+        }       from '@angular/common/http';
+import { CustomHttpParameterCodec }                          from '../encoder';
+import { Observable }                                        from 'rxjs';
 
 // @ts-ignore
-import {ErrorStatus} from '../model/errorStatus';
+import { ErrorStatus } from '../model/errorStatus';
 // @ts-ignore
-import {ObjectCollection} from '../model/objectCollection';
+import { ObjectCollection } from '../model/objectCollection';
 // @ts-ignore
-import {PaginatedObjectCollectionResult} from '../model/paginatedObjectCollectionResult';
+import { PaginatedObjectCollectionResult } from '../model/paginatedObjectCollectionResult';
 // @ts-ignore
-import {SuccessStatus} from '../model/successStatus';
+import { SuccessStatus } from '../model/successStatus';
 
 // @ts-ignore
-import {BASE_PATH, COLLECTION_FORMATS} from '../variables';
-import {Configuration} from '../configuration';
-import {BaseService} from '../api.base.service';
+import { BASE_PATH, COLLECTION_FORMATS }                     from '../variables';
+import { Configuration }                                     from '../configuration';
+import { BaseService } from '../api.base.service';
+
 
 
 @Injectable({
@@ -39,6 +43,7 @@ export class CollectionService extends BaseService {
 
     /**
      * Deletes an existing collection.
+     * @endpoint delete /api/collections/{id}
      * @param id The ID of the collection that should be deleted.
      * @param observe set whether or not to return the data Observable as the body, response or events. defaults to returning the body.
      * @param reportProgress flag to report request and response progress.
@@ -85,7 +90,7 @@ export class CollectionService extends BaseService {
                 ...(withCredentials ? { withCredentials } : {}),
                 headers: localVarHeaders,
                 observe: observe,
-                transferCache: localVarTransferCache,
+                ...(localVarTransferCache !== undefined ? { transferCache: localVarTransferCache } : {}),
                 reportProgress: reportProgress
             }
         );
@@ -93,6 +98,7 @@ export class CollectionService extends BaseService {
 
     /**
      * Deletes the preview image for the provided collection.
+     * @endpoint delete /api/collections/{id}/{name}
      * @param id The ID of the collection the image should be deleted for.
      * @param name The name of the image to delete.
      * @param observe set whether or not to return the data Observable as the body, response or events. defaults to returning the body.
@@ -143,7 +149,7 @@ export class CollectionService extends BaseService {
                 ...(withCredentials ? { withCredentials } : {}),
                 headers: localVarHeaders,
                 observe: observe,
-                transferCache: localVarTransferCache,
+                ...(localVarTransferCache !== undefined ? { transferCache: localVarTransferCache } : {}),
                 reportProgress: reportProgress
             }
         );
@@ -151,6 +157,7 @@ export class CollectionService extends BaseService {
 
     /**
      * Gets information about an existing collection.
+     * @endpoint get /api/collections/{id}
      * @param id The ID of the collection that should be fetched.
      * @param observe set whether or not to return the data Observable as the body, response or events. defaults to returning the body.
      * @param reportProgress flag to report request and response progress.
@@ -197,7 +204,7 @@ export class CollectionService extends BaseService {
                 ...(withCredentials ? { withCredentials } : {}),
                 headers: localVarHeaders,
                 observe: observe,
-                transferCache: localVarTransferCache,
+                ...(localVarTransferCache !== undefined ? { transferCache: localVarTransferCache } : {}),
                 reportProgress: reportProgress
             }
         );
@@ -205,6 +212,7 @@ export class CollectionService extends BaseService {
 
     /**
      * Gets the preview image for the provided collection.
+     * @endpoint get /api/collections/{id}/{name}
      * @param id The ID of the collection the image should be retrieved for.
      * @param name The name of the image.
      * @param observe set whether or not to return the data Observable as the body, response or events. defaults to returning the body.
@@ -246,7 +254,7 @@ export class CollectionService extends BaseService {
                 ...(withCredentials ? { withCredentials } : {}),
                 headers: localVarHeaders,
                 observe: observe,
-                transferCache: localVarTransferCache,
+                ...(localVarTransferCache !== undefined ? { transferCache: localVarTransferCache } : {}),
                 reportProgress: reportProgress
             }
         );
@@ -254,6 +262,7 @@ export class CollectionService extends BaseService {
 
     /**
      * Retrieves all collections registered in the database.
+     * @endpoint get /api/collections
      * @param filter The filter term for search.
      * @param page The page index (zero-based) for pagination.
      * @param pageSize The page size for pagination.
@@ -308,7 +317,7 @@ export class CollectionService extends BaseService {
                 ...(withCredentials ? { withCredentials } : {}),
                 headers: localVarHeaders,
                 observe: observe,
-                transferCache: localVarTransferCache,
+                ...(localVarTransferCache !== undefined ? { transferCache: localVarTransferCache } : {}),
                 reportProgress: reportProgress
             }
         );
@@ -316,6 +325,7 @@ export class CollectionService extends BaseService {
 
     /**
      * Posts a new image for the provided collection.
+     * @endpoint post /api/collections/{id}
      * @param id The ID of the collection the image should be added to.
      * @param image 
      * @param observe set whether or not to return the data Observable as the body, response or events. defaults to returning the body.
@@ -386,7 +396,7 @@ export class CollectionService extends BaseService {
                 ...(withCredentials ? { withCredentials } : {}),
                 headers: localVarHeaders,
                 observe: observe,
-                transferCache: localVarTransferCache,
+                ...(localVarTransferCache !== undefined ? { transferCache: localVarTransferCache } : {}),
                 reportProgress: reportProgress
             }
         );
@@ -394,6 +404,7 @@ export class CollectionService extends BaseService {
 
     /**
      * Creates a new collection.
+     * @endpoint post /api/collections
      * @param objectCollection 
      * @param observe set whether or not to return the data Observable as the body, response or events. defaults to returning the body.
      * @param reportProgress flag to report request and response progress.
@@ -450,7 +461,7 @@ export class CollectionService extends BaseService {
                 ...(withCredentials ? { withCredentials } : {}),
                 headers: localVarHeaders,
                 observe: observe,
-                transferCache: localVarTransferCache,
+                ...(localVarTransferCache !== undefined ? { transferCache: localVarTransferCache } : {}),
                 reportProgress: reportProgress
             }
         );
@@ -458,6 +469,7 @@ export class CollectionService extends BaseService {
 
     /**
      * Synchronizes object collections with an Apache Solr backend.
+     * @endpoint post /api/collections/synchronize
      * @param collectionId The ID  of the Apache Solr configuration to use.
      * @param observe set whether or not to return the data Observable as the body, response or events. defaults to returning the body.
      * @param reportProgress flag to report request and response progress.
@@ -509,7 +521,7 @@ export class CollectionService extends BaseService {
                 ...(withCredentials ? { withCredentials } : {}),
                 headers: localVarHeaders,
                 observe: observe,
-                transferCache: localVarTransferCache,
+                ...(localVarTransferCache !== undefined ? { transferCache: localVarTransferCache } : {}),
                 reportProgress: reportProgress
             }
         );
@@ -517,6 +529,7 @@ export class CollectionService extends BaseService {
 
     /**
      * Updates an existing collection.
+     * @endpoint put /api/collections/{id}
      * @param id The ID of the collection that should be updated.
      * @param objectCollection 
      * @param observe set whether or not to return the data Observable as the body, response or events. defaults to returning the body.
@@ -577,7 +590,7 @@ export class CollectionService extends BaseService {
                 ...(withCredentials ? { withCredentials } : {}),
                 headers: localVarHeaders,
                 observe: observe,
-                transferCache: localVarTransferCache,
+                ...(localVarTransferCache !== undefined ? { transferCache: localVarTransferCache } : {}),
                 reportProgress: reportProgress
             }
         );

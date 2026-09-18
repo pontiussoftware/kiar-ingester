@@ -35,6 +35,7 @@ export class OAIService extends BaseService {
 
     /**
      * An endpoint that provides OAI-PMH harvesting for the specified collection.
+     * @endpoint get /api/{collection}/oai-pmh
      * @param collection The collection to harvest.
      * @param verb The OAI-PMH verb.
      * @param identifier The identifier to harvest (used for GetRecord ).
@@ -102,7 +103,7 @@ export class OAIService extends BaseService {
                 ...(withCredentials ? { withCredentials } : {}),
                 headers: localVarHeaders,
                 observe: observe,
-                transferCache: localVarTransferCache,
+                ...(localVarTransferCache !== undefined ? { transferCache: localVarTransferCache } : {}),
                 reportProgress: reportProgress
             }
         );
@@ -110,6 +111,7 @@ export class OAIService extends BaseService {
 
     /**
      * An endpoint that provides OAI-PMH harvesting for the specified collection.
+     * @endpoint post /api/{collection}/oai-pmh
      * @param collection The collection to harvest.
      * @param verb 
      * @param identifier 
@@ -193,7 +195,7 @@ export class OAIService extends BaseService {
                 ...(withCredentials ? { withCredentials } : {}),
                 headers: localVarHeaders,
                 observe: observe,
-                transferCache: localVarTransferCache,
+                ...(localVarTransferCache !== undefined ? { transferCache: localVarTransferCache } : {}),
                 reportProgress: reportProgress
             }
         );

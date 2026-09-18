@@ -4,56 +4,64 @@
 
     <span class="space-flexible"></span>
 
-    @if ((isViewer | async)) {
-      <button mat-icon-button [routerLink]="['/manager/dashboard']"
-        i18n-matTooltip="@@TooltipGoToDashboard" matTooltip="Go to job dashboard.">
+    @if (isViewer()) {
+      <button mat-icon-button [routerLink]="['/manager/dashboard']" [matTooltip]="'toolbar.dashboard' | translate">
         <mat-icon>dashboard</mat-icon>
       </button>
     }
 
-    @if ((isAdmin | async)) {
-      <button mat-icon-button [routerLink]="['/admin/dashboard']"
-        i18n-matTooltip="@@TooltipGoToAdmim" matTooltip="Go to administrator dashboard.">
+    @if (isAdmin()) {
+      <button mat-icon-button [routerLink]="['/admin/dashboard']" [matTooltip]="'toolbar.admin' | translate">
         <mat-icon>admin_panel_settings</mat-icon>
       </button>
     }
 
-    @if ((isAdmin | async)) {
-      <button mat-icon-button [routerLink]="['/institutions']"
-        i18n-matTooltip="@@TooltipGoToInstitutionManagement" matTooltip="Go to institution management.">
+    @if (isAdmin()) {
+      <button mat-icon-button [routerLink]="['/institutions']" [matTooltip]="'toolbar.institutions' | translate">
         <mat-icon>account_balance</mat-icon>
       </button>
     }
 
-    @if ((isAdmin | async)) {
-      <button mat-icon-button [routerLink]="['/collections']"
-        i18n-matTooltip="@@TooltipGoToCollectionManagement" matTooltip="Go to collection management.">
+    @if (isAdmin()) {
+      <button mat-icon-button [routerLink]="['/collections']" [matTooltip]="'toolbar.collections' | translate">
         <mat-icon>category</mat-icon>
       </button>
     }
 
-    @if ((isAdmin | async)) {
-      <button mat-icon-button [routerLink]="['/users']"
-        i18n-matTooltip="@@TooltipGoToUserManagement" matTooltip="Go to user management.">
+    @if (isAdmin()) {
+      <button mat-icon-button [routerLink]="['/users']" [matTooltip]="'toolbar.users' | translate">
         <mat-icon>person</mat-icon>
       </button>
     }
 
     <span class="space-flexible"></span>
 
-    @if (isLoggedIn | async) {
-      <button mat-button [matMenuTriggerFor]="userMenu">{{ (username | async) }}</button>
+    <button mat-icon-button [matMenuTriggerFor]="languageMenu" [matTooltip]="'toolbar.language' | translate">
+      <mat-icon>language</mat-icon>
+    </button>
+
+    <mat-menu #languageMenu="matMenu">
+      @for (lang of languages; track lang) {
+        <button mat-menu-item (click)="language.use(lang)">
+          <mat-icon>{{ language.language() === lang ? 'check' : '' }}</mat-icon>
+          <span>{{ 'languages.' + lang | translate }}</span>
+        </button>
+      }
+    </mat-menu>
+
+    @if (isLoggedIn()) {
+      <button mat-button [matMenuTriggerFor]="userMenu">{{ username() }}</button>
     }
 
     <mat-menu #userMenu="matMenu">
       <button mat-menu-item (click)="userProfile()">
         <mat-icon>person</mat-icon>
-        <span i18n="@@LabelManageUserProfile">Manager User Profile</span>
+        <span>{{ 'toolbar.profile' | translate }}</span>
       </button>
 
       <button mat-menu-item (click)="logout()">
         <mat-icon>logout</mat-icon>
-        <span i18n="@@LabelLogout">Logout</span>
+        <span>{{ 'toolbar.logout' | translate }}</span>
       </button>
     </mat-menu>
   </mat-toolbar>
@@ -64,5 +72,5 @@
 </article>
 
 <footer id="footer">
-  <h3>KIM.ch Data Ingest Dashboard (Beta)</h3>
+  <h3>{{ 'footer.title' | translate }}</h3>
 </footer>

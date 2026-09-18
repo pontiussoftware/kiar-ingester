@@ -1,4 +1,6 @@
-import {AfterViewInit, Component} from "@angular/core";
+import {AfterViewInit, Component, inject} from "@angular/core";
+import {TranslatePipe, TranslateService} from "@ngx-translate/core";
+import {toSignal} from "@angular/core/rxjs-interop";
 import {
   AttributeMapping,
   EntityMapping,
@@ -7,31 +9,56 @@ import {
   ValueParser
 } from "../../../../../openapi";
 import {ActivatedRoute, Router} from "@angular/router";
-import {catchError, map, mergeMap, Observable, of, shareReplay} from "rxjs";
+import {catchError, map, mergeMap, Observable, of} from "rxjs";
 import {MatSnackBar, MatSnackBarConfig} from "@angular/material/snack-bar";
-import {FormArray, FormControl, FormGroup, Validators} from "@angular/forms";
+import {FormArray, FormControl, FormGroup, FormsModule, ReactiveFormsModule, Validators} from "@angular/forms";
 import {MatDialog} from "@angular/material/dialog";
 import {AttributeMappingData, AttributeMappingDialogComponent} from "./attribute-mapping-dialog.component";
+import {MatFormField, MatInput, MatLabel} from "@angular/material/input";
+import {MatOption, MatSelect} from "@angular/material/select";
+import {MatButton, MatIconButton, MatMiniFabButton} from "@angular/material/button";
+import {MatTooltip} from "@angular/material/tooltip";
+import {MatIcon} from "@angular/material/icon";
+import {MatCheckbox} from "@angular/material/checkbox";
 
 @Component({
     selector: 'kiar-entity-mapping-admin',
     templateUrl: './entity-mapping.component.html',
     styleUrls: ['./entity-mapping.component.scss'],
-    standalone: false
+    imports: [FormsModule, ReactiveFormsModule, MatFormField, MatLabel, MatInput, MatSelect, MatOption, MatButton, MatTooltip, MatMiniFabButton, MatIcon, MatIconButton, MatCheckbox, TranslatePipe]
 })
 export class EntityMappingComponent implements AfterViewInit {
+  /** The {@link EntityMappingService} used to access entity mappings, parsers and mapping formats. */
+  private service = inject(EntityMappingService);
 
-  /** An {@link Observable} of the mapping ID that is being inspected by this {@link EntityMappingComponent}. */
-  public readonly mappingId: Observable<number>
+  /** The {@link Router} used for navigation. */
+  private router = inject(Router);
 
-  /** An {@link Observable} of the list of available {@link ValueParser}s. */
-  public readonly parsers: Observable<Array<ValueParser>>
+  /** The {@link ActivatedRoute} used to read route parameters. */
+  private route = inject(ActivatedRoute);
 
-  /** An {@link Observable} of available {@link MappingFormat}. */
-  public readonly mappingFormats: Observable<Array<MappingFormat>>
+  /** The {@link MatSnackBar} used to display notifications. */
+  private snackBar = inject(MatSnackBar);
 
+  /** The {@link MatDialog} service used to open dialogs. */
+  dialog = inject(MatDialog);
+
+  /** The {@link TranslateService} used to resolve user-facing messages. */
+  private translate = inject(TranslateService);
+
+  /** {@link Observable} backing {@link mappingId}. */
+  private readonly mappingId$ = this.route.paramMap.pipe(map(params => Number(params.get('id')!!)))
+
+  /** A signal of the current mappingId. */
+  public readonly mappingId = toSignal(this.mappingId$)
+
+  /** A signal of the available {@link ValueParser}s. */
+  public readonly parsers = toSignal(this.service.getListParsers(), {initialValue: [] as Array<ValueParser>})
+
+  /** A signal of the available {@link MappingFormat}s. */
+  public readonly mappingFormats = toSignal(this.service.getListMappingFormats(), {initialValue: [] as Array<MappingFormat>})
   /** List of attribute {@link FormGroup}s. */
-  public readonly attributes: FormArray<any> = new FormArray<any>([])
+  public readonly attributes: FormArray<FormGroup> = new FormArray<FormGroup>([])
 
   /** The {@link FormControl} that backs this {@link EntityMappingComponent}. */
   public readonly formControl = new FormGroup({
@@ -40,18 +67,6 @@ export class EntityMappingComponent implements AfterViewInit {
     type: new FormControl('', [Validators.required]),
     attributes: this.attributes
   })
-
-  constructor(
-      private service: EntityMappingService,
-      private router: Router,
-      private route: ActivatedRoute,
-      private snackBar: MatSnackBar,
-      public dialog: MatDialog
-  ) {
-    this.mappingId = this.route.paramMap.pipe(map(params => Number(params.get('id')!!)));
-    this.parsers = this.service.getListParsers().pipe(shareReplay(1))
-    this.mappingFormats = this.service.getListMappingFormats().pipe(shareReplay(1))
-  }
 
   /**
    * Refreshes the data after view has been setup.
@@ -108,19 +123,18 @@ export class EntityMappingComponent implements AfterViewInit {
     })
   }
 
-
   /**
    * Tries to save the current state of the {@link EntityMapping} represented by the local {@link FormControl}
    */
   public save() {
-    this.mappingId.pipe(
+    this.mappingId$.pipe(
         mergeMap((id) => this.service.updateEntityMapping(id, this.formToEntityMapping(id)))
     ).subscribe({
       next: (m) => {
-        this.snackBar.open(`Successfully saved updated entity mapping.`, "Dismiss", { duration: 2000 } as MatSnackBarConfig);
+        this.snackBar.open(this.translate.instant('admin.entityMapping.messages.saved'), this.translate.instant('common.action.dismiss'), { duration: 2000 } as MatSnackBarConfig);
         this.updateForm(m)
       },
-      error: (err) => this.snackBar.open(`Error occurred while trying to update entity mapping: ${err?.error?.description}.`, "Dismiss", { duration: 2000 } as MatSnackBarConfig)
+      error: (err) => this.snackBar.open(this.translate.instant('admin.entityMapping.errors.save', {error: err?.error?.description}), this.translate.instant('common.action.dismiss'), { duration: 2000 } as MatSnackBarConfig)
     })
   }
 
@@ -128,15 +142,15 @@ export class EntityMappingComponent implements AfterViewInit {
    * Opens a {@link AttributeMappingDialogComponent} to add an existing  {@link AttributeMapping}.
    */
   public delete() {
-    if (confirm("Are you sure that you want to delete this entity mapping?\nAfter deletion, it can no longer be retrieved.")) {
-      this.mappingId.pipe(
+    if (confirm(this.translate.instant('admin.entityMapping.confirmDelete') + '\n' + this.translate.instant('common.confirmDeleteSuffix'))) {
+      this.mappingId$.pipe(
           mergeMap((id) => this.service.deleteEntityMapping(id))
       ).subscribe({
         next: () => {
-          this.snackBar.open(`Successfully deleted entity mapping.`, "Dismiss", {duration: 2000} as MatSnackBarConfig);
+          this.snackBar.open(this.translate.instant('admin.entityMapping.messages.deleted'), this.translate.instant('common.action.dismiss'), {duration: 2000} as MatSnackBarConfig);
           this.router.navigate(['admin', 'dashboard']).then(() => {})
         },
-        error: (err) => this.snackBar.open(`Error occurred while trying to delete entity mapping: ${err?.error?.description}.`, "Dismiss", {duration: 2000} as MatSnackBarConfig)
+        error: (err) => this.snackBar.open(this.translate.instant('admin.entityMapping.errors.delete', {error: err?.error?.description}), this.translate.instant('common.action.dismiss'), {duration: 2000} as MatSnackBarConfig)
       })
     }
   }
@@ -145,10 +159,10 @@ export class EntityMappingComponent implements AfterViewInit {
    * Reloads and refreshes the data backing this {@link EntityMappingComponent}.
    */
   public refresh() {
-    this.mappingId.pipe(
+    this.mappingId$.pipe(
         mergeMap(id => this.service.getEntityMapping(id)),
         catchError((err) => {
-          this.snackBar.open(`Error occurred while trying to load entity mapping: ${err?.error?.description}.`, "Dismiss", { duration: 2000 } as MatSnackBarConfig);
+          this.snackBar.open(this.translate.instant('admin.entityMapping.errors.load', {error: err?.error?.description}), this.translate.instant('common.action.dismiss'), { duration: 2000 } as MatSnackBarConfig);
           return of(null)
         })
     ).subscribe(m => this.updateForm(m))
@@ -158,10 +172,10 @@ export class EntityMappingComponent implements AfterViewInit {
    * Downloads the current {@link EntityMapping} as a file.
    */
   public download() {
-    this.mappingId.pipe(
+    this.mappingId$.pipe(
         mergeMap(id => this.service.getEntityMapping(id)),
         catchError((err) => {
-          this.snackBar.open(`Error occurred while trying to load entity mapping: ${err?.error?.description}.`, "Dismiss", { duration: 2000 } as MatSnackBarConfig);
+          this.snackBar.open(this.translate.instant('admin.entityMapping.errors.load', {error: err?.error?.description}), this.translate.instant('common.action.dismiss'), { duration: 2000 } as MatSnackBarConfig);
           return of(null)
         })
     ).subscribe(data => {

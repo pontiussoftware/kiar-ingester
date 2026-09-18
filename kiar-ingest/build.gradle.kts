@@ -1,26 +1,23 @@
-val bcryptVersion: String by project
-val caffeineVersion: String by project
-val commonsImagingVersion: String by project
-val exposedVersion: String by project
-val javalinVersion: String by project
-val jsonPathVersion: String by project
-val kotlinCoroutines: String by project
-val kotlinLoggingVersion: String by project
-val kotlinSerialization: String by project
-val log4jVersion: String by project
-val poiVersion: String by project
-val scrimageVersion: String by project
-val slf4jVersion: String by project
-val solrjVersion: String by project
-val sqliteVersion: String by project
+val bcryptVersion = project.property("bcryptVersion") as String
+val caffeineVersion = project.property("caffeineVersion") as String
+val commonsImagingVersion = project.property("commonsImagingVersion") as String
+val exposedVersion = project.property("exposedVersion") as String
+val gsonVersion = project.property("gsonVersion") as String
+val ktorVersion = project.property("ktorVersion") as String
+val jsonPathVersion = project.property("jsonPathVersion") as String
+val kotlinCoroutines = project.property("kotlinCoroutines") as String
+val kotlinLoggingVersion = project.property("kotlinLoggingVersion") as String
+val kotlinSerialization = project.property("kotlinSerialization") as String
+val log4jVersion = project.property("log4jVersion") as String
+val poiVersion = project.property("poiVersion") as String
+val scrimageVersion = project.property("scrimageVersion") as String
+val slf4jVersion = project.property("slf4jVersion") as String
+val solrjVersion = project.property("solrjVersion") as String
+val sqliteVersion = project.property("sqliteVersion") as String
 
-
-plugins {
-    id("kotlin-kapt")
-}
 
 configurations {
-    val frontendClasspath by creating {
+    create("frontendClasspath") {
         isCanBeConsumed = false
         isCanBeResolved = true
     }
@@ -49,7 +46,7 @@ dependencies {
 
     /** SolrJ. */
     implementation("org.apache.solr:solr-solrj:$solrjVersion")
-
+    implementation("org.apache.solr:solr-solrj-jetty:${solrjVersion}")
     /** Bcrypt */
     implementation("org.mindrot:jbcrypt:$bcryptVersion")
 
@@ -67,6 +64,9 @@ dependencies {
     /** JSON path. */
     implementation("com.jayway.jsonpath:json-path:$jsonPathVersion")
 
+    /** Gson (used by the JSON ingest parsers). */
+    implementation("com.google.code.gson:gson:$gsonVersion")
+
     /** Kotlinx. */
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json-jvm:$kotlinSerialization")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core-jvm:$kotlinCoroutines")
@@ -78,12 +78,17 @@ dependencies {
     /** Apache Commons imaging for metadata processing. */
     implementation("org.apache.commons:commons-imaging:$commonsImagingVersion")
 
-    /** Javalin + Open API. */
-    implementation("io.javalin:javalin:$javalinVersion")
-    implementation("io.javalin.community.openapi:javalin-openapi-plugin:$javalinVersion")
-    implementation("io.javalin.community.openapi:javalin-swagger-plugin:$javalinVersion")
-    implementation("io.javalin.community.ssl:ssl-plugin:$javalinVersion")
-    kapt("io.javalin.community.openapi:openapi-annotation-processor:$javalinVersion")
+    /** Ktor server + OpenAPI. */
+    implementation(platform("io.ktor:ktor-bom:$ktorVersion"))
+    implementation("io.ktor:ktor-server-core")
+    implementation("io.ktor:ktor-server-netty")
+    implementation("io.ktor:ktor-server-content-negotiation")
+    implementation("io.ktor:ktor-serialization-kotlinx-json")
+    implementation("io.ktor:ktor-server-sessions")
+    implementation("io.ktor:ktor-server-status-pages")
+    implementation("io.ktor:ktor-server-cors")
+    implementation("io.ktor:ktor-server-routing-openapi")
+    implementation("io.ktor:ktor-server-swagger")
 
     /** SQLite + Kotlin Exposed */
     implementation("org.xerial:sqlite-jdbc:${sqliteVersion}")

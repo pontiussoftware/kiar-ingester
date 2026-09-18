@@ -1,17 +1,38 @@
-import {Injectable} from "@angular/core";
+import {computed, inject, Injectable, signal} from "@angular/core";
 import {LoginRequest, Role, SessionService, SessionStatus, SuccessStatus} from "../../../openapi";
-import {BehaviorSubject, catchError, firstValueFrom, map, Observable, of, shareReplay, tap} from "rxjs";
+import {catchError, firstValueFrom, map, Observable, of, tap} from "rxjs";
 import {ActivatedRouteSnapshot, CanActivateFn, Router, RouterStateSnapshot, UrlTree} from "@angular/router";
 
 @Injectable({
   providedIn: 'root',
 })
 export class AuthenticationService {
+  /** The {@link SessionService} used to access the current session. */
+  private session = inject(SessionService);
 
-  /** A {@link BehaviorSubject} of the current {@link SessionStatus}. */
-  private _status = new BehaviorSubject<SessionStatus | null>(null)
+  /** The {@link Router} used for navigation. */
+  private router = inject(Router);
 
-  constructor(private session: SessionService, private router: Router) {}
+  /** The current {@link SessionStatus} (null if no user is logged in). */
+  private readonly _status = signal<SessionStatus | null>(null)
+
+  /** A read-only signal of the current {@link SessionStatus}. */
+  public readonly status = this._status.asReadonly()
+
+  /** A signal indicating whether a user is currently logged in. */
+  public readonly isLoggedIn = computed(() => this._status() != null)
+
+  /** A signal of the username of the currently logged-in user. */
+  public readonly username = computed(() => this._status()?.username)
+
+  /** A signal indicating whether the current user is an administrator. */
+  public readonly isAdmin = computed(() => this.hasRole(Role.ADMINISTRATOR))
+
+  /** A signal indicating whether the current user is a manager (or higher). */
+  public readonly isManager = computed(() => this.hasRole(Role.ADMINISTRATOR, Role.MANAGER))
+
+  /** A signal indicating whether the current user is a viewer (or higher). */
+  public readonly isViewer = computed(() => this.hasRole(Role.ADMINISTRATOR, Role.MANAGER, Role.VIEWER))
 
   /**
    * Tries to login the current user with the provided credentials.
@@ -32,26 +53,10 @@ export class AuthenticationService {
   public logout(): Observable<SuccessStatus> {
     return this.session.logout().pipe(
         tap(() => {
-          this._status.next(null);
+          this._status.set(null);
           console.log(`User was logged out.`);
         })
     );
-  }
-
-  /**
-   * Returns an {@link Observable} of the current {@link SessionStatus}
-   *
-   * @return {@link Observable}
-   */
-  get status() {
-    return this._status.asObservable()
-  }
-
-  /**
-   * Returns an {@link Observable} of the current login state.
-   */
-  get isLoggedIn(): Observable<boolean> {
-    return this._status.pipe(map(s => s != null))
   }
 
   /**
@@ -65,7 +70,7 @@ export class AuthenticationService {
   public canActivate(rolesAllowed: Array<Role>, route: ActivatedRouteSnapshot, state: RouterStateSnapshot): Promise<boolean | UrlTree> {
     return firstValueFrom(this.session.status().pipe(
         map(s => {
-            this._status.next(s);
+            this._status.set(s);
             if (rolesAllowed.length == 0 || rolesAllowed.indexOf(s.role) > -1) {
               return true
             } else {
@@ -74,11 +79,21 @@ export class AuthenticationService {
         }),
         catchError((err, caught) => {
             if (err.status == 401 || err.status == 403) {
-              this._status.next(null) /* Automatically log-out. */
+              this._status.set(null) /* Automatically log-out. */
               return of(this.router.parseUrl(`/login?returnUrl=${state.url}`))
             }
             return of(this.router.parseUrl('/forbidden'))
         })
     ))
+  }
+
+  /**
+   * Checks whether the current user has one of the given {@link Role}s.
+   *
+   * @param roles The {@link Role}s to check for.
+   */
+  private hasRole(...roles: Array<Role>): boolean {
+    const status = this._status()
+    return status != null && roles.indexOf(status.role) > -1
   }
 }

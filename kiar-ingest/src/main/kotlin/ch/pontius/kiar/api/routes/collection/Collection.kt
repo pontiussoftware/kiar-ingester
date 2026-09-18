@@ -16,11 +16,9 @@ import ch.pontius.kiar.database.institutions.InstitutionsSolrCollections
 import ch.pontius.kiar.database.institutions.Participants
 import ch.pontius.kiar.utilities.ImageHandler
 import ch.pontius.kiar.utilities.extensions.currentUser
-import ch.pontius.kiar.utilities.extensions.parseBodyOrThrow
+import ch.pontius.kiar.utilities.extensions.receiveOrThrow
 import com.sksamuel.scrimage.ImmutableImage
 import com.sksamuel.scrimage.nio.JpegWriter
-import io.javalin.http.Context
-import io.javalin.openapi.*
 import org.jetbrains.exposed.v1.core.eq
 import org.jetbrains.exposed.v1.core.innerJoin
 import org.jetbrains.exposed.v1.core.like
@@ -30,31 +28,35 @@ import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 import java.io.IOException
 import java.nio.file.Files
 import java.nio.file.Paths
-import java.nio.file.StandardOpenOption
 import java.time.Instant
+import io.ktor.server.application.ApplicationCall
+import ch.pontius.kiar.api.openapi.*
+import io.ktor.server.response.respond
+import ch.pontius.kiar.utilities.extensions.pathParam
+import ch.pontius.kiar.utilities.extensions.queryParam
+import io.ktor.http.ContentType
+import io.ktor.server.http.content.LocalFileContent
+import ch.pontius.kiar.utilities.extensions.uploadedFiles
 
-@OpenApi(
-    path = "/api/collections",
-    methods = [HttpMethod.GET],
-    summary = "Retrieves all collections registered in the database.",
-    operationId = "getCollections",
-    tags = ["Collection"],
-    pathParams = [],
-    queryParams = [
-        OpenApiParam(name = "filter", type = String::class, description = "The filter term for search.", required = false),
-        OpenApiParam(name = "page", type = Int::class, description = "The page index (zero-based) for pagination.", required = false),
-        OpenApiParam(name = "pageSize", type = Int::class, description = "The page size for pagination.", required = false)],
-    responses = [
-        OpenApiResponse("200", [OpenApiContent(PaginatedObjectCollectionResult::class)]),
-        OpenApiResponse("401", [OpenApiContent(ErrorStatus::class)]),
-        OpenApiResponse("403", [OpenApiContent(ErrorStatus::class)]),
-        OpenApiResponse("500", [OpenApiContent(ErrorStatus::class)])
-    ]
-)
-fun getListCollections(ctx: Context) {
-    val page = ctx.queryParam("page")?.toIntOrNull() ?: 0
-    val pageSize = ctx.queryParam("pageSize")?.toIntOrNull() ?: 50
-    val filter = ctx.queryParam("filter")?.lowercase()
+val getListCollectionsDoc: RouteDoc = {
+    operationId = "getCollections"
+    summary = "Retrieves all collections registered in the database."
+    tags("Collection")
+    parameters {
+        queryParam("filter", "The filter term for search.")
+        queryParam("page", "The page index (zero-based) for pagination.", INT32)
+        queryParam("pageSize", "The page size for pagination.", INT32)
+    }
+    responses {
+        json<PaginatedObjectCollectionResult>(200)
+        errors(401, 403, 500)
+    }
+}
+
+suspend fun getListCollections(call: ApplicationCall) {
+    val page = call.queryParam("page")?.toIntOrNull() ?: 0
+    val pageSize = call.queryParam("pageSize")?.toIntOrNull() ?: 50
+    val filter = call.queryParam("filter")?.lowercase()
     val (total, result) = transaction {
         val query = (Collections innerJoin Institutions innerJoin Participants).selectAll()
         if (filter != null) {
@@ -64,30 +66,25 @@ fun getListCollections(ctx: Context) {
         }
         query.count() to query.offset((page * pageSize).toLong()).limit(pageSize).asSequence().map { it.toObjectCollection() }.toList()
     }
-    ctx.json(PaginatedObjectCollectionResult(total, page, pageSize, result))
+    call.respond(PaginatedObjectCollectionResult(total, page, pageSize, result))
 }
 
-@OpenApi(
-    path = "/api/collections/{id}",
-    methods = [HttpMethod.GET],
-    summary = "Gets information about an existing collection.",
-    operationId = "getCollection",
-    tags = ["Collection"],
-    pathParams = [
-        OpenApiParam(name = "id", type = Int::class, description = "The ID of the collection that should be fetched.", required = true)
-    ],
-    responses = [
-        OpenApiResponse("200", [OpenApiContent(ObjectCollection::class)]),
-        OpenApiResponse("400", [OpenApiContent(ErrorStatus::class)]),
-        OpenApiResponse("401", [OpenApiContent(ErrorStatus::class)]),
-        OpenApiResponse("403", [OpenApiContent(ErrorStatus::class)]),
-        OpenApiResponse("404", [OpenApiContent(ErrorStatus::class)]),
-        OpenApiResponse("500", [OpenApiContent(ErrorStatus::class)])
-    ]
-)
+val getCollectionDoc: RouteDoc = {
+    operationId = "getCollection"
+    summary = "Gets information about an existing collection."
+    tags("Collection")
+    parameters {
+        pathParam("id", "The ID of the collection that should be fetched.")
+    }
+    responses {
+        json<ObjectCollection>(200)
+        errors(400, 401, 403, 404, 500)
+    }
+}
 
-fun getCollection(ctx: Context) {
-    val collectionId = ctx.pathParam("id").toIntOrNull() ?: throw ErrorStatusException(400, "Malformed collection ID.")
+
+suspend fun getCollection(call: ApplicationCall) {
+    val collectionId = call.pathParam("id").toIntOrNull() ?: throw ErrorStatusException(400, "Malformed collection ID.")
 
     /* Read collection. */
     val collection = transaction {
@@ -95,28 +92,22 @@ fun getCollection(ctx: Context) {
     }
 
     /* Return collection object. */
-    ctx.json(collection)
+    call.respond(collection)
 }
 
-@OpenApi(
-    path = "/api/collections",
-    methods = [HttpMethod.POST],
-    summary = "Creates a new collection.",
-    operationId = "postCreateCollection",
-    tags = ["Collection"],
-    requestBody = OpenApiRequestBody([OpenApiContent(ObjectCollection::class)], required = true),
-    pathParams = [],
-    responses = [
-        OpenApiResponse("200", [OpenApiContent(SuccessStatus::class)]),
-        OpenApiResponse("400", [OpenApiContent(ErrorStatus::class)]),
-        OpenApiResponse("401", [OpenApiContent(ErrorStatus::class)]),
-        OpenApiResponse("403", [OpenApiContent(ErrorStatus::class)]),
-        OpenApiResponse("404", [OpenApiContent(ErrorStatus::class)]),
-        OpenApiResponse("500", [OpenApiContent(ErrorStatus::class)])
-    ]
-)
-fun postCreateCollection(ctx: Context) {
-    val request = ctx.parseBodyOrThrow<ObjectCollection>()
+val postCreateCollectionDoc: RouteDoc = {
+    operationId = "postCreateCollection"
+    summary = "Creates a new collection."
+    tags("Collection")
+    jsonBody<ObjectCollection>()
+    responses {
+        json<SuccessStatus>(200)
+        errors(400, 401, 403, 404, 500)
+    }
+}
+
+suspend fun postCreateCollection(call: ApplicationCall) {
+    val request = call.receiveOrThrow<ObjectCollection>()
 
     /* Create new collection. */
     transaction {
@@ -133,35 +124,30 @@ fun postCreateCollection(ctx: Context) {
     }
 
     /* Return job object. */
-    ctx.json(SuccessStatus("Collection with ID ${request.id} created successfully."))
+    call.respond(SuccessStatus("Collection with ID ${request.id} created successfully."))
 }
 
-@OpenApi(
-    path = "/api/collections/{id}",
-    methods = [HttpMethod.PUT],
-    summary = "Updates an existing collection.",
-    operationId = "putUpdateCollection",
-    tags = ["Collection"],
-    requestBody = OpenApiRequestBody([OpenApiContent(ObjectCollection::class)], required = true),
-    pathParams = [
-        OpenApiParam(name = "id", type = Int::class, description = "The ID of the collection that should be updated.", required = true)
-    ],
-    responses = [
-        OpenApiResponse("200", [OpenApiContent(SuccessStatus::class)]),
-        OpenApiResponse("400", [OpenApiContent(ErrorStatus::class)]),
-        OpenApiResponse("401", [OpenApiContent(ErrorStatus::class)]),
-        OpenApiResponse("403", [OpenApiContent(ErrorStatus::class)]),
-        OpenApiResponse("404", [OpenApiContent(ErrorStatus::class)]),
-        OpenApiResponse("500", [OpenApiContent(ErrorStatus::class)])
-    ]
-)
-fun putUpdateCollection(ctx: Context) {
-    val collectionId = ctx.pathParam("id").toIntOrNull() ?: throw ErrorStatusException(400, "Malformed collection ID.")
-    val request = ctx.parseBodyOrThrow<ObjectCollection>()
+val putUpdateCollectionDoc: RouteDoc = {
+    operationId = "putUpdateCollection"
+    summary = "Updates an existing collection."
+    tags("Collection")
+    parameters {
+        pathParam("id", "The ID of the collection that should be updated.")
+    }
+    jsonBody<ObjectCollection>()
+    responses {
+        json<SuccessStatus>(200)
+        errors(400, 401, 403, 404, 500)
+    }
+}
+
+suspend fun putUpdateCollection(call: ApplicationCall) {
+    val collectionId = call.pathParam("id").toIntOrNull() ?: throw ErrorStatusException(400, "Malformed collection ID.")
+    val request = call.receiveOrThrow<ObjectCollection>()
 
     /* Update collection. */
     val updated = transaction {
-        val currentUser = ctx.currentUser()
+        val currentUser = call.currentUser()
         val collection = Collections.getById(collectionId)
 
         /* Make sure, that the current user can actually edit this collection. */
@@ -186,37 +172,30 @@ fun putUpdateCollection(ctx: Context) {
 
     /* Return job object. */
     if (updated > 0) {
-        ctx.json(SuccessStatus("Collection with ID $collectionId updated successfully."))
+        call.respond(SuccessStatus("Collection with ID $collectionId updated successfully."))
     } else {
-        ctx.json(ErrorStatus(404, "Collection with ID $collectionId could not be updated because it does not exist."))
+        call.respond(ErrorStatus(404, "Collection with ID $collectionId could not be updated because it does not exist."))
     }
 }
 
-@OpenApi(
-    path = "/api/collections/{id}/{name}",
-    methods = [HttpMethod.GET],
-    summary = "Gets the preview image for the provided collection.",
-    operationId = "getCollectionImage",
-    tags = ["Collection"],
-    pathParams = [
-        OpenApiParam(name = "id", type = Int::class, description = "The ID of the collection the image should be retrieved for.", required = true),
-        OpenApiParam(name = "name", description = "The name of the image.", required = true)
-    ],
-    responses = [
-        OpenApiResponse("200", [
-            OpenApiContent(mimeType = "image/jpeg", type = "string", format = "binary"),
-            OpenApiContent(mimeType = "image/png", type = "string", format = "binary"),
-        ]),
-        OpenApiResponse("401", [OpenApiContent(ErrorStatus::class)]),
-        OpenApiResponse("403", [OpenApiContent(ErrorStatus::class)]),
-        OpenApiResponse("404", [OpenApiContent(ErrorStatus::class)]),
-        OpenApiResponse("500", [OpenApiContent(ErrorStatus::class)])
-    ]
-)
-fun getImageForCollection(ctx: Context) {
+val getImageForCollectionDoc: RouteDoc = {
+    operationId = "getCollectionImage"
+    summary = "Gets the preview image for the provided collection."
+    tags("Collection")
+    parameters {
+        pathParam("id", "The ID of the collection the image should be retrieved for.")
+        pathParam("name", "The name of the image.", STRING)
+    }
+    responses {
+        image(200)
+        errors(401, 403, 404, 500)
+    }
+}
+
+suspend fun getImageForCollection(call: ApplicationCall) {
     /* Obtain parameters. */
-    val collectionId = ctx.pathParam("id").toIntOrNull() ?: throw ErrorStatusException(400, "Malformed collection ID.")
-    val imageName = ctx.pathParam("name")
+    val collectionId = call.pathParam("id").toIntOrNull() ?: throw ErrorStatusException(400, "Malformed collection ID.")
+    val imageName = call.pathParam("name")
 
     /* Obtain deployment path */
     val deployment = transaction {
@@ -231,36 +210,31 @@ fun getImageForCollection(ctx: Context) {
     }
 
     /* Send back image. */
-    ctx.status(200)
-    when(deployment.format) {
-        ImageFormat.JPEG -> ctx.contentType("image/jpeg")
-        ImageFormat.PNG -> ctx.contentType("image/png")
+    val contentType = when(deployment.format) {
+        ImageFormat.JPEG -> ContentType.Image.JPEG
+        ImageFormat.PNG -> ContentType.Image.PNG
     }
-    ctx.result(Files.newInputStream(path, StandardOpenOption.READ))
+    call.respond(LocalFileContent(path.toFile(), contentType))
 }
 
-@OpenApi(
-    path = "/api/collections/{id}/{name}",
-    methods = [HttpMethod.DELETE],
-    summary = "Deletes the preview image for the provided collection.",
-    operationId = "deleteCollectionImage",
-    tags = ["Collection"],
-    pathParams = [
-        OpenApiParam(name = "id", type = Int::class, description = "The ID of the collection the image should be deleted for.", required = true),
-        OpenApiParam(name = "name", description = "The name of the image to delete.", required = true)
-    ],
-    responses = [
-        OpenApiResponse("200", [OpenApiContent(SuccessStatus::class)]),
-        OpenApiResponse("401", [OpenApiContent(ErrorStatus::class)]),
-        OpenApiResponse("403", [OpenApiContent(ErrorStatus::class)]),
-        OpenApiResponse("404", [OpenApiContent(ErrorStatus::class)]),
-        OpenApiResponse("500", [OpenApiContent(ErrorStatus::class)])
-    ]
-)
-fun deleteImageForCollection(ctx: Context) {
+val deleteImageForCollectionDoc: RouteDoc = {
+    operationId = "deleteCollectionImage"
+    summary = "Deletes the preview image for the provided collection."
+    tags("Collection")
+    parameters {
+        pathParam("id", "The ID of the collection the image should be deleted for.")
+        pathParam("name", "The name of the image to delete.", STRING)
+    }
+    responses {
+        json<SuccessStatus>(200)
+        errors(401, 403, 404, 500)
+    }
+}
+
+suspend fun deleteImageForCollection(call: ApplicationCall) {
     /* Obtain parameters. */
-    val collectionId = ctx.pathParam("id").toIntOrNull() ?: throw ErrorStatusException(400, "Malformed collection ID.")
-    val imageName = ctx.pathParam("name")
+    val collectionId = call.pathParam("id").toIntOrNull() ?: throw ErrorStatusException(400, "Malformed collection ID.")
+    val imageName = call.pathParam("name")
 
     /* Start transaction and update ecollection. */
     val delete = transaction {
@@ -297,36 +271,32 @@ fun deleteImageForCollection(ctx: Context) {
     }
 
     /* Set status. */
-    ctx.json(SuccessStatus("Image for collection with ID $collectionId deleted successfully."))
+    call.respond(SuccessStatus("Image for collection with ID $collectionId deleted successfully."))
 }
 
-@OpenApi(
-    path = "/api/collections/{id}",
-    methods = [HttpMethod.POST],
-    summary = "Posts a new image for the provided collection.",
-    operationId = "postCollectionImage",
-    tags = ["Collection"],
-    pathParams = [
-        OpenApiParam(name = "id", type = Int::class, description = "The ID of the collection the image should be added to.", required = true)
-    ],
-    requestBody = OpenApiRequestBody(content = [
-        OpenApiContent(mimeType = ContentType.FORM_DATA_MULTIPART, properties = [OpenApiContentProperty(name = "image", type = "string", format = "binary")])
-    ], description = "The uploaded image file.", required = true),
-    responses = [
-        OpenApiResponse("200", [OpenApiContent(SuccessStatus::class)]),
-        OpenApiResponse("401", [OpenApiContent(ErrorStatus::class)]),
-        OpenApiResponse("403", [OpenApiContent(ErrorStatus::class)]),
-        OpenApiResponse("404", [OpenApiContent(ErrorStatus::class)]),
-        OpenApiResponse("500", [OpenApiContent(ErrorStatus::class)])
-    ]
-)
-fun postUploadImageForCollection(ctx: Context) {
+val postUploadImageForCollectionDoc: RouteDoc = {
+    operationId = "postCollectionImage"
+    summary = "Posts a new image for the provided collection."
+    tags("Collection")
+    parameters {
+        pathParam("id", "The ID of the collection the image should be added to.")
+    }
+    multipartFile("image", "The uploaded image file.")
+    responses {
+        json<SuccessStatus>(200)
+        errors(401, 403, 404, 500)
+    }
+}
+
+suspend fun postUploadImageForCollection(call: ApplicationCall) {
     /* Obtain parameters. */
-    val collectionId = ctx.pathParam("id").toIntOrNull() ?: throw ErrorStatusException(400, "Malformed collection ID.")
-    val files = ctx.uploadedFiles()
+    val collectionId = call.pathParam("id").toIntOrNull() ?: throw ErrorStatusException(400, "Malformed collection ID.")
+    val files = call.uploadedFiles()
 
     /* Make sure that a file has been uploaded. */
     if (files.isEmpty()) throw ErrorStatusException(401, "Uploaded file is missing.")
+
+    try {
 
     /* Start transaction */
     val (collection, deployments) = transaction {
@@ -343,10 +313,10 @@ fun postUploadImageForCollection(ctx: Context) {
 
     /* Process images. */
     val newImages = collection.images.toMutableList()
-    for (f in ctx.uploadedFiles()) {
+    for (f in files) {
         /* Open image. */
         val image = try {
-            ImmutableImage.loader().fromStream(f.content())
+            f.content().use { ImmutableImage.loader().fromStream(it) }
         } catch (_: IOException) {
             throw ErrorStatusException(400, "Uploaded image file could not be opened.")
         }
@@ -387,28 +357,27 @@ fun postUploadImageForCollection(ctx: Context) {
     }
 
     /* Set status. */
-    ctx.json(SuccessStatus("Images for collection with ID $collectionId uploaded successfully."))
+    call.respond(SuccessStatus("Images for collection with ID $collectionId uploaded successfully."))
+    } finally {
+        files.forEach { it.delete() }
+    }
 }
 
-@OpenApi(
-    path = "/api/collections/{id}",
-    methods = [HttpMethod.DELETE],
-    summary = "Deletes an existing collection.",
-    operationId = "deleteCollection",
-    tags = ["Collection"],
-    pathParams = [
-        OpenApiParam(name = "id", type = Int::class, description = "The ID of the collection that should be deleted.", required = true)
-    ],
-    responses = [
-        OpenApiResponse("200", [OpenApiContent(SuccessStatus::class)]),
-        OpenApiResponse("401", [OpenApiContent(ErrorStatus::class)]),
-        OpenApiResponse("403", [OpenApiContent(ErrorStatus::class)]),
-        OpenApiResponse("404", [OpenApiContent(ErrorStatus::class)]),
-        OpenApiResponse("500", [OpenApiContent(ErrorStatus::class)])
-    ]
-)
-fun deleteCollection(ctx: Context) {
-    val collectionId = ctx.pathParam("id").toIntOrNull() ?: throw ErrorStatusException(400, "Malformed collection ID.")
+val deleteCollectionDoc: RouteDoc = {
+    operationId = "deleteCollection"
+    summary = "Deletes an existing collection."
+    tags("Collection")
+    parameters {
+        pathParam("id", "The ID of the collection that should be deleted.")
+    }
+    responses {
+        json<SuccessStatus>(200)
+        errors(401, 403, 404, 500)
+    }
+}
+
+suspend fun deleteCollection(call: ApplicationCall) {
+    val collectionId = call.pathParam("id").toIntOrNull() ?: throw ErrorStatusException(400, "Malformed collection ID.")
     val (name, images) = transaction {
         val collection = Collections.getById(collectionId) ?: throw ErrorStatusException(400, "Collection with ID $collectionId could not be found.")
 
@@ -434,7 +403,7 @@ fun deleteCollection(ctx: Context) {
     }
 
     /* Return success status. */
-    ctx.json(SuccessStatus("Collection '$name' (id: $collectionId) deleted successfully."))
+    call.respond(SuccessStatus("Collection '$name' (id: $collectionId) deleted successfully."))
 }
 
 /**

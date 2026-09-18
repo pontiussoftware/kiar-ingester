@@ -1,5 +1,7 @@
-import {AfterViewInit, Component} from "@angular/core";
-import {catchError, map, mergeMap, Observable, of, shareReplay} from "rxjs";
+import {AfterViewInit, Component, inject} from "@angular/core";
+import {TranslatePipe, TranslateService} from "@ngx-translate/core";
+import {toSignal} from "@angular/core/rxjs-interop";
+import {catchError, map, mergeMap, Observable, of} from "rxjs";
 import {
   ApacheSolrCollection,
   ApacheSolrConfig,
@@ -9,27 +11,50 @@ import {
   ImageFormat
 } from "../../../../../openapi";
 import {ActivatedRoute, Router} from "@angular/router";
-import {FormArray, FormControl, FormGroup, Validators} from "@angular/forms";
+import {FormArray, FormControl, FormGroup, FormsModule, ReactiveFormsModule, Validators} from "@angular/forms";
 import {MatSnackBar, MatSnackBarConfig} from "@angular/material/snack-bar";
+import {MatFormField, MatInput, MatLabel} from "@angular/material/input";
+import {MatButton, MatIconButton, MatMiniFabButton} from "@angular/material/button";
+import {MatTooltip} from "@angular/material/tooltip";
+import {MatIcon} from "@angular/material/icon";
+import {MatOption, MatSelect} from "@angular/material/select";
+import {MatCheckbox} from "@angular/material/checkbox";
 
 @Component({
     selector: 'kiar-apache-solr-admin',
     templateUrl: './apache-solr.component.html',
     styleUrls: ['./apache-solr.component.scss'],
-    standalone: false
+    imports: [FormsModule, ReactiveFormsModule, MatFormField, MatLabel, MatInput, MatButton, MatTooltip, MatMiniFabButton, MatIcon, MatIconButton, MatSelect, MatOption, MatCheckbox, TranslatePipe]
 })
 export class ApacheSolrComponent implements AfterViewInit{
-  /** An {@link Observable} of the mapping ID that is being inspected by this {@link EntityMappingComponent}. */
-  public readonly solrId: Observable<number>
+  /** The {@link ApacheSolrService} used to load and edit Apache Solr configurations. */
+  private service = inject(ApacheSolrService);
 
+  /** The {@link Router} used for navigation. */
+  private router = inject(Router);
+
+  /** The {@link ActivatedRoute} used to read route parameters. */
+  private route = inject(ActivatedRoute);
+
+  /** The {@link MatSnackBar} used to display notifications. */
+  private snackBar = inject(MatSnackBar);
+
+  /** The {@link TranslateService} used to resolve user-facing messages. */
+  private translate = inject(TranslateService);
+
+  /** {@link Observable} backing {@link solrId}. */
+  private readonly solrId$ = this.route.paramMap.pipe(map(params => Number(params.get('id')!!)))
+
+  /** A signal of the current solrId. */
+  public readonly solrId = toSignal(this.solrId$)
   /** List of attribute {@link FormGroup}s. */
   public readonly collections: Array<FormGroup> = []
 
   /** List of attribute {@link FormGroup}s. */
   public readonly deployments: Array<FormGroup> = []
 
-  /** An {@link Observable} of available {@link ImageFormat}. */
-  public readonly imageFormats: Observable<Array<ImageFormat>>
+  /** A signal of the available {@link ImageFormat}s. */
+  public readonly imageFormats = toSignal(this.service.getListImageFormats(), {initialValue: [] as Array<ImageFormat>})
 
   /** The {@link FormControl} that backs this {@link EntityMappingComponent}. */
   public formControl = new FormGroup({
@@ -43,16 +68,6 @@ export class ApacheSolrComponent implements AfterViewInit{
     deployments: new FormArray(this.deployments)
   })
 
-  constructor(
-      private service: ApacheSolrService,
-      private router: Router,
-      private route: ActivatedRoute,
-      private snackBar: MatSnackBar
-  ) {
-    this.solrId = this.route.paramMap.pipe(map(params => Number(params.get('id')!!)));
-    this.imageFormats = this.service.getListImageFormats().pipe(shareReplay(1))
-  }
-
   /**
    * Refreshes the data after view has been setup.
    */
@@ -64,11 +79,11 @@ export class ApacheSolrComponent implements AfterViewInit{
    * Reloads and refreshes the data backing this {@link EntityMappingComponent}.
    */
   public refresh() {
-    this.solrId.pipe(
+    this.solrId$.pipe(
         mergeMap(id => this.service.getSolrConfig(id)),
     ).subscribe({
       next: (c) => this.updateForm(c),
-      error: (err) => this.snackBar.open(`Error occurred while trying to Apache Solr configuration: ${err?.error?.description}.`, "Dismiss", {duration: 2000} as MatSnackBarConfig)
+      error: (err) => this.snackBar.open(this.translate.instant('admin.solr.messages.loadError', {error: err?.error?.description}), this.translate.instant('common.action.dismiss'), {duration: 2000} as MatSnackBarConfig)
     })
   }
 
@@ -76,14 +91,14 @@ export class ApacheSolrComponent implements AfterViewInit{
    * Tries to save the current state of the {@link ApacheSolrConfig} represented by the local {@link FormControl}
    */
   public save() {
-    this.solrId.pipe(
+    this.solrId$.pipe(
         mergeMap((id) => this.service.updateSolrConfig(id, this.formToApacheSolrConfig(id)))
     ).subscribe({
       next: (c) => {
-        this.snackBar.open(`Successfully updated  Apache Solr configuration.`, "Dismiss", { duration: 2000 } as MatSnackBarConfig)
+        this.snackBar.open(this.translate.instant('admin.solr.messages.updated'), this.translate.instant('common.action.dismiss'), { duration: 2000 } as MatSnackBarConfig)
         this.updateForm(c)
       },
-      error: (err) => this.snackBar.open(`Error occurred while trying to update entity mapping: ${err?.error?.description}.`, "Dismiss", { duration: 2000 } as MatSnackBarConfig)
+      error: (err) => this.snackBar.open(this.translate.instant('admin.solr.messages.updateError', {error: err?.error?.description}), this.translate.instant('common.action.dismiss'), { duration: 2000 } as MatSnackBarConfig)
     })
   }
 
@@ -91,15 +106,15 @@ export class ApacheSolrComponent implements AfterViewInit{
    * Deletes this {@link ApacheSolrConfig}.
    */
   public delete() {
-    if (confirm("Are you sure that you want to delete this Apache Solr configuration?\nAfter deletion, it can no longer be retrieved.")) {
-      this.solrId.pipe(
+    if (confirm(this.translate.instant('admin.solr.confirmDelete') + '\n' + this.translate.instant('common.confirmDeleteSuffix'))) {
+      this.solrId$.pipe(
           mergeMap((id) =>  this.service.deleteSolrConfig(id))
       ).subscribe({
         next: () => {
-          this.snackBar.open(`Successfully deleted Apache Solr configuration.`, "Dismiss", { duration: 2000 } as MatSnackBarConfig);
+          this.snackBar.open(this.translate.instant('admin.solr.messages.deleted'), this.translate.instant('common.action.dismiss'), { duration: 2000 } as MatSnackBarConfig);
           this.router.navigate(['admin', 'dashboard']).then(() => {})
         },
-        error: (err) => this.snackBar.open(`Error occurred while trying to delete Apache Solr configuration: ${err?.error?.description}.`, "Dismiss", { duration: 2000 } as MatSnackBarConfig)
+        error: (err) => this.snackBar.open(this.translate.instant('admin.solr.messages.deleteError', {error: err?.error?.description}), this.translate.instant('common.action.dismiss'), { duration: 2000 } as MatSnackBarConfig)
       })
     }
   }
@@ -108,10 +123,10 @@ export class ApacheSolrComponent implements AfterViewInit{
    * Downloads the current {@link ApacheSolrConfig} as a file.
    */
   public download() {
-    this.solrId.pipe(
+    this.solrId$.pipe(
         mergeMap(id => this.service.getSolrConfig(id)),
         catchError((err) => {
-          this.snackBar.open(`Error occurred while trying to load Apache Solr configuration: ${err?.error?.description}.`, "Dismiss", { duration: 2000 } as MatSnackBarConfig);
+          this.snackBar.open(this.translate.instant('admin.solr.messages.loadError', {error: err?.error?.description}), this.translate.instant('common.action.dismiss'), { duration: 2000 } as MatSnackBarConfig);
           return of(null)
         })
     ).subscribe(data => {

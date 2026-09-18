@@ -4,83 +4,78 @@ import ch.pontius.kiar.api.model.status.ErrorStatus
 import ch.pontius.kiar.api.model.status.ErrorStatusException
 import ch.pontius.kiar.api.model.status.SuccessStatus
 import ch.pontius.kiar.database.institutions.Participants
-import io.javalin.http.Context
-import io.javalin.openapi.*
 import org.jetbrains.exposed.v1.core.eq
 import org.jetbrains.exposed.v1.jdbc.deleteWhere
 import org.jetbrains.exposed.v1.jdbc.insert
 import org.jetbrains.exposed.v1.jdbc.select
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
+import io.ktor.server.application.ApplicationCall
+import ch.pontius.kiar.api.openapi.*
+import io.ktor.server.response.respond
+import ch.pontius.kiar.utilities.extensions.pathParam
 
 
-@OpenApi(
-    path = "/api/participants",
-    methods = [HttpMethod.GET],
-    summary = "Lists all available participants.",
-    operationId = "getListParticipants",
-    tags = ["Config", "Participant"],
-    pathParams = [],
-    responses = [
-        OpenApiResponse("200", [OpenApiContent(Array<String>::class)]),
-        OpenApiResponse("401", [OpenApiContent(ErrorStatus::class)]),
-        OpenApiResponse("403", [OpenApiContent(ErrorStatus::class)]),
-        OpenApiResponse("500", [OpenApiContent(ErrorStatus::class)]),
-    ]
-)
-fun listParticipants(ctx: Context) {
-    transaction {
-        ctx.json(Participants.select(Participants.name).map { it[Participants.name] }.toTypedArray())
+val listParticipantsDoc: RouteDoc = {
+    operationId = "getListParticipants"
+    summary = "Lists all available participants."
+    tags("Config", "Participant")
+    responses {
+        json<List<String>>(200)
+        errors(401, 403, 500)
     }
 }
 
-@OpenApi(
-    path = "/api/participants/{name}",
-    methods = [HttpMethod.POST],
-    summary = "Creates a new participant.",
-    operationId = "postCreateParticipant",
-    tags = ["Config", "Participant"],
-    pathParams = [
-        OpenApiParam("name", String::class, description = "The name of the new participant. Must be unique!", required = true)
-    ],
-    responses = [
-        OpenApiResponse("200", [OpenApiContent(SuccessStatus::class)]),
-        OpenApiResponse("400", [OpenApiContent(ErrorStatus::class)]),
-        OpenApiResponse("500", [OpenApiContent(ErrorStatus::class)])
-    ]
-)
-fun createParticipants(ctx: Context) {
-    val participantName = ctx.pathParam("name")
+suspend fun listParticipants(call: ApplicationCall) {
+    val participants = transaction {
+        Participants.select(Participants.name).map { it[Participants.name] }
+    }
+    call.respond(participants)
+}
+
+val createParticipantsDoc: RouteDoc = {
+    operationId = "postCreateParticipant"
+    summary = "Creates a new participant."
+    tags("Config", "Participant")
+    parameters {
+        pathParam("name", "The name of the new participant. Must be unique!", STRING)
+    }
+    responses {
+        json<SuccessStatus>(200)
+        errors(400, 500)
+    }
+}
+
+suspend fun createParticipants(call: ApplicationCall) {
+    val participantName = call.pathParam("name")
     transaction {
         Participants.insert {
             it[name] = participantName
         }
     }
-    ctx.json(SuccessStatus("Participant '$participantName' created successfully."))
+    call.respond(SuccessStatus("Participant '$participantName' created successfully."))
 }
 
-@OpenApi(
-    path = "/api/participants/{id}",
-    methods = [HttpMethod.DELETE],
-    summary = "Deletes and existing participant.",
-    operationId = "deleteParticipant",
-    tags = ["Config", "Participant"],
-    pathParams = [
-        OpenApiParam("id", Int::class, description = "The ID of the participant to delete.", required = true)
-    ],
-    responses = [
-        OpenApiResponse("200", [OpenApiContent(SuccessStatus::class)]),
-        OpenApiResponse("404", [OpenApiContent(ErrorStatus::class)]),
-        OpenApiResponse("500", [OpenApiContent(ErrorStatus::class)]),
-    ]
-)
-fun deleteParticipants(ctx: Context) {
-    val participantId = ctx.pathParam("id").toIntOrNull() ?: throw ErrorStatusException(400, "Malformed participant ID.")
+val deleteParticipantsDoc: RouteDoc = {
+    operationId = "deleteParticipant"
+    summary = "Deletes and existing participant."
+    tags("Config", "Participant")
+    parameters {
+        pathParam("id", "The ID of the participant to delete.")
+    }
+    responses {
+        json<SuccessStatus>(200)
+        errors(404, 500)
+    }
+}
+
+suspend fun deleteParticipants(call: ApplicationCall) {
+    val participantId = call.pathParam("id").toIntOrNull() ?: throw ErrorStatusException(400, "Malformed participant ID.")
     val deleted = transaction {
         Participants.deleteWhere { Participants.id eq participantId }
     }
     if (deleted > 0) {
-        ctx.json(SuccessStatus("Participant with ID $participantId deleted successfully."))
+        call.respond(SuccessStatus("Participant with ID $participantId deleted successfully."))
     } else {
-        ctx.json(ErrorStatus(404, "Participant with ID could not be found."))
+        call.respond(ErrorStatus(404, "Participant with ID could not be found."))
     }
 }

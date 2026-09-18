@@ -1,33 +1,45 @@
-import {Component, Inject} from "@angular/core";
-import {MAT_DIALOG_DATA, MatDialogRef} from "@angular/material/dialog";
+import {Component, inject} from "@angular/core";
+import {TranslatePipe} from "@ngx-translate/core";
+import {toSignal} from "@angular/core/rxjs-interop";
+import {
+  MAT_DIALOG_DATA,
+  MatDialogActions,
+  MatDialogContent,
+  MatDialogRef,
+  MatDialogTitle
+} from "@angular/material/dialog";
 import {AttributeMappingDialogComponent} from "../mapping/attribute-mapping-dialog.component";
-import {FormArray, FormControl, FormGroup} from "@angular/forms";
-import {Observable, shareReplay} from "rxjs";
+import {FormArray, FormControl, FormGroup, FormsModule, ReactiveFormsModule} from "@angular/forms";
 import {ConfigService, TransformerType} from "../../../../../openapi";
+import {MatFormField, MatInput, MatLabel} from "@angular/material/input";
+import {MatOption, MatSelect} from "@angular/material/select";
+import {MatButton, MatIconButton, MatMiniFabButton} from "@angular/material/button";
+import {MatTooltip} from "@angular/material/tooltip";
+import {MatIcon} from "@angular/material/icon";
 
 @Component({
     selector: 'transformer-dialog',
     templateUrl: 'transformer-dialog.component.html',
-    standalone: false
+  imports: [MatDialogTitle, MatDialogContent, FormsModule, ReactiveFormsModule, MatFormField, MatLabel, MatSelect, MatOption, MatMiniFabButton, MatTooltip, MatIcon, MatInput, MatIconButton, MatDialogActions, MatButton, TranslatePipe]
 })
 export class TransformerDialogComponent {
+  /** The {@link MatDialogRef} used to interact with the dialog. */
+  private dialogRef = inject<MatDialogRef<AttributeMappingDialogComponent>>(MatDialogRef);
 
-  /** An {@link Observable} of available {@link TransformerType}. */
-  public readonly transformerTypes: Observable<Array<TransformerType>>
+  /** The {@link ConfigService} instance used to access application configuration. */
+  private service = inject(ConfigService);
 
-  constructor(
-      private dialogRef: MatDialogRef<AttributeMappingDialogComponent>,
-      private service: ConfigService,
-      @Inject(MAT_DIALOG_DATA) public formGroup: FormGroup) {
-    this.transformerTypes = this.service.getListTransformerTypes().pipe(shareReplay(1))
-  }
+  /** The provided input data. */
+  protected formGroup = inject<FormGroup>(MAT_DIALOG_DATA);
+
+  /** A signal of the available {@link TransformerType}s. */
+  public readonly transformerTypes = toSignal(this.service.getListTransformerTypes(), {initialValue: [] as Array<TransformerType>})
 
   /**
    * Accessor for the {@link FormArray} holding parameter values.
    */
-
-  get parameterForms(): FormArray {
-    return this.formGroup.get('parameters') as FormArray
+  get parameterForms(): FormArray<FormGroup> {
+    return this.formGroup.get('parameters') as FormArray<FormGroup>
   }
 
   /**

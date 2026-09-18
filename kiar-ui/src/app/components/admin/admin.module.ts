@@ -27,46 +27,43 @@ import {JobTemplateComponent} from "./template/job-template.component";
 import {TransformerDialogComponent} from "./template/transformer-dialog.component";
 
 @NgModule({
-  declarations: [
-    AddEntityMappingDialogComponent,
-    AddJobTemplateDialogComponent,
-    AddParticipantDialogComponent,
-    AddSolrConfigDialogComponent,
-    AdminDashboardComponent,
-    ApacheSolrComponent,
-    AttributeMappingDialogComponent,
-    TransformerDialogComponent,
-    EntityMappingComponent,
-    JobTemplateComponent
-  ],
-  imports: [
-    CommonModule,
-    BrowserModule,
-    FormsModule,
-    ReactiveFormsModule,
-    RouterLink,
-
-    MatButtonModule,
-    MatCardModule,
-    MatDialogModule,
-    MatInputModule,
-    MatSnackBarModule,
-    MatListModule,
-    MatIconModule,
-    MatTableModule,
-    MatToolbarModule,
-    MatSelectModule,
-    MatCheckboxModule,
-    MatTooltipModule
-  ],
-  exports: [
-    AdminDashboardComponent,
-    ApacheSolrComponent,
-    EntityMappingComponent,
-    JobTemplateComponent
-  ],
-  providers: [
-      AttributeMappingDialogComponent
-  ]
+    imports: [
+        CommonModule,
+        BrowserModule,
+        FormsModule,
+        ReactiveFormsModule,
+        RouterLink,
+        MatButtonModule,
+        MatCardModule,
+        MatDialogModule,
+        MatInputModule,
+        MatSnackBarModule,
+        MatListModule,
+        MatIconModule,
+        MatTableModule,
+        MatToolbarModule,
+        MatSelectModule,
+        MatCheckboxModule,
+        MatTooltipModule,
+        AddEntityMappingDialogComponent,
+        AddJobTemplateDialogComponent,
+        AddParticipantDialogComponent,
+        AddSolrConfigDialogComponent,
+        AdminDashboardComponent,
+        ApacheSolrComponent,
+        AttributeMappingDialogComponent,
+        TransformerDialogComponent,
+        EntityMappingComponent,
+        JobTemplateComponent
+    ],
+    exports: [
+        AdminDashboardComponent,
+        ApacheSolrComponent,
+        EntityMappingComponent,
+        JobTemplateComponent
+    ],
+    providers: [
+        AttributeMappingDialogComponent
+    ]
 })
 export class AdminModule {}

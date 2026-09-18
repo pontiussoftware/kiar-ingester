@@ -2,19 +2,19 @@
 <div mat-dialog-content>
   <form [formGroup]="data.form">
     <mat-form-field appearance="fill" [style.width]="'100%'">
-      <mat-label i18n="@@Source">Source</mat-label>
+      <mat-label>{{ 'common.label.source' | translate }}</mat-label>
       <input matInput type="text" required formControlName="source">
     </mat-form-field>
 
     <mat-form-field appearance="fill" [style.width]="'100%'">
-      <mat-label i18n="@@LabelDestination">Destination</mat-label>
+      <mat-label>{{ 'common.label.destination' | translate }}</mat-label>
       <input matInput type="text" formControlName="destination">
     </mat-form-field>
 
     <mat-form-field appearance="fill" [style.width]="'50%'">
-      <mat-label i18n="@@LabelParser">Parser</mat-label>
+      <mat-label>{{ 'common.label.parser' | translate }}</mat-label>
       <mat-select formControlName="parser">
-        @for (parser of (parsers | async); track parser) {
+        @for (parser of this.parsers(); track parser) {
           <mat-option [value]="parser">
             {{parser}}
           </mat-option>
@@ -23,42 +23,42 @@
     </mat-form-field>
 
     <mat-checkbox formControlName="required">
-      Required
+      {{ 'common.label.required' | translate }}
     </mat-checkbox>
 
     <mat-checkbox formControlName="multiValued">
-      Multi-valued
+      {{ 'common.label.multiValued' | translate }}
     </mat-checkbox>
 
-    <h2>Parameters
-      <button mat-mini-fab color="primary" (click)="addParameter()" i18n-matTooltip="@@TooltipAddParameter" matTooltip="Add a new parameter.">
+    <h2>{{ 'common.label.parameters' | translate }}
+      <button mat-mini-fab color="primary" (click)="addParameter()" [matTooltip]="'admin.attributeMapping.tooltips.addParameter' | translate">
         <mat-icon>add</mat-icon>
       </button>
     </h2>
 
     <table [style.width]="'100%'">
       <thead>
-        <th i18n="@@LabelKey">Key</th>
-        <th i18n="@@LabelKey">Value</th>
+        <th>{{ 'common.label.key' | translate }}</th>
+        <th>{{ 'common.label.value' | translate }}</th>
         <th>&nbsp;</th>
       </thead>
       <tbody>
-        @for (parameterForm of parameterForms?.controls; track parameterForm; let i = $index) {
+        @for (parameterForm of this.parameterForms.controls; track parameterForm; let i = $index) {
           <tr [formGroup]="parameterForm">
             <td [style.width]="'15%'">
               <mat-form-field appearance="fill" [style.width]="'100%'">
-                <mat-label>Key</mat-label>
+                <mat-label>{{ 'common.label.key' | translate }}</mat-label>
                 <input matInput type="text" formControlName="key">
               </mat-form-field>
             </td>
             <td [style.width]="'75%'">
               <mat-form-field appearance="fill" [style.width]="'100%'">
-                <mat-label>Value</mat-label>
+                <mat-label>{{ 'common.label.value' | translate }}</mat-label>
                 <input matInput type="text" formControlName="value">
               </mat-form-field>
             </td>
             <td [style.padding-bottom]="'25px'">
-              <button mat-icon-button (click)="removeParameter(i)" color="warn" i18n-matTooltip="@@TooltipRemoveParameter" matTooltip="Remove parameter."><mat-icon>delete</mat-icon></button>
+              <button mat-icon-button (click)="removeParameter(i)" color="warn" [matTooltip]="'admin.attributeMapping.tooltips.removeParameter' | translate"><mat-icon>delete</mat-icon></button>
             </td>
           </tr>
         }
@@ -67,5 +67,5 @@
   </form>
 </div>
 <div mat-dialog-actions>
-  <button mat-button color="primary" (click)="close()">Save</button>
+  <button mat-button color="primary" (click)="close()">{{ 'common.action.save' | translate }}</button>
 </div>

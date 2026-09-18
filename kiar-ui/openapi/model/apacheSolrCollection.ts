@@ -7,7 +7,7 @@
  * https://openapi-generator.tech
  * Do not edit the class manually.
  */
-import {CollectionType} from './collectionType';
+import { CollectionType } from './collectionType';
 
 
 export interface ApacheSolrCollection { 

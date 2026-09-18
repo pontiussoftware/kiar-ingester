@@ -6,7 +6,7 @@ import kotlinx.serialization.Serializable
 typealias InstitutionId = Int
 
 /**
- * An API representation of a [DbInstitution].
+ * An API representation of a [Institution].
  *
  * @author Ralph Gasser
  * @version 1.0.0

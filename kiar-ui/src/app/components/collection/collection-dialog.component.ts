@@ -1,39 +1,66 @@
-import {Component, ElementRef, Inject, ViewChild} from "@angular/core";
-import {FormArray, FormControl, FormGroup, Validators} from "@angular/forms";
+import {Component, inject} from "@angular/core";
+import {TranslatePipe, TranslateService} from "@ngx-translate/core";
+import {toSignal} from "@angular/core/rxjs-interop";
+import {FormArray, FormControl, FormGroup, FormsModule, ReactiveFormsModule, Validators} from "@angular/forms";
 import {CollectionService, Institution, InstitutionService, ObjectCollection,} from "../../../../openapi";
-import {MAT_DIALOG_DATA, MatDialogRef} from "@angular/material/dialog";
+import {
+  MAT_DIALOG_DATA,
+  MatDialogActions,
+  MatDialogContent,
+  MatDialogRef,
+  MatDialogTitle
+} from "@angular/material/dialog";
 import {combineLatest, first, map, Observable, shareReplay} from "rxjs";
 import {MatSnackBar, MatSnackBarConfig} from "@angular/material/snack-bar";
+import {MatError, MatFormField, MatInput, MatLabel} from "@angular/material/input";
+import {MatOption, MatSelect} from "@angular/material/select";
+import {MatCheckbox} from "@angular/material/checkbox";
+import {MatButton, MatIconButton} from "@angular/material/button";
+import {MatIcon} from "@angular/material/icon";
+import {CollectionImageComponent} from "./collection-image.component";
 
 @Component({
     selector: 'kiar-collection-dialog',
     templateUrl: './collection-dialog.component.html',
     styleUrls: ['./collection-dialog.component.scss'],
-    standalone: false
+  imports: [MatDialogTitle, MatDialogContent, FormsModule, ReactiveFormsModule, MatFormField, MatLabel, MatInput, MatError, MatSelect, MatOption, MatCheckbox, MatIconButton, MatIcon, CollectionImageComponent, MatDialogActions, MatButton, TranslatePipe]
 })
 export class CollectionDialogComponent {
+  /** The {@link InstitutionService} used to access institution data. */
+  private institutionService = inject(InstitutionService);
+
+  /** The {@link CollectionService} used to access collection data. */
+  private collectionService = inject(CollectionService);
+
+  /** The {@link MatDialogRef} used to interact with and close this dialog. */
+  private dialogRef = inject<MatDialogRef<CollectionDialogComponent>>(MatDialogRef);
+
+  /** The {@link MatSnackBar} used to display notifications. */
+  private snackBar = inject(MatSnackBar);
+
+  /** The {@link TranslateService} used to resolve user-facing messages. */
+  private translate = inject(TranslateService);
+
+  /** The ID of the {@link ObjectCollection} to edit, provided as dialog data (null when creating a new one). */
+  protected collectionId = inject<number | null>(MAT_DIALOG_DATA);
 
   /** The {@link FormControl} that backs this {@link AddEntityMappingDialogComponent}. */
   public formControl: FormGroup
 
-  /** An {@link Observable} of available participants. */
-  public readonly institutions: Observable<Array<Institution>>
+  /** {@link Observable} of the available {@link Institution}s; shared between {@link institutions} and {@link reload}. */
+  private readonly institutions$ = this.institutionService.getInstitutions(0, 1000).pipe(
+      first(),
+      map(r => r.results),
+      shareReplay(1)
+  )
+
+  /** A signal of the available {@link Institution}s. */
+  public readonly institutions = toSignal(this.institutions$, {initialValue: [] as Array<Institution>})
 
   /** List of images that should be displayed. */
   public images: Array<string> = []
 
-  /** Reference to the file input. */
-  @ViewChild('fileInput')
-  fileInput: ElementRef<HTMLInputElement>;
-
-
-  constructor(
-      private institutionService: InstitutionService,
-      private collectionService: CollectionService,
-      private dialogRef: MatDialogRef<CollectionDialogComponent>,
-      private snackBar: MatSnackBar,
-      @Inject(MAT_DIALOG_DATA) protected collectionId: number | null
-  ) {
+  constructor() {
     /* Prepare empty form. */
     this.formControl = new FormGroup({
       name: new FormControl(null, [Validators.required, Validators.minLength(5)]),
@@ -45,13 +72,6 @@ export class CollectionDialogComponent {
           new FormControl(null, [Validators.required]),
       ], [Validators.minLength(1)]),
     })
-
-    /* Get list of available participants. */
-    this.institutions = this.institutionService.getInstitutions(0, 1000).pipe(
-        first(),
-        map(r => r.results),
-        shareReplay(1)
-    )
 
     /* Reload institution data. */
     if (this.collectionId) {
@@ -103,18 +123,18 @@ export class CollectionDialogComponent {
       if (collection.id) {
         this.collectionService.putUpdateCollection(collection.id, collection).subscribe({
           next: (value) => {
-            this.snackBar.open(value.description, "Dismiss", { duration: 2000 } as MatSnackBarConfig);
+            this.snackBar.open(value.description, this.translate.instant('common.action.dismiss'), { duration: 2000 } as MatSnackBarConfig);
             this.dialogRef.close(collection);
           },
-          error: (err) => this.snackBar.open(`Error occurred while trying to update collection: ${err?.error?.description}.`, "Dismiss", { duration: 2000 } as MatSnackBarConfig),
+          error: (err) => this.snackBar.open(this.translate.instant('collection.dialog.messages.updateError', {error: err?.error?.description}), this.translate.instant('common.action.dismiss'), { duration: 2000 } as MatSnackBarConfig),
         })
       } else {
         this.collectionService.postCreateCollection(collection).subscribe({
           next: (value) => {
-            this.snackBar.open(value.description, "Dismiss", { duration: 2000 } as MatSnackBarConfig);
+            this.snackBar.open(value.description, this.translate.instant('common.action.dismiss'), { duration: 2000 } as MatSnackBarConfig);
             this.dialogRef.close(collection);
           },
-          error: (err) => this.snackBar.open(`Error occurred while trying to create collection: ${err?.error?.description}.`, "Dismiss", { duration: 2000 } as MatSnackBarConfig),
+          error: (err) => this.snackBar.open(this.translate.instant('collection.dialog.messages.createError', {error: err?.error?.description}), this.translate.instant('common.action.dismiss'), { duration: 2000 } as MatSnackBarConfig),
         })
       }
     }
@@ -133,10 +153,10 @@ export class CollectionDialogComponent {
         if (file) {
           this.collectionService.postCollectionImage(this.collectionId!!, file).subscribe({
             next: () => {
-              this.snackBar.open("Successfully uploaded collection image.", "Dismiss", {duration: 2000} as MatSnackBarConfig)
+              this.snackBar.open(this.translate.instant('collection.dialog.messages.imageUploaded'), this.translate.instant('common.action.dismiss'), {duration: 2000} as MatSnackBarConfig)
               this.reload(this.collectionId!!)
             },
-            error: (err) => this.snackBar.open(`Error occurred while trying to upload image: ${err?.error?.description}.`, "Dismiss", {duration: 2000} as MatSnackBarConfig)
+            error: (err) => this.snackBar.open(this.translate.instant('collection.dialog.messages.imageUploadError', {error: err?.error?.description}), this.translate.instant('common.action.dismiss'), {duration: 2000} as MatSnackBarConfig)
           });
         }
       });
@@ -150,7 +170,7 @@ export class CollectionDialogComponent {
    * @param id The ID of the collection to reload.
    */
   private reload(id: number) {
-    combineLatest([this.collectionService.getCollection(id), this.institutions]).subscribe({
+    combineLatest([this.collectionService.getCollection(id), this.institutions$]).subscribe({
       next: ([collection, institutions]) => {
         /* Update form control. */
         this.formControl.get('name')?.setValue(collection.name)
@@ -172,7 +192,7 @@ export class CollectionDialogComponent {
         /* Update images. */
         this.images = collection.images
       },
-      error: (err) => this.snackBar.open(`Error occurred while trying to create institution: ${err?.error?.description}.`, "Dismiss", {duration: 2000} as MatSnackBarConfig)
+      error: (err) => this.snackBar.open(this.translate.instant('collection.dialog.messages.loadError', {error: err?.error?.description}), this.translate.instant('common.action.dismiss'), {duration: 2000} as MatSnackBarConfig)
     })
   }
 }

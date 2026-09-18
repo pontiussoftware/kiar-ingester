@@ -9,29 +9,33 @@
  */
 /* tslint:disable:no-unused-variable member-ordering */
 
-import {Inject, Injectable, Optional} from '@angular/core';
-import {HttpClient, HttpContext, HttpEvent, HttpParams, HttpResponse} from '@angular/common/http';
-import {Observable} from 'rxjs';
+import { Inject, Injectable, Optional }                      from '@angular/core';
+import { HttpClient, HttpHeaders, HttpParams,
+         HttpResponse, HttpEvent, HttpParameterCodec, HttpContext 
+        }       from '@angular/common/http';
+import { CustomHttpParameterCodec }                          from '../encoder';
+import { Observable }                                        from 'rxjs';
 
 // @ts-ignore
-import {CreateJobRequest} from '../model/createJobRequest';
+import { CreateJobRequest } from '../model/createJobRequest';
 // @ts-ignore
-import {ErrorStatus} from '../model/errorStatus';
+import { ErrorStatus } from '../model/errorStatus';
 // @ts-ignore
-import {Job} from '../model/job';
+import { Job } from '../model/job';
 // @ts-ignore
-import {JobTemplate} from '../model/jobTemplate';
+import { JobTemplate } from '../model/jobTemplate';
 // @ts-ignore
-import {PaginatedJobLogResult} from '../model/paginatedJobLogResult';
+import { PaginatedJobLogResult } from '../model/paginatedJobLogResult';
 // @ts-ignore
-import {PaginatedJobResult} from '../model/paginatedJobResult';
+import { PaginatedJobResult } from '../model/paginatedJobResult';
 // @ts-ignore
-import {SuccessStatus} from '../model/successStatus';
+import { SuccessStatus } from '../model/successStatus';
 
 // @ts-ignore
-import {BASE_PATH, COLLECTION_FORMATS} from '../variables';
-import {Configuration} from '../configuration';
-import {BaseService} from '../api.base.service';
+import { BASE_PATH, COLLECTION_FORMATS }                     from '../variables';
+import { Configuration }                                     from '../configuration';
+import { BaseService } from '../api.base.service';
+
 
 
 @Injectable({
@@ -45,6 +49,7 @@ export class JobService extends BaseService {
 
     /**
      * Aborts a running job.
+     * @endpoint delete /api/jobs/{id}
      * @param id The ID of the Job that should be aborted.
      * @param observe set whether or not to return the data Observable as the body, response or events. defaults to returning the body.
      * @param reportProgress flag to report request and response progress.
@@ -91,7 +96,7 @@ export class JobService extends BaseService {
                 ...(withCredentials ? { withCredentials } : {}),
                 headers: localVarHeaders,
                 observe: observe,
-                transferCache: localVarTransferCache,
+                ...(localVarTransferCache !== undefined ? { transferCache: localVarTransferCache } : {}),
                 reportProgress: reportProgress
             }
         );
@@ -99,6 +104,7 @@ export class JobService extends BaseService {
 
     /**
      * Purges the logs for the job with the provided ID.
+     * @endpoint delete /api/jobs/{id}/logs
      * @param id The ID of the Job for which the logs should be pruged.
      * @param observe set whether or not to return the data Observable as the body, response or events. defaults to returning the body.
      * @param reportProgress flag to report request and response progress.
@@ -145,7 +151,7 @@ export class JobService extends BaseService {
                 ...(withCredentials ? { withCredentials } : {}),
                 headers: localVarHeaders,
                 observe: observe,
-                transferCache: localVarTransferCache,
+                ...(localVarTransferCache !== undefined ? { transferCache: localVarTransferCache } : {}),
                 reportProgress: reportProgress
             }
         );
@@ -153,6 +159,7 @@ export class JobService extends BaseService {
 
     /**
      * Retrieves all jobs that are currently active. Non-administrator users can only see Jobs that belong to them.
+     * @endpoint get /api/jobs/active
      * @param page The page index (zero-based) for pagination.
      * @param pageSize The page size for pagination.
      * @param observe set whether or not to return the data Observable as the body, response or events. defaults to returning the body.
@@ -204,7 +211,7 @@ export class JobService extends BaseService {
                 ...(withCredentials ? { withCredentials } : {}),
                 headers: localVarHeaders,
                 observe: observe,
-                transferCache: localVarTransferCache,
+                ...(localVarTransferCache !== undefined ? { transferCache: localVarTransferCache } : {}),
                 reportProgress: reportProgress
             }
         );
@@ -212,6 +219,7 @@ export class JobService extends BaseService {
 
     /**
      * Retrieves all jobs that are currently inactive (job history). Non-administrator users can only see Jobs that belong to them.
+     * @endpoint get /api/jobs/inactive
      * @param page The page index (zero-based) for pagination.
      * @param pageSize The page size for pagination.
      * @param observe set whether or not to return the data Observable as the body, response or events. defaults to returning the body.
@@ -263,7 +271,7 @@ export class JobService extends BaseService {
                 ...(withCredentials ? { withCredentials } : {}),
                 headers: localVarHeaders,
                 observe: observe,
-                transferCache: localVarTransferCache,
+                ...(localVarTransferCache !== undefined ? { transferCache: localVarTransferCache } : {}),
                 reportProgress: reportProgress
             }
         );
@@ -271,6 +279,7 @@ export class JobService extends BaseService {
 
     /**
      * Retrieves the job log for the provided job ID.
+     * @endpoint get /api/jobs/{id}/logs
      * @param id The ID of the Job for which the logs should be retrieved.
      * @param page The page index (zero-based) for pagination.
      * @param pageSize The page size  for pagination.
@@ -332,7 +341,7 @@ export class JobService extends BaseService {
                 ...(withCredentials ? { withCredentials } : {}),
                 headers: localVarHeaders,
                 observe: observe,
-                transferCache: localVarTransferCache,
+                ...(localVarTransferCache !== undefined ? { transferCache: localVarTransferCache } : {}),
                 reportProgress: reportProgress
             }
         );
@@ -340,6 +349,7 @@ export class JobService extends BaseService {
 
     /**
      * Lists all available job templates.
+     * @endpoint get /api/templates
      * @param observe set whether or not to return the data Observable as the body, response or events. defaults to returning the body.
      * @param reportProgress flag to report request and response progress.
      */
@@ -382,7 +392,7 @@ export class JobService extends BaseService {
                 ...(withCredentials ? { withCredentials } : {}),
                 headers: localVarHeaders,
                 observe: observe,
-                transferCache: localVarTransferCache,
+                ...(localVarTransferCache !== undefined ? { transferCache: localVarTransferCache } : {}),
                 reportProgress: reportProgress
             }
         );
@@ -390,6 +400,7 @@ export class JobService extends BaseService {
 
     /**
      * Creates a new job.
+     * @endpoint post /api/jobs
      * @param createJobRequest 
      * @param observe set whether or not to return the data Observable as the body, response or events. defaults to returning the body.
      * @param reportProgress flag to report request and response progress.
@@ -446,7 +457,7 @@ export class JobService extends BaseService {
                 ...(withCredentials ? { withCredentials } : {}),
                 headers: localVarHeaders,
                 observe: observe,
-                transferCache: localVarTransferCache,
+                ...(localVarTransferCache !== undefined ? { transferCache: localVarTransferCache } : {}),
                 reportProgress: reportProgress
             }
         );
@@ -454,6 +465,7 @@ export class JobService extends BaseService {
 
     /**
      * Starts execution of a job.
+     * @endpoint put /api/jobs/{id}/schedule
      * @param id The ID of the Job that should be started.
      * @param test True, if only a test-run should be executed.
      * @param observe set whether or not to return the data Observable as the body, response or events. defaults to returning the body.
@@ -506,7 +518,7 @@ export class JobService extends BaseService {
                 ...(withCredentials ? { withCredentials } : {}),
                 headers: localVarHeaders,
                 observe: observe,
-                transferCache: localVarTransferCache,
+                ...(localVarTransferCache !== undefined ? { transferCache: localVarTransferCache } : {}),
                 reportProgress: reportProgress
             }
         );
@@ -514,6 +526,7 @@ export class JobService extends BaseService {
 
     /**
      * Uploads a file for the given job.
+     * @endpoint put /api/jobs/{id}/upload
      * @param id The ID of the Job for which a file should be uploaded.
      * @param first Set to \&#39;true\&#39; if the submitted chunk is the first one.
      * @param last Set to \&#39;true\&#39; if the submitted chunk is the last one.
@@ -593,7 +606,7 @@ export class JobService extends BaseService {
                 ...(withCredentials ? { withCredentials } : {}),
                 headers: localVarHeaders,
                 observe: observe,
-                transferCache: localVarTransferCache,
+                ...(localVarTransferCache !== undefined ? { transferCache: localVarTransferCache } : {}),
                 reportProgress: reportProgress
             }
         );

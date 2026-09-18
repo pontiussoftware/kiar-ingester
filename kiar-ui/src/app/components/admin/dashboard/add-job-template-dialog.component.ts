@@ -1,15 +1,25 @@
-import {Component} from "@angular/core";
-import {FormControl, FormGroup, Validators} from "@angular/forms";
-import {MatDialogRef} from "@angular/material/dialog";
+import {Component, inject} from "@angular/core";
+import {TranslatePipe} from "@ngx-translate/core";
+import {toSignal} from "@angular/core/rxjs-interop";
+import {FormControl, FormGroup, FormsModule, ReactiveFormsModule, Validators} from "@angular/forms";
+import {MatDialogActions, MatDialogContent, MatDialogRef, MatDialogTitle} from "@angular/material/dialog";
 import {ApacheSolrConfig, ConfigService, EntityMapping, JobTemplate, JobType} from "../../../../../openapi";
-import {Observable, shareReplay} from "rxjs";
+import {MatFormField, MatInput, MatLabel} from "@angular/material/input";
+import {MatOption, MatSelect} from "@angular/material/select";
+import {MatCheckbox} from "@angular/material/checkbox";
+import {MatButton} from "@angular/material/button";
 
 @Component({
     selector: 'kiar-add-job-template-dialog',
     templateUrl: './add-job-template.dialog.component.html',
-    standalone: false
+    imports: [MatDialogTitle, MatDialogContent, FormsModule, ReactiveFormsModule, MatFormField, MatLabel, MatInput, MatSelect, MatOption, MatCheckbox, MatDialogActions, MatButton, TranslatePipe]
 })
 export class AddJobTemplateDialogComponent {
+  /** The {@link ConfigService} used to access application configuration (templates, mappings, Solr configurations, participants). */
+  private config = inject(ConfigService);
+
+  /** The {@link MatDialogRef} used to interact with and close this dialog. */
+  private dialogRef = inject<MatDialogRef<AddJobTemplateDialogComponent>>(MatDialogRef);
 
   /** The {@link FormControl} that backs this {@link AddJobTemplateDialogComponent}. */
   public formControl: FormGroup =  new FormGroup({
@@ -22,24 +32,17 @@ export class AddJobTemplateDialogComponent {
       config: new FormControl<ApacheSolrConfig | null>(null, [Validators.required]),
   })
 
-  /** An {@link Observable} of available {@link JobTemplate}. */
-  public readonly mappings: Observable<Array<EntityMapping>>
+  /** A signal of the available {@link EntityMapping}s. */
+  public readonly mappings = toSignal(this.config.getListEntityMappings(), {initialValue: [] as Array<EntityMapping>})
 
-  /** An {@link Observable} of available {@link ApacheSolrConfig}. */
-  public readonly solr: Observable<Array<ApacheSolrConfig>>
+  /** A signal of the available {@link ApacheSolrConfig}s. */
+  public readonly solr = toSignal(this.config.getListSolrConfiguration(), {initialValue: [] as Array<ApacheSolrConfig>})
 
-  /** An {@link Observable} of available {@link JobType}. */
-  public readonly types: Observable<Array<JobType>>
+  /** A signal of the available {@link JobType}s. */
+  public readonly types = toSignal(this.config.getListJobTemplateTypes(), {initialValue: [] as Array<JobType>})
 
-  /** An {@link Observable} of available participants. */
-  public readonly participants: Observable<Array<String>>
-
-  constructor(private config: ConfigService, private dialogRef: MatDialogRef<AddJobTemplateDialogComponent>) {
-      this.mappings = this.config.getListEntityMappings().pipe(shareReplay(1))
-      this.solr = this.config.getListSolrConfiguration().pipe(shareReplay(1))
-      this.types = this.config.getListJobTemplateTypes().pipe(shareReplay(1))
-      this.participants = this.config.getListParticipants().pipe(shareReplay(1))
-  }
+  /** A signal of the available participant names. */
+  public readonly participants = toSignal(this.config.getListParticipants(), {initialValue: [] as Array<string>})
 
   /**
    * Saves the data in this {@link AddJobTemplateDialogComponent}.

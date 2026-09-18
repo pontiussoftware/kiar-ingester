@@ -7,6 +7,7 @@ import org.jetbrains.exposed.v1.core.ResultRow
 import org.jetbrains.exposed.v1.core.Table
 import org.jetbrains.exposed.v1.core.dao.id.IntIdTable
 import org.jetbrains.exposed.v1.core.eq
+import org.jetbrains.exposed.v1.core.java.javaUUID
 import org.jetbrains.exposed.v1.javatime.CurrentTimestamp
 import org.jetbrains.exposed.v1.javatime.timestamp
 import org.jetbrains.exposed.v1.jdbc.select
@@ -22,7 +23,7 @@ import java.util.*
 object Institutions : IntIdTable("institutions") {
 
     /** The unique identifier of a [Collections] entry. */
-    val uuid = uuid("uuid").uniqueIndex().clientDefault { UUID.randomUUID() }
+    val uuid = javaUUID("uuid").uniqueIndex().clientDefault { UUID.randomUUID() }
 
     /** The name of the [Institutions] entry. */
     val name = varchar("name", 255).uniqueIndex()

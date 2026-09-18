@@ -1,15 +1,15 @@
-<h1 mat-dialog-title i18n="@@TitleCreateJob">Create Job</h1>
+<h1 mat-dialog-title>{{ 'createJob.title' | translate }}</h1>
 <div mat-dialog-content>
   <form [formGroup]="formControl">
     <mat-form-field [style.width]="'100%'">
-      <mat-label i18n="@@LabelName">Name:</mat-label>
-      <input type="text" matInput placeholder="Job Name (not required)" formControlName="name"  />
+      <mat-label>{{ 'common.label.name' | translate }}</mat-label>
+      <input type="text" matInput [placeholder]="'createJob.placeholder.name' | translate" formControlName="name"  />
     </mat-form-field>
 
     <mat-form-field [style.width]="'100%'">
-      <mat-label i18n="@@LabelTemplate">Template:</mat-label>
+      <mat-label>{{ 'common.label.template' | translate }}</mat-label>
       <mat-select formControlName="template">
-        @for (template of (templates | async); track template) {
+        @for (template of this.templates(); track template) {
           <mat-option [value]="template">
             {{template.name}} ({{(template.type)}})
           </mat-option>
@@ -20,6 +20,6 @@
 </div>
 
 <div mat-dialog-actions>
-  <button mat-flat-button color="primary" i18n="@@LabelCreate" (click)="create()">Create</button>
-  <button mat-flat-button i18n="@@LabelClose" (click)="close()">Close</button>
+  <button mat-flat-button color="primary" (click)="create()">{{ 'common.action.create' | translate }}</button>
+  <button mat-flat-button (click)="close()">{{ 'common.action.close' | translate }}</button>
 </div>

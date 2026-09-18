@@ -11,8 +11,7 @@ import ch.pontius.kiar.solr.SolrClientProvider
 import com.github.benmanes.caffeine.cache.Caffeine
 import io.github.oshai.kotlinlogging.KLogger
 import io.github.oshai.kotlinlogging.KotlinLogging
-import io.javalin.http.Context
-import org.apache.solr.client.solrj.SolrQuery
+import org.apache.solr.client.solrj.request.SolrQuery
 import org.jetbrains.exposed.v1.core.and
 import org.jetbrains.exposed.v1.core.eq
 import org.jetbrains.exposed.v1.jdbc.select
@@ -49,18 +48,15 @@ class SruServer {
     /**
      * Handles a SRU request.
      *
-     * @param ctx The Javalin [Context] object
+     * @param collection The name of the collection to search.
+     * @param query The query string.
+     * @param pageSize The maximum number of records to return.
+     * @param startRecord The (1-based) index of the first record to return.
      * @return [Document] representing the SRU response.
      */
-    fun handle(ctx: Context): Document {
-        /* Read collection and associated config. */
-        val collection = ctx.pathParam("collection")
+    fun handle(collection: String, query: String, pageSize: Int, startRecord: Int): Document {
+        /* Read associated config. */
         val config = this.collections[collection] ?: throw IllegalArgumentException("Collection '$collection' not found or not configured for SRU.")
-
-        /* Read remaining parameters. */
-        val query = ctx.queryParam("query") ?: "*"
-        val pageSize = ctx.queryParam("maximumRecords")?.toIntOrNull() ?: 100
-        val startRecord = ctx.queryParam("startRecord")?.toIntOrNull() ?: 1
 
         val response = try {
             /* Prepare Apache Solr query. */

@@ -1,32 +1,32 @@
-<h1 mat-dialog-title>Create Apache Solr Configuration</h1>
+<h1 mat-dialog-title>{{ 'admin.addSolrConfig.title' | translate }}</h1>
 <div mat-dialog-content>
   <form [formGroup]="formControl">
     <mat-form-field appearance="fill" [style.width]="'100%'">
-      <mat-label>Name</mat-label>
+      <mat-label>{{ 'common.label.name' | translate }}</mat-label>
       <input matInput type="text" required formControlName="name">
     </mat-form-field>
 
     <mat-form-field appearance="fill" [style.width]="'100%'">
-      <mat-label>Description</mat-label>
+      <mat-label>{{ 'common.label.description' | translate }}</mat-label>
       <textarea matInput  formControlName="description"></textarea>
     </mat-form-field>
 
     <mat-form-field appearance="fill" [style.width]="'100%'">
-      <mat-label>Server</mat-label>
+      <mat-label>{{ 'common.label.server' | translate }}</mat-label>
       <input matInput type="textarea" formControlName="server">
     </mat-form-field>
 
     <mat-form-field appearance="fill" [style.width]="'50%'">
-      <mat-label>Username</mat-label>
+      <mat-label>{{ 'common.label.username' | translate }}</mat-label>
       <input matInput type="text" formControlName="username">
     </mat-form-field>
 
     <mat-form-field appearance="fill" [style.width]="'50%'">
-      <mat-label>Password</mat-label>
+      <mat-label>{{ 'common.label.password' | translate }}</mat-label>
       <input matInput type="password" formControlName="password">
     </mat-form-field>
   </form>
 </div>
 <div mat-dialog-actions>
-  <button mat-button color="primary" (click)="save()">Save</button>
+  <button mat-button color="primary" (click)="save()">{{ 'common.action.save' | translate }}</button>
 </div>

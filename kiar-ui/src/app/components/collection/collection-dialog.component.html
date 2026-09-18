@@ -1,18 +1,18 @@
-<h1 mat-dialog-title i18n="@@HeadingCreateCollection">Create Collection</h1>
+<h1 mat-dialog-title>{{ (collectionId ? 'collection.dialog.title.edit' : 'collection.dialog.title.create') | translate }}</h1>
 <div mat-dialog-content>
   <form [formGroup]="formControl">
     <mat-form-field appearance="fill" [style.width]="'50%'">
-      <mat-label i18n="@@LabelName">Name</mat-label>
+      <mat-label>{{ 'common.label.name' | translate }}</mat-label>
       <input matInput type="text" formControlName="name">
-      @if (formControl.get('name')?.hasError('minlength')) {
-        <mat-error>Minimum length is 10.</mat-error>
+      @if (this.formControl.get('name')?.hasError('minlength')) {
+        <mat-error>{{ 'collection.dialog.errors.minLength' | translate:{length: 5} }}</mat-error>
       }
     </mat-form-field>
 
     <mat-form-field appearance="fill" [style.width]="'30%'">
-      <mat-label i18n="@@LabelInstitution">Institution</mat-label>
+      <mat-label>{{ 'common.label.institution' | translate }}</mat-label>
       <mat-select formControlName="institution">
-        @for (institution of (institutions | async); track institution.id) {
+        @for (institution of this.institutions(); track institution.id) {
           <mat-option [value]="institution">
             {{ institution.name }}
           </mat-option>
@@ -20,32 +20,32 @@
       </mat-select>
     </mat-form-field>
 
-    <mat-checkbox formControlName="publish" i18n="@@LabelPublish">
-            Publish
+    <mat-checkbox formControlName="publish">
+            {{ 'common.label.publish' | translate }}
         </mat-checkbox>
 
     <mat-form-field appearance="fill" [style.width]="'100%'">
-      <mat-label i18n="@@LabelDisplayName">Display Name</mat-label>
+      <mat-label>{{ 'common.label.displayName' | translate }}</mat-label>
       <input matInput type="text" formControlName="displayName">
       @if (formControl.get('displayName')?.hasError('minlength')) {
-        <mat-error>Minimum length is 10.</mat-error>
+        <mat-error>{{ 'collection.dialog.errors.minLength' | translate:{length: 5} }}</mat-error>
       }
     </mat-form-field>
 
     <div formArrayName="filters">
-      @for (filter of filters; track filter; let i = $index) {
+      @for (filter of this.filters; track filter; let i = $index) {
         <div >
           <mat-form-field appearance="fill" [style.width]="'85%'">
-            <mat-label i18n="@@LabelFilter">Filter</mat-label>
+            <mat-label>{{ 'common.label.filter' | translate }}</mat-label>
             <input matInput type="text" [formControl]="filter">
           </mat-form-field>
-          @if (i == filters.length - 1) {
-            <button mat-icon-button (click)="addFilter()">
+          @if (i == this.filters.length - 1) {
+            <button mat-icon-button (click)="addFilter()" [attr.aria-label]="'collection.dialog.tooltips.addFilter' | translate">
               <mat-icon>add</mat-icon>
             </button>
           }
-          @if (filters.length > 1) {
-            <button mat-icon-button (click)="removeFilter(i)">
+          @if (this.filters.length > 1) {
+            <button mat-icon-button (click)="removeFilter(i)" [attr.aria-label]="'collection.dialog.tooltips.removeFilter' | translate">
               <mat-icon>remove</mat-icon>
             </button>
           }
@@ -54,18 +54,18 @@
     </div>
 
     <mat-form-field appearance="fill" [style.width]="'100%'">
-      <mat-label i18n="@@LabelDescription">Description</mat-label>
+      <mat-label>{{ 'common.label.description' | translate }}</mat-label>
       <textarea matInput formControlName="description"></textarea>
     </mat-form-field>
 
-    @if (images.length > 0) {
+    @if (this.images.length > 0) {
       <hr/>
     }
 
-    @if (collectionId) {
+    @if (this.collectionId) {
       <div class="image-gallery">
-        @for (image of images; track image) {
-          <kiar-collection-image [collectionId]="collectionId" [name]="image" [edit]="true"></kiar-collection-image>
+        @for (image of this.images; track image) {
+          <kiar-collection-image [collectionId]="this.collectionId" [name]="image" [edit]="true"></kiar-collection-image>
         }
       </div>
     }
@@ -74,12 +74,12 @@
 <div mat-dialog-actions>
   <button mat-button color="primary" (click)="save()">
     <mat-icon>save</mat-icon>
-    Save
+    {{ 'common.action.save' | translate }}
   </button>
-  @if (collectionId) {
+  @if (this.collectionId) {
     <button mat-button (click)="uploadImage()">
       <mat-icon>upload</mat-icon>
-      Upload Image
+      {{ 'common.action.uploadImage' | translate }}
     </button>
   }
 </div>

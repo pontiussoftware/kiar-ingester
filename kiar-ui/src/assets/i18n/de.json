@@ -1,0 +1,470 @@
+{
+  "languages": {
+    "en": "English",
+    "de": "Deutsch"
+  },
+  "common": {
+    "label": {
+      "id": "ID",
+      "name": "Name",
+      "displayName": "Anzeigename",
+      "description": "Beschreibung",
+      "email": "E-Mail",
+      "username": "Benutzername",
+      "password": "Passwort",
+      "passwordRepeat": "Passwort wiederholen",
+      "role": "Rolle",
+      "institution": "Institution",
+      "participant": "Teilnehmer",
+      "type": "Typ",
+      "key": "Schlüssel",
+      "value": "Wert",
+      "source": "Quelle",
+      "destination": "Ziel",
+      "parser": "Parser",
+      "publish": "Veröffentlichen",
+      "active": "Aktiv",
+      "status": "Status",
+      "street": "Strasse",
+      "zip": "PLZ",
+      "city": "Ort",
+      "canton": "Kanton",
+      "server": "Server",
+      "template": "Vorlage",
+      "collection": "Sammlung",
+      "createdAt": "Erstellt am",
+      "changedAt": "Geändert am",
+      "createdBy": "Erstellt von",
+      "action": "Aktion",
+      "filter": "Filter",
+      "image": "Bild",
+      "publicServer": "Öffentlicher Server",
+      "format": "Format",
+      "path": "Pfad",
+      "parameters": "Parameter",
+      "required": "Erforderlich",
+      "multiValued": "Mehrwertig",
+      "homepage": "Website",
+      "longitude": "Längengrad",
+      "latitude": "Breitengrad",
+      "contact": "Kontakt"
+    },
+    "action": {
+      "save": "Speichern",
+      "close": "Schliessen",
+      "delete": "Löschen",
+      "dismiss": "Schliessen",
+      "reload": "Neu laden",
+      "login": "Anmelden",
+      "download": "Herunterladen",
+      "create": "Erstellen",
+      "uploadImage": "Bild hochladen",
+      "update": "Aktualisieren"
+    },
+    "noData": "Keine Daten",
+    "confirmDeleteSuffix": "Nach dem Löschen kann der Eintrag nicht wiederhergestellt werden."
+  },
+  "toolbar": {
+    "dashboard": "Zum Job-Dashboard.",
+    "admin": "Zum Administrator-Dashboard.",
+    "institutions": "Zur Verwaltung der Institutionen.",
+    "collections": "Zur Verwaltung der Sammlungen.",
+    "users": "Zur Benutzerverwaltung.",
+    "language": "Sprache wechseln.",
+    "profile": "Benutzerprofil verwalten",
+    "logout": "Abmelden"
+  },
+  "footer": {
+    "title": "KIMnet Daten Ingest Dashboard"
+  },
+  "paginator": {
+    "itemsPerPage": "Einträge pro Seite:",
+    "nextPage": "Nächste Seite",
+    "previousPage": "Vorherige Seite",
+    "firstPage": "Erste Seite",
+    "lastPage": "Letzte Seite",
+    "range": "{{start}} – {{end}} von {{length}}",
+    "rangeEmpty": "0 von {{length}}"
+  },
+  "login": {
+    "messages": {
+      "success": "Anmeldung erfolgreich!",
+      "failed": "Anmeldung fehlgeschlagen: {{error}}!",
+      "connectionError": "Anmeldung aufgrund eines Verbindungsproblems fehlgeschlagen!"
+    }
+  },
+  "forbidden": {
+    "title": "Zugriff verweigert",
+    "message": "Sie sind nicht berechtigt, diese Seite anzuzeigen. Wenden Sie sich an den Administrator, falls Sie dies für einen Fehler halten."
+  },
+  "profile": {
+    "title": "Benutzerprofil",
+    "placeholders": {
+      "passwordMinLength": "Mindestens 8 Zeichen"
+    },
+    "errors": {
+      "invalidEmail": "Keine gültige E-Mail-Adresse.",
+      "passwordTooShort": "Das Passwort muss mindestens 8 Zeichen lang sein.",
+      "passwordMismatch": "Die Passwörter stimmen nicht überein."
+    },
+    "messages": {
+      "updated": "Benutzerprofil erfolgreich aktualisiert.",
+      "updateFailed": "Fehler beim Aktualisieren des Benutzerprofils: {{error}}."
+    }
+  },
+  "dashboard": {
+    "title": "Datenimport-Jobs",
+    "tabs": {
+      "running": "Aktive Jobs",
+      "history": "Job-Verlauf"
+    },
+    "columns": {
+      "statistics": "Statistik"
+    },
+    "tooltips": {
+      "addJob": "Neuen Job hinzufügen.",
+      "viewLog": "Log anzeigen.",
+      "uploadKiar": "KIAR-Datei hochladen.",
+      "scheduleIngest": "Für den Datenimport einplanen.",
+      "scheduleTestRun": "Für einen Testlauf einplanen.",
+      "abortJob": "Job abbrechen.",
+      "purgeLog": "Log löschen."
+    },
+    "messages": {
+      "uploadError": "Fehler beim Hochladen der {{type}}-Datei für Job {{id}}.",
+      "uploadSuccess": "{{type}} erfolgreich hochgeladen. Bereit für das Harvesting!",
+      "jobScheduled": "Job {{id}} erfolgreich eingeplant.",
+      "jobScheduleError": "Fehler beim Einplanen von Job {{id}}: {{error}}.",
+      "jobAborted": "Job {{id}} erfolgreich abgebrochen.",
+      "jobAbortError": "Fehler beim Abbrechen von Job {{id}}: {{error}}.",
+      "logPurged": "Log von Job {{id}} erfolgreich gelöscht.",
+      "logPurgeError": "Fehler beim Löschen des Logs von Job {{id}}: {{error}}."
+    }
+  },
+  "createJob": {
+    "title": "Job erstellen",
+    "placeholder": {
+      "name": "Job-Name (optional)"
+    },
+    "messages": {
+      "created": "Job {{id}} erfolgreich erstellt.",
+      "createError": "Fehler beim Erstellen des Jobs: {{error}}."
+    }
+  },
+  "jobLog": {
+    "title": "Job-Log (ID: {{id}})",
+    "tooltips": {
+      "back": "Zurück zur Job-Liste."
+    },
+    "filters": {
+      "all": "Alle",
+      "levelAriaLabel": "Nach Stufe filtern",
+      "contextAriaLabel": "Nach Kontext filtern"
+    },
+    "level": {
+      "warning": "Warnung",
+      "validation": "Validierung",
+      "error": "Fehler",
+      "severe": "Schwerwiegend"
+    },
+    "context": {
+      "metadata": "Metadaten",
+      "resource": "Ressource",
+      "system": "System"
+    },
+    "columns": {
+      "documentId": "Dokument-ID",
+      "level": "Stufe",
+      "context": "Kontext"
+    }
+  },
+  "institution": {
+    "list": {
+      "title": "Institutionen",
+      "tooltips": {
+        "add": "Neue Institution hinzufügen.",
+        "synchronize": "Mit Apache Solr synchronisieren.",
+        "edit": "Institution {{id}} bearbeiten.",
+        "delete": "Institution {{id}} löschen."
+      },
+      "sort": {
+        "name": "Nach Name sortieren.",
+        "zip": "Nach PLZ sortieren.",
+        "canton": "Nach Kanton sortieren."
+      },
+      "confirmDelete": "Sind Sie sicher, dass Sie die Institution '{{id}}' löschen möchten?",
+      "messages": {
+        "deleteError": "Beim Löschen der Institution '{{name}}' ist ein Fehler aufgetreten: {{error}}.",
+        "synchronized": "Die Institutionen wurden erfolgreich mit dem Apache-Solr-Backend ({{name}}) synchronisiert.",
+        "synchronizeError": "Beim Synchronisieren der Institutionen mit dem Apache-Solr-Backend ({{name}}) ist ein Fehler aufgetreten: {{error}}."
+      }
+    },
+    "dialog": {
+      "title": {
+        "create": "Institution erstellen",
+        "edit": "Institution bearbeiten"
+      },
+      "tabs": {
+        "publicationDefaults": "Standardwerte für die Veröffentlichung",
+        "availableCollections": "Verfügbare Sammlungen",
+        "publishedCollections": "Veröffentlichte Sammlungen"
+      },
+      "labels": {
+        "defaultRightStatement": "Standard-Rechteangabe",
+        "defaultCopyright": "Standard-Copyright",
+        "defaultObjectUrl": "Standard-Objekt-URL"
+      },
+      "errors": {
+        "minLength": "Die minimale Länge beträgt {{length}} Zeichen.",
+        "email": "Es muss eine gültige E-Mail-Adresse angegeben werden."
+      },
+      "messages": {
+        "updateError": "Beim Aktualisieren der Institution ist ein Fehler aufgetreten: {{error}}.",
+        "createError": "Beim Erstellen der Institution ist ein Fehler aufgetreten: {{error}}.",
+        "loadError": "Beim Laden der Institution ist ein Fehler aufgetreten: {{error}}.",
+        "imageUploaded": "Das Bild der Institution wurde erfolgreich hochgeladen.",
+        "imageUploadError": "Beim Hochladen des Bildes ist ein Fehler aufgetreten: {{error}}."
+      }
+    }
+  },
+  "collection": {
+    "list": {
+      "title": "Sammlungen",
+      "tooltips": {
+        "add": "Neue Sammlung hinzufügen.",
+        "synchronize": "Mit Apache Solr synchronisieren.",
+        "edit": "Sammlung {{id}} bearbeiten.",
+        "delete": "Sammlung {{id}} löschen."
+      },
+      "sort": {
+        "name": "Nach Name sortieren."
+      },
+      "confirmDelete": "Sind Sie sicher, dass Sie die Sammlung '{{id}}' löschen möchten?",
+      "messages": {
+        "deleteError": "Beim Löschen der Sammlung '{{name}}' ist ein Fehler aufgetreten: {{error}}.",
+        "synchronized": "Die Sammlungen wurden erfolgreich mit dem Apache-Solr-Backend ({{name}}) synchronisiert.",
+        "synchronizeError": "Beim Synchronisieren der Sammlungen mit dem Apache-Solr-Backend ({{name}}) ist ein Fehler aufgetreten: {{error}}."
+      }
+    },
+    "dialog": {
+      "title": {
+        "create": "Sammlung erstellen",
+        "edit": "Sammlung bearbeiten"
+      },
+      "tooltips": {
+        "addFilter": "Filter hinzufügen.",
+        "removeFilter": "Diesen Filter entfernen."
+      },
+      "errors": {
+        "minLength": "Die minimale Länge beträgt {{length}} Zeichen."
+      },
+      "messages": {
+        "updateError": "Beim Aktualisieren der Sammlung ist ein Fehler aufgetreten: {{error}}.",
+        "createError": "Beim Erstellen der Sammlung ist ein Fehler aufgetreten: {{error}}.",
+        "loadError": "Beim Laden der Sammlung ist ein Fehler aufgetreten: {{error}}.",
+        "imageUploaded": "Das Bild der Sammlung wurde erfolgreich hochgeladen.",
+        "imageUploadError": "Beim Hochladen des Bildes ist ein Fehler aufgetreten: {{error}}."
+      }
+    },
+    "image": {
+      "tooltips": {
+        "delete": "Bild löschen."
+      }
+    }
+  },
+  "user": {
+    "list": {
+      "title": "Benutzer",
+      "tooltips": {
+        "add": "Neuen Benutzer hinzufügen.",
+        "edit": "Benutzer {{id}} bearbeiten.",
+        "delete": "Benutzer {{id}} löschen."
+      },
+      "sort": {
+        "byUsername": "Nach Benutzername sortieren.",
+        "byEmail": "Nach E-Mail sortieren."
+      },
+      "confirmDelete": "Möchten Sie den Benutzer '{{id}}' wirklich löschen?",
+      "messages": {
+        "createFailed": "Fehler beim Erstellen des Benutzers: {{error}}.",
+        "updateFailed": "Fehler beim Aktualisieren des Benutzers: {{error}}.",
+        "deleteFailed": "Fehler beim Löschen des Benutzers '{{username}}': {{error}}."
+      }
+    },
+    "dialog": {
+      "title": "Benutzer erstellen / bearbeiten",
+      "placeholders": {
+        "passwordMinLength": "Mindestens 8 Zeichen"
+      },
+      "errors": {
+        "usernameMinLength": "Die Mindestlänge beträgt 4 Zeichen.",
+        "passwordTooShort": "Das Passwort muss mindestens 8 Zeichen lang sein.",
+        "passwordMismatch": "Die Passwörter stimmen nicht überein."
+      }
+    }
+  },
+  "admin": {
+    "dashboard": {
+      "cards": {
+        "jobTemplates": "Job-Vorlagen ({{count}})",
+        "entityMappings": "Entitäts-Mappings ({{count}})",
+        "solrConfigs": "Apache-Solr-Konfigurationen ({{count}})",
+        "participants": "Teilnehmer ({{count}})"
+      },
+      "tooltips": {
+        "addJobTemplate": "Neue Job-Vorlage hinzufügen.",
+        "addEntityMapping": "Neues Entitäts-Mapping hinzufügen.",
+        "addSolrConfig": "Neue Apache-Solr-Konfiguration hinzufügen.",
+        "addParticipant": "Neuen Teilnehmer hinzufügen."
+      },
+      "aria": {
+        "addJobTemplate": "Fügt eine neue Job-Vorlage hinzu.",
+        "addEntityMapping": "Fügt ein neues Entitäts-Mapping hinzu.",
+        "addSolrConfig": "Fügt eine neue Apache-Solr-Konfiguration hinzu.",
+        "addParticipant": "Fügt eine neue Teilnehmer-Kennung hinzu."
+      },
+      "messages": {
+        "jobTemplateCreated": "Job-Vorlage erfolgreich erstellt.",
+        "jobTemplateCreateError": "Beim Erstellen der Job-Vorlage ist ein Fehler aufgetreten: {{error}}.",
+        "entityMappingCreated": "Entitäts-Mapping erfolgreich erstellt.",
+        "entityMappingCreateError": "Beim Erstellen des Entitäts-Mappings ist ein Fehler aufgetreten: {{error}}.",
+        "solrConfigCreated": "Apache-Solr-Konfiguration erfolgreich erstellt.",
+        "solrConfigCreateError": "Beim Erstellen der Apache-Solr-Konfiguration ist ein Fehler aufgetreten: {{error}}.",
+        "participantCreated": "Teilnehmer erfolgreich erstellt.",
+        "participantCreateError": "Beim Erstellen des Teilnehmers ist ein Fehler aufgetreten: {{error}}."
+      }
+    },
+    "addEntityMapping": {
+      "title": "Entitäts-Mapping erstellen"
+    },
+    "addJobTemplate": {
+      "title": "Job-Vorlage erstellen",
+      "labels": {
+        "startAutomatically": "Automatisch starten",
+        "entityMapping": "Entitäts-Mapping",
+        "solrConfig": "Apache-Solr-Konfiguration"
+      }
+    },
+    "addParticipant": {
+      "title": "Teilnehmer erstellen"
+    },
+    "addSolrConfig": {
+      "title": "Apache-Solr-Konfiguration erstellen"
+    },
+    "solr": {
+      "title": "Apache-Solr-Konfiguration (ID: {{id}})",
+      "sections": {
+        "imageDeployments": "Bild-Deployments",
+        "collections": "Collections"
+      },
+      "columns": {
+        "maxSize": "Max. Grösse",
+        "selector": "Selektor",
+        "oaiPmh": "OAI-PMH",
+        "sru": "SRU"
+      },
+      "tooltips": {
+        "save": "Speichert alle Änderungen an dieser Apache-Solr-Konfiguration.",
+        "reload": "Lädt diese Apache-Solr-Konfiguration neu und verwirft alle ungespeicherten Änderungen.",
+        "download": "Lädt diese Apache-Solr-Konfiguration als JSON herunter.",
+        "delete": "Löscht diese Apache-Solr-Konfiguration.",
+        "removeDeployment": "Deployment entfernen.",
+        "viewCollection": "Collection anzeigen (öffnet ein neues Fenster).",
+        "removeCollection": "Collection entfernen."
+      },
+      "aria": {
+        "addDeployment": "Fügt ein neues Bild-Deployment hinzu.",
+        "addCollection": "Fügt eine neue Collection hinzu."
+      },
+      "confirmDelete": "Sind Sie sicher, dass Sie diese Apache-Solr-Konfiguration löschen möchten?",
+      "messages": {
+        "loadError": "Beim Laden der Apache-Solr-Konfiguration ist ein Fehler aufgetreten: {{error}}.",
+        "updated": "Apache-Solr-Konfiguration erfolgreich aktualisiert.",
+        "updateError": "Beim Aktualisieren der Apache-Solr-Konfiguration ist ein Fehler aufgetreten: {{error}}.",
+        "deleted": "Apache-Solr-Konfiguration erfolgreich gelöscht.",
+        "deleteError": "Beim Löschen der Apache-Solr-Konfiguration ist ein Fehler aufgetreten: {{error}}."
+      }
+    },
+    "entityMapping": {
+      "title": "Entitäts-Mapping bearbeiten (ID: {{id}})",
+      "sections": {
+        "attributeMappings": "Attribut-Mappings ({{count}})"
+      },
+      "tooltips": {
+        "save": "Speichert alle Änderungen an diesem Entitäts-Mapping.",
+        "reload": "Lädt dieses Entitäts-Mapping neu und verwirft alle ungespeicherten Änderungen.",
+        "download": "Lädt dieses Entitäts-Mapping als JSON herunter.",
+        "delete": "Löscht dieses Entitäts-Mapping.",
+        "addAttributeMapping": "Fügt diesem Entitäts-Mapping ein neues Attribut-Mapping hinzu.",
+        "moveUp": "Attribut-Mapping nach oben verschieben.",
+        "moveDown": "Attribut-Mapping nach unten verschieben.",
+        "edit": "Attribut-Mapping bearbeiten.",
+        "remove": "Attribut-Mapping entfernen."
+      },
+      "confirmDelete": "Sind Sie sicher, dass Sie dieses Entitäts-Mapping löschen möchten?",
+      "messages": {
+        "saved": "Entitäts-Mapping erfolgreich gespeichert.",
+        "deleted": "Entitäts-Mapping erfolgreich gelöscht."
+      },
+      "errors": {
+        "save": "Beim Aktualisieren des Entitäts-Mappings ist ein Fehler aufgetreten: {{error}}.",
+        "delete": "Beim Löschen des Entitäts-Mappings ist ein Fehler aufgetreten: {{error}}.",
+        "load": "Beim Laden des Entitäts-Mappings ist ein Fehler aufgetreten: {{error}}."
+      }
+    },
+    "attributeMapping": {
+      "titleCreate": "Attribut-Mapping erstellen",
+      "titleEdit": "Attribut-Mapping bearbeiten",
+      "tooltips": {
+        "addParameter": "Neuen Parameter hinzufügen.",
+        "removeParameter": "Parameter entfernen."
+      }
+    },
+    "jobTemplate": {
+      "title": "Job-Vorlage (ID: {{id}})",
+      "labels": {
+        "entityMapping": "Entitäts-Mapping",
+        "solrConfig": "Apache-Solr-Konfiguration",
+        "startAutomatically": "Automatisch starten"
+      },
+      "sections": {
+        "transformers": "Transformer"
+      },
+      "columns": {
+        "transformerName": "Transformer-Name"
+      },
+      "tooltips": {
+        "save": "Speichert alle Änderungen an dieser Job-Vorlage.",
+        "reload": "Lädt diese Job-Vorlage neu und verwirft alle ungespeicherten Änderungen.",
+        "download": "Lädt diese Job-Vorlage als JSON herunter.",
+        "delete": "Löscht diese Job-Vorlage.",
+        "addTransformer": "Fügt dieser Job-Vorlage einen neuen Transformer hinzu.",
+        "moveUp": "Transformer nach oben verschieben.",
+        "moveDown": "Transformer nach unten verschieben.",
+        "edit": "Transformer-Parameter bearbeiten.",
+        "remove": "Transformer entfernen."
+      },
+      "confirmDelete": "Sind Sie sicher, dass Sie diese Job-Vorlage löschen möchten?",
+      "messages": {
+        "saved": "Job-Vorlage erfolgreich aktualisiert.",
+        "deleted": "Job-Vorlage erfolgreich gelöscht."
+      },
+      "errors": {
+        "reload": "Beim Neuladen der Job-Vorlage ist ein Fehler aufgetreten: {{error}}.",
+        "save": "Beim Aktualisieren der Job-Vorlage ist ein Fehler aufgetreten: {{error}}.",
+        "delete": "Beim Löschen der Job-Vorlage ist ein Fehler aufgetreten: {{error}}.",
+        "load": "Beim Laden der Job-Vorlage ist ein Fehler aufgetreten: {{error}}."
+      }
+    },
+    "transformer": {
+      "title": "Transformer bearbeiten",
+      "labels": {
+        "transformer": "Transformer"
+      },
+      "tooltips": {
+        "addParameter": "Neuen Parameter hinzufügen.",
+        "removeParameter": "Parameter entfernen."
+      }
+    }
+  }
+}

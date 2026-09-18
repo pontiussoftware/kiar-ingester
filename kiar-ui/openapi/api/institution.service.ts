@@ -9,23 +9,27 @@
  */
 /* tslint:disable:no-unused-variable member-ordering */
 
-import {Inject, Injectable, Optional} from '@angular/core';
-import {HttpClient, HttpContext, HttpEvent, HttpParams, HttpResponse} from '@angular/common/http';
-import {Observable} from 'rxjs';
+import { Inject, Injectable, Optional }                      from '@angular/core';
+import { HttpClient, HttpHeaders, HttpParams,
+         HttpResponse, HttpEvent, HttpParameterCodec, HttpContext 
+        }       from '@angular/common/http';
+import { CustomHttpParameterCodec }                          from '../encoder';
+import { Observable }                                        from 'rxjs';
 
 // @ts-ignore
-import {ErrorStatus} from '../model/errorStatus';
+import { ErrorStatus } from '../model/errorStatus';
 // @ts-ignore
-import {Institution} from '../model/institution';
+import { Institution } from '../model/institution';
 // @ts-ignore
-import {PaginatedInstitutionResult} from '../model/paginatedInstitutionResult';
+import { PaginatedInstitutionResult } from '../model/paginatedInstitutionResult';
 // @ts-ignore
-import {SuccessStatus} from '../model/successStatus';
+import { SuccessStatus } from '../model/successStatus';
 
 // @ts-ignore
-import {BASE_PATH, COLLECTION_FORMATS} from '../variables';
-import {Configuration} from '../configuration';
-import {BaseService} from '../api.base.service';
+import { BASE_PATH, COLLECTION_FORMATS }                     from '../variables';
+import { Configuration }                                     from '../configuration';
+import { BaseService } from '../api.base.service';
+
 
 
 @Injectable({
@@ -39,6 +43,7 @@ export class InstitutionService extends BaseService {
 
     /**
      * Deletes an existing institution.
+     * @endpoint delete /api/institutions/{id}
      * @param id The ID of the institution that should be deleted.
      * @param observe set whether or not to return the data Observable as the body, response or events. defaults to returning the body.
      * @param reportProgress flag to report request and response progress.
@@ -85,7 +90,7 @@ export class InstitutionService extends BaseService {
                 ...(withCredentials ? { withCredentials } : {}),
                 headers: localVarHeaders,
                 observe: observe,
-                transferCache: localVarTransferCache,
+                ...(localVarTransferCache !== undefined ? { transferCache: localVarTransferCache } : {}),
                 reportProgress: reportProgress
             }
         );
@@ -93,6 +98,7 @@ export class InstitutionService extends BaseService {
 
     /**
      * Gets information about an existing institution.
+     * @endpoint get /api/institutions/{id}
      * @param id The ID of the institution that should be fetched.
      * @param observe set whether or not to return the data Observable as the body, response or events. defaults to returning the body.
      * @param reportProgress flag to report request and response progress.
@@ -139,7 +145,7 @@ export class InstitutionService extends BaseService {
                 ...(withCredentials ? { withCredentials } : {}),
                 headers: localVarHeaders,
                 observe: observe,
-                transferCache: localVarTransferCache,
+                ...(localVarTransferCache !== undefined ? { transferCache: localVarTransferCache } : {}),
                 reportProgress: reportProgress
             }
         );
@@ -147,6 +153,7 @@ export class InstitutionService extends BaseService {
 
     /**
      * Gets the preview image for the provided institution.
+     * @endpoint get /api/institutions/{id}/image
      * @param id The ID of the institution the image should be retrieved for.
      * @param observe set whether or not to return the data Observable as the body, response or events. defaults to returning the body.
      * @param reportProgress flag to report request and response progress.
@@ -184,7 +191,7 @@ export class InstitutionService extends BaseService {
                 ...(withCredentials ? { withCredentials } : {}),
                 headers: localVarHeaders,
                 observe: observe,
-                transferCache: localVarTransferCache,
+                ...(localVarTransferCache !== undefined ? { transferCache: localVarTransferCache } : {}),
                 reportProgress: reportProgress
             }
         );
@@ -192,6 +199,7 @@ export class InstitutionService extends BaseService {
 
     /**
      * Retrieves all institution names registered in the database.
+     * @endpoint get /api/institutions/name
      * @param observe set whether or not to return the data Observable as the body, response or events. defaults to returning the body.
      * @param reportProgress flag to report request and response progress.
      */
@@ -234,7 +242,7 @@ export class InstitutionService extends BaseService {
                 ...(withCredentials ? { withCredentials } : {}),
                 headers: localVarHeaders,
                 observe: observe,
-                transferCache: localVarTransferCache,
+                ...(localVarTransferCache !== undefined ? { transferCache: localVarTransferCache } : {}),
                 reportProgress: reportProgress
             }
         );
@@ -242,6 +250,7 @@ export class InstitutionService extends BaseService {
 
     /**
      * Retrieves all institutions registered in the database.
+     * @endpoint get /api/institutions
      * @param page The page index (zero-based) for pagination.
      * @param pageSize The page size for pagination.
      * @param order The attribute to order by. Possible values are \&#39;name\&#39;, \&#39;city\&#39;, \&#39;zip\&#39;, \&#39;canton\&#39; and \&#39;publish\&#39;.
@@ -302,7 +311,7 @@ export class InstitutionService extends BaseService {
                 ...(withCredentials ? { withCredentials } : {}),
                 headers: localVarHeaders,
                 observe: observe,
-                transferCache: localVarTransferCache,
+                ...(localVarTransferCache !== undefined ? { transferCache: localVarTransferCache } : {}),
                 reportProgress: reportProgress
             }
         );
@@ -310,6 +319,7 @@ export class InstitutionService extends BaseService {
 
     /**
      * Creates a new institution.
+     * @endpoint post /api/institutions
      * @param institution 
      * @param observe set whether or not to return the data Observable as the body, response or events. defaults to returning the body.
      * @param reportProgress flag to report request and response progress.
@@ -366,7 +376,7 @@ export class InstitutionService extends BaseService {
                 ...(withCredentials ? { withCredentials } : {}),
                 headers: localVarHeaders,
                 observe: observe,
-                transferCache: localVarTransferCache,
+                ...(localVarTransferCache !== undefined ? { transferCache: localVarTransferCache } : {}),
                 reportProgress: reportProgress
             }
         );
@@ -374,6 +384,7 @@ export class InstitutionService extends BaseService {
 
     /**
      * Posts a new image for the provided institution.
+     * @endpoint post /api/institutions/{id}/image
      * @param id The ID of the institution the image should be added to.
      * @param image 
      * @param observe set whether or not to return the data Observable as the body, response or events. defaults to returning the body.
@@ -444,7 +455,7 @@ export class InstitutionService extends BaseService {
                 ...(withCredentials ? { withCredentials } : {}),
                 headers: localVarHeaders,
                 observe: observe,
-                transferCache: localVarTransferCache,
+                ...(localVarTransferCache !== undefined ? { transferCache: localVarTransferCache } : {}),
                 reportProgress: reportProgress
             }
         );
@@ -452,6 +463,7 @@ export class InstitutionService extends BaseService {
 
     /**
      * Synchronizes institutions with an Apache Solr backend.
+     * @endpoint post /api/institutions/synchronize
      * @param collectionId The ID of the Apache Solr collection to synchronize with.
      * @param observe set whether or not to return the data Observable as the body, response or events. defaults to returning the body.
      * @param reportProgress flag to report request and response progress.
@@ -503,7 +515,7 @@ export class InstitutionService extends BaseService {
                 ...(withCredentials ? { withCredentials } : {}),
                 headers: localVarHeaders,
                 observe: observe,
-                transferCache: localVarTransferCache,
+                ...(localVarTransferCache !== undefined ? { transferCache: localVarTransferCache } : {}),
                 reportProgress: reportProgress
             }
         );
@@ -511,6 +523,7 @@ export class InstitutionService extends BaseService {
 
     /**
      * Updates an existing institution.
+     * @endpoint put /api/institutions/{id}
      * @param id The ID of the institution that should be updated.
      * @param institution 
      * @param observe set whether or not to return the data Observable as the body, response or events. defaults to returning the body.
@@ -571,7 +584,7 @@ export class InstitutionService extends BaseService {
                 ...(withCredentials ? { withCredentials } : {}),
                 headers: localVarHeaders,
                 observe: observe,
-                transferCache: localVarTransferCache,
+                ...(localVarTransferCache !== undefined ? { transferCache: localVarTransferCache } : {}),
                 reportProgress: reportProgress
             }
         );

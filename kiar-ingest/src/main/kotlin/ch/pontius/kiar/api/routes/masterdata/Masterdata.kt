@@ -7,131 +7,100 @@ import ch.pontius.kiar.api.model.config.templates.JobType
 import ch.pontius.kiar.api.model.config.transformers.TransformerType
 import ch.pontius.kiar.api.model.masterdata.Canton
 import ch.pontius.kiar.api.model.masterdata.RightStatement
-import ch.pontius.kiar.api.model.status.ErrorStatus
-import io.javalin.http.Context
-import io.javalin.openapi.HttpMethod
-import io.javalin.openapi.OpenApi
-import io.javalin.openapi.OpenApiContent
-import io.javalin.openapi.OpenApiResponse
+import io.ktor.server.application.ApplicationCall
+import ch.pontius.kiar.api.openapi.*
+import io.ktor.server.response.respond
 
-@OpenApi(
-    path = "/api/masterdata/rightstatements",
-    methods = [HttpMethod.GET],
-    summary = "Lists all available right statements.",
-    operationId = "getListRightStatements",
-    tags = ["Masterdata"],
-    pathParams = [],
-    responses = [
-        OpenApiResponse("200", [OpenApiContent(Array<RightStatement>::class)]),
-        OpenApiResponse("401", [OpenApiContent(ErrorStatus::class)]),
-        OpenApiResponse("403", [OpenApiContent(ErrorStatus::class)]),
-        OpenApiResponse("500", [OpenApiContent(ErrorStatus::class)]),
-    ]
-)
-fun listRightStatements(ctx: Context) = ctx.json(RightStatement.DEFAULT)
-
-@OpenApi(
-    path = "/api/masterdata/cantons",
-    methods = [HttpMethod.GET],
-    summary = "Lists all available cantons.",
-    operationId = "getListCantons",
-    tags = ["Masterdata"],
-    pathParams = [],
-    responses = [
-        OpenApiResponse("200", [OpenApiContent(Array<Canton>::class)]),
-        OpenApiResponse("401", [OpenApiContent(ErrorStatus::class)]),
-        OpenApiResponse("403", [OpenApiContent(ErrorStatus::class)]),
-        OpenApiResponse("500", [OpenApiContent(ErrorStatus::class)]),
-    ]
-)
-fun listCantons(ctx: Context) = ctx.json(Canton.entries.toTypedArray())
-
-@OpenApi(
-    path = "/api/masterdata/transformers",
-    methods = [HttpMethod.GET],
-    summary = "Lists all available transformer types.",
-    operationId = "getListTransformerTypes",
-    tags = ["Config", "Masterdata"],
-    pathParams = [],
-    responses = [
-        OpenApiResponse("200", [OpenApiContent(Array<TransformerType>::class)]),
-        OpenApiResponse("401", [OpenApiContent(ErrorStatus::class)]),
-        OpenApiResponse("403", [OpenApiContent(ErrorStatus::class)]),
-        OpenApiResponse("500", [OpenApiContent(ErrorStatus::class)]),
-    ]
-)
-fun listTransformerTypes(ctx: Context) {
-    ctx.json(TransformerType.entries.filter { it.name != "IMAGE" }.toTypedArray())
+val listRightStatementsDoc: RouteDoc = {
+    operationId = "getListRightStatements"
+    summary = "Lists all available right statements."
+    tags("Masterdata")
+    responses {
+        json<List<RightStatement>>(200)
+        errors(401, 403, 500)
+    }
 }
 
-@OpenApi(
-    path = "/api/masterdata/image-formats",
-    methods = [HttpMethod.GET],
-    summary = "Lists all available formats available for image deployment.",
-    operationId = "getListImageFormats",
-    tags = ["Config",  "Apache Solr", "Masterdata"],
-    pathParams = [],
-    responses = [
-        OpenApiResponse("200", [OpenApiContent(Array<ImageFormat>::class)]),
-        OpenApiResponse("401", [OpenApiContent(ErrorStatus::class)]),
-        OpenApiResponse("403", [OpenApiContent(ErrorStatus::class)]),
-        OpenApiResponse("500", [OpenApiContent(ErrorStatus::class)]),
-    ]
-)
-fun listImageFormats(ctx: Context) {
-    ctx.json(ImageFormat.entries.toTypedArray())
+suspend fun listRightStatements(call: ApplicationCall) = call.respond(RightStatement.DEFAULT.toList())
+
+val listCantonsDoc: RouteDoc = {
+    operationId = "getListCantons"
+    summary = "Lists all available cantons."
+    tags("Masterdata")
+    responses {
+        json<List<Canton>>(200)
+        errors(401, 403, 500)
+    }
 }
 
-@OpenApi(
-    path = "/api/masterdata/mapping-formats",
-    methods = [HttpMethod.GET],
-    summary = "Lists all available entity mapping formats.",
-    operationId = "getListMappingFormats",
-    tags = ["Config", "Entity Mapping", "Masterdata"],
-    pathParams = [],
-    responses = [
-        OpenApiResponse("200", [OpenApiContent(Array<MappingFormat>::class)]),
-        OpenApiResponse("401", [OpenApiContent(ErrorStatus::class)]),
-        OpenApiResponse("403", [OpenApiContent(ErrorStatus::class)]),
-        OpenApiResponse("500", [OpenApiContent(ErrorStatus::class)]),
-    ]
-)
-fun listMappingFormats(ctx: Context) {
-    ctx.json(MappingFormat.entries.toTypedArray())
+suspend fun listCantons(call: ApplicationCall) = call.respond(Canton.entries.toList())
+
+val listTransformerTypesDoc: RouteDoc = {
+    operationId = "getListTransformerTypes"
+    summary = "Lists all available transformer types."
+    tags("Config", "Masterdata")
+    responses {
+        json<List<TransformerType>>(200)
+        errors(401, 403, 500)
+    }
 }
 
-@OpenApi(
-    path = "/api/masterdata/parsers",
-    methods = [HttpMethod.GET],
-    summary = "Lists all available parses available for entity mapping.",
-    operationId = "getListParsers",
-    tags = ["Config", "Entity Mapping", "Masterdata"],
-    pathParams = [],
-    responses = [
-        OpenApiResponse("200", [OpenApiContent(Array<ValueParser>::class)]),
-        OpenApiResponse("401", [OpenApiContent(ErrorStatus::class)]),
-        OpenApiResponse("403", [OpenApiContent(ErrorStatus::class)]),
-        OpenApiResponse("500", [OpenApiContent(ErrorStatus::class)]),
-    ]
-)
-fun listParsers(ctx: Context) {
-    ctx.json(ValueParser.entries.toTypedArray())
+suspend fun listTransformerTypes(call: ApplicationCall) {
+    call.respond(TransformerType.entries.filter { it.name != "IMAGE" })
 }
 
-@OpenApi(
-    path = "/api/masterdata/job-types",
-    methods = [HttpMethod.GET],
-    summary = "Lists all available job template types.",
-    operationId = "getListJobTemplateTypes",
-    tags = ["Config", "Job Template", "Masterdata"],
-    pathParams = [],
-    responses = [
-        OpenApiResponse("200", [OpenApiContent(Array<JobType>::class)]),
-        OpenApiResponse("401", [OpenApiContent(ErrorStatus::class)]),
-        OpenApiResponse("403", [OpenApiContent(ErrorStatus::class)]),
-        OpenApiResponse("500", [OpenApiContent(ErrorStatus::class)]),
-    ]
-)
-fun listJobTemplateTypes(ctx: Context) {
-    ctx.json(JobType.entries.toTypedArray())
+val listImageFormatsDoc: RouteDoc = {
+    operationId = "getListImageFormats"
+    summary = "Lists all available formats available for image deployment."
+    tags("Config",  "Apache Solr", "Masterdata")
+    responses {
+        json<List<ImageFormat>>(200)
+        errors(401, 403, 500)
+    }
+}
+
+suspend fun listImageFormats(call: ApplicationCall) {
+    call.respond(ImageFormat.entries.toList())
+}
+
+val listMappingFormatsDoc: RouteDoc = {
+    operationId = "getListMappingFormats"
+    summary = "Lists all available entity mapping formats."
+    tags("Config", "Entity Mapping", "Masterdata")
+    responses {
+        json<List<MappingFormat>>(200)
+        errors(401, 403, 500)
+    }
+}
+
+suspend fun listMappingFormats(call: ApplicationCall) {
+    call.respond(MappingFormat.entries.toList())
+}
+
+val listParsersDoc: RouteDoc = {
+    operationId = "getListParsers"
+    summary = "Lists all available parses available for entity mapping."
+    tags("Config", "Entity Mapping", "Masterdata")
+    responses {
+        json<List<ValueParser>>(200)
+        errors(401, 403, 500)
+    }
+}
+
+suspend fun listParsers(call: ApplicationCall) {
+    call.respond(ValueParser.entries.toList())
+}
+
+val listJobTemplateTypesDoc: RouteDoc = {
+    operationId = "getListJobTemplateTypes"
+    summary = "Lists all available job template types."
+    tags("Config", "Job Template", "Masterdata")
+    responses {
+        json<List<JobType>>(200)
+        errors(401, 403, 500)
+    }
+}
+
+suspend fun listJobTemplateTypes(call: ApplicationCall) {
+    call.respond(JobType.entries.toList())
 }

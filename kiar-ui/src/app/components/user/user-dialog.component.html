@@ -1,18 +1,18 @@
-<h1 mat-dialog-title i18n="@@HeadingCreateInstitution">Create / Edit User</h1>
+<h1 mat-dialog-title>{{ 'user.dialog.title' | translate }}</h1>
 <div mat-dialog-content>
   <form [formGroup]="formControl">
     <mat-form-field appearance="fill" [style.width]="'50%'">
-      <mat-label i18n="@@LabelName">Username</mat-label>
+      <mat-label>{{ 'common.label.username' | translate }}</mat-label>
       <input matInput type="text" formControlName="username">
       @if (formControl.get('name')?.hasError('minlength')) {
-        <mat-error>Minimum length is 4.</mat-error>
+        <mat-error>{{ 'user.dialog.errors.usernameMinLength' | translate }}</mat-error>
       }
     </mat-form-field>
 
     <mat-form-field appearance="fill" [style.width]="'20%'">
-      <mat-label i18n="@@LabelRole">Role</mat-label>
+      <mat-label>{{ 'common.label.role' | translate }}</mat-label>
       <mat-select formControlName="role">
-        @for (role of (roles | async); track role) {
+        @for (role of this.roles(); track role) {
           <mat-option [value]="role">
             {{role}}
           </mat-option>
@@ -20,19 +20,19 @@
       </mat-select>
     </mat-form-field>
 
-    <mat-checkbox formControlName="active" i18n="@@LabelPublish">
-      Active
+    <mat-checkbox formControlName="active">
+      {{ 'common.label.active' | translate }}
     </mat-checkbox>
 
     <mat-form-field appearance="fill" [style.width]="'50%'">
-      <mat-label i18n="@@LabelName">E-Mail</mat-label>
+      <mat-label>{{ 'common.label.email' | translate }}</mat-label>
       <input matInput type="text" formControlName="email">
     </mat-form-field>
 
     <mat-form-field appearance="fill" [style.width]="'50%'">
-      <mat-label i18n="@@LabelInstitution">Institution</mat-label>
+      <mat-label>{{ 'common.label.institution' | translate }}</mat-label>
       <mat-select formControlName="institution">
-        @for (institution of (institutions | async); track institution.id) {
+        @for (institution of this.institutions(); track institution.id) {
           <mat-option [value]="institution">
             {{ institution.name}}
           </mat-option>
@@ -42,18 +42,18 @@
 
     <div formGroupName="password">
       <mat-form-field [style.width]="'100%'">
-        <mat-label i18n="@@LabelPassword">Password:</mat-label>
-        <input type="password" matInput placeholder="Minimum of 8 characters" formControlName="passwordFirst" />
-        @if (formControl.get('password')?.hasError('notLongEnough')) {
-          <mat-error>Password must have at least 8 characters.</mat-error>
+        <mat-label>{{ 'common.label.password' | translate }}</mat-label>
+        <input type="password" matInput [placeholder]="'user.dialog.placeholders.passwordMinLength' | translate" formControlName="passwordFirst" />
+        @if (this.formControl.get('password')?.hasError('notLongEnough')) {
+          <mat-error>{{ 'user.dialog.errors.passwordTooShort' | translate }}</mat-error>
         }
       </mat-form-field>
 
       <mat-form-field [style.width]="'100%'">
-        <mat-label i18n="@@LabelPasswordRepeat">Password (repeat):</mat-label>
-        <input type="password" matInput placeholder="Minimum of 8 characters" formControlName="passwordSecond"  />
-        @if (formControl.get('password')?.hasError('notSame')) {
-          <mat-error>Passwords do not match.</mat-error>
+        <mat-label>{{ 'common.label.passwordRepeat' | translate }}</mat-label>
+        <input type="password" matInput [placeholder]="'user.dialog.placeholders.passwordMinLength' | translate" formControlName="passwordSecond"  />
+        @if (this.formControl.get('password')?.hasError('notSame')) {
+          <mat-error>{{ 'user.dialog.errors.passwordMismatch' | translate }}</mat-error>
         }
       </mat-form-field>
     </div>
@@ -61,5 +61,5 @@
   </form>
 </div>
 <div mat-dialog-actions>
-  <button mat-button color="primary" (click)="save()">Save</button>
+  <button mat-button color="primary" (click)="save()">{{ 'common.action.save' | translate }}</button>
 </div>
