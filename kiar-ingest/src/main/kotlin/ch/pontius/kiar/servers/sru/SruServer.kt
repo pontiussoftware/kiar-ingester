@@ -12,6 +12,7 @@ import com.github.benmanes.caffeine.cache.Caffeine
 import io.github.oshai.kotlinlogging.KLogger
 import io.github.oshai.kotlinlogging.KotlinLogging
 import org.apache.solr.client.solrj.request.SolrQuery
+import org.apache.solr.client.solrj.util.ClientUtils
 import org.jetbrains.exposed.v1.core.and
 import org.jetbrains.exposed.v1.core.eq
 import org.jetbrains.exposed.v1.jdbc.select
@@ -32,6 +33,18 @@ private val logger: KLogger = KotlinLogging.logger {}
  * @version 1.0.1
  */
 class SruServer {
+
+    companion object {
+        /** The maximum number of records returned per SRU request. */
+        const val MAX_RECORDS = 100
+
+        /** The Solr full-text field (a copy field on the Solr side) that SRU queries run against. */
+        private const val FULLTEXT_FIELD = "_fulltext_"
+
+        /** Splits a query into double-quoted phrases (group 1) and single terms (group 2). */
+        private val TERM_REGEX = Regex("\"([^\"]*)\"|(\\S+)")
+    }
+
     /** The [DocumentBuilder] instance used by this [XmlDocumentParser]. */
     private val documentBuilder: DocumentBuilder = DocumentBuilderFactory.newInstance().newDocumentBuilder()
 
@@ -58,11 +71,15 @@ class SruServer {
         /* Read associated config. */
         val config = this.collections[collection] ?: throw IllegalArgumentException("Collection '$collection' not found or not configured for SRU.")
 
+        /* Clamp paging parameters; both are client-controlled. SRU's startRecord is 1-based, Solr's start is 0-based. */
+        val rows = pageSize.coerceIn(1, MAX_RECORDS)
+        val startRecord = startRecord.coerceAtLeast(1)
+
         val response = try {
             /* Prepare Apache Solr query. */
-            val solrQuery = SolrQuery("_fulltext_:$query")
-            solrQuery.start = startRecord
-            solrQuery.rows = pageSize
+            val solrQuery = SolrQuery(toSolrQuery(query))
+            solrQuery.start = startRecord - 1
+            solrQuery.rows = rows
 
             /* Prepare client. */
             val client = SolrClientProvider.clientForConfig(config)
@@ -90,6 +107,32 @@ class SruServer {
 
         /* Return document. */
         return response.ownerDocument
+    }
+
+    /**
+     * Converts a client-supplied SRU query string into a safe Apache Solr query against the full-text field.
+     *
+     * The input is treated as search terms only: it is split into whitespace-separated terms and double-quoted phrases,
+     * and every term is escaped so that no Solr query syntax (field selectors, local parameters, ranges, wildcards) can
+     * be injected. A blank query or a lone '*' matches all documents.
+     *
+     * @param query The raw query string.
+     * @return A Solr query string.
+     */
+    internal fun toSolrQuery(query: String): String {
+        val trimmed = query.trim()
+        if (trimmed.isEmpty() || trimmed == "*") return "*:*"
+        val terms = TERM_REGEX.findAll(trimmed).mapNotNull { match ->
+            val phrase = match.groups[1]?.value
+            val term = match.groups[2]?.value
+            when {
+                phrase != null -> phrase.trim().takeIf { it.isNotEmpty() }?.let { "\"${it.replace("\\", "\\\\").replace("\"", "\\\"")}\"" }
+                term != null -> ClientUtils.escapeQueryChars(term)
+                else -> null
+            }
+        }.toList()
+        if (terms.isEmpty()) return "*:*"
+        return "$FULLTEXT_FIELD:(${terms.joinToString(" ")})"
     }
 
     /**

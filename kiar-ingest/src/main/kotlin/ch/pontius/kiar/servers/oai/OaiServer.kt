@@ -43,6 +43,12 @@ class OaiServer {
         /** The page size for the OAI endpoint. */
         const val PAGE_SIZE = 100
 
+        /** The Solr fields that are exposed as OAI-PMH sets (see ListSets). Only these may appear in a setSpec. */
+        private val SET_FIELDS = setOf(Field.INSTITUTION.solr, Field.COLLECTION.solr, Field.PARTIAL_COLLECTION.solr)
+
+        /** Matches a setSpec of the form `field:("value")` (group 2) or `field:value` (group 3). */
+        private val SET_REGEX = Regex("^([A-Za-z0-9_]+):(?:\\(\"(.*)\"\\)|([^()\"]+))$")
+
         /** The simple date format used for queries. */
         private val GRANULARITY_FORMAT = SimpleDateFormat("yyyy-MM-dd")
     }
@@ -104,6 +110,24 @@ class OaiServer {
      * @param message The error message.
      * @return [Document] representing the OAI-PMH response.
      */
+    /**
+     * Converts a client-supplied OAI-PMH setSpec into a safe Apache Solr filter query.
+     *
+     * Accepted forms are `field:("value")` (as advertised by ListSets) and `field:value`, where `field` must be one of the
+     * facet fields exposed as sets. The value is embedded as an escaped phrase, so no Solr query syntax can be injected.
+     *
+     * @param set The raw setSpec.
+     * @return The filter query, or null if the setSpec is malformed or refers to an unknown field.
+     */
+    internal fun setToFilterQuery(set: String): String? {
+        val match = SET_REGEX.matchEntire(set.trim()) ?: return null
+        val field = match.groupValues[1]
+        if (field !in SET_FIELDS) return null
+        val value = match.groupValues[2].ifEmpty { match.groupValues[3] }.trim()
+        if (value.isEmpty()) return null
+        return "$field:\"${value.replace("\\", "\\\\").replace("\"", "\\\"")}\""
+    }
+
     private fun handleError(code: String, message: String): Document  {
         /* Construct response document. */
         val doc = this.documentBuilder.newDocument()
@@ -300,7 +324,7 @@ class OaiServer {
             query.addFilterQuery("date:[* TO $until]")
         }
         if (set != null) {
-            query.addFilterQuery(set)
+            query.addFilterQuery(setToFilterQuery(set) ?: return handleError("badArgument", "Unknown or malformed set '$set'."))
         }
 
         query.start = start
@@ -399,7 +423,7 @@ class OaiServer {
             query.addFilterQuery("date:[* TO ${GRANULARITY_FORMAT.format(until)}]")
         }
         if (set != null) {
-            query.addFilterQuery(set)
+            query.addFilterQuery(setToFilterQuery(set) ?: return handleError("badArgument", "Unknown or malformed set '$set'."))
         }
         query.addField("uuid")
         query.start = start
