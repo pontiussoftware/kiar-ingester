@@ -17,7 +17,7 @@
       <AppenderRef ref="STDOUT"/>
       <AppenderRef ref="FILE"/>
     </Root>
-    <Logger name="io.javalin" level="info" additivity="false">
+    <Logger name="io.netty" level="info" additivity="false">
       <AppenderRef ref="STDOUT"/>
     </Logger>
     <Logger name="ch.pontius.kiar" level="debug" additivity="false">
