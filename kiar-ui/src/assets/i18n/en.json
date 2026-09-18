@@ -75,7 +75,7 @@
     "logout": "Logout"
   },
   "footer": {
-    "title": "KIM.ch Data Ingest Dashboard (Beta)"
+    "title": "KIMnet Data Ingest Dashboard"
   },
   "paginator": {
     "itemsPerPage": "Items per page:",

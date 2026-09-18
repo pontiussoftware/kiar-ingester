@@ -75,7 +75,7 @@
     "logout": "Abmelden"
   },
   "footer": {
-    "title": "KIM.ch Dashboard für den Datenimport (Beta)"
+    "title": "KIMnet Daten Ingest Dashboard"
   },
   "paginator": {
     "itemsPerPage": "Einträge pro Seite:",
