@@ -7,6 +7,7 @@ import ch.pontius.kiar.api.model.status.ErrorStatus
 import ch.pontius.kiar.api.model.status.ErrorStatusException
 import ch.pontius.kiar.api.model.status.SuccessStatus
 import ch.pontius.kiar.api.model.user.Role
+import ch.pontius.kiar.api.openapi.*
 import ch.pontius.kiar.database.collections.Collections
 import ch.pontius.kiar.database.collections.Collections.toObjectCollection
 import ch.pontius.kiar.database.config.ImageDeployments
@@ -15,10 +16,13 @@ import ch.pontius.kiar.database.institutions.Institutions
 import ch.pontius.kiar.database.institutions.InstitutionsSolrCollections
 import ch.pontius.kiar.database.institutions.Participants
 import ch.pontius.kiar.utilities.ImageHandler
-import ch.pontius.kiar.utilities.extensions.currentUser
-import ch.pontius.kiar.utilities.extensions.receiveOrThrow
+import ch.pontius.kiar.utilities.extensions.*
 import com.sksamuel.scrimage.ImmutableImage
 import com.sksamuel.scrimage.nio.JpegWriter
+import io.ktor.http.*
+import io.ktor.server.application.*
+import io.ktor.server.http.content.*
+import io.ktor.server.response.*
 import org.jetbrains.exposed.v1.core.eq
 import org.jetbrains.exposed.v1.core.innerJoin
 import org.jetbrains.exposed.v1.core.like
@@ -29,14 +33,6 @@ import java.io.IOException
 import java.nio.file.Files
 import java.nio.file.Paths
 import java.time.Instant
-import io.ktor.server.application.ApplicationCall
-import ch.pontius.kiar.api.openapi.*
-import io.ktor.server.response.respond
-import ch.pontius.kiar.utilities.extensions.pathParam
-import ch.pontius.kiar.utilities.extensions.queryParam
-import io.ktor.http.ContentType
-import io.ktor.server.http.content.LocalFileContent
-import ch.pontius.kiar.utilities.extensions.uploadedFiles
 
 val getListCollectionsDoc: RouteDoc = {
     operationId = "getCollections"
@@ -200,6 +196,11 @@ suspend fun getImageForCollection(call: ApplicationCall) {
     /* Obtain deployment path */
     val deployment = transaction {
         val collection = Collections.getById(collectionId) ?:  throw ErrorStatusException(404, "Collection with ID $collectionId could not be found.")
+
+        /* Only serve images registered for this collection; the name is a user-controlled path segment otherwise. */
+        if (!collection.images.contains(imageName)) {
+            throw ErrorStatusException(404, "No image named '$imageName' found for collection with ID $collectionId.")
+        }
         ImageDeployments.forCollection(collection).firstOrNull() ?: throw ErrorStatusException(404, "No deployment found for institution with ID $collectionId.")
     }
 
