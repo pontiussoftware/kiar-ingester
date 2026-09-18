@@ -1,23 +1,23 @@
 <div [style.display]="'flex'">
-  <h1 i18n="@@HeadingCollections">
-        Collections
+  <h1>
+        {{ 'collection.list.title' | translate }}
     </h1>
 
   <div class="space-flexible"></div>
 
-  <button mat-mini-fab color="primary" (click)="add()" i18n-matTooltip="@@TooltipAddNewCollection"
-    matTooltip="Add a new collection.">
+  <button mat-mini-fab color="primary" (click)="add()"
+    [matTooltip]="'collection.list.tooltips.add' | translate">
     <mat-icon>add</mat-icon>
   </button>
   &nbsp;
-  <button mat-mini-fab [matMenuTriggerFor]="menu" i18n-matTooltip="@@TooltipSyncWithSolr"
-    matTooltip="Synchronize with Apache Solr.">
+  <button mat-mini-fab [matMenuTriggerFor]="menu"
+    [matTooltip]="'collection.list.tooltips.synchronize' | translate">
     <mat-icon>sync</mat-icon>
   </button>
   <mat-menu #menu="matMenu" class=".collection-menu">
     @for (collection of this.solrCollections(); track collection) {
       <button mat-menu-item
-        (click)="synchronize(collection)">{{ collection.name }} (ID: {{ collection.id }})
+        (click)="synchronize(collection)">{{ collection.name }} ({{ 'common.label.id' | translate }}: {{ collection.id }})
       </button>
     }
   </mat-menu>
@@ -25,16 +25,16 @@
   <div class="space-flexible"></div>
 
   <mat-form-field>
-    <mat-label>Filter</mat-label>
-    <input #filterField matInput placeholder="Filter" (input)="onFilterChange()">
+    <mat-label>{{ 'common.label.filter' | translate }}</mat-label>
+    <input #filterField matInput [placeholder]="'common.label.filter' | translate" (input)="onFilterChange()">
   </mat-form-field>
 </div>
 
 
 <table mat-table [dataSource]="this.dataSource.data()" class="mat-elevation-z8" matSort>
   <!-- Image Column -->
-  <ng-container matColumnDef="image" i18n="@@Image">
-        <th mat-header-cell *matHeaderCellDef> Image</th>
+  <ng-container matColumnDef="image">
+        <th mat-header-cell *matHeaderCellDef> {{ 'common.label.image' | translate }}</th>
         <td mat-cell *matCellDef="let element">
             @if (element.images?.length > 0) {
                 <kiar-collection-image [collectionId]="element.id" [name]="element.images[0]"> </kiar-collection-image>
@@ -43,40 +43,40 @@
     </ng-container>
 
   <!-- Name Column -->
-  <ng-container matColumnDef="name" i18n="@@LabelName">
-        <th mat-header-cell *matHeaderCellDef mat-sort-header sortActionDescription="Sort by name."> Name</th>
+  <ng-container matColumnDef="name">
+        <th mat-header-cell *matHeaderCellDef mat-sort-header [sortActionDescription]="'collection.list.sort.name' | translate"> {{ 'common.label.name' | translate }}</th>
         <td mat-cell *matCellDef="let element"> {{ element.name }}</td>
     </ng-container>
 
   <!-- Display Name Column -->
-  <ng-container matColumnDef="displayName" i18n="@@LabelDisplayName">
-        <th mat-header-cell *matHeaderCellDef> Display Name</th>
+  <ng-container matColumnDef="displayName">
+        <th mat-header-cell *matHeaderCellDef> {{ 'common.label.displayName' | translate }}</th>
         <td mat-cell *matCellDef="let element"> {{ element.displayName }}</td>
     </ng-container>
 
 
   <!-- Institution Column -->
-  <ng-container matColumnDef="institutionName" i18n="@@LabelInstitution">
-        <th mat-header-cell *matHeaderCellDef> Institution</th>
+  <ng-container matColumnDef="institutionName">
+        <th mat-header-cell *matHeaderCellDef> {{ 'common.label.institution' | translate }}</th>
         <td mat-cell *matCellDef="let element"> {{ element?.institution?.name }}</td>
     </ng-container>
 
   <!-- Publish Column -->
   <ng-container matColumnDef="publish">
-    <th mat-header-cell *matHeaderCellDef i18n="@@LabelPublish"> Publish</th>
+    <th mat-header-cell *matHeaderCellDef> {{ 'common.label.publish' | translate }}</th>
     <td mat-cell *matCellDef="let element">{{ element.publish }}</td>
   </ng-container>
 
   <!-- Symbol Column -->
   <ng-container matColumnDef="action">
-    <th mat-header-cell *matHeaderCellDef i18n="@@LabelEmail"> Action</th>
+    <th mat-header-cell *matHeaderCellDef> {{ 'common.label.action' | translate }}</th>
     <td mat-cell *matCellDef="let element">
       <button mat-icon-button color="primary" (click)="edit(element)"
-        matTooltip="Edit institution {{element.id}}.">
+        [matTooltip]="'collection.list.tooltips.edit' | translate:{id: element.id}">
         <mat-icon>edit</mat-icon>
       </button>
       <button mat-icon-button color="warn" (click)="delete(element)"
-        matTooltip="Delete institution {{element.id}}.">
+        [matTooltip]="'collection.list.tooltips.delete' | translate:{id: element.id}">
         <mat-icon>delete</mat-icon>
       </button>
     </td>

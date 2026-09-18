@@ -1,4 +1,5 @@
 import {Component, inject} from "@angular/core";
+import {TranslatePipe} from "@ngx-translate/core";
 import {toSignal} from "@angular/core/rxjs-interop";
 import {
   MAT_DIALOG_DATA,
@@ -19,7 +20,7 @@ import {MatIcon} from "@angular/material/icon";
 @Component({
     selector: 'transformer-dialog',
     templateUrl: 'transformer-dialog.component.html',
-  imports: [MatDialogTitle, MatDialogContent, FormsModule, ReactiveFormsModule, MatFormField, MatLabel, MatSelect, MatOption, MatMiniFabButton, MatTooltip, MatIcon, MatInput, MatIconButton, MatDialogActions, MatButton]
+  imports: [MatDialogTitle, MatDialogContent, FormsModule, ReactiveFormsModule, MatFormField, MatLabel, MatSelect, MatOption, MatMiniFabButton, MatTooltip, MatIcon, MatInput, MatIconButton, MatDialogActions, MatButton, TranslatePipe]
 })
 export class TransformerDialogComponent {
   /** The {@link MatDialogRef} used to interact with the dialog. */

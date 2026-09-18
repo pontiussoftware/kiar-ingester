@@ -1,39 +1,39 @@
-<h1 i18n="@@HeadingDataIngestJobs">Data Ingest Jobs
-  <button mat-mini-fab color="primary" (click)="createJob()" i18n-matTooltip="@@TooltipAddNewJob" matTooltip="Add a new job.">
+<h1>{{ 'dashboard.title' | translate }}
+  <button mat-mini-fab color="primary" (click)="createJob()" [matTooltip]="'dashboard.tooltips.addJob' | translate">
     <mat-icon>add</mat-icon>
   </button>
 </h1>
 
 <mat-tab-group>
-  <mat-tab label="Running" i18n-label="@@TabLabelRunning">
+  <mat-tab [label]="'dashboard.tabs.running' | translate">
     <table mat-table [dataSource]="this.activeJobs.data()" class="mat-elevation-z8">
       <!-- Name Column -->
       <ng-container matColumnDef="name">
-        <th mat-header-cell *matHeaderCellDef i18n="@@ColHeaderName"> Name </th>
+        <th mat-header-cell *matHeaderCellDef> {{ 'common.label.name' | translate }} </th>
         <td mat-cell *matCellDef="let element"> {{element.name}} </td>
       </ng-container>
 
       <!-- Status Column -->
       <ng-container matColumnDef="status">
-        <th mat-header-cell *matHeaderCellDef i18n="@@ColHeaderStatus"> Status </th>
+        <th mat-header-cell *matHeaderCellDef> {{ 'common.label.status' | translate }} </th>
         <td mat-cell *matCellDef="let element"> {{element.status}} </td>
       </ng-container>
 
       <!-- Source Column -->
       <ng-container matColumnDef="source">
-        <th mat-header-cell *matHeaderCellDef i18n="@@ColHeaderSource"> Source </th>
+        <th mat-header-cell *matHeaderCellDef> {{ 'common.label.source' | translate }} </th>
         <td mat-cell *matCellDef="let element"> {{element.source}} </td>
       </ng-container>
 
       <!-- Template Column -->
       <ng-container matColumnDef="template">
-        <th mat-header-cell *matHeaderCellDef i18n="@@ColHeaderTemplate"> Template </th>
+        <th mat-header-cell *matHeaderCellDef> {{ 'common.label.template' | translate }} </th>
         <td mat-cell *matCellDef="let element"> {{element.template?.name}} </td>
       </ng-container>
 
       <!-- Statistics Column -->
       <ng-container matColumnDef="statistics">
-        <th mat-header-cell *matHeaderCellDef i18n="@@ColHeaderStatistics"> Statistics </th>
+        <th mat-header-cell *matHeaderCellDef> {{ 'dashboard.columns.statistics' | translate }} </th>
         <td mat-cell *matCellDef="let element">
           (<span class="color-traffic-light-green">{{element.processed}}</span> | <span class="color-traffic-light-orange">{{element.skipped}}</span> | <span class="color-traffic-light-red">{{element.error}}</span>)
         </td>
@@ -41,48 +41,48 @@
 
       <!-- Changed At Column -->
       <ng-container matColumnDef="changedAt">
-        <th mat-header-cell *matHeaderCellDef i18n="@@ColHeaderChangedAt"> Changed At </th>
-        <td mat-cell *matCellDef="let element"> {{element.changedAt | date:'medium'}}  </td>
+        <th mat-header-cell *matHeaderCellDef> {{ 'common.label.changedAt' | translate }} </th>
+        <td mat-cell *matCellDef="let element"> {{element.changedAt | date:'medium':undefined:language.locale()}}  </td>
       </ng-container>
 
       <!-- Created At Column -->
       <ng-container matColumnDef="createdAt">
-        <th mat-header-cell *matHeaderCellDef i18n="@@ColHeaderCreatedAt"> Created At </th>
-        <td mat-cell *matCellDef="let element">{{element.createdAt | date:'medium'}} </td>
+        <th mat-header-cell *matHeaderCellDef> {{ 'common.label.createdAt' | translate }} </th>
+        <td mat-cell *matCellDef="let element">{{element.createdAt | date:'medium':undefined:language.locale()}} </td>
       </ng-container>
 
       <!-- Created By Column -->
       <ng-container matColumnDef="createdBy">
-        <th mat-header-cell *matHeaderCellDef i18n="@@ColHeaderCreatedBy"> Created By </th>
+        <th mat-header-cell *matHeaderCellDef> {{ 'common.label.createdBy' | translate }} </th>
         <td mat-cell *matCellDef="let element">{{element.createdBy}} </td>
       </ng-container>
 
       <!--Action Column -->
       <ng-container matColumnDef="action">
-        <th mat-header-cell *matHeaderCellDef i18n="@@ColHeaderAction"> Action </th>
+        <th mat-header-cell *matHeaderCellDef> {{ 'common.label.action' | translate }} </th>
         <td mat-cell *matCellDef="let element">
           @if (!isUploading(element)) {
             <div>
-              <button mat-icon-button aria-label="View logs." matTooltip="View logs." [routerLink]="['/manager/logs', element.id]">
+              <button mat-icon-button [attr.aria-label]="'dashboard.tooltips.viewLog' | translate" [matTooltip]="'dashboard.tooltips.viewLog' | translate" [routerLink]="['/manager/logs', element.id]">
                 <mat-icon>list_alt</mat-icon>
               </button>
               @if ((element.status === 'CREATED' || element.status === 'FAILED')) {
-                <button (click)="upload(element)" mat-icon-button matTooltip="Upload KIAR file." i18n-matTooltip="@@TooltipUploadKiar">
+                <button (click)="upload(element)" mat-icon-button [matTooltip]="'dashboard.tooltips.uploadKiar' | translate">
                   <mat-icon>upload_file</mat-icon>
                 </button>
               }
               @if (element.status === 'HARVESTED' || element.status === 'INTERRUPTED' || element.status === 'FAILED') {
-                <button (click)="startIngest(element, false)" mat-icon-button matTooltip="Schedule for data ingest." i18n-matTooltip="@@TooltipStartIngest">
+                <button (click)="startIngest(element, false)" mat-icon-button [matTooltip]="'dashboard.tooltips.scheduleIngest' | translate">
                   <mat-icon>publish</mat-icon>
                 </button>
               }
               @if (element.status === 'HARVESTED' || element.status === 'INTERRUPTED' || element.status === 'FAILED') {
-                <button (click)="startIngest(element, true)" mat-icon-button matTooltip="Schedule for test run." i18n-matTooltip="@@TooltipStartIngest">
+                <button (click)="startIngest(element, true)" mat-icon-button [matTooltip]="'dashboard.tooltips.scheduleTestRun' | translate">
                   <mat-icon>cruelty_free</mat-icon>
                 </button>
               }
               @if (element.status !== 'ABORTED' && element.status !== 'INGESTED') {
-                <button (click)="abortJob(element)" mat-icon-button matTooltip="Abort job." i18n-matTooltip="@@TooltipAbortJob">
+                <button (click)="abortJob(element)" mat-icon-button [matTooltip]="'dashboard.tooltips.abortJob' | translate">
                   <mat-icon>cancel</mat-icon>
                 </button>
               }
@@ -102,7 +102,7 @@
 
       <!-- Row shown when there is no matching data that will be provided to the wrapper table. -->
       <tr class="mat-row" *matNoDataRow>
-        <td class="mat-cell" colspan="6">No data</td>
+        <td class="mat-cell" colspan="6">{{ 'common.noData' | translate }}</td>
       </tr>
     </table>
 
@@ -110,7 +110,7 @@
 
   </mat-tab>
 
-  <mat-tab label="History" i18n-label="@@TabLabelHistory">
+  <mat-tab [label]="'dashboard.tabs.history' | translate">
     <table mat-table [dataSource]="this.jobHistory.data()" class="mat-elevation-z8">
 
       <!--- Note that these columns can be defined in any order.
@@ -118,31 +118,31 @@
 
       <!-- Name Column -->
       <ng-container matColumnDef="name">
-        <th mat-header-cell *matHeaderCellDef i18n="@@ColHeaderName"> Name </th>
+        <th mat-header-cell *matHeaderCellDef> {{ 'common.label.name' | translate }} </th>
         <td mat-cell *matCellDef="let element"> {{element.name}} </td>
       </ng-container>
 
       <!-- Name Column -->
       <ng-container matColumnDef="status">
-        <th mat-header-cell *matHeaderCellDef i18n="@@ColHeaderStatus"> Status </th>
+        <th mat-header-cell *matHeaderCellDef> {{ 'common.label.status' | translate }} </th>
         <td mat-cell *matCellDef="let element"> {{element.status}} </td>
       </ng-container>
 
       <!-- Weight Column -->
       <ng-container matColumnDef="source">
-        <th mat-header-cell *matHeaderCellDef i18n="@@ColHeaderSource"> Source </th>
+        <th mat-header-cell *matHeaderCellDef> {{ 'common.label.source' | translate }} </th>
         <td mat-cell *matCellDef="let element"> {{element.source}} </td>
       </ng-container>
 
       <!-- Symbol Column -->
       <ng-container matColumnDef="template">
-        <th mat-header-cell *matHeaderCellDef i18n="@@ColHeaderTemplate"> Template </th>
+        <th mat-header-cell *matHeaderCellDef> {{ 'common.label.template' | translate }} </th>
         <td mat-cell *matCellDef="let element"> {{element.template?.name}} </td>
       </ng-container>
 
       <!-- Statistics Column -->
       <ng-container matColumnDef="statistics">
-        <th mat-header-cell *matHeaderCellDef i18n="@@ColHeaderStatistics"> Statistics </th>
+        <th mat-header-cell *matHeaderCellDef> {{ 'dashboard.columns.statistics' | translate }} </th>
         <td mat-cell *matCellDef="let element">
           (<span class="color-traffic-light-green">{{element.processed}}</span> | <span class="color-traffic-light-orange">{{element.skipped}}</span> | <span class="color-traffic-light-red">{{element.error}}</span>)
         </td>
@@ -150,33 +150,33 @@
 
       <!-- Changed At Column -->
       <ng-container matColumnDef="changedAt">
-        <th mat-header-cell *matHeaderCellDef i18n="@@ColHeaderCreatedAt">  Changed At </th>
-        <td mat-cell *matCellDef="let element"> {{element.changedAt | date:'medium'}}  </td>
+        <th mat-header-cell *matHeaderCellDef> {{ 'common.label.changedAt' | translate }} </th>
+        <td mat-cell *matCellDef="let element"> {{element.changedAt | date:'medium':undefined:language.locale()}}  </td>
       </ng-container>
 
       <!-- Created At Column -->
       <ng-container matColumnDef="createdAt">
-        <th mat-header-cell *matHeaderCellDef i18n="@@ColHeaderCreatedAt"> Created At </th>
-        <td mat-cell *matCellDef="let element"> {{element.createdAt | date:'medium'}}  </td>
+        <th mat-header-cell *matHeaderCellDef> {{ 'common.label.createdAt' | translate }} </th>
+        <td mat-cell *matCellDef="let element"> {{element.createdAt | date:'medium':undefined:language.locale()}}  </td>
       </ng-container>
 
       <!-- Created By Column -->
       <ng-container matColumnDef="createdBy">
-        <th mat-header-cell *matHeaderCellDef i18n="@@ColHeaderCreatedBy"> Created By </th>
+        <th mat-header-cell *matHeaderCellDef> {{ 'common.label.createdBy' | translate }} </th>
         <td mat-cell *matCellDef="let element"> {{element.createdBy}} </td>
       </ng-container>
 
       <!--Action Column -->
       <ng-container matColumnDef="action">
-        <th mat-header-cell *matHeaderCellDef i18n="@@ColHeaderAction"> Action </th>
+        <th mat-header-cell *matHeaderCellDef> {{ 'common.label.action' | translate }} </th>
         <td mat-cell *matCellDef="let element">
           @if (element.logEntries > 0) {
-            <button mat-icon-button aria-label="View log" matTooltip="View log." [routerLink]="['/manager/logs', element.id]">
+            <button mat-icon-button [attr.aria-label]="'dashboard.tooltips.viewLog' | translate" [matTooltip]="'dashboard.tooltips.viewLog' | translate" [routerLink]="['/manager/logs', element.id]">
               <mat-icon>list_alt</mat-icon>
             </button>
           }
           @if (element.logEntries > 0) {
-            <button mat-icon-button aria-label="Purge log" matTooltip="Purge log." (click)="purgeLog(element)">
+            <button mat-icon-button [attr.aria-label]="'dashboard.tooltips.purgeLog' | translate" [matTooltip]="'dashboard.tooltips.purgeLog' | translate" (click)="purgeLog(element)">
               <mat-icon>delete_forever</mat-icon>
             </button>
           }
@@ -188,7 +188,7 @@
 
       <!-- Row shown when there is no matching data that will be provided to the wrapper table. -->
       <tr class="mat-row" *matNoDataRow>
-        <td class="mat-cell" colspan="6">No data</td>
+        <td class="mat-cell" colspan="6">{{ 'common.noData' | translate }}</td>
       </tr>
     </table>
 

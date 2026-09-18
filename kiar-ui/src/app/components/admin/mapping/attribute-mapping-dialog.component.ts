@@ -1,4 +1,5 @@
 import {Component, inject} from "@angular/core";
+import {TranslatePipe, TranslateService} from "@ngx-translate/core";
 import {toSignal} from "@angular/core/rxjs-interop";
 import {
   MAT_DIALOG_DATA,
@@ -27,7 +28,7 @@ export interface AttributeMappingData {
 @Component({
     selector: 'attribute-mapping-dialog',
     templateUrl: 'attribute-mapping-dialog.component.html',
-  imports: [MatDialogTitle, MatDialogContent, FormsModule, ReactiveFormsModule, MatFormField, MatLabel, MatInput, MatSelect, MatOption, MatCheckbox, MatMiniFabButton, MatTooltip, MatIcon, MatIconButton, MatDialogActions, MatButton]
+  imports: [MatDialogTitle, MatDialogContent, FormsModule, ReactiveFormsModule, MatFormField, MatLabel, MatInput, MatSelect, MatOption, MatCheckbox, MatMiniFabButton, MatTooltip, MatIcon, MatIconButton, MatDialogActions, MatButton, TranslatePipe]
 })
 export class AttributeMappingDialogComponent {
   /** The {@link MatDialogRef} used to interact with and close this dialog. */
@@ -38,6 +39,9 @@ export class AttributeMappingDialogComponent {
 
   /** The {@link AttributeMappingData} provided as dialog data. */
   protected data = inject<AttributeMappingData>(MAT_DIALOG_DATA);
+
+  /** The {@link TranslateService} used to resolve user-facing messages. */
+  private translate = inject(TranslateService);
 
   /** A signal of the available {@link ValueParser}s. */
   public readonly parsers = toSignal(this._service.getListParsers(), {initialValue: [] as Array<ValueParser>})
@@ -54,9 +58,9 @@ export class AttributeMappingDialogComponent {
    */
   get title(): string {
     if (this.data.new) {
-      return "Create Attribute Mapping";
+      return this.translate.instant('admin.attributeMapping.titleCreate');
     } else {
-      return "Edit Attribute Mapping";
+      return this.translate.instant('admin.attributeMapping.titleEdit');
     }
   }
 

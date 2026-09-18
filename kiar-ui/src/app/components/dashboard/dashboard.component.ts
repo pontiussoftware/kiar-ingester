@@ -1,4 +1,6 @@
 import {AfterViewInit, Component, inject, OnDestroy, signal, viewChild} from "@angular/core";
+import {TranslatePipe, TranslateService} from "@ngx-translate/core";
+import {LanguageService} from "../../services/language.service";
 import {MatDialog} from "@angular/material/dialog";
 import {Job, JobService} from "../../../../openapi";
 import {firstValueFrom, interval, Subscription} from "rxjs";
@@ -32,7 +34,7 @@ import {DatePipe} from "@angular/common";
     selector: 'kiar-dashboard',
     templateUrl: './dashboard.component.html',
     styleUrls: ['./dashboard.component.scss'],
-    imports: [MatMiniFabButton, MatTooltip, MatIcon, MatTabGroup, MatTab, MatTable, MatColumnDef, MatHeaderCellDef, MatHeaderCell, MatCellDef, MatCell, MatIconButton, RouterLink, MatProgressBar, MatHeaderRowDef, MatHeaderRow, MatRowDef, MatRow, MatNoDataRow, MatPaginator, DatePipe]
+    imports: [MatMiniFabButton, MatTooltip, MatIcon, MatTabGroup, MatTab, MatTable, MatColumnDef, MatHeaderCellDef, MatHeaderCell, MatCellDef, MatCell, MatIconButton, RouterLink, MatProgressBar, MatHeaderRowDef, MatHeaderRow, MatRowDef, MatRow, MatNoDataRow, MatPaginator, DatePipe, TranslatePipe]
 })
 export class DashboardComponent implements AfterViewInit, OnDestroy {
   /** The {@link MatDialog} service used to open dialogs. */
@@ -43,6 +45,12 @@ export class DashboardComponent implements AfterViewInit, OnDestroy {
 
   /** The {@link JobService} used to access and manage jobs. */
   private service = inject(JobService);
+
+  /** The {@link LanguageService} providing the locale used for date formatting. */
+  protected readonly language = inject(LanguageService);
+
+  /** The {@link TranslateService} used to resolve user-facing messages. */
+  private translate = inject(TranslateService);
 
   /** Name of the columns being displayed by the data table. */
   public readonly displayedColumns: string[] = ['name', 'status', 'source', 'template', 'statistics', 'changedAt', 'createdAt', 'createdBy',  'action'];
@@ -140,12 +148,12 @@ export class DashboardComponent implements AfterViewInit, OnDestroy {
               await firstValueFrom(this.service.putUpload(job.id!!, i == 0, i == (slices - 1), slice, 'body'));
               this.setProgress(job.id, (i / slices) * 100)
             } catch (err) {
-              this.snackBar.open(`Error while uploading ${job.template?.type} file for job ${job.id}.`, "Dismiss", { duration: 2000 } as MatSnackBarConfig)
+              this.snackBar.open(this.translate.instant('dashboard.messages.uploadError', {type: job.template?.type, id: job.id}), this.translate.instant('common.action.dismiss'), { duration: 2000 } as MatSnackBarConfig)
               break
             }
           }
 
-          this.snackBar.open(`${job.template?.type} uploaded successfully. Ready for harvesting!`, "Dismiss", { duration: 2000 } as MatSnackBarConfig)
+          this.snackBar.open(this.translate.instant('dashboard.messages.uploadSuccess', {type: job.template?.type}), this.translate.instant('common.action.dismiss'), { duration: 2000 } as MatSnackBarConfig)
           this.clearProgress(job.id);
         }
       });
@@ -161,10 +169,10 @@ export class DashboardComponent implements AfterViewInit, OnDestroy {
   public startIngest(job: Job, test: boolean) {
     this.service.putScheduleJob(job.id!!, test).subscribe({
       next: (next) => {
-        this.snackBar.open(`Successfully scheduled job ${job.id}.`, "Dismiss", { duration: 2000 } as MatSnackBarConfig)
+        this.snackBar.open(this.translate.instant('dashboard.messages.jobScheduled', {id: job.id}), this.translate.instant('common.action.dismiss'), { duration: 2000 } as MatSnackBarConfig)
         this.reload()
       },
-      error: (err) => this.snackBar.open(`Error occurred while scheduling job ${job.id}: ${err?.error?.description}.`, "Dismiss", { duration: 2000 } as MatSnackBarConfig)
+      error: (err) => this.snackBar.open(this.translate.instant('dashboard.messages.jobScheduleError', {id: job.id, error: err?.error?.description}), this.translate.instant('common.action.dismiss'), { duration: 2000 } as MatSnackBarConfig)
     })
   }
 
@@ -176,10 +184,10 @@ export class DashboardComponent implements AfterViewInit, OnDestroy {
   public abortJob(job: Job) {
     this.service.deleteAbortJob(job.id!!).subscribe({
         next: (next) => {
-          this.snackBar.open(`Successfully aborted job ${job.id}.`, "Dismiss", { duration: 2000 } as MatSnackBarConfig)
+          this.snackBar.open(this.translate.instant('dashboard.messages.jobAborted', {id: job.id}), this.translate.instant('common.action.dismiss'), { duration: 2000 } as MatSnackBarConfig)
           this.reload()
         },
-        error: (err) => this.snackBar.open(`Error occurred while aborting job ${job.id}: ${err?.error?.description}.`, "Dismiss", { duration: 2000 } as MatSnackBarConfig)
+        error: (err) => this.snackBar.open(this.translate.instant('dashboard.messages.jobAbortError', {id: job.id, error: err?.error?.description}), this.translate.instant('common.action.dismiss'), { duration: 2000 } as MatSnackBarConfig)
     })
   }
 
@@ -191,10 +199,10 @@ export class DashboardComponent implements AfterViewInit, OnDestroy {
   public purgeLog(job: Job) {
     this.service.deletePurgeJobLog(job.id!!).subscribe({
       next: (next) => {
-        this.snackBar.open(`Successfully purged job ${job.id} log.`, "Dismiss", { duration: 2000 } as MatSnackBarConfig)
+        this.snackBar.open(this.translate.instant('dashboard.messages.logPurged', {id: job.id}), this.translate.instant('common.action.dismiss'), { duration: 2000 } as MatSnackBarConfig)
         this.reload()
       },
-      error: (err) => this.snackBar.open(`Error occurred while purging job ${job.id} log: ${err?.error?.description}.`, "Dismiss", { duration: 2000 } as MatSnackBarConfig)
+      error: (err) => this.snackBar.open(this.translate.instant('dashboard.messages.logPurgeError', {id: job.id, error: err?.error?.description}), this.translate.instant('common.action.dismiss'), { duration: 2000 } as MatSnackBarConfig)
     })
   }
 

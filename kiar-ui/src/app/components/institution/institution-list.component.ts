@@ -1,4 +1,5 @@
 import {AfterViewInit, Component, ElementRef, inject, viewChild} from "@angular/core";
+import {TranslatePipe, TranslateService} from "@ngx-translate/core";
 import {toSignal} from "@angular/core/rxjs-interop";
 import {ApacheSolrCollection, ConfigService, Institution, InstitutionService} from "../../../../openapi";
 import {map, Observable, tap} from "rxjs";
@@ -31,7 +32,7 @@ import {InstitutionImageComponent} from "./institution-image.component";
     selector: 'kiar-institution-list',
     templateUrl: './institution-list.component.html',
     styleUrls: ['./institution-list.component.scss'],
-    imports: [MatMiniFabButton, MatTooltip, MatIcon, MatMenuTrigger, MatMenu, MatMenuItem, MatFormField, MatLabel, MatInput, MatTable, MatSort, MatColumnDef, MatHeaderCellDef, MatHeaderCell, MatCellDef, MatCell, InstitutionImageComponent, MatSortHeader, MatIconButton, MatHeaderRowDef, MatHeaderRow, MatRowDef, MatRow, MatPaginator]
+    imports: [MatMiniFabButton, MatTooltip, MatIcon, MatMenuTrigger, MatMenu, MatMenuItem, MatFormField, MatLabel, MatInput, MatTable, MatSort, MatColumnDef, MatHeaderCellDef, MatHeaderCell, MatCellDef, MatCell, InstitutionImageComponent, MatSortHeader, MatIconButton, MatHeaderRowDef, MatHeaderRow, MatRowDef, MatRow, MatPaginator, TranslatePipe]
 })
 export class InstitutionListComponent implements AfterViewInit  {
   /** The {@link InstitutionService} used to access institution data. */
@@ -45,6 +46,9 @@ export class InstitutionListComponent implements AfterViewInit  {
 
   /** The {@link MatSnackBar} used to display notifications. */
   private snackBar = inject(MatSnackBar);
+
+  /** The {@link TranslateService} used to resolve user-facing messages. */
+  private translate = inject(TranslateService);
 
   /** {@link Observable} of all available participants. */
   public readonly dataSource: InstitutionDatasource
@@ -107,13 +111,13 @@ export class InstitutionListComponent implements AfterViewInit  {
    * Opens a dialog to add a new {@link Institution} to the collection and persists it through the API upon saving.
    */
   public delete(institution: Institution) {
-    if (confirm(`Are you sure that you want to delete institution '${institution.id}'?\nAfter deletion, it can no longer be retrieved.`)) {
+    if (confirm(this.translate.instant('institution.list.confirmDelete', {id: institution.id}) + '\n' + this.translate.instant('common.confirmDeleteSuffix'))) {
       this.institutionService.deleteInstitution(institution.id!!).subscribe({
         next: (value) => {
-          this.snackBar.open(value.description, "Dismiss", { duration: 2000 } as MatSnackBarConfig);
+          this.snackBar.open(value.description, this.translate.instant('common.action.dismiss'), { duration: 2000 } as MatSnackBarConfig);
           this.dataSource.load(this.paginator().pageIndex, this.paginator().pageSize, this.sort().active, this.sort().direction, this.filterField().nativeElement.value);
         },
-        error: (err) => this.snackBar.open(`Error occurred while trying to delete institution '${institution.name}': ${err?.error?.description}.`, "Dismiss", { duration: 2000 } as MatSnackBarConfig),
+        error: (err) => this.snackBar.open(this.translate.instant('institution.list.messages.deleteError', {name: institution.name, error: err?.error?.description}), this.translate.instant('common.action.dismiss'), { duration: 2000 } as MatSnackBarConfig),
       })
     }
   }
@@ -133,8 +137,8 @@ export class InstitutionListComponent implements AfterViewInit  {
   public synchronize(collection: ApacheSolrCollection) {
     if (!collection.id) return;
     this.institutionService.postSynchronizeInstitutions(collection.id).subscribe({
-      next: (value) =>  this.snackBar.open(`Successfully synchronised institutions with Apache Solr backend (${collection.name}).`, "Dismiss", { duration: 2000 } as MatSnackBarConfig),
-      error: (err) => this.snackBar.open(`Error occurred while synchronising institutions with Apache Solr backend (${collection.name}): ${err?.error?.description}.`, "Dismiss", { duration: 2000 } as MatSnackBarConfig),
+      next: (value) =>  this.snackBar.open(this.translate.instant('institution.list.messages.synchronized', {name: collection.name}), this.translate.instant('common.action.dismiss'), { duration: 2000 } as MatSnackBarConfig),
+      error: (err) => this.snackBar.open(this.translate.instant('institution.list.messages.synchronizeError', {name: collection.name, error: err?.error?.description}), this.translate.instant('common.action.dismiss'), { duration: 2000 } as MatSnackBarConfig),
     })
   }
 }

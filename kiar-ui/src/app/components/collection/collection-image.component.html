@@ -3,7 +3,7 @@
     <div class="image-container" (mouseenter)="this.showOverlay.set(true)" (mouseleave)="this.showOverlay.set(false)">
       <img [src]="this.imageUrl()" [width]="this.width()" [height]="this.height()" [style.object-fit]="'contain'" />
       @if (this.showOverlay()) {
-        <div class="overlay" (click)="delete()">
+        <div class="overlay" (click)="delete()" [title]="'collection.image.tooltips.delete' | translate" [attr.aria-label]="'collection.image.tooltips.delete' | translate">
           <mat-icon>delete</mat-icon>
         </div>
       }

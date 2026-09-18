@@ -1,16 +1,16 @@
-<h1 mat-dialog-title i18n="@@HeadingCreateInstitution">Create Institution</h1>
+<h1 mat-dialog-title>{{ (institutionId ? 'institution.dialog.title.edit' : 'institution.dialog.title.create') | translate }}</h1>
 <div mat-dialog-content>
   <form [formGroup]="formControl">
     <mat-form-field appearance="fill" [style.width]="'50%'">
-      <mat-label i18n="@@LabelName">Name</mat-label>
+      <mat-label>{{ 'common.label.name' | translate }}</mat-label>
       <input matInput type="text" formControlName="name">
       @if (this.formControl.get('name')?.hasError('minlength')) {
-        <mat-error>Minimum length is 10.</mat-error>
+        <mat-error>{{ 'institution.dialog.errors.minLength' | translate:{length: 5} }}</mat-error>
       }
     </mat-form-field>
 
     <mat-form-field appearance="fill" [style.width]="'20%'">
-      <mat-label i18n="@@LabelParticipant">Participant</mat-label>
+      <mat-label>{{ 'common.label.participant' | translate }}</mat-label>
       <mat-select formControlName="participantName">
         @for (participant of this.participants(); track participant) {
           <mat-option [value]="participant">
@@ -21,7 +21,7 @@
     </mat-form-field>
 
     <mat-form-field appearance="fill" [style.width]="'20%'">
-      <mat-label i18n="@@LabelCanton">Canton</mat-label>
+      <mat-label>{{ 'common.label.canton' | translate }}</mat-label>
       <mat-select formControlName="canton">
         @for (canton of this.cantons(); track canton) {
           <mat-option [value]="canton">
@@ -31,68 +31,68 @@
       </mat-select>
     </mat-form-field>
 
-    <mat-checkbox formControlName="publish" i18n="@@LabelPublish">
-            Publish
+    <mat-checkbox formControlName="publish">
+            {{ 'common.label.publish' | translate }}
         </mat-checkbox>
 
     <mat-form-field appearance="fill" [style.width]="'100%'">
-      <mat-label i18n="@@LabelDisplayName">Display Name</mat-label>
+      <mat-label>{{ 'common.label.displayName' | translate }}</mat-label>
       <input matInput type="text" formControlName="displayName">
       @if (this.formControl.get('displayName')?.hasError('minlength')) {
-        <mat-error>Minimum length is 10.</mat-error>
+        <mat-error>{{ 'institution.dialog.errors.minLength' | translate:{length: 5} }}</mat-error>
       }
     </mat-form-field>
 
     <mat-form-field appearance="fill" [style.width]="'100%'">
-      <mat-label i18n="@@LabelDescription">Description</mat-label>
+      <mat-label>{{ 'common.label.description' | translate }}</mat-label>
       <textarea matInput formControlName="description"></textarea>
     </mat-form-field>
 
     <mat-tab-group [style.width]="'100%'">
-      <mat-tab label="Contact" i18n-label="@@LabelContact">
+      <mat-tab [label]="'common.label.contact' | translate">
         <mat-form-field appearance="fill" [style.width]="'50%'">
-          <mat-label i18n="@@LabelStreet">Street</mat-label>
+          <mat-label>{{ 'common.label.street' | translate }}</mat-label>
           <input matInput formControlName="street">
         </mat-form-field>
 
         <mat-form-field appearance="fill" [style.width]="'10%'">
-          <mat-label i18n="@@LabelZip">Zip</mat-label>
+          <mat-label>{{ 'common.label.zip' | translate }}</mat-label>
           <input matInput type="number" formControlName="zip">
         </mat-form-field>
 
         <mat-form-field appearance="fill" [style.width]="'20%'">
-          <mat-label i18n="@@LabelCity">City</mat-label>
+          <mat-label>{{ 'common.label.city' | translate }}</mat-label>
           <input matInput formControlName="city">
         </mat-form-field>
 
 
         <mat-form-field appearance="fill" [style.width]="'10%'">
-          <mat-label i18n="@@LabelCity">Longitude</mat-label>
+          <mat-label>{{ 'common.label.longitude' | translate }}</mat-label>
           <input matInput formControlName="longitude" type="number">
         </mat-form-field>
 
         <mat-form-field appearance="fill" [style.width]="'10%'">
-          <mat-label i18n="@@LabelCity">Latitude</mat-label>
+          <mat-label>{{ 'common.label.latitude' | translate }}</mat-label>
           <input matInput formControlName="latitude" type="number">
         </mat-form-field>
 
         <mat-form-field appearance="fill" [style.width]="'50%'">
-          <mat-label i18n="@@LabelEmail">E-Mail</mat-label>
+          <mat-label>{{ 'common.label.email' | translate }}</mat-label>
           <input matInput type="email" formControlName="email">
           @if (formControl.get('email')?.hasError('email')) {
-            <mat-error>Must be a valid e-mail address.
+            <mat-error>{{ 'institution.dialog.errors.email' | translate }}
             </mat-error>
           }
         </mat-form-field>
 
         <mat-form-field appearance="fill" [style.width]="'50%'">
-          <mat-label i18n="@@LabelHomepage">Homepage</mat-label>
+          <mat-label>{{ 'common.label.homepage' | translate }}</mat-label>
           <input matInput type="url" formControlName="homepage">
         </mat-form-field>
       </mat-tab>
-      <mat-tab label="Publication Defaults" i18n-label="@@LabelPublicationDefaults">
+      <mat-tab [label]="'institution.dialog.tabs.publicationDefaults' | translate">
         <mat-form-field appearance="fill" [style.width]="'30%'">
-          <mat-label i18n="@@LabelDefaultRightStatement">Default Right Statement</mat-label>
+          <mat-label>{{ 'institution.dialog.labels.defaultRightStatement' | translate }}</mat-label>
           <mat-select formControlName="defaultRightStatement">
             @for (rightStatement of this.rightStatements(); track rightStatement) {
               <mat-option
@@ -104,18 +104,18 @@
         </mat-form-field>
 
         <mat-form-field appearance="fill" [style.width]="'70%'">
-          <mat-label i18n="@@LabelDefaultCopyright">Default Copyright</mat-label>
+          <mat-label>{{ 'institution.dialog.labels.defaultCopyright' | translate }}</mat-label>
           <input matInput type="text" formControlName="defaultCopyright">
         </mat-form-field>
 
         <mat-form-field appearance="fill" [style.width]="'100%'">
-          <mat-label i18n="@@LabelDefaultObjectUrl">Default Object URL</mat-label>
+          <mat-label>{{ 'institution.dialog.labels.defaultObjectUrl' | translate }}</mat-label>
           <input matInput type="text" formControlName="defaultObjectUrl">
         </mat-form-field>
       </mat-tab>
 
       <!-- Tab of available collections (admin only).  -->
-      <mat-tab label="Available Collections" i18n-label="@@LabelAvailableCollections">
+      <mat-tab [label]="'institution.dialog.tabs.availableCollections' | translate">
         <ul formArrayName="availableCollections" class="checkbox-list">
           @for (option of this.availableCollectionsForms; track option; let i = $index) {
             <li>
@@ -128,7 +128,7 @@
       </mat-tab>
 
       <!-- Tab of selected collections -->
-      <mat-tab label="Published Collections" i18n-label="@@LabelPublishedCollections">
+      <mat-tab [label]="'institution.dialog.tabs.publishedCollections' | translate">
         <ul formArrayName="selectedCollections" class="checkbox-list">
           @for (option of this.selectedCollectionsForms; track option; let i = $index) {
             <li>
@@ -145,13 +145,13 @@
 <div mat-dialog-actions>
   <button mat-button color="primary" (click)="save()">
     <mat-icon>save</mat-icon>
-    Save
+    {{ 'common.action.save' | translate }}
   </button>
 
   @if (institutionId) {
     <button mat-button (click)="uploadImage()">
       <mat-icon>upload</mat-icon>
-      Upload Image
+      {{ 'common.action.uploadImage' | translate }}
     </button>
   }
 </div>

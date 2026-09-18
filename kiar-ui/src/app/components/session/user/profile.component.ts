@@ -1,4 +1,5 @@
 import {AfterViewInit, Component, inject} from "@angular/core";
+import {TranslatePipe, TranslateService} from "@ngx-translate/core";
 import {FormControl, FormGroup, FormsModule, ReactiveFormsModule, Validators} from "@angular/forms";
 import {Role, SessionService, SessionStatus, User} from "../../../../../openapi";
 import {Observer} from "rxjs";
@@ -12,7 +13,7 @@ import {MatButton} from "@angular/material/button";
     selector: 'app-user-profile',
     templateUrl: './profile.component.html',
     styleUrls: ['./profile.component.scss'],
-    imports: [MatDialogTitle, MatDialogContent, FormsModule, ReactiveFormsModule, MatFormField, MatLabel, MatInput, MatError, MatDialogActions, MatButton]
+    imports: [MatDialogTitle, MatDialogContent, FormsModule, ReactiveFormsModule, MatFormField, MatLabel, MatInput, MatError, MatDialogActions, MatButton, TranslatePipe]
 })
 export class ProfileComponent implements AfterViewInit {
   /** The {@link SessionService} used to access the current session. */
@@ -20,6 +21,9 @@ export class ProfileComponent implements AfterViewInit {
 
   /** The {@link MatSnackBar} used to display notifications. */
   private snackBar = inject(MatSnackBar);
+
+  /** The {@link TranslateService} used to resolve user-facing messages. */
+  private translate = inject(TranslateService);
 
   /** The {@link FormControl} that backs this {@link AddJobTemplateDialogComponent}. */
   public formControl: FormGroup =  new FormGroup({
@@ -58,10 +62,10 @@ export class ProfileComponent implements AfterViewInit {
     if (this.formControl.valid) {
         const observer = {
           next: (value) => {
-            this.snackBar.open("Successfully updates user profile.", "Dismiss", { duration: 2000 } as MatSnackBarConfig)
+            this.snackBar.open(this.translate.instant('profile.messages.updated'), this.translate.instant('common.action.dismiss'), { duration: 2000 } as MatSnackBarConfig)
           },
           error: (err) => {
-            this.snackBar.open(`Error occurred while trying to update user profile: ${err?.error?.description}.`, "Dismiss", { duration: 2000 } as MatSnackBarConfig)
+            this.snackBar.open(this.translate.instant('profile.messages.updateFailed', {error: err?.error?.description}), this.translate.instant('common.action.dismiss'), { duration: 2000 } as MatSnackBarConfig)
           }
         } as Observer<SessionStatus>
 

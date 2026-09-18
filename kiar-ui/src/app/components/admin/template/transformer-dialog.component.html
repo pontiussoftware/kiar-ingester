@@ -1,8 +1,8 @@
-<h1 mat-dialog-title>Edit transformer</h1>
+<h1 mat-dialog-title>{{ 'admin.transformer.title' | translate }}</h1>
 <div mat-dialog-content>
   <form [formGroup]="formGroup">
     <mat-form-field appearance="fill" [style.width]="'50%'">
-      <mat-label i18n="@@LabelTransformer">Transformer</mat-label>
+      <mat-label>{{ 'admin.transformer.labels.transformer' | translate }}</mat-label>
       <mat-select formControlName="type">
         @for (type of this.transformerTypes(); track type) {
           <mat-option [value]="type">
@@ -12,16 +12,16 @@
       </mat-select>
     </mat-form-field>
 
-    <h2>Parameters
-      <button mat-mini-fab color="primary" (click)="addParameter()" i18n-matTooltip="@@TooltipAddParameter" matTooltip="Add a new parameter.">
+    <h2>{{ 'common.label.parameters' | translate }}
+      <button mat-mini-fab color="primary" (click)="addParameter()" [matTooltip]="'admin.transformer.tooltips.addParameter' | translate">
         <mat-icon>add</mat-icon>
       </button>
     </h2>
 
     <table [style.width]="'100%'">
       <thead>
-        <th i18n="@@LabelKey">Key</th>
-        <th i18n="@@LabelKey">Value</th>
+        <th>{{ 'common.label.key' | translate }}</th>
+        <th>{{ 'common.label.value' | translate }}</th>
         <th>&nbsp;</th>
       </thead>
       <tbody>
@@ -29,18 +29,18 @@
           <tr [formGroup]="p">
             <td [style.width]="'15%'">
               <mat-form-field appearance="fill" [style.width]="'100%'">
-                <mat-label>Key</mat-label>
+                <mat-label>{{ 'common.label.key' | translate }}</mat-label>
                 <input matInput type="text" formControlName="key">
               </mat-form-field>
             </td>
             <td [style.width]="'75%'">
               <mat-form-field appearance="fill" [style.width]="'100%'">
-                <mat-label>Value</mat-label>
+                <mat-label>{{ 'common.label.value' | translate }}</mat-label>
                 <input matInput type="text" formControlName="value">
               </mat-form-field>
             </td>
             <td [style.padding-bottom]="'25px'">
-              <button mat-icon-button (click)="removeParameter(i)" color="warn" i18n-matTooltip="@@TooltipRemoveParameter" matTooltip="Remove parameter."><mat-icon>delete</mat-icon></button>
+              <button mat-icon-button (click)="removeParameter(i)" color="warn" [matTooltip]="'admin.transformer.tooltips.removeParameter' | translate"><mat-icon>delete</mat-icon></button>
             </td>
           </tr>
         }
@@ -49,5 +49,5 @@
   </form>
 </div>
 <div mat-dialog-actions>
-  <button mat-button color="primary" (click)="close()">Close</button>
+  <button mat-button color="primary" (click)="close()">{{ 'common.action.close' | translate }}</button>
 </div>

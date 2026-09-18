@@ -1,4 +1,5 @@
 import {AfterViewInit, Component, inject} from "@angular/core";
+import {TranslatePipe, TranslateService} from "@ngx-translate/core";
 import {toSignal} from "@angular/core/rxjs-interop";
 import {
   AttributeMapping,
@@ -24,7 +25,7 @@ import {MatCheckbox} from "@angular/material/checkbox";
     selector: 'kiar-entity-mapping-admin',
     templateUrl: './entity-mapping.component.html',
     styleUrls: ['./entity-mapping.component.scss'],
-    imports: [FormsModule, ReactiveFormsModule, MatFormField, MatLabel, MatInput, MatSelect, MatOption, MatButton, MatTooltip, MatMiniFabButton, MatIcon, MatIconButton, MatCheckbox]
+    imports: [FormsModule, ReactiveFormsModule, MatFormField, MatLabel, MatInput, MatSelect, MatOption, MatButton, MatTooltip, MatMiniFabButton, MatIcon, MatIconButton, MatCheckbox, TranslatePipe]
 })
 export class EntityMappingComponent implements AfterViewInit {
   /** The {@link EntityMappingService} used to access entity mappings, parsers and mapping formats. */
@@ -41,6 +42,9 @@ export class EntityMappingComponent implements AfterViewInit {
 
   /** The {@link MatDialog} service used to open dialogs. */
   dialog = inject(MatDialog);
+
+  /** The {@link TranslateService} used to resolve user-facing messages. */
+  private translate = inject(TranslateService);
 
   /** {@link Observable} backing {@link mappingId}. */
   private readonly mappingId$ = this.route.paramMap.pipe(map(params => Number(params.get('id')!!)))
@@ -127,10 +131,10 @@ export class EntityMappingComponent implements AfterViewInit {
         mergeMap((id) => this.service.updateEntityMapping(id, this.formToEntityMapping(id)))
     ).subscribe({
       next: (m) => {
-        this.snackBar.open(`Successfully saved updated entity mapping.`, "Dismiss", { duration: 2000 } as MatSnackBarConfig);
+        this.snackBar.open(this.translate.instant('admin.entityMapping.messages.saved'), this.translate.instant('common.action.dismiss'), { duration: 2000 } as MatSnackBarConfig);
         this.updateForm(m)
       },
-      error: (err) => this.snackBar.open(`Error occurred while trying to update entity mapping: ${err?.error?.description}.`, "Dismiss", { duration: 2000 } as MatSnackBarConfig)
+      error: (err) => this.snackBar.open(this.translate.instant('admin.entityMapping.errors.save', {error: err?.error?.description}), this.translate.instant('common.action.dismiss'), { duration: 2000 } as MatSnackBarConfig)
     })
   }
 
@@ -138,15 +142,15 @@ export class EntityMappingComponent implements AfterViewInit {
    * Opens a {@link AttributeMappingDialogComponent} to add an existing  {@link AttributeMapping}.
    */
   public delete() {
-    if (confirm("Are you sure that you want to delete this entity mapping?\nAfter deletion, it can no longer be retrieved.")) {
+    if (confirm(this.translate.instant('admin.entityMapping.confirmDelete') + '\n' + this.translate.instant('common.confirmDeleteSuffix'))) {
       this.mappingId$.pipe(
           mergeMap((id) => this.service.deleteEntityMapping(id))
       ).subscribe({
         next: () => {
-          this.snackBar.open(`Successfully deleted entity mapping.`, "Dismiss", {duration: 2000} as MatSnackBarConfig);
+          this.snackBar.open(this.translate.instant('admin.entityMapping.messages.deleted'), this.translate.instant('common.action.dismiss'), {duration: 2000} as MatSnackBarConfig);
           this.router.navigate(['admin', 'dashboard']).then(() => {})
         },
-        error: (err) => this.snackBar.open(`Error occurred while trying to delete entity mapping: ${err?.error?.description}.`, "Dismiss", {duration: 2000} as MatSnackBarConfig)
+        error: (err) => this.snackBar.open(this.translate.instant('admin.entityMapping.errors.delete', {error: err?.error?.description}), this.translate.instant('common.action.dismiss'), {duration: 2000} as MatSnackBarConfig)
       })
     }
   }
@@ -158,7 +162,7 @@ export class EntityMappingComponent implements AfterViewInit {
     this.mappingId$.pipe(
         mergeMap(id => this.service.getEntityMapping(id)),
         catchError((err) => {
-          this.snackBar.open(`Error occurred while trying to load entity mapping: ${err?.error?.description}.`, "Dismiss", { duration: 2000 } as MatSnackBarConfig);
+          this.snackBar.open(this.translate.instant('admin.entityMapping.errors.load', {error: err?.error?.description}), this.translate.instant('common.action.dismiss'), { duration: 2000 } as MatSnackBarConfig);
           return of(null)
         })
     ).subscribe(m => this.updateForm(m))
@@ -171,7 +175,7 @@ export class EntityMappingComponent implements AfterViewInit {
     this.mappingId$.pipe(
         mergeMap(id => this.service.getEntityMapping(id)),
         catchError((err) => {
-          this.snackBar.open(`Error occurred while trying to load entity mapping: ${err?.error?.description}.`, "Dismiss", { duration: 2000 } as MatSnackBarConfig);
+          this.snackBar.open(this.translate.instant('admin.entityMapping.errors.load', {error: err?.error?.description}), this.translate.instant('common.action.dismiss'), { duration: 2000 } as MatSnackBarConfig);
           return of(null)
         })
     ).subscribe(data => {

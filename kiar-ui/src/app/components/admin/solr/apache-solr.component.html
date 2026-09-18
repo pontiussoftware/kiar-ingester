@@ -1,56 +1,56 @@
 <form [formGroup]="formControl">
 
-  <h1>Apache Solr Configuration (ID: {{this.solrId()}})</h1>
+  <h1>{{ 'admin.solr.title' | translate:{id: this.solrId()} }}</h1>
 
   <div id="main" [style.display]="'flex'">
     <mat-form-field appearance="fill" [style.width]="'15%'">
-      <mat-label i18n="@@LabelName">Name</mat-label>
+      <mat-label>{{ 'common.label.name' | translate }}</mat-label>
       <input matInput type="text" required formControlName="name">
     </mat-form-field>
 
     <mat-form-field appearance="fill" [style.width]="'15%'">
-      <mat-label i18n="@@LabelServer">Server</mat-label>
+      <mat-label>{{ 'common.label.server' | translate }}</mat-label>
       <input matInput type="url" formControlName="server">
     </mat-form-field>
 
     <mat-form-field appearance="fill" [style.width]="'15%'">
-      <mat-label i18n="@@LabelPublicServer">Public Server</mat-label>
+      <mat-label>{{ 'common.label.publicServer' | translate }}</mat-label>
       <input matInput type="url" formControlName="publicServer">
     </mat-form-field>
 
     <mat-form-field appearance="fill" [style.width]="'10%'">
-      <mat-label i18n="@@LabelUsername">Username</mat-label>
+      <mat-label>{{ 'common.label.username' | translate }}</mat-label>
       <input matInput type="text" formControlName="username">
     </mat-form-field>
 
     <mat-form-field appearance="fill" [style.width]="'10%'">
-      <mat-label  i18n="@@LabelPassword">Password</mat-label>
+      <mat-label>{{ 'common.label.password' | translate }}</mat-label>
       <input matInput type="password" formControlName="password">
     </mat-form-field>
 
     <div class="button-group" [style.margin-top]="'10px'">
-      <button mat-raised-button color="primary" i18n="@@ButtonSave" matTooltip="Saves all changes made to this Apache Solr configuration." (click)="save()">
-        Save
+      <button mat-raised-button color="primary" [matTooltip]="'admin.solr.tooltips.save' | translate" (click)="save()">
+        {{ 'common.action.save' | translate }}
       </button>
-      <button mat-raised-button i18n="@@ButtonReload" matTooltip="Reloads this Apache Solr configuration, reverting all unsaved changes."  (click)="refresh()">
-        Reload
+      <button mat-raised-button [matTooltip]="'admin.solr.tooltips.reload' | translate"  (click)="refresh()">
+        {{ 'common.action.reload' | translate }}
       </button>
-      <button mat-raised-button matTooltip="Downloads this Apache Solr configuration as JSON." (click)="download()">
-        Download
+      <button mat-raised-button [matTooltip]="'admin.solr.tooltips.download' | translate" (click)="download()">
+        {{ 'common.action.download' | translate }}
       </button>
-      <button mat-raised-button color="warn"  i18n="@@ButtonDelete" matTooltip="Deletes this Apache Solr configuration." (click)="delete()">
-        Delete
+      <button mat-raised-button color="warn"  [matTooltip]="'admin.solr.tooltips.delete' | translate" (click)="delete()">
+        {{ 'common.action.delete' | translate }}
       </button>
     </div>
   </div>
 
   <mat-form-field appearance="fill" [style.width]="'100%'">
-    <mat-label i18n="@@LabelDescription">Description</mat-label>
+    <mat-label>{{ 'common.label.description' | translate }}</mat-label>
     <textarea matInput type="textarea" formControlName="description"></textarea>
   </mat-form-field>
 
-  <h2>Image Deployments
-    <button mat-mini-fab color="primary" aria-label="Adds a new image deployment." (click)="addDeployment()">
+  <h2>{{ 'admin.solr.sections.imageDeployments' | translate }}
+    <button mat-mini-fab color="primary" [attr.aria-label]="'admin.solr.aria.addDeployment' | translate" (click)="addDeployment()">
       <mat-icon>add</mat-icon>
     </button>
   </h2>
@@ -59,28 +59,28 @@
     <thead>
       <tr>
         <th>&nbsp;</th>
-        <th>Name</th>
-        <th>Format</th>
-        <th>Source</th>
-        <th>Server</th>
-        <th>Path</th>
-        <th>Max. Size</th>
+        <th>{{ 'common.label.name' | translate }}</th>
+        <th>{{ 'common.label.format' | translate }}</th>
+        <th>{{ 'common.label.source' | translate }}</th>
+        <th>{{ 'common.label.server' | translate }}</th>
+        <th>{{ 'common.label.path' | translate }}</th>
+        <th>{{ 'admin.solr.columns.maxSize' | translate }}</th>
       </tr>
     </thead>
     @for (e of deployments; track e; let i = $index) {
       <tr [formGroupName]="i">
         <td [style.padding-bottom]="'25px'" [style.width]="'125px'">
-          <button mat-icon-button color="warn" (click)="removeDeployment(i)"  matTooltip="Remove deployment."><mat-icon>delete</mat-icon></button>
+          <button mat-icon-button color="warn" (click)="removeDeployment(i)"  [matTooltip]="'admin.solr.tooltips.removeDeployment' | translate"><mat-icon>delete</mat-icon></button>
         </td>
         <td>
           <mat-form-field appearance="fill" [style.width]="'100%'">
-            <mat-label i18n="@@LabelName">Name</mat-label>
+            <mat-label>{{ 'common.label.name' | translate }}</mat-label>
             <input matInput type="text" formControlName="name"/>
           </mat-form-field>
         </td>
         <td>
           <mat-form-field appearance="fill" [style.width]="'100%'">
-            <mat-label i18n="@@LabelFormat">Type</mat-label>
+            <mat-label>{{ 'common.label.type' | translate }}</mat-label>
             <mat-select formControlName="format">
               @for (format of this.imageFormats(); track format) {
                 <mat-option [value]="format">
@@ -92,25 +92,25 @@
         </td>
         <td>
           <mat-form-field appearance="fill" [style.width]="'100%'">
-            <mat-label i18n="@@LabelSource">Source</mat-label>
+            <mat-label>{{ 'common.label.source' | translate }}</mat-label>
             <input matInput type="text" formControlName="source"/>
           </mat-form-field>
         </td>
         <td>
           <mat-form-field appearance="fill" [style.width]="'100%'">
-            <mat-label i18n="@@LabelServer">Server</mat-label>
+            <mat-label>{{ 'common.label.server' | translate }}</mat-label>
             <input matInput type="text" formControlName="server"/>
           </mat-form-field>
         </td>
         <td>
           <mat-form-field appearance="fill" [style.width]="'100%'">
-            <mat-label i18n="@@LabelPath">Path</mat-label>
+            <mat-label>{{ 'common.label.path' | translate }}</mat-label>
             <input matInput type="text" formControlName="path"/>
           </mat-form-field>
         </td>
         <td>
           <mat-form-field appearance="fill" [style.width]="'100%'">
-            <mat-label i18n="@@LabelMaxSize">Max. Size</mat-label>
+            <mat-label>{{ 'admin.solr.columns.maxSize' | translate }}</mat-label>
             <input matInput type="number" formControlName="maxSize"/>
           </mat-form-field>
         </td>
@@ -120,8 +120,8 @@
 
   <hr/>
 
-  <h2>Collections
-    <button mat-mini-fab color="primary" aria-label="Adds a new collection." (click)="addCollection()">
+  <h2>{{ 'admin.solr.sections.collections' | translate }}
+    <button mat-mini-fab color="primary" [attr.aria-label]="'admin.solr.aria.addCollection' | translate" (click)="addCollection()">
       <mat-icon>add</mat-icon>
     </button>
   </h2>
@@ -129,35 +129,35 @@
     <thead>
       <tr>
         <th>&nbsp;</th>
-        <th>Display Name</th>
-        <th>Name</th>
-        <th>Type</th>
-        <th>Selector</th>
-        <th>OAI-PMH</th>
-        <th>SRU</th>
+        <th>{{ 'common.label.displayName' | translate }}</th>
+        <th>{{ 'common.label.name' | translate }}</th>
+        <th>{{ 'common.label.type' | translate }}</th>
+        <th>{{ 'admin.solr.columns.selector' | translate }}</th>
+        <th>{{ 'admin.solr.columns.oaiPmh' | translate }}</th>
+        <th>{{ 'admin.solr.columns.sru' | translate }}</th>
       </tr>
     </thead>
     @for (e of collections; track e; let i = $index) {
       <tr [formGroupName]="i">
         <td [style.padding-bottom]="'25px'" [style.width]="'125px'">
-          <button mat-icon-button (click)="viewCollection(i)" matTooltip="View collection (opens new window)."><mat-icon>visibility</mat-icon></button>
-          <button mat-icon-button color="warn" (click)="removeCollection(i)"  matTooltip="Remove collection."><mat-icon>delete</mat-icon></button>
+          <button mat-icon-button (click)="viewCollection(i)" [matTooltip]="'admin.solr.tooltips.viewCollection' | translate"><mat-icon>visibility</mat-icon></button>
+          <button mat-icon-button color="warn" (click)="removeCollection(i)"  [matTooltip]="'admin.solr.tooltips.removeCollection' | translate"><mat-icon>delete</mat-icon></button>
         </td>
         <td>
           <mat-form-field appearance="fill" [style.width]="'100%'">
-            <mat-label i18n="@@LabelName">Display Name</mat-label>
+            <mat-label>{{ 'common.label.displayName' | translate }}</mat-label>
             <input matInput type="text" formControlName="displayName"/>
           </mat-form-field>
         </td>
         <td>
           <mat-form-field appearance="fill" [style.width]="'100%'">
-            <mat-label i18n="@@LabelName">Name</mat-label>
+            <mat-label>{{ 'common.label.name' | translate }}</mat-label>
             <input matInput type="text" formControlName="name"/>
           </mat-form-field>
         </td>
         <td>
           <mat-form-field appearance="fill" [style.width]="'100%'">
-            <mat-label i18n="@@LabelType">Type</mat-label>
+            <mat-label>{{ 'common.label.type' | translate }}</mat-label>
             <select matNativeControl required formControlName="type">
               <option value="OBJECT">OBJECT</option>
               <option value="MUSEUM">MUSEUM</option>
@@ -168,7 +168,7 @@
         </td>
         <td>
           <mat-form-field appearance="fill" [style.width]="'100%'">
-            <mat-label i18n="@@LabelSelector">Selector</mat-label>
+            <mat-label>{{ 'admin.solr.columns.selector' | translate }}</mat-label>
             <input matInput type="text" formControlName="selector"/>
           </mat-form-field>
         </td>

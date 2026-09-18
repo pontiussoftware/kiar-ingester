@@ -1,4 +1,5 @@
 import {Component, inject} from "@angular/core";
+import {TranslatePipe} from "@ngx-translate/core";
 import {toSignal} from "@angular/core/rxjs-interop";
 import {FormControl, FormGroup, FormsModule, ReactiveFormsModule, Validators} from "@angular/forms";
 import {MatDialogActions, MatDialogContent, MatDialogRef, MatDialogTitle} from "@angular/material/dialog";
@@ -11,7 +12,7 @@ import {MatButton} from "@angular/material/button";
 @Component({
     selector: 'kiar-add-job-template-dialog',
     templateUrl: './add-job-template.dialog.component.html',
-    imports: [MatDialogTitle, MatDialogContent, FormsModule, ReactiveFormsModule, MatFormField, MatLabel, MatInput, MatSelect, MatOption, MatCheckbox, MatDialogActions, MatButton]
+    imports: [MatDialogTitle, MatDialogContent, FormsModule, ReactiveFormsModule, MatFormField, MatLabel, MatInput, MatSelect, MatOption, MatCheckbox, MatDialogActions, MatButton, TranslatePipe]
 })
 export class AddJobTemplateDialogComponent {
   /** The {@link ConfigService} used to access application configuration (templates, mappings, Solr configurations, participants). */

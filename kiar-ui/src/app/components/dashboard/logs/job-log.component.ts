@@ -1,4 +1,5 @@
 import {AfterViewInit, Component, inject, OnInit, viewChild} from "@angular/core";
+import {TranslatePipe} from "@ngx-translate/core";
 import {toSignal} from "@angular/core/rxjs-interop";
 import {JobService} from "../../../../../openapi";
 import {JobLogDatasource} from "./job-log-datasource";
@@ -27,7 +28,7 @@ import {
 @Component({
     selector: 'kiar-job-log',
     templateUrl: 'job-log.component.html',
-    imports: [MatMiniFabButton, MatTooltip, RouterLink, MatIcon, MatButtonToggleGroup, FormsModule, MatButtonToggle, MatTable, MatColumnDef, MatHeaderCellDef, MatHeaderCell, MatCellDef, MatCell, MatHeaderRowDef, MatHeaderRow, MatRowDef, MatRow, MatNoDataRow, MatPaginator]
+    imports: [MatMiniFabButton, MatTooltip, RouterLink, MatIcon, MatButtonToggleGroup, FormsModule, MatButtonToggle, MatTable, MatColumnDef, MatHeaderCellDef, MatHeaderCell, MatCellDef, MatCell, MatHeaderRowDef, MatHeaderRow, MatRowDef, MatRow, MatNoDataRow, MatPaginator, TranslatePipe]
 })
 export class JobLogComponent implements AfterViewInit, OnInit {
   /** The {@link JobService} used to access and manage jobs. */

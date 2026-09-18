@@ -1,4 +1,5 @@
 import {AfterViewInit, Component, inject} from "@angular/core";
+import {TranslatePipe, TranslateService} from "@ngx-translate/core";
 import {toSignal} from "@angular/core/rxjs-interop";
 import {catchError, map, mergeMap, Observable, of} from "rxjs";
 import {
@@ -23,7 +24,7 @@ import {MatCheckbox} from "@angular/material/checkbox";
     selector: 'kiar-apache-solr-admin',
     templateUrl: './apache-solr.component.html',
     styleUrls: ['./apache-solr.component.scss'],
-    imports: [FormsModule, ReactiveFormsModule, MatFormField, MatLabel, MatInput, MatButton, MatTooltip, MatMiniFabButton, MatIcon, MatIconButton, MatSelect, MatOption, MatCheckbox]
+    imports: [FormsModule, ReactiveFormsModule, MatFormField, MatLabel, MatInput, MatButton, MatTooltip, MatMiniFabButton, MatIcon, MatIconButton, MatSelect, MatOption, MatCheckbox, TranslatePipe]
 })
 export class ApacheSolrComponent implements AfterViewInit{
   /** The {@link ApacheSolrService} used to load and edit Apache Solr configurations. */
@@ -37,6 +38,9 @@ export class ApacheSolrComponent implements AfterViewInit{
 
   /** The {@link MatSnackBar} used to display notifications. */
   private snackBar = inject(MatSnackBar);
+
+  /** The {@link TranslateService} used to resolve user-facing messages. */
+  private translate = inject(TranslateService);
 
   /** {@link Observable} backing {@link solrId}. */
   private readonly solrId$ = this.route.paramMap.pipe(map(params => Number(params.get('id')!!)))
@@ -79,7 +83,7 @@ export class ApacheSolrComponent implements AfterViewInit{
         mergeMap(id => this.service.getSolrConfig(id)),
     ).subscribe({
       next: (c) => this.updateForm(c),
-      error: (err) => this.snackBar.open(`Error occurred while trying to Apache Solr configuration: ${err?.error?.description}.`, "Dismiss", {duration: 2000} as MatSnackBarConfig)
+      error: (err) => this.snackBar.open(this.translate.instant('admin.solr.messages.loadError', {error: err?.error?.description}), this.translate.instant('common.action.dismiss'), {duration: 2000} as MatSnackBarConfig)
     })
   }
 
@@ -91,10 +95,10 @@ export class ApacheSolrComponent implements AfterViewInit{
         mergeMap((id) => this.service.updateSolrConfig(id, this.formToApacheSolrConfig(id)))
     ).subscribe({
       next: (c) => {
-        this.snackBar.open(`Successfully updated  Apache Solr configuration.`, "Dismiss", { duration: 2000 } as MatSnackBarConfig)
+        this.snackBar.open(this.translate.instant('admin.solr.messages.updated'), this.translate.instant('common.action.dismiss'), { duration: 2000 } as MatSnackBarConfig)
         this.updateForm(c)
       },
-      error: (err) => this.snackBar.open(`Error occurred while trying to update entity mapping: ${err?.error?.description}.`, "Dismiss", { duration: 2000 } as MatSnackBarConfig)
+      error: (err) => this.snackBar.open(this.translate.instant('admin.solr.messages.updateError', {error: err?.error?.description}), this.translate.instant('common.action.dismiss'), { duration: 2000 } as MatSnackBarConfig)
     })
   }
 
@@ -102,15 +106,15 @@ export class ApacheSolrComponent implements AfterViewInit{
    * Deletes this {@link ApacheSolrConfig}.
    */
   public delete() {
-    if (confirm("Are you sure that you want to delete this Apache Solr configuration?\nAfter deletion, it can no longer be retrieved.")) {
+    if (confirm(this.translate.instant('admin.solr.confirmDelete') + '\n' + this.translate.instant('common.confirmDeleteSuffix'))) {
       this.solrId$.pipe(
           mergeMap((id) =>  this.service.deleteSolrConfig(id))
       ).subscribe({
         next: () => {
-          this.snackBar.open(`Successfully deleted Apache Solr configuration.`, "Dismiss", { duration: 2000 } as MatSnackBarConfig);
+          this.snackBar.open(this.translate.instant('admin.solr.messages.deleted'), this.translate.instant('common.action.dismiss'), { duration: 2000 } as MatSnackBarConfig);
           this.router.navigate(['admin', 'dashboard']).then(() => {})
         },
-        error: (err) => this.snackBar.open(`Error occurred while trying to delete Apache Solr configuration: ${err?.error?.description}.`, "Dismiss", { duration: 2000 } as MatSnackBarConfig)
+        error: (err) => this.snackBar.open(this.translate.instant('admin.solr.messages.deleteError', {error: err?.error?.description}), this.translate.instant('common.action.dismiss'), { duration: 2000 } as MatSnackBarConfig)
       })
     }
   }
@@ -122,7 +126,7 @@ export class ApacheSolrComponent implements AfterViewInit{
     this.solrId$.pipe(
         mergeMap(id => this.service.getSolrConfig(id)),
         catchError((err) => {
-          this.snackBar.open(`Error occurred while trying to load Apache Solr configuration: ${err?.error?.description}.`, "Dismiss", { duration: 2000 } as MatSnackBarConfig);
+          this.snackBar.open(this.translate.instant('admin.solr.messages.loadError', {error: err?.error?.description}), this.translate.instant('common.action.dismiss'), { duration: 2000 } as MatSnackBarConfig);
           return of(null)
         })
     ).subscribe(data => {

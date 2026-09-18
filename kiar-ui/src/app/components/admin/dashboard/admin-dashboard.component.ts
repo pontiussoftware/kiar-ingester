@@ -1,4 +1,5 @@
 import {AfterViewInit, Component, inject} from "@angular/core";
+import {TranslatePipe, TranslateService} from "@ngx-translate/core";
 import {toSignal} from "@angular/core/rxjs-interop";
 import {ApacheSolrConfig, ConfigService, EntityMapping, JobTemplate} from "../../../../../openapi";
 import {mergeMap, Observer, Subject} from "rxjs";
@@ -19,7 +20,7 @@ import {RouterLink} from "@angular/router";
     selector: 'kiar-admin-dashboard',
     templateUrl: './admin-dashboard.component.html',
     styleUrls: ['./admin-dashboard.component.scss'],
-    imports: [MatCard, MatCardHeader, MatCardTitle, MatMiniFabButton, MatTooltip, MatIcon, MatCardContent, MatList, MatListItem, RouterLink, MatListItemTitle, MatListItemLine]
+    imports: [MatCard, MatCardHeader, MatCardTitle, MatMiniFabButton, MatTooltip, MatIcon, MatCardContent, MatList, MatListItem, RouterLink, MatListItemTitle, MatListItemLine, TranslatePipe]
 })
 export class AdminDashboardComponent implements AfterViewInit {
   /** The {@link ConfigService} used to access application configuration (templates, mappings, Solr configurations, participants). */
@@ -30,6 +31,9 @@ export class AdminDashboardComponent implements AfterViewInit {
 
   /** The {@link MatSnackBar} used to display notifications. */
   private _snackBar = inject(MatSnackBar);
+
+  /** The {@link TranslateService} used to resolve user-facing messages. */
+  private translate = inject(TranslateService);
 
   /** A {@link Subject} that can be used to trigger a data reload. */
   private reload = new Subject<void>()
@@ -61,10 +65,10 @@ export class AdminDashboardComponent implements AfterViewInit {
       if (config != null) {
         this.config.postCreateJobTemplate(config).subscribe({
           next: value => {
-            this._snackBar.open(`Successfully created job template.`, "Dismiss", { duration: 2000 } as MatSnackBarConfig);
+            this._snackBar.open(this.translate.instant('admin.dashboard.messages.jobTemplateCreated'), this.translate.instant('common.action.dismiss'), { duration: 2000 } as MatSnackBarConfig);
             this.reload.next()
           },
-          error: err => this._snackBar.open(`Error occurred while trying to create job template: ${err?.error?.description}.`, "Dismiss", { duration: 2000 } as MatSnackBarConfig),
+          error: err => this._snackBar.open(this.translate.instant('admin.dashboard.messages.jobTemplateCreateError', {error: err?.error?.description}), this.translate.instant('common.action.dismiss'), { duration: 2000 } as MatSnackBarConfig),
           complete: () => {}
         } as Observer<JobTemplate>)
       }
@@ -79,10 +83,10 @@ export class AdminDashboardComponent implements AfterViewInit {
       if (config != null) {
         this.config.postCreateEntityMapping(config).subscribe({
           next: value => {
-            this._snackBar.open(`Successfully created entity mapping.`, "Dismiss", { duration: 2000 } as MatSnackBarConfig);
+            this._snackBar.open(this.translate.instant('admin.dashboard.messages.entityMappingCreated'), this.translate.instant('common.action.dismiss'), { duration: 2000 } as MatSnackBarConfig);
             this.reload.next()
           },
-          error: err => this._snackBar.open(`Error occurred while trying to create entity mapping: ${err?.error?.description}.`, "Dismiss", { duration: 2000 } as MatSnackBarConfig),
+          error: err => this._snackBar.open(this.translate.instant('admin.dashboard.messages.entityMappingCreateError', {error: err?.error?.description}), this.translate.instant('common.action.dismiss'), { duration: 2000 } as MatSnackBarConfig),
           complete: () => {}
         } as Observer<EntityMapping>)
       }
@@ -97,10 +101,10 @@ export class AdminDashboardComponent implements AfterViewInit {
       if (config != null) {
         this.config.postCreateSolrConfig(config).subscribe({
           next: value => {
-            this._snackBar.open(`Successfully created Apache Solr configuration.`, "Dismiss", { duration: 2000 } as MatSnackBarConfig);
+            this._snackBar.open(this.translate.instant('admin.dashboard.messages.solrConfigCreated'), this.translate.instant('common.action.dismiss'), { duration: 2000 } as MatSnackBarConfig);
             this.reload.next()
           },
-          error: err => this._snackBar.open(`Error occurred while trying to create Apache Solr config: ${err?.error?.description}.`, "Dismiss", { duration: 2000 } as MatSnackBarConfig),
+          error: err => this._snackBar.open(this.translate.instant('admin.dashboard.messages.solrConfigCreateError', {error: err?.error?.description}), this.translate.instant('common.action.dismiss'), { duration: 2000 } as MatSnackBarConfig),
           complete: () => {}
         } as Observer<ApacheSolrConfig>)
       }
@@ -115,10 +119,10 @@ export class AdminDashboardComponent implements AfterViewInit {
       if (participant != null) {
         this.config.postCreateParticipant(participant).subscribe({
           next: value => {
-            this._snackBar.open(`Successfully created participant.`, "Dismiss", { duration: 2000 } as MatSnackBarConfig);
+            this._snackBar.open(this.translate.instant('admin.dashboard.messages.participantCreated'), this.translate.instant('common.action.dismiss'), { duration: 2000 } as MatSnackBarConfig);
             this.reload.next()
           },
-          error: err => this._snackBar.open(`Error occurred while trying to create participant: ${err?.error?.description}.`, "Dismiss", { duration: 2000 } as MatSnackBarConfig),
+          error: err => this._snackBar.open(this.translate.instant('admin.dashboard.messages.participantCreateError', {error: err?.error?.description}), this.translate.instant('common.action.dismiss'), { duration: 2000 } as MatSnackBarConfig),
           complete: () => {}
         })
       }

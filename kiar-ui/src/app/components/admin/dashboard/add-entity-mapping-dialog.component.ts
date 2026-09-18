@@ -1,4 +1,5 @@
 import {Component, inject} from "@angular/core";
+import {TranslatePipe} from "@ngx-translate/core";
 import {toSignal} from "@angular/core/rxjs-interop";
 import {FormControl, FormGroup, FormsModule, ReactiveFormsModule, Validators} from "@angular/forms";
 import {MatDialogActions, MatDialogContent, MatDialogRef, MatDialogTitle} from "@angular/material/dialog";
@@ -10,7 +11,7 @@ import {MatButton} from "@angular/material/button";
 @Component({
     selector: 'kiar-add-entity-mapping-dialog',
     templateUrl: './add-entity-mapping-dialog.component.html',
-  imports: [MatDialogTitle, MatDialogContent, FormsModule, ReactiveFormsModule, MatFormField, MatLabel, MatInput, MatSelect, MatOption, MatDialogActions, MatButton]
+  imports: [MatDialogTitle, MatDialogContent, FormsModule, ReactiveFormsModule, MatFormField, MatLabel, MatInput, MatSelect, MatOption, MatDialogActions, MatButton, TranslatePipe]
 })
 export class AddEntityMappingDialogComponent {
   /** The {@link MatDialogRef} used to interact with and close this dialog. */

@@ -1,4 +1,5 @@
 import {AfterViewInit, Component, inject, viewChild} from "@angular/core";
+import {TranslatePipe, TranslateService} from "@ngx-translate/core";
 import {ConfigService, User, UserService} from "../../../../openapi";
 import {tap} from "rxjs";
 import {MatPaginator} from "@angular/material/paginator";
@@ -27,7 +28,7 @@ import {
     selector: 'kiar-user-list',
     templateUrl: './user-list.component.html',
     styleUrls: ['./user-list.component.scss'],
-    imports: [MatMiniFabButton, MatTooltip, MatIcon, MatTable, MatSort, MatColumnDef, MatHeaderCellDef, MatHeaderCell, MatSortHeader, MatCellDef, MatCell, MatIconButton, MatHeaderRowDef, MatHeaderRow, MatRowDef, MatRow, MatPaginator]
+    imports: [MatMiniFabButton, MatTooltip, MatIcon, MatTable, MatSort, MatColumnDef, MatHeaderCellDef, MatHeaderCell, MatSortHeader, MatCellDef, MatCell, MatIconButton, MatHeaderRowDef, MatHeaderRow, MatRowDef, MatRow, MatPaginator, TranslatePipe]
 })
 export class UserListComponent implements AfterViewInit  {
   /** The {@link UserService} used to access user data. */
@@ -41,6 +42,9 @@ export class UserListComponent implements AfterViewInit  {
 
   /** The {@link MatSnackBar} used to display notifications. */
   private snackBar = inject(MatSnackBar);
+
+  /** The {@link TranslateService} used to resolve user-facing messages. */
+  private translate = inject(TranslateService);
 
   /** {@link Observable} of all available participants. */
   public readonly dataSource: UserDataSource
@@ -77,10 +81,10 @@ export class UserListComponent implements AfterViewInit  {
       if (user != null) {
         this.user.postCreateUser(user).subscribe({
           next: (value) => {
-            this.snackBar.open(value.description, "Dismiss", { duration: 2000 } as MatSnackBarConfig);
+            this.snackBar.open(value.description, this.translate.instant('common.action.dismiss'), { duration: 2000 } as MatSnackBarConfig);
             this.dataSource.load(this.paginator().pageIndex, this.paginator().pageSize, this.sort().active, this.sort().direction);
           },
-          error: (err) => this.snackBar.open(`Error occurred while trying to create user: ${err?.error?.description}.`, "Dismiss", { duration: 2000 } as MatSnackBarConfig),
+          error: (err) => this.snackBar.open(this.translate.instant('user.list.messages.createFailed', {error: err?.error?.description}), this.translate.instant('common.action.dismiss'), { duration: 2000 } as MatSnackBarConfig),
         })
       }
     })
@@ -94,10 +98,10 @@ export class UserListComponent implements AfterViewInit  {
       if (ret != null) {
         this.user.putUpdateUser(ret.id!!, ret).subscribe({
           next: (value) => {
-            this.snackBar.open(value.description, "Dismiss", { duration: 2000 } as MatSnackBarConfig);
+            this.snackBar.open(value.description, this.translate.instant('common.action.dismiss'), { duration: 2000 } as MatSnackBarConfig);
             this.dataSource.load(this.paginator().pageIndex, this.paginator().pageSize, this.sort().active, this.sort().direction);
           },
-          error: (err) => this.snackBar.open(`Error occurred while trying to update user: ${err?.error?.description}.`, "Dismiss", { duration: 2000 } as MatSnackBarConfig),
+          error: (err) => this.snackBar.open(this.translate.instant('user.list.messages.updateFailed', {error: err?.error?.description}), this.translate.instant('common.action.dismiss'), { duration: 2000 } as MatSnackBarConfig),
         })
       }
     })
@@ -107,13 +111,13 @@ export class UserListComponent implements AfterViewInit  {
    * Opens a dialog to add a new {@link User} to the collection and persists it through the API upon saving.
    */
   public delete(user: User) {
-    if (confirm(`Are you sure that you want to delete user '${user.id}'?\nAfter deletion, it can no longer be retrieved.`)) {
+    if (confirm(this.translate.instant('user.list.confirmDelete', {id: user.id}) + '\n' + this.translate.instant('common.confirmDeleteSuffix'))) {
       this.user.deleteUser(user.id!!).subscribe({
         next: (value) => {
-          this.snackBar.open(value.description, "Dismiss", { duration: 2000 } as MatSnackBarConfig);
+          this.snackBar.open(value.description, this.translate.instant('common.action.dismiss'), { duration: 2000 } as MatSnackBarConfig);
           this.dataSource.load(this.paginator().pageIndex, this.paginator().pageSize, this.sort().active, this.sort().direction);
         },
-        error: (err) => this.snackBar.open(`Error occurred while trying to delete user '${user.username}': ${err?.error?.description}.`, "Dismiss", { duration: 2000 } as MatSnackBarConfig),
+        error: (err) => this.snackBar.open(this.translate.instant('user.list.messages.deleteFailed', {username: user.username, error: err?.error?.description}), this.translate.instant('common.action.dismiss'), { duration: 2000 } as MatSnackBarConfig),
       })
     }
   }

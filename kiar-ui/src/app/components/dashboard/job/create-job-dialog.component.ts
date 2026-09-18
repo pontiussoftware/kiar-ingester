@@ -1,4 +1,5 @@
 import {Component, inject} from "@angular/core";
+import {TranslatePipe, TranslateService} from "@ngx-translate/core";
 import {toSignal} from "@angular/core/rxjs-interop";
 import {FormControl, FormGroup, FormsModule, ReactiveFormsModule} from "@angular/forms";
 import {CreateJobRequest, Job, JobService, JobTemplate} from "../../../../../openapi";
@@ -12,7 +13,7 @@ import {MatButton} from "@angular/material/button";
 @Component({
     selector: 'create-job-dialog',
     templateUrl: 'create-job-dialog.component.html',
-  imports: [MatDialogTitle, MatDialogContent, FormsModule, ReactiveFormsModule, MatFormField, MatLabel, MatInput, MatSelect, MatOption, MatDialogActions, MatButton]
+  imports: [MatDialogTitle, MatDialogContent, FormsModule, ReactiveFormsModule, MatFormField, MatLabel, MatInput, MatSelect, MatOption, MatDialogActions, MatButton, TranslatePipe]
 })
 export class CreateJobDialogComponent {
   /** The {@link JobService} used to access and manage jobs. */
@@ -23,6 +24,9 @@ export class CreateJobDialogComponent {
 
   /** The {@link MatDialogRef} used to interact with and close this dialog. */
   private dialogRef = inject<MatDialogRef<CreateJobDialogComponent>>(MatDialogRef);
+
+  /** The {@link TranslateService} used to resolve user-facing messages. */
+  private translate = inject(TranslateService);
 
   /** The {@link FormControl} that backs this {@link AddJobTemplateDialogComponent}. */
   public formControl: FormGroup =  new FormGroup({
@@ -48,11 +52,11 @@ export class CreateJobDialogComponent {
       /* Prepare observer. */
       const observer = {
         next: (job) => {
-          this.snackBar.open(`Successfully created job ${job.id}.`, "Dismiss", { duration: 2000 } as MatSnackBarConfig)
+          this.snackBar.open(this.translate.instant('createJob.messages.created', {id: job.id}), this.translate.instant('common.action.dismiss'), { duration: 2000 } as MatSnackBarConfig)
           this.dialogRef.close()
         },
         error: (err) => {
-          this.snackBar.open(`Error occurred while creating job: ${err?.error?.description}.`, "Dismiss", { duration: 2000 } as MatSnackBarConfig)
+          this.snackBar.open(this.translate.instant('createJob.messages.createError', {error: err?.error?.description}), this.translate.instant('common.action.dismiss'), { duration: 2000 } as MatSnackBarConfig)
         }
       } as Observer<Job>
 

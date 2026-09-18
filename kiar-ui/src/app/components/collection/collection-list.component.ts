@@ -1,4 +1,5 @@
 import {AfterViewInit, Component, ElementRef, inject, viewChild} from "@angular/core";
+import {TranslatePipe, TranslateService} from "@ngx-translate/core";
 import {toSignal} from "@angular/core/rxjs-interop";
 import {
   ApacheSolrCollection,
@@ -37,7 +38,7 @@ import {CollectionImageComponent} from "./collection-image.component";
     selector: 'kiar-collection-list',
     templateUrl: './collection-list.component.html',
     styleUrls: ['./collection-list.component.scss'],
-    imports: [MatMiniFabButton, MatTooltip, MatIcon, MatMenuTrigger, MatMenu, MatMenuItem, MatFormField, MatLabel, MatInput, MatTable, MatSort, MatColumnDef, MatHeaderCellDef, MatHeaderCell, MatCellDef, MatCell, CollectionImageComponent, MatSortHeader, MatIconButton, MatHeaderRowDef, MatHeaderRow, MatRowDef, MatRow, MatPaginator]
+    imports: [MatMiniFabButton, MatTooltip, MatIcon, MatMenuTrigger, MatMenu, MatMenuItem, MatFormField, MatLabel, MatInput, MatTable, MatSort, MatColumnDef, MatHeaderCellDef, MatHeaderCell, MatCellDef, MatCell, CollectionImageComponent, MatSortHeader, MatIconButton, MatHeaderRowDef, MatHeaderRow, MatRowDef, MatRow, MatPaginator, TranslatePipe]
 })
 export class CollectionListComponent implements AfterViewInit  {
   /** The {@link CollectionService} used to access collection data. */
@@ -51,6 +52,9 @@ export class CollectionListComponent implements AfterViewInit  {
 
   /** The {@link MatSnackBar} used to display notifications. */
   private snackBar = inject(MatSnackBar);
+
+  /** The {@link TranslateService} used to resolve user-facing messages. */
+  private translate = inject(TranslateService);
 
   /** {@link Observable} of all available participants. */
   public readonly dataSource: CollectionDatasource
@@ -107,13 +111,13 @@ export class CollectionListComponent implements AfterViewInit  {
    * Deletes the given {@link ObjectCollection} from the backend.
    */
   public delete(collection: ObjectCollection) {
-    if (confirm(`Are you sure that you want to delete institution '${collection.id}'?\nAfter deletion, it can no longer be retrieved.`)) {
+    if (confirm(this.translate.instant('collection.list.confirmDelete', {id: collection.id}) + '\n' + this.translate.instant('common.confirmDeleteSuffix'))) {
       this.collectionService.deleteCollection(collection.id!!).subscribe({
         next: (value) => {
-          this.snackBar.open(value.description, "Dismiss", { duration: 2000 } as MatSnackBarConfig);
+          this.snackBar.open(value.description, this.translate.instant('common.action.dismiss'), { duration: 2000 } as MatSnackBarConfig);
           this.dataSource.load(this.paginator().pageIndex, this.paginator().pageSize, this.filterField().nativeElement.value);
         },
-        error: (err) => this.snackBar.open(`Error occurred while trying to delete institution '${collection.name}': ${err?.error?.description}.`, "Dismiss", { duration: 2000 } as MatSnackBarConfig),
+        error: (err) => this.snackBar.open(this.translate.instant('collection.list.messages.deleteError', {name: collection.name, error: err?.error?.description}), this.translate.instant('common.action.dismiss'), { duration: 2000 } as MatSnackBarConfig),
       })
     }
   }
@@ -133,8 +137,8 @@ export class CollectionListComponent implements AfterViewInit  {
   public synchronize(collection: ApacheSolrCollection) {
     if (!collection.id) return;
     this.collectionService.postSynchronizeCollections(collection.id).subscribe({
-      next: (value) =>  this.snackBar.open(`Successfully synchronised collections with Apache Solr backend (${collection.name}).`, "Dismiss", { duration: 2000 } as MatSnackBarConfig),
-      error: (err) => this.snackBar.open(`Error occurred while synchronising collections with Apache Solr backend (${collection.name}): ${err?.error?.description}.`, "Dismiss", { duration: 2000 } as MatSnackBarConfig),
+      next: (value) =>  this.snackBar.open(this.translate.instant('collection.list.messages.synchronized', {name: collection.name}), this.translate.instant('common.action.dismiss'), { duration: 2000 } as MatSnackBarConfig),
+      error: (err) => this.snackBar.open(this.translate.instant('collection.list.messages.synchronizeError', {name: collection.name, error: err?.error?.description}), this.translate.instant('common.action.dismiss'), { duration: 2000 } as MatSnackBarConfig),
     })
   }
 }

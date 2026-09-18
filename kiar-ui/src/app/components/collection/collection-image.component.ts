@@ -1,4 +1,5 @@
 import {Component, computed, inject, input, linkedSignal, signal} from "@angular/core";
+import {TranslatePipe} from "@ngx-translate/core";
 import {toObservable, toSignal} from "@angular/core/rxjs-interop";
 import {CollectionService} from "../../../../openapi";
 import {catchError, map, of, switchMap} from "rxjs";
@@ -8,7 +9,7 @@ import {MatIcon} from "@angular/material/icon";
     selector: 'kiar-collection-image',
     templateUrl: 'collection-image.component.html',
     styleUrls: ['collection-image.component.scss'],
-    imports: [MatIcon]
+    imports: [MatIcon, TranslatePipe]
 })
 export class CollectionImageComponent {
   /** The {@link CollectionService} used to access collection data. */

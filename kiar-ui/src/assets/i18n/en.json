@@ -1,0 +1,470 @@
+{
+  "languages": {
+    "en": "English",
+    "de": "Deutsch"
+  },
+  "common": {
+    "label": {
+      "id": "ID",
+      "name": "Name",
+      "displayName": "Display Name",
+      "description": "Description",
+      "email": "Email",
+      "username": "Username",
+      "password": "Password",
+      "passwordRepeat": "Repeat Password",
+      "role": "Role",
+      "institution": "Institution",
+      "participant": "Participant",
+      "type": "Type",
+      "key": "Key",
+      "value": "Value",
+      "source": "Source",
+      "destination": "Destination",
+      "parser": "Parser",
+      "publish": "Publish",
+      "active": "Active",
+      "status": "Status",
+      "street": "Street",
+      "zip": "ZIP",
+      "city": "City",
+      "canton": "Canton",
+      "server": "Server",
+      "template": "Template",
+      "collection": "Collection",
+      "createdAt": "Created At",
+      "changedAt": "Changed At",
+      "createdBy": "Created By",
+      "action": "Action",
+      "filter": "Filter",
+      "image": "Image",
+      "publicServer": "Public Server",
+      "format": "Format",
+      "path": "Path",
+      "parameters": "Parameters",
+      "required": "Required",
+      "multiValued": "Multi-Valued",
+      "homepage": "Homepage",
+      "longitude": "Longitude",
+      "latitude": "Latitude",
+      "contact": "Contact"
+    },
+    "action": {
+      "save": "Save",
+      "close": "Close",
+      "delete": "Delete",
+      "dismiss": "Dismiss",
+      "reload": "Reload",
+      "login": "Login",
+      "download": "Download",
+      "create": "Create",
+      "uploadImage": "Upload Image",
+      "update": "Update"
+    },
+    "noData": "No data",
+    "confirmDeleteSuffix": "After deletion, it can no longer be retrieved."
+  },
+  "toolbar": {
+    "dashboard": "Go to job dashboard.",
+    "admin": "Go to administrator dashboard.",
+    "institutions": "Go to institution management.",
+    "collections": "Go to collection management.",
+    "users": "Go to user management.",
+    "language": "Change language.",
+    "profile": "Manage user profile",
+    "logout": "Logout"
+  },
+  "footer": {
+    "title": "KIM.ch Data Ingest Dashboard (Beta)"
+  },
+  "paginator": {
+    "itemsPerPage": "Items per page:",
+    "nextPage": "Next page",
+    "previousPage": "Previous page",
+    "firstPage": "First page",
+    "lastPage": "Last page",
+    "range": "{{start}} – {{end}} of {{length}}",
+    "rangeEmpty": "0 of {{length}}"
+  },
+  "login": {
+    "messages": {
+      "success": "Login successful!",
+      "failed": "Login failed: {{error}}!",
+      "connectionError": "Login failed due to a connection issue!"
+    }
+  },
+  "forbidden": {
+    "title": "Access denied",
+    "message": "You are not allowed to view this page. Check with the administrator if you believe this to be a mistake."
+  },
+  "profile": {
+    "title": "User profile",
+    "placeholders": {
+      "passwordMinLength": "Minimum of 8 characters"
+    },
+    "errors": {
+      "invalidEmail": "Not a valid e-mail address.",
+      "passwordTooShort": "Password must have at least 8 characters.",
+      "passwordMismatch": "Passwords do not match."
+    },
+    "messages": {
+      "updated": "User profile updated successfully.",
+      "updateFailed": "Error occurred while trying to update user profile: {{error}}."
+    }
+  },
+  "dashboard": {
+    "title": "Data Ingest Jobs",
+    "tabs": {
+      "running": "Running",
+      "history": "History"
+    },
+    "columns": {
+      "statistics": "Statistics"
+    },
+    "tooltips": {
+      "addJob": "Add a new job.",
+      "viewLog": "View log.",
+      "uploadKiar": "Upload KIAR file.",
+      "scheduleIngest": "Schedule for data ingest.",
+      "scheduleTestRun": "Schedule for test run.",
+      "abortJob": "Abort job.",
+      "purgeLog": "Purge log."
+    },
+    "messages": {
+      "uploadError": "Error while uploading {{type}} file for job {{id}}.",
+      "uploadSuccess": "{{type}} uploaded successfully. Ready for harvesting!",
+      "jobScheduled": "Successfully scheduled job {{id}}.",
+      "jobScheduleError": "Error occurred while scheduling job {{id}}: {{error}}.",
+      "jobAborted": "Successfully aborted job {{id}}.",
+      "jobAbortError": "Error occurred while aborting job {{id}}: {{error}}.",
+      "logPurged": "Successfully purged job {{id}} log.",
+      "logPurgeError": "Error occurred while purging job {{id}} log: {{error}}."
+    }
+  },
+  "createJob": {
+    "title": "Create Job",
+    "placeholder": {
+      "name": "Job name (not required)"
+    },
+    "messages": {
+      "created": "Successfully created job {{id}}.",
+      "createError": "Error occurred while creating job: {{error}}."
+    }
+  },
+  "jobLog": {
+    "title": "Job Log (ID: {{id}})",
+    "tooltips": {
+      "back": "Return to list of jobs."
+    },
+    "filters": {
+      "all": "All",
+      "levelAriaLabel": "Filter by level",
+      "contextAriaLabel": "Filter by context"
+    },
+    "level": {
+      "warning": "Warning",
+      "validation": "Validation",
+      "error": "Error",
+      "severe": "Severe"
+    },
+    "context": {
+      "metadata": "Metadata",
+      "resource": "Resource",
+      "system": "System"
+    },
+    "columns": {
+      "documentId": "Document ID",
+      "level": "Level",
+      "context": "Context"
+    }
+  },
+  "institution": {
+    "list": {
+      "title": "Institutions",
+      "tooltips": {
+        "add": "Add a new institution.",
+        "synchronize": "Synchronize with Apache Solr.",
+        "edit": "Edit institution {{id}}.",
+        "delete": "Delete institution {{id}}."
+      },
+      "sort": {
+        "name": "Sort by name.",
+        "zip": "Sort by ZIP.",
+        "canton": "Sort by canton."
+      },
+      "confirmDelete": "Are you sure that you want to delete institution '{{id}}'?",
+      "messages": {
+        "deleteError": "Error occurred while trying to delete institution '{{name}}': {{error}}.",
+        "synchronized": "Successfully synchronised institutions with Apache Solr backend ({{name}}).",
+        "synchronizeError": "Error occurred while synchronising institutions with Apache Solr backend ({{name}}): {{error}}."
+      }
+    },
+    "dialog": {
+      "title": {
+        "create": "Create Institution",
+        "edit": "Edit Institution"
+      },
+      "tabs": {
+        "publicationDefaults": "Publication Defaults",
+        "availableCollections": "Available Collections",
+        "publishedCollections": "Published Collections"
+      },
+      "labels": {
+        "defaultRightStatement": "Default Right Statement",
+        "defaultCopyright": "Default Copyright",
+        "defaultObjectUrl": "Default Object URL"
+      },
+      "errors": {
+        "minLength": "Minimum length is {{length}}.",
+        "email": "Must be a valid e-mail address."
+      },
+      "messages": {
+        "updateError": "Error occurred while trying to update institution: {{error}}.",
+        "createError": "Error occurred while trying to create institution: {{error}}.",
+        "loadError": "Error occurred while trying to load institution: {{error}}.",
+        "imageUploaded": "Successfully uploaded institution image.",
+        "imageUploadError": "Error occurred while trying to upload image: {{error}}."
+      }
+    }
+  },
+  "collection": {
+    "list": {
+      "title": "Collections",
+      "tooltips": {
+        "add": "Add a new collection.",
+        "synchronize": "Synchronize with Apache Solr.",
+        "edit": "Edit collection {{id}}.",
+        "delete": "Delete collection {{id}}."
+      },
+      "sort": {
+        "name": "Sort by name."
+      },
+      "confirmDelete": "Are you sure that you want to delete collection '{{id}}'?",
+      "messages": {
+        "deleteError": "Error occurred while trying to delete collection '{{name}}': {{error}}.",
+        "synchronized": "Successfully synchronised collections with Apache Solr backend ({{name}}).",
+        "synchronizeError": "Error occurred while synchronising collections with Apache Solr backend ({{name}}): {{error}}."
+      }
+    },
+    "dialog": {
+      "title": {
+        "create": "Create Collection",
+        "edit": "Edit Collection"
+      },
+      "tooltips": {
+        "addFilter": "Add a filter.",
+        "removeFilter": "Remove this filter."
+      },
+      "errors": {
+        "minLength": "Minimum length is {{length}}."
+      },
+      "messages": {
+        "updateError": "Error occurred while trying to update collection: {{error}}.",
+        "createError": "Error occurred while trying to create collection: {{error}}.",
+        "loadError": "Error occurred while trying to load collection: {{error}}.",
+        "imageUploaded": "Successfully uploaded collection image.",
+        "imageUploadError": "Error occurred while trying to upload image: {{error}}."
+      }
+    },
+    "image": {
+      "tooltips": {
+        "delete": "Delete image."
+      }
+    }
+  },
+  "user": {
+    "list": {
+      "title": "Users",
+      "tooltips": {
+        "add": "Add a new user.",
+        "edit": "Edit user {{id}}.",
+        "delete": "Delete user {{id}}."
+      },
+      "sort": {
+        "byUsername": "Sort by username.",
+        "byEmail": "Sort by email."
+      },
+      "confirmDelete": "Are you sure that you want to delete user '{{id}}'?",
+      "messages": {
+        "createFailed": "Error occurred while trying to create user: {{error}}.",
+        "updateFailed": "Error occurred while trying to update user: {{error}}.",
+        "deleteFailed": "Error occurred while trying to delete user '{{username}}': {{error}}."
+      }
+    },
+    "dialog": {
+      "title": "Create / Edit User",
+      "placeholders": {
+        "passwordMinLength": "Minimum of 8 characters"
+      },
+      "errors": {
+        "usernameMinLength": "Minimum length is 4.",
+        "passwordTooShort": "Password must have at least 8 characters.",
+        "passwordMismatch": "Passwords do not match."
+      }
+    }
+  },
+  "admin": {
+    "dashboard": {
+      "cards": {
+        "jobTemplates": "Job Templates ({{count}})",
+        "entityMappings": "Entity Mappings ({{count}})",
+        "solrConfigs": "Apache Solr Configurations ({{count}})",
+        "participants": "Participants ({{count}})"
+      },
+      "tooltips": {
+        "addJobTemplate": "Add new job template.",
+        "addEntityMapping": "Add new entity mapping.",
+        "addSolrConfig": "Add new Apache Solr configuration.",
+        "addParticipant": "Add new participant."
+      },
+      "aria": {
+        "addJobTemplate": "Adds a new job template.",
+        "addEntityMapping": "Adds a new entity mapping.",
+        "addSolrConfig": "Adds a new Apache Solr configuration.",
+        "addParticipant": "Adds a new participant identifier."
+      },
+      "messages": {
+        "jobTemplateCreated": "Successfully created job template.",
+        "jobTemplateCreateError": "Error occurred while trying to create job template: {{error}}.",
+        "entityMappingCreated": "Successfully created entity mapping.",
+        "entityMappingCreateError": "Error occurred while trying to create entity mapping: {{error}}.",
+        "solrConfigCreated": "Successfully created Apache Solr configuration.",
+        "solrConfigCreateError": "Error occurred while trying to create Apache Solr configuration: {{error}}.",
+        "participantCreated": "Successfully created participant.",
+        "participantCreateError": "Error occurred while trying to create participant: {{error}}."
+      }
+    },
+    "addEntityMapping": {
+      "title": "Create Entity Mapping"
+    },
+    "addJobTemplate": {
+      "title": "Create Job Template",
+      "labels": {
+        "startAutomatically": "Start automatically",
+        "entityMapping": "Entity Mapping",
+        "solrConfig": "Apache Solr Configuration"
+      }
+    },
+    "addParticipant": {
+      "title": "Create Participant"
+    },
+    "addSolrConfig": {
+      "title": "Create Apache Solr Configuration"
+    },
+    "solr": {
+      "title": "Apache Solr Configuration (ID: {{id}})",
+      "sections": {
+        "imageDeployments": "Image Deployments",
+        "collections": "Collections"
+      },
+      "columns": {
+        "maxSize": "Max. Size",
+        "selector": "Selector",
+        "oaiPmh": "OAI-PMH",
+        "sru": "SRU"
+      },
+      "tooltips": {
+        "save": "Saves all changes made to this Apache Solr configuration.",
+        "reload": "Reloads this Apache Solr configuration, reverting all unsaved changes.",
+        "download": "Downloads this Apache Solr configuration as JSON.",
+        "delete": "Deletes this Apache Solr configuration.",
+        "removeDeployment": "Remove deployment.",
+        "viewCollection": "View collection (opens new window).",
+        "removeCollection": "Remove collection."
+      },
+      "aria": {
+        "addDeployment": "Adds a new image deployment.",
+        "addCollection": "Adds a new collection."
+      },
+      "confirmDelete": "Are you sure that you want to delete this Apache Solr configuration?",
+      "messages": {
+        "loadError": "Error occurred while trying to load Apache Solr configuration: {{error}}.",
+        "updated": "Successfully updated Apache Solr configuration.",
+        "updateError": "Error occurred while trying to update Apache Solr configuration: {{error}}.",
+        "deleted": "Successfully deleted Apache Solr configuration.",
+        "deleteError": "Error occurred while trying to delete Apache Solr configuration: {{error}}."
+      }
+    },
+    "entityMapping": {
+      "title": "Edit Entity Mapping (ID: {{id}})",
+      "sections": {
+        "attributeMappings": "Attribute Mappings ({{count}})"
+      },
+      "tooltips": {
+        "save": "Saves all changes made to this entity mapping.",
+        "reload": "Reloads this entity mapping, reverting all unsaved changes.",
+        "download": "Downloads this entity mapping as JSON.",
+        "delete": "Deletes this entity mapping.",
+        "addAttributeMapping": "Adds a new attribute mapping to this entity mapping.",
+        "moveUp": "Move attribute mapping upwards.",
+        "moveDown": "Move attribute mapping downwards.",
+        "edit": "Edit attribute mapping.",
+        "remove": "Remove attribute mapping."
+      },
+      "confirmDelete": "Are you sure that you want to delete this entity mapping?",
+      "messages": {
+        "saved": "Successfully saved updated entity mapping.",
+        "deleted": "Successfully deleted entity mapping."
+      },
+      "errors": {
+        "save": "Error occurred while trying to update entity mapping: {{error}}.",
+        "delete": "Error occurred while trying to delete entity mapping: {{error}}.",
+        "load": "Error occurred while trying to load entity mapping: {{error}}."
+      }
+    },
+    "attributeMapping": {
+      "titleCreate": "Create Attribute Mapping",
+      "titleEdit": "Edit Attribute Mapping",
+      "tooltips": {
+        "addParameter": "Add a new parameter.",
+        "removeParameter": "Remove parameter."
+      }
+    },
+    "jobTemplate": {
+      "title": "Job Template (ID: {{id}})",
+      "labels": {
+        "entityMapping": "Entity Mapping",
+        "solrConfig": "Apache Solr Config",
+        "startAutomatically": "Start automatically"
+      },
+      "sections": {
+        "transformers": "Transformers"
+      },
+      "columns": {
+        "transformerName": "Transformer Name"
+      },
+      "tooltips": {
+        "save": "Saves all changes made to this job template.",
+        "reload": "Reloads this job template, reverting all unsaved changes.",
+        "download": "Downloads this job template as JSON.",
+        "delete": "Deletes this job template.",
+        "addTransformer": "Adds a new transformer to this job template.",
+        "moveUp": "Move transformer upwards.",
+        "moveDown": "Move transformer downwards.",
+        "edit": "Edit transformer parameters.",
+        "remove": "Remove transformer."
+      },
+      "confirmDelete": "Are you sure that you want to delete this job template?",
+      "messages": {
+        "saved": "Successfully updated job template.",
+        "deleted": "Successfully deleted job template."
+      },
+      "errors": {
+        "reload": "Error occurred while trying to reload job template: {{error}}.",
+        "save": "Error occurred while trying to update job template: {{error}}.",
+        "delete": "Error occurred while trying to delete job template: {{error}}.",
+        "load": "Error occurred while trying to load job template: {{error}}."
+      }
+    },
+    "transformer": {
+      "title": "Edit Transformer",
+      "labels": {
+        "transformer": "Transformer"
+      },
+      "tooltips": {
+        "addParameter": "Add a new parameter.",
+        "removeParameter": "Remove parameter."
+      }
+    }
+  }
+}

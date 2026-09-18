@@ -1,4 +1,5 @@
 import {Component, inject} from "@angular/core";
+import {TranslatePipe, TranslateService} from "@ngx-translate/core";
 import {toSignal} from "@angular/core/rxjs-interop";
 import {FormArray, FormControl, FormGroup, FormsModule, ReactiveFormsModule, Validators} from "@angular/forms";
 import {
@@ -30,7 +31,7 @@ import {MatIcon} from "@angular/material/icon";
     selector: 'kiar-add-institution-dialog',
     templateUrl: './institution-dialog.component.html',
     styleUrls: ['./institution-dialog.component.scss'],
-  imports: [MatDialogTitle, MatDialogContent, FormsModule, ReactiveFormsModule, MatFormField, MatLabel, MatInput, MatError, MatSelect, MatOption, MatCheckbox, MatTabGroup, MatTab, MatDialogActions, MatButton, MatIcon]
+  imports: [MatDialogTitle, MatDialogContent, FormsModule, ReactiveFormsModule, MatFormField, MatLabel, MatInput, MatError, MatSelect, MatOption, MatCheckbox, MatTabGroup, MatTab, MatDialogActions, MatButton, MatIcon, TranslatePipe]
 })
 export class InstitutionDialogComponent {
   /** The {@link ConfigService} used to access application configuration (templates, mappings, Solr configurations, participants). */
@@ -47,6 +48,9 @@ export class InstitutionDialogComponent {
 
   /** The {@link MatSnackBar} used to display notifications. */
   private snackBar = inject(MatSnackBar);
+
+  /** The {@link TranslateService} used to resolve user-facing messages. */
+  private translate = inject(TranslateService);
 
   /** The ID of the {@link Institution} to edit, provided as dialog data (null when creating a new one). */
   protected institutionId = inject<number | null>(MAT_DIALOG_DATA);
@@ -151,18 +155,18 @@ export class InstitutionDialogComponent {
       if (institution.id) {
         this.institution.putUpdateInstitution(institution.id, institution).subscribe({
           next: (value) => {
-            this.snackBar.open(value.description, "Dismiss", { duration: 2000 } as MatSnackBarConfig);
+            this.snackBar.open(value.description, this.translate.instant('common.action.dismiss'), { duration: 2000 } as MatSnackBarConfig);
             this.dialogRef.close(institution);
           },
-          error: (err) => this.snackBar.open(`Error occurred while trying to update institution: ${err?.error?.description}.`, "Dismiss", { duration: 2000 } as MatSnackBarConfig),
+          error: (err) => this.snackBar.open(this.translate.instant('institution.dialog.messages.updateError', {error: err?.error?.description}), this.translate.instant('common.action.dismiss'), { duration: 2000 } as MatSnackBarConfig),
         })
       } else {
         this.institution.postCreateInstitution(institution).subscribe({
           next: (value) => {
-            this.snackBar.open(value.description, "Dismiss", { duration: 2000 } as MatSnackBarConfig);
+            this.snackBar.open(value.description, this.translate.instant('common.action.dismiss'), { duration: 2000 } as MatSnackBarConfig);
             this.dialogRef.close(institution);
           },
-          error: (err) => this.snackBar.open(`Error occurred while trying to create institution: ${err?.error?.description}.`, "Dismiss", { duration: 2000 } as MatSnackBarConfig),
+          error: (err) => this.snackBar.open(this.translate.instant('institution.dialog.messages.createError', {error: err?.error?.description}), this.translate.instant('common.action.dismiss'), { duration: 2000 } as MatSnackBarConfig),
         })
       }
     }
@@ -181,10 +185,10 @@ export class InstitutionDialogComponent {
         if (file) {
           this.institution.postInstitutionImage(this.institutionId!!, file).subscribe({
             next: () => {
-              this.snackBar.open("Successfully uploaded institution image.", "Dismiss", {duration: 2000} as MatSnackBarConfig)
+              this.snackBar.open(this.translate.instant('institution.dialog.messages.imageUploaded'), this.translate.instant('common.action.dismiss'), {duration: 2000} as MatSnackBarConfig)
               this.reload(this.institutionId!!)
             },
-            error: (err) => this.snackBar.open(`Error occurred while trying to upload image: ${err?.error?.description}.`, "Dismiss", {duration: 2000} as MatSnackBarConfig)
+            error: (err) => this.snackBar.open(this.translate.instant('institution.dialog.messages.imageUploadError', {error: err?.error?.description}), this.translate.instant('common.action.dismiss'), {duration: 2000} as MatSnackBarConfig)
           });
         }
       });
@@ -238,7 +242,7 @@ export class InstitutionDialogComponent {
           }
         }
       },
-      error: (err) => this.snackBar.open(`Error occurred while trying to create institution: ${err?.error?.description}.`, "Dismiss", {duration: 2000} as MatSnackBarConfig)
+      error: (err) => this.snackBar.open(this.translate.instant('institution.dialog.messages.loadError', {error: err?.error?.description}), this.translate.instant('common.action.dismiss'), {duration: 2000} as MatSnackBarConfig)
     })
   }
 }

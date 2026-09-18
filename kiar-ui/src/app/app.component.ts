@@ -3,6 +3,7 @@ import {AuthenticationService} from "./services/authentication.service";
 import {Router} from "@angular/router";
 import {MatDialog} from "@angular/material/dialog";
 import {ProfileComponent} from "./components/session/user/profile.component";
+import {LANGUAGES, LanguageService} from "./services/language.service";
 
 @Component({
     selector: 'app-root',
@@ -19,6 +20,12 @@ export class AppComponent {
 
   /** The {@link Router} used for navigation. */
   private router = inject(Router);
+
+  /** The {@link LanguageService} used to read and switch the UI language. */
+  protected readonly language = inject(LanguageService);
+
+  /** The languages offered in the language menu. */
+  protected readonly languages = LANGUAGES;
 
   /** A signal of the current login status. */
   public readonly isLoggedIn = this.authentication.isLoggedIn

@@ -1,4 +1,5 @@
 import {Component, inject} from "@angular/core";
+import {TranslatePipe} from "@ngx-translate/core";
 import {toSignal} from "@angular/core/rxjs-interop";
 import {FormControl, FormGroup, FormsModule, ReactiveFormsModule, Validators} from "@angular/forms";
 import {first, map, tap} from "rxjs";
@@ -20,7 +21,7 @@ import {MatButton} from "@angular/material/button";
     selector: 'kiar-user-dialog',
     templateUrl: './user-dialog.component.html',
     styleUrls: ['./user-dialog.component.scss'],
-  imports: [MatDialogTitle, MatDialogContent, FormsModule, ReactiveFormsModule, MatFormField, MatLabel, MatInput, MatError, MatSelect, MatOption, MatCheckbox, MatDialogActions, MatButton]
+  imports: [MatDialogTitle, MatDialogContent, FormsModule, ReactiveFormsModule, MatFormField, MatLabel, MatInput, MatError, MatSelect, MatOption, MatCheckbox, MatDialogActions, MatButton, TranslatePipe]
 })
 export class UserDialogComponent {
   /** The {@link UserService} used to load and edit user information. */

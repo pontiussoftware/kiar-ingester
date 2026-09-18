@@ -1,20 +1,20 @@
 <form [formGroup]="formControl">
 
-  <h1>Edit Entity Mapping (ID: {{this.mappingId()}})</h1>
+  <h1>{{ 'admin.entityMapping.title' | translate:{id: this.mappingId()} }}</h1>
 
   <div id="main" [style.display]="'flex'">
     <mat-form-field appearance="fill" [style.width]="'15%'">
-      <mat-label>Name</mat-label>
+      <mat-label>{{ 'common.label.name' | translate }}</mat-label>
       <input matInput type="text" required formControlName="name">
     </mat-form-field>
 
     <mat-form-field appearance="fill" [style.width]="'25%'">
-      <mat-label>Description</mat-label>
+      <mat-label>{{ 'common.label.description' | translate }}</mat-label>
       <input matInput type="textarea" formControlName="description">
     </mat-form-field>
 
     <mat-form-field appearance="fill" [style.width]="'10%'">
-      <mat-label>Type</mat-label>
+      <mat-label>{{ 'common.label.type' | translate }}</mat-label>
       <mat-select formControlName="type">
         @for (format of this.mappingFormats(); track format) {
           <mat-option [value]="format">
@@ -25,23 +25,23 @@
     </mat-form-field>
 
     <div class="button-group" [style.margin-top]="'10px'">
-      <button mat-raised-button color="primary" matTooltip="Saves all changes made to this entity mapping." (click)="save()">
-        Save
+      <button mat-raised-button color="primary" [matTooltip]="'admin.entityMapping.tooltips.save' | translate" (click)="save()">
+        {{ 'common.action.save' | translate }}
       </button>
-      <button mat-raised-button matTooltip="Reloads this entity mapping, reverting all unsaved changes."  (click)="refresh()">
-        Reload
+      <button mat-raised-button [matTooltip]="'admin.entityMapping.tooltips.reload' | translate"  (click)="refresh()">
+        {{ 'common.action.reload' | translate }}
       </button>
-      <button mat-raised-button matTooltip="Downloads this entity mapping as JSON." (click)="download()">
-        Download
+      <button mat-raised-button [matTooltip]="'admin.entityMapping.tooltips.download' | translate" (click)="download()">
+        {{ 'common.action.download' | translate }}
       </button>
-      <button mat-raised-button color="warn" matTooltip="Deletes this entity mapping." (click)="delete()">
-        Delete
+      <button mat-raised-button color="warn" [matTooltip]="'admin.entityMapping.tooltips.delete' | translate" (click)="delete()">
+        {{ 'common.action.delete' | translate }}
       </button>
     </div>
   </div>
 
-  <h2>Attribute Mappings ({{attributes.length}})
-    <button mat-mini-fab color="primary" aria-label="Adds a new attribute mapping to this entity mapping." (click)="addAttributeMapping()">
+  <h2>{{ 'admin.entityMapping.sections.attributeMappings' | translate:{count: attributes.length} }}
+    <button mat-mini-fab color="primary" [attr.aria-label]="'admin.entityMapping.tooltips.addAttributeMapping' | translate" (click)="addAttributeMapping()">
       <mat-icon>add</mat-icon>
     </button>
   </h2>
@@ -50,11 +50,11 @@
     <thead>
       <tr>
         <th  [style.width]="'10%'">&nbsp;</th>
-        <th i18n="@@LabelSource" [style.width]="'55%'">Source</th>
-        <th i18n="@@LabelDestination" [style.width]="'15%'">Destination</th>
-        <th i18n="@@LabelParser" [style.width]="'10%'">Parser</th>
-        <th i18n="@@LabelRequired"  [style.width]="'5%'">Required</th>
-        <th i18n="@@LabelMultiValued" [style.width]="'5%'">Multi-Valued</th>
+        <th [style.width]="'55%'">{{ 'common.label.source' | translate }}</th>
+        <th [style.width]="'15%'">{{ 'common.label.destination' | translate }}</th>
+        <th [style.width]="'10%'">{{ 'common.label.parser' | translate }}</th>
+        <th  [style.width]="'5%'">{{ 'common.label.required' | translate }}</th>
+        <th [style.width]="'5%'">{{ 'common.label.multiValued' | translate }}</th>
 
       </tr>
     </thead>
@@ -63,26 +63,26 @@
     @for (e of attributes.controls; track e; let i = $index) {
       <tr [formGroup]="e">
         <td [style.padding-bottom]="'25px'">
-          <button mat-icon-button matTooltip="Move attribute mapping upwards." (click)="moveAttributeMapping(i, i - 1)"><mat-icon>arrow_upward</mat-icon></button>
-          <button mat-icon-button matTooltip="Move attribute mapping downwards."  (click)="moveAttributeMapping(i, i + 1)"><mat-icon>arrow_downward</mat-icon></button>
-          <button mat-icon-button matTooltip="Edit attribute mapping." (click)="editAttributeMapping(i)" color="primary"><mat-icon>edit</mat-icon></button>
-          <button mat-icon-button matTooltip="Remove attribute mapping." (click)="removeAttributeMapping(i)" color="warn"><mat-icon>delete</mat-icon></button>
+          <button mat-icon-button [matTooltip]="'admin.entityMapping.tooltips.moveUp' | translate" (click)="moveAttributeMapping(i, i - 1)"><mat-icon>arrow_upward</mat-icon></button>
+          <button mat-icon-button [matTooltip]="'admin.entityMapping.tooltips.moveDown' | translate"  (click)="moveAttributeMapping(i, i + 1)"><mat-icon>arrow_downward</mat-icon></button>
+          <button mat-icon-button [matTooltip]="'admin.entityMapping.tooltips.edit' | translate" (click)="editAttributeMapping(i)" color="primary"><mat-icon>edit</mat-icon></button>
+          <button mat-icon-button [matTooltip]="'admin.entityMapping.tooltips.remove' | translate" (click)="removeAttributeMapping(i)" color="warn"><mat-icon>delete</mat-icon></button>
         </td>
         <td>
           <mat-form-field appearance="fill" [style.width]="'100%'">
-            <mat-label i18n="@@LabelSource">Source</mat-label>
+            <mat-label>{{ 'common.label.source' | translate }}</mat-label>
             <input matInput type="text" formControlName="source"/>
           </mat-form-field>
         </td>
         <td>
           <mat-form-field appearance="fill" [style.width]="'100%'">
-            <mat-label i18n="@@LabelDestination">Destination</mat-label>
+            <mat-label>{{ 'common.label.destination' | translate }}</mat-label>
             <input matInput type="text" formControlName="destination"/>
           </mat-form-field>
         </td>
         <td>
           <mat-form-field appearance="fill" [style.width]="'100%'">
-            <mat-label i18n="@@LabelParser">Parser</mat-label>
+            <mat-label>{{ 'common.label.parser' | translate }}</mat-label>
             <mat-select formControlName="parser">
               @for (parser of this.parsers(); track parser) {
                 <mat-option [value]="parser">
