@@ -33,7 +33,7 @@ object Users : IntIdTable("users") {
     val email = varchar("email", 255).nullable()
 
     /** The password of the [Users] entry. */
-    val password = varchar("password", 255).uniqueIndex()
+    val password = varchar("password", 255)
 
     /** Flag indicating, that a [Users] entry has been inactivated. */
     val inactive = bool("inactive").default(false)
@@ -78,7 +78,7 @@ object Users : IntIdTable("users") {
      fun ResultRow.toUser() = User(
         id = this[id].value,
         username = this[name],
-        password = this[password],
+        password = null, /* The password hash is never exposed through the API model. */
         email = this[email],
         active = !this[inactive],
         role = this[role],

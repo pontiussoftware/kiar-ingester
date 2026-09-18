@@ -15,7 +15,6 @@ import io.ktor.utils.io.jvm.javaio.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.SerializationException
-import org.mindrot.jbcrypt.BCrypt
 import java.io.IOException
 import java.io.InputStream
 import java.nio.file.Files
@@ -28,8 +27,8 @@ const val MIN_LENGTH_PASSWORD = 8
 /** The minimum length of a username. */
 const val MIN_LENGTH_USERNAME = 5
 
-/** The salt used for password encryption. */
-val SALT: String = BCrypt.gensalt()
+/** The bcrypt cost factor (log2 rounds) used when hashing passwords. A fresh salt is generated for every hash. */
+const val BCRYPT_COST = 12
 
 /**
  * Executes the given block on [Dispatchers.IO]. Used for blocking database and file system work within request handlers.

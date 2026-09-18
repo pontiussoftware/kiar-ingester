@@ -6,25 +6,20 @@ import ch.pontius.kiar.api.model.status.SuccessStatus
 import ch.pontius.kiar.api.model.user.PaginatedUserResult
 import ch.pontius.kiar.api.model.user.Role
 import ch.pontius.kiar.api.model.user.User
+import ch.pontius.kiar.api.openapi.*
 import ch.pontius.kiar.database.institutions.Institutions
 import ch.pontius.kiar.database.institutions.Participants
 import ch.pontius.kiar.database.institutions.Users
 import ch.pontius.kiar.database.institutions.Users.toUser
-import ch.pontius.kiar.utilities.extensions.SALT
-import ch.pontius.kiar.utilities.extensions.receiveOrThrow
-import ch.pontius.kiar.utilities.extensions.validateEmail
-import ch.pontius.kiar.utilities.extensions.validatePassword
+import ch.pontius.kiar.utilities.extensions.*
+import io.ktor.server.application.*
+import io.ktor.server.response.*
 import org.jetbrains.exposed.v1.core.SortOrder
 import org.jetbrains.exposed.v1.core.eq
 import org.jetbrains.exposed.v1.jdbc.*
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 import org.mindrot.jbcrypt.BCrypt
 import java.time.Instant
-import io.ktor.server.application.ApplicationCall
-import ch.pontius.kiar.api.openapi.*
-import io.ktor.server.response.respond
-import ch.pontius.kiar.utilities.extensions.pathParam
-import ch.pontius.kiar.utilities.extensions.queryParam
 
 
 val getListUsersDoc: RouteDoc = {
@@ -121,7 +116,7 @@ suspend fun postCreateUser(call: ApplicationCall) {
         val userId = Users.insertAndGetId { user ->
             user[name] = request.username.lowercase()
             user[email] = request.email?.lowercase()
-            user[password] = BCrypt.hashpw(request.password, SALT)
+            user[password] = BCrypt.hashpw(request.password, BCrypt.gensalt(BCRYPT_COST))
             user[inactive] = !request.active
             user[role] = request.role
             user[institutionId] = request.institution?.name?.let { name ->
@@ -165,7 +160,7 @@ suspend fun putUpdateUser(call: ApplicationCall) {
                 if (!request.password.validatePassword()) {
                     throw ErrorStatusException(400, "Invalid password. Password must consist of printable ASCII characters and have at least a length of eight characters and it must contain at least one upper- and lowercase letter and one digit.")
                 }
-                user[password] = BCrypt.hashpw(request.password, SALT)
+                user[password] = BCrypt.hashpw(request.password, BCrypt.gensalt(BCRYPT_COST))
             }
             user[inactive] = !request.active
             user[role] = request.role

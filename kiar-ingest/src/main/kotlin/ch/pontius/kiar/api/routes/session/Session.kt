@@ -1,22 +1,18 @@
 package ch.pontius.kiar.api.routes.session
 
+import ch.pontius.kiar.api.UserSession
 import ch.pontius.kiar.api.model.session.LoginRequest
 import ch.pontius.kiar.api.model.session.SessionStatus
-import ch.pontius.kiar.api.model.user.User
 import ch.pontius.kiar.api.model.status.ErrorStatusException
 import ch.pontius.kiar.api.model.status.SuccessStatus
+import ch.pontius.kiar.api.model.user.User
+import ch.pontius.kiar.api.openapi.*
 import ch.pontius.kiar.database.institutions.Users
 import ch.pontius.kiar.database.institutions.Users.toUser
-import ch.pontius.kiar.utilities.extensions.SALT
-import ch.pontius.kiar.api.UserSession
-import io.ktor.server.sessions.get
-import io.ktor.server.sessions.sessions
-import ch.pontius.kiar.utilities.extensions.currentUser
-import ch.pontius.kiar.utilities.extensions.invalidateUser
-import ch.pontius.kiar.utilities.extensions.receiveOrThrow
-import ch.pontius.kiar.utilities.extensions.setUser
-import ch.pontius.kiar.utilities.extensions.validateEmail
-import ch.pontius.kiar.utilities.extensions.validatePassword
+import ch.pontius.kiar.utilities.extensions.*
+import io.ktor.server.application.*
+import io.ktor.server.response.*
+import io.ktor.server.sessions.*
 import org.jetbrains.exposed.v1.core.and
 import org.jetbrains.exposed.v1.core.eq
 import org.jetbrains.exposed.v1.jdbc.selectAll
@@ -24,9 +20,6 @@ import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 import org.jetbrains.exposed.v1.jdbc.update
 import org.mindrot.jbcrypt.BCrypt
 import java.time.Instant
-import io.ktor.server.application.ApplicationCall
-import ch.pontius.kiar.api.openapi.*
-import io.ktor.server.response.respond
 
 val loginDoc: RouteDoc = {
     operationId = "login"
@@ -49,15 +42,15 @@ suspend fun login(call: ApplicationCall) {
         return
     }
 
-    /* Find active user with given username. */
-    val user = transaction {
+    /* Find active user with given username; the password hash is read from the row and never leaves this function. */
+    val (user, hash) = transaction {
         Users.selectAll().where {
             Users.name eq request.username and (Users.inactive eq false)
-        }.map { it.toUser() }.firstOrNull()
+        }.map { it.toUser() to it[Users.password] }.firstOrNull()
     } ?: throw ErrorStatusException(401, "The provided credentials are invalid.")
 
     /* Check password. */
-    if (!BCrypt.checkpw(request.password, user.password)) {
+    if (!BCrypt.checkpw(request.password, hash)) {
         throw ErrorStatusException(401, "The provided credentials are invalid.")
     } else {
         call.setUser(user)
@@ -138,7 +131,7 @@ suspend fun updateUser(call: ApplicationCall) {
         Users.update( { Users.id eq request.id!! }) {
             if (request.password != null) {
                 if(!request.password.validatePassword()) throw ErrorStatusException(400, "Invalid password. Password must have at least a length of eight characters and it must contain at least one upper- and lowercase letter and one digit.")
-                it[Users.password] = BCrypt.hashpw(request.password, SALT)
+                it[Users.password] = BCrypt.hashpw(request.password, BCrypt.gensalt(BCRYPT_COST))
             }
 
             if (request.email != null) {
