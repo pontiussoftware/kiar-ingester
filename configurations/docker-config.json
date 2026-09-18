@@ -1,0 +1,9 @@
+{
+  "web": true,
+  "webPort": 7070,
+  "dbPath": "/data/db/kiar.db",
+  "ingestPath": "/data/ingest",
+  "logPath": "/data/logs",
+  "jobLogRetentionDays": 30,
+  "inputRetentionCount": 1
+}

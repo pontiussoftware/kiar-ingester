@@ -23,10 +23,10 @@ node {
 /**
  * New task to build front-end.
  */
-val buildFrontend = tasks.register<com.github.gradle.node.npm.task.NpxTask>("buildFrontend") {
+val buildFrontend = tasks.register<com.github.gradle.node.npm.task.NpmTask>("buildFrontend") {
     dependsOn(tasks.npmInstall)
-    command.value("@angular/cli@20")
-    args.value(listOf("build", "--configuration=production", "--output-path=build/dist"))
+    /* Uses the Angular CLI version declared in package.json instead of a separately downloaded one. */
+    args.value(listOf("run", "build", "--", "--configuration=production", "--output-path=build/dist"))
 }
 
 /**

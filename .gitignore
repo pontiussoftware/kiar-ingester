@@ -26,3 +26,6 @@ testOut/
 .DS_Store
 .AppleDouble
 .LSOverride
+
+# Local Docker environment
+.env

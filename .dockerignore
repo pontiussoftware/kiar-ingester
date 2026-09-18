@@ -1,0 +1,25 @@
+# Version control and IDE
+.git
+.gitignore
+.idea
+.kotlin
+**/*.iml
+
+# Build outputs and caches (rebuilt inside the image)
+build
+**/build
+**/out
+**/.gradle
+kiar-ui/node_modules
+kiar-ui/.angular
+kiar-ui/dist
+
+# Local runtime data and secrets
+data
+.env
+*.log
+
+# Docker files themselves
+Dockerfile
+docker-compose.yml
+.dockerignore

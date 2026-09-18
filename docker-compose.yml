@@ -1,0 +1,46 @@
+# KIAR Ingest -- Docker Compose deployment.
+#
+# Copy .env.example to .env and point the KIAR_*_DIR variables at the host folders the tools should
+# work with. Every path the application touches is below /config or /data inside the container, so
+# whatever you map there is what the ingest, the image deployments and the logs end up using.
+#
+#   docker compose up -d --build
+#
+services:
+  kiar:
+    build:
+      context: .
+      args:
+        # Match the owner of the mapped host folders so the container can write to them.
+        KIAR_UID: ${KIAR_UID:-1000}
+        KIAR_GID: ${KIAR_GID:-1000}
+    image: kiar-ingest:${KIAR_VERSION:-latest}
+    container_name: kiar-ingest
+    restart: unless-stopped
+    ports:
+      - "${KIAR_PORT:-7070}:7070"
+    environment:
+      # JVM memory follows the container limit by default; override with e.g. "-Xms512m -Xmx4g".
+      JAVA_OPTS: ${JAVA_OPTS:--XX:MaxRAMPercentage=75.0}
+      # Only used when no config.json is present in the mapped /config folder (generated on first start).
+      KIAR_JOB_LOG_RETENTION_DAYS: ${KIAR_JOB_LOG_RETENTION_DAYS:-30}
+      KIAR_INPUT_RETENTION_COUNT: ${KIAR_INPUT_RETENTION_COUNT:-1}
+    volumes:
+      # Configuration (config.json). Generated on first start if the folder is empty.
+      - ${KIAR_CONFIG_DIR:-./data/config}:/config
+      # SQLite database.
+      - ${KIAR_DB_DIR:-./data/db}:/data/db
+      # Ingest folder: uploaded KIAR files and watched job template sources (one sub-folder per participant).
+      - ${KIAR_INGEST_DIR:-./data/ingest}:/data/ingest
+      # Application log (kiar.log).
+      - ${KIAR_LOG_DIR:-./data/logs}:/data/logs
+      # Target folder for image deployments. Configure the deployment path in the UI as /data/media.
+      - ${KIAR_MEDIA_DIR:-./data/media}:/data/media
+      # Source images referenced by the ingested metadata are read from wherever the mapping points to.
+      # Map those host folders read-only under the same path the image parser expects, for example:
+      # - /mnt/kimmedia:/mnt/kimmedia:ro
+    # Uncomment to cap the container's memory; the JVM heap follows via MaxRAMPercentage.
+    # deploy:
+    #   resources:
+    #     limits:
+    #       memory: 6g
