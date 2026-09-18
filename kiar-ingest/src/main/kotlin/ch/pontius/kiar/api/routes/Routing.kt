@@ -106,11 +106,11 @@ fun Route.configureApiRoutes(config: Config, server: IngesterServer, oaiServer: 
             post { io { postUploadImageForCollection(call) } }.describe(postUploadImageForCollectionDoc)
         }
     }
+    authorized(Role.ADMINISTRATOR, Role.MANAGER) {
+        delete("collections/{id}/{name}") { io { deleteImageForCollection(call) } }.describe(deleteImageForCollectionDoc)
+    }
     authorized(Role.ADMINISTRATOR, Role.MANAGER, Role.VIEWER) {
-        route("collections/{id}/{name}") {
-            get { io { getImageForCollection(call) } }.describe(getImageForCollectionDoc)
-            delete { io { deleteImageForCollection(call) } }.describe(deleteImageForCollectionDoc)
-        }
+        get("collections/{id}/{name}") { io { getImageForCollection(call) } }.describe(getImageForCollectionDoc)
     }
 
     /* Endpoints related to master data. */

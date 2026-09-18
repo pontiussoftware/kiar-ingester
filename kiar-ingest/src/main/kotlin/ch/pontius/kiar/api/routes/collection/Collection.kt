@@ -239,7 +239,13 @@ suspend fun deleteImageForCollection(call: ApplicationCall) {
 
     /* Start transaction and update ecollection. */
     val delete = transaction {
+        val currentUser = call.currentUser()
         val collection = Collections.getById(collectionId) ?:  throw ErrorStatusException(404, "Collection with ID $collectionId could not be found.")
+
+        /* Make sure, that the current user can actually edit this collection. */
+        if (currentUser.role != Role.ADMINISTRATOR && currentUser.institution?.id != collection.institution?.id) {
+            throw ErrorStatusException(403, "Collection with ID $collectionId cannot be edited by current user.")
+        }
         val deployments = ImageDeployments.forCollection(collection)
         val newImages = collection.images.toMutableList()
 
