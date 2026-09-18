@@ -20,8 +20,8 @@ import deleteEntityMappingDoc
 import getEntityMapping
 import getEntityMappingDoc
 import io.ktor.server.routing.*
-import io.ktor.server.routing.openapi.describe
-import io.ktor.utils.io.ExperimentalKtorApi
+import io.ktor.server.routing.openapi.*
+import io.ktor.utils.io.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import listEntityMappings
@@ -64,11 +64,9 @@ fun Route.configureApiRoutes(config: Config, server: IngesterServer, oaiServer: 
         post("users") { io { postCreateUser(call) } }.describe(postCreateUserDoc)
         route("users") {
             get("roles") { io { getListRoles(call) } }.describe(getListRolesDoc)
+            put("{id}") { io { putUpdateUser(call) } }.describe(putUpdateUserDoc)
             delete("{id}") { io { deleteUser(call) } }.describe(deleteUserDoc)
         }
-    }
-    authorized(Role.ADMINISTRATOR, Role.MANAGER) {
-        put("users/{id}") { io { putUpdateUser(call) } }.describe(putUpdateUserDoc)
     }
 
     /* Endpoints related to institutions. */
