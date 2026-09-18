@@ -13,7 +13,7 @@ configurations {
 val includeConfig: Boolean by lazy { project.hasProperty("includeConfig") }
 
 node {
-    this.version.value("22.20.0")
+    this.version.value("26.9.0")
     this.download.value(true)
     this.workDir.dir("${project.projectDir}/.gradle/nodejs")
     this.yarnWorkDir.dir("${project.projectDir}/.gradle/nodejs")

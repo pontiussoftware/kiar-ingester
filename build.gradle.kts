@@ -9,10 +9,10 @@ plugins {
     id("org.jetbrains.kotlin.plugin.serialization") version "2.4.20"
 
     /* OpenAPI Generator for Frontend internal API generation. */
-    id ("org.openapi.generator") version "7.17.0"
+    id ("org.openapi.generator") version "7.25.0"
 
     /* Download plugin to load OAS. */
-    id ("de.undercouch.download") version "5.6.0"
+    id ("de.undercouch.download") version "5.7.0"
 
     idea
 }
@@ -76,7 +76,7 @@ openApiGenerate {
     outputDir.set("${project.projectDir}/kiar-ui/openapi")
     configOptions.set(mapOf(
         "npmName" to "@kiar-openapi/api",
-        "ngVersion" to "20.3.0",
+        "ngVersion" to "21.2.23",
         "snapshot" to "true",
         "enumPropertyNaming" to "original"
     ))
