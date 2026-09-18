@@ -1,23 +1,23 @@
-val bcryptVersion: String by project
-val caffeineVersion: String by project
-val commonsImagingVersion: String by project
-val exposedVersion: String by project
-val gsonVersion: String by project
-val ktorVersion: String by project
-val jsonPathVersion: String by project
-val kotlinCoroutines: String by project
-val kotlinLoggingVersion: String by project
-val kotlinSerialization: String by project
-val log4jVersion: String by project
-val poiVersion: String by project
-val scrimageVersion: String by project
-val slf4jVersion: String by project
-val solrjVersion: String by project
-val sqliteVersion: String by project
+val bcryptVersion = project.property("bcryptVersion") as String
+val caffeineVersion = project.property("caffeineVersion") as String
+val commonsImagingVersion = project.property("commonsImagingVersion") as String
+val exposedVersion = project.property("exposedVersion") as String
+val gsonVersion = project.property("gsonVersion") as String
+val ktorVersion = project.property("ktorVersion") as String
+val jsonPathVersion = project.property("jsonPathVersion") as String
+val kotlinCoroutines = project.property("kotlinCoroutines") as String
+val kotlinLoggingVersion = project.property("kotlinLoggingVersion") as String
+val kotlinSerialization = project.property("kotlinSerialization") as String
+val log4jVersion = project.property("log4jVersion") as String
+val poiVersion = project.property("poiVersion") as String
+val scrimageVersion = project.property("scrimageVersion") as String
+val slf4jVersion = project.property("slf4jVersion") as String
+val solrjVersion = project.property("solrjVersion") as String
+val sqliteVersion = project.property("sqliteVersion") as String
 
 
 configurations {
-    val frontendClasspath by creating {
+    create("frontendClasspath") {
         isCanBeConsumed = false
         isCanBeResolved = true
     }

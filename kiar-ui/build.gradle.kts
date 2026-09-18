@@ -1,11 +1,9 @@
-import org.gradle.kotlin.dsl.*
-
 plugins {
     id("com.github.node-gradle.node") version "7.1.0"
 }
 
 configurations {
-    val frontendFiles by creating {
+    create("frontendFiles") {
         isCanBeConsumed = true
         isCanBeResolved = false
     }
@@ -25,7 +23,7 @@ node {
 /**
  * New task to build front-end.
  */
-val buildFrontend by tasks.registering(com.github.gradle.node.npm.task.NpxTask::class) {
+val buildFrontend = tasks.register<com.github.gradle.node.npm.task.NpxTask>("buildFrontend") {
     dependsOn(tasks.npmInstall)
     command.value("@angular/cli@20")
     args.value(listOf("build", "--configuration=production", "--output-path=build/dist"))
@@ -34,7 +32,7 @@ val buildFrontend by tasks.registering(com.github.gradle.node.npm.task.NpxTask::
 /**
  * New task to package front-end.
  */
-val packageFrontend by tasks.registering(Zip::class) {
+val packageFrontend = tasks.register<Zip>("packageFrontend") {
     dependsOn(buildFrontend)
     archiveFileName.set("kiar-ui.jar")
     destinationDirectory.set(project.layout.buildDirectory.dir("libs").get())
