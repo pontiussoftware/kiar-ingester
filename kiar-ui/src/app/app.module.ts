@@ -1,4 +1,5 @@
-import {NgModule} from '@angular/core';
+import {NgModule, provideCheckNoChangesConfig} from '@angular/core';
+import {environment} from '../environments/environment';
 import {BrowserModule} from '@angular/platform-browser';
 import {CommonModule} from "@angular/common";
 import {AppRoutingModule} from './app-routing.module';
@@ -51,5 +52,9 @@ export function initializeApiConfig() {
         UserModule,
         DashboardModule,
         SessionModule,
-        ServiceModule], providers: [provideHttpClient(withInterceptorsFromDi())] })
+        ServiceModule], providers: [
+        provideHttpClient(withInterceptorsFromDi()),
+        /* Development only: periodically verify that no template expression changed without Angular being notified (zoneless safety net). */
+        ...(environment.production ? [] : [provideCheckNoChangesConfig({exhaustive: true, interval: 1000})])
+    ] })
 export class AppModule { }

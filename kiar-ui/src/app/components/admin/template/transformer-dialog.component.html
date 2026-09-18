@@ -4,7 +4,7 @@
     <mat-form-field appearance="fill" [style.width]="'50%'">
       <mat-label i18n="@@LabelTransformer">Transformer</mat-label>
       <mat-select formControlName="type">
-        @for (type of (transformerTypes | async); track type) {
+        @for (type of this.transformerTypes(); track type) {
           <mat-option [value]="type">
             {{type}}
           </mat-option>
@@ -25,7 +25,7 @@
         <th>&nbsp;</th>
       </thead>
       <tbody>
-        @for (p of parameterForms?.controls; track p; let i = $index) {
+        @for (p of this.parameterForms.controls; track p; let i = $index) {
           <tr [formGroup]="p">
             <td [style.width]="'15%'">
               <mat-form-field appearance="fill" [style.width]="'100%'">

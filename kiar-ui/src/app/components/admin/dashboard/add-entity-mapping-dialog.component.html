@@ -9,7 +9,7 @@
     <mat-form-field appearance="fill" [style.width]="'20%'">
       <mat-label>Type</mat-label>
       <mat-select formControlName="type">
-        @for (format of (mappingFormats | async); track format) {
+        @for (format of this.mappingFormats(); track format) {
           <mat-option [value]="format">
             {{format}}
           </mat-option>

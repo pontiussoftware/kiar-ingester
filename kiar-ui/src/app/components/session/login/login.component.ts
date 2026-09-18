@@ -1,9 +1,8 @@
-import {AfterViewInit, Component, OnInit} from '@angular/core';
+import {AfterViewInit, Component, inject} from '@angular/core';
 import {SuccessStatus} from "../../../../../openapi";
 import {FormControl, FormGroup} from "@angular/forms";
 import {ActivatedRoute, Router} from "@angular/router";
 import {MatSnackBar} from "@angular/material/snack-bar";
-import {first, Observer} from "rxjs";
 import {AuthenticationService} from "../../../services/authentication.service";
 
 @Component({
@@ -13,6 +12,17 @@ import {AuthenticationService} from "../../../services/authentication.service";
     standalone: false
 })
 export class LoginComponent implements AfterViewInit {
+  /** The {@link AuthenticationService} used to query and change the login state. */
+  private authentication = inject(AuthenticationService);
+
+  /** The {@link Router} used for navigation. */
+  private router = inject(Router);
+
+  /** The {@link ActivatedRoute} used to read route parameters. */
+  private route = inject(ActivatedRoute);
+
+  /** The {@link MatSnackBar} used to display notifications. */
+  private snackBar = inject(MatSnackBar);
 
   /** The {@link FormGroup} for the user to enter their credentials. */
   public readonly form: FormGroup = new FormGroup({
@@ -24,24 +34,18 @@ export class LoginComponent implements AfterViewInit {
   private readonly returnUrl: string;
 
   /**
-   *
-   * @param authentication
-   * @param router
-   * @param route
-   * @param snackBar
+   * Default constructor
    */
-  constructor(private authentication: AuthenticationService, private router: Router, private route: ActivatedRoute, private snackBar: MatSnackBar) {
+  constructor() {
     this.returnUrl = this.route.snapshot.queryParams['returnUrl'] || '';
   }
   /**
    * Initializes the return URL based on the referrer and triggers navigation, if the user has already been logged in.
    */
   public ngAfterViewInit(): void {
-    this.authentication.isLoggedIn.pipe(first()).subscribe((b) => {
-      if (b) {
-        this.router.navigateByUrl(this.returnUrl, {skipLocationChange: true}).then(r => { /* No op. */});
-      }
-    });
+    if (this.authentication.isLoggedIn()) {
+      this.router.navigateByUrl(this.returnUrl, {skipLocationChange: true}).then(r => { /* No op. */});
+    }
   }
 
   /**

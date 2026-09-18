@@ -9,7 +9,7 @@
     <mat-form-field [style.width]="'100%'">
       <mat-label i18n="@@LabelTemplate">Template:</mat-label>
       <mat-select formControlName="template">
-        @for (template of (templates | async); track template) {
+        @for (template of this.templates(); track template) {
           <mat-option [value]="template">
             {{template.name}} ({{(template.type)}})
           </mat-option>

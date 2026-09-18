@@ -1,6 +1,6 @@
 <form [formGroup]="formControl">
 
-  <h1>Job Template (ID: {{templateId | async}})</h1>
+  <h1>Job Template (ID: {{this.templateId()}})</h1>
 
   <div class="main">
     <mat-form-field appearance="fill" [style.width]="'20%'">
@@ -11,7 +11,7 @@
     <mat-form-field appearance="fill" [style.width]="'5%'">
       <mat-label i18n="@@LabelType">Type</mat-label>
       <mat-select formControlName="type">
-        @for (type of (jobTypes | async); track type) {
+        @for (type of this.jobTypes(); track type) {
           <mat-option [value]="type">
             {{type}}
           </mat-option>
@@ -22,7 +22,7 @@
     <mat-form-field appearance="fill" [style.width]="'10%'">
       <mat-label i18n="@@LabelParticipant">Participant</mat-label>
       <mat-select formControlName="participantName">
-        @for (participant of (participants | async); track participant) {
+        @for (participant of this.participants(); track participant) {
           <mat-option [value]="participant">
             {{participant}}
           </mat-option>
@@ -33,7 +33,7 @@
     <mat-form-field appearance="fill" [style.width]="'15%'">
       <mat-label i18n="@@LabelEntityMapping">Entity Mapping</mat-label>
       <mat-select formControlName="mapping">
-        @for (mapping of (mappings | async); track mapping.id) {
+        @for (mapping of this.mappings(); track mapping.id) {
           <mat-option [value]="mapping">
             {{mapping.name}}
           </mat-option>
@@ -44,7 +44,7 @@
     <mat-form-field appearance="fill" [style.width]="'15%'">
       <mat-label i18n="@@ApacheSolrConfig">Apache Solr Config</mat-label>
       <mat-select formControlName="config">
-        @for (config of (solr | async); track config.id) {
+        @for (config of this.solr(); track config.id) {
           <mat-option [value]="config">
             {{config.name}}
           </mat-option>
@@ -107,7 +107,7 @@
         <td [style.min-width]="'300px'">
           <mat-form-field appearance="fill" [style.width]="'100%'">
             <mat-select formControlName="type">
-              @for (type of (transformerTypes | async); track type) {
+              @for (type of this.transformerTypes(); track type) {
                 <mat-option [value]="type">
                   {{type}}
                 </mat-option>

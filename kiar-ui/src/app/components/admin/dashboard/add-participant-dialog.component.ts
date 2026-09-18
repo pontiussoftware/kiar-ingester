@@ -1,4 +1,4 @@
-import {Component} from "@angular/core";
+import {Component, inject} from "@angular/core";
 import {FormControl, FormGroup, Validators} from "@angular/forms";
 import {MatDialogRef} from "@angular/material/dialog";
 
@@ -8,13 +8,13 @@ import {MatDialogRef} from "@angular/material/dialog";
     standalone: false
 })
 export class AddParticipantDialogComponent {
+  /** The {@link MatDialogRef} used to interact with and close this dialog. */
+  private dialogRef = inject<MatDialogRef<AddParticipantDialogComponent>>(MatDialogRef);
 
   /** The {@link FormControl} that backs this {@link AddParticipantDialogComponent}. */
   public formControl: FormGroup =  new FormGroup({
     name: new FormControl('', [Validators.required, Validators.minLength(3)]),
   })
-
-  constructor(private dialogRef: MatDialogRef<AddParticipantDialogComponent>) {}
 
   /**
    * Saves the data in this {@link AddParticipantDialogComponent}.

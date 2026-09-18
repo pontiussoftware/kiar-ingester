@@ -1,6 +1,6 @@
 <form [formGroup]="formControl">
 
-  <h1>Edit Entity Mapping (ID: {{mappingId | async}})</h1>
+  <h1>Edit Entity Mapping (ID: {{this.mappingId()}})</h1>
 
   <div id="main" [style.display]="'flex'">
     <mat-form-field appearance="fill" [style.width]="'15%'">
@@ -16,7 +16,7 @@
     <mat-form-field appearance="fill" [style.width]="'10%'">
       <mat-label>Type</mat-label>
       <mat-select formControlName="type">
-        @for (format of (mappingFormats | async); track format) {
+        @for (format of this.mappingFormats(); track format) {
           <mat-option [value]="format">
             {{format}}
           </mat-option>
@@ -84,7 +84,7 @@
           <mat-form-field appearance="fill" [style.width]="'100%'">
             <mat-label i18n="@@LabelParser">Parser</mat-label>
             <mat-select formControlName="parser">
-              @for (parser of (parsers | async); track parser) {
+              @for (parser of this.parsers(); track parser) {
                 <mat-option [value]="parser">
                   {{parser}}
                 </mat-option>

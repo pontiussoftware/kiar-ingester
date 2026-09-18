@@ -1,4 +1,4 @@
-import {Component} from "@angular/core";
+import {Component, inject} from "@angular/core";
 import {FormControl, FormGroup, Validators} from "@angular/forms";
 import {MatDialogRef} from "@angular/material/dialog";
 import {ApacheSolrConfig} from "../../../../../openapi";
@@ -9,6 +9,8 @@ import {ApacheSolrConfig} from "../../../../../openapi";
     standalone: false
 })
 export class AddSolrConfigDialogComponent {
+  /** The {@link MatDialogRef} used to interact with and close this dialog. */
+  private dialogRef = inject<MatDialogRef<AddSolrConfigDialogComponent>>(MatDialogRef);
 
   /** The {@link FormControl} that backs this {@link AddEntityMappingDialogComponent}. */
   public formControl: FormGroup =  new FormGroup({
@@ -18,8 +20,6 @@ export class AddSolrConfigDialogComponent {
     username: new FormControl('', [Validators.required]),
     password: new FormControl('', [Validators.required])
   })
-
-  constructor(private dialogRef: MatDialogRef<AddSolrConfigDialogComponent>) {}
 
   /**
    * Saves the data in this {@link AddEntityMappingDialogComponent}.

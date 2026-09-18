@@ -1,4 +1,4 @@
-import {AfterViewInit, Component, OnDestroy, ViewChild} from "@angular/core";
+import {AfterViewInit, Component, inject, OnDestroy, signal, viewChild} from "@angular/core";
 import {MatDialog} from "@angular/material/dialog";
 import {Job, JobService} from "../../../../openapi";
 import {firstValueFrom, interval, Subscription} from "rxjs";
@@ -15,6 +15,14 @@ import {JobCurrentDatasource} from "./job-current-datasource";
     standalone: false
 })
 export class DashboardComponent implements AfterViewInit, OnDestroy {
+  /** The {@link MatDialog} service used to open dialogs. */
+  private dialog = inject(MatDialog);
+
+  /** The {@link MatSnackBar} used to display notifications. */
+  private snackBar = inject(MatSnackBar);
+
+  /** The {@link JobService} used to access and manage jobs. */
+  private service = inject(JobService);
 
   /** Name of the columns being displayed by the data table. */
   public readonly displayedColumns: string[] = ['name', 'status', 'source', 'template', 'statistics', 'changedAt', 'createdAt', 'createdBy',  'action'];
@@ -35,17 +43,15 @@ export class DashboardComponent implements AfterViewInit, OnDestroy {
   private jobHistoryPaginatorSubscription: (Subscription | null) = null
 
   /** Reference to the {@link MatPaginator}*/
-  @ViewChild('activeJobPaginator')
-  private activeJobPaginator: MatPaginator;
+  private readonly activeJobPaginator = viewChild.required<MatPaginator>('activeJobPaginator');
 
   /** Reference to the {@link MatPaginator}*/
-  @ViewChild('jobHistoryPaginator')
-  private jobHistoryPaginator: MatPaginator;
+  private readonly jobHistoryPaginator = viewChild.required<MatPaginator>('jobHistoryPaginator');
 
   /** The upload progress for a specific job. */
-  private uploadProgress = new Map<number, number>()
+  private readonly uploadProgress = signal(new Map<number, number>())
 
-  constructor(private dialog: MatDialog, private snackBar: MatSnackBar, private service: JobService) {
+  constructor() {
     this.activeJobs = new JobCurrentDatasource(this.service)
     this.jobHistory = new JobHistoryDatasource(this.service)
   }
@@ -54,9 +60,9 @@ export class DashboardComponent implements AfterViewInit, OnDestroy {
    */
   public ngAfterViewInit(): void {
     this.reload()
-    this.activeJobPaginatorSubscription = this.activeJobPaginator.page.subscribe((s) => this.activeJobs.load(s.pageIndex, s.pageSize));
-    this.jobHistoryPaginatorSubscription = this.jobHistoryPaginator.page.subscribe((s) => this.jobHistory.load(s.pageIndex, s.pageSize));
-    this.timerSubscription = interval(5000).subscribe(s => this.activeJobs.load(this.activeJobPaginator.pageIndex, this.activeJobPaginator.pageSize))
+    this.activeJobPaginatorSubscription = this.activeJobPaginator().page.subscribe((s) => this.activeJobs.load(s.pageIndex, s.pageSize));
+    this.jobHistoryPaginatorSubscription = this.jobHistoryPaginator().page.subscribe((s) => this.jobHistory.load(s.pageIndex, s.pageSize));
+    this.timerSubscription = interval(5000).subscribe(s => this.activeJobs.load(this.activeJobPaginator().pageIndex, this.activeJobPaginator().pageSize))
   }
 
   /**
@@ -84,8 +90,8 @@ export class DashboardComponent implements AfterViewInit, OnDestroy {
    * Reloads both the list of active jobs and the job history.
    */
   public reload() {
-    this.activeJobs.load(this.activeJobPaginator.pageIndex, this.activeJobPaginator.pageSize);
-    this.jobHistory.load(this.jobHistoryPaginator.pageIndex, this.jobHistoryPaginator.pageSize);
+    this.activeJobs.load(this.activeJobPaginator().pageIndex, this.activeJobPaginator().pageSize);
+    this.jobHistory.load(this.jobHistoryPaginator().pageIndex, this.jobHistoryPaginator().pageSize);
   }
 
   /**
@@ -103,7 +109,7 @@ export class DashboardComponent implements AfterViewInit, OnDestroy {
           const formData: FormData = new FormData();
           if (job.id == null) throw new Error("Undefined job ID.")
           formData.append('file', file);
-          this.uploadProgress.set(job.id, 0);
+          this.setProgress(job.id, 0);
 
           /* Slice file and upload it. */
           const sliceSize = 1e8
@@ -112,7 +118,7 @@ export class DashboardComponent implements AfterViewInit, OnDestroy {
             const slice = file.slice(i * sliceSize, Math.min((i + 1) * sliceSize, file.size), file.type)
             try {
               await firstValueFrom(this.service.putUpload(job.id!!, i == 0, i == (slices - 1), slice, 'body'));
-              this.uploadProgress.set(job.id, (i / slices) * 100)
+              this.setProgress(job.id, (i / slices) * 100)
             } catch (err) {
               this.snackBar.open(`Error while uploading ${job.template?.type} file for job ${job.id}.`, "Dismiss", { duration: 2000 } as MatSnackBarConfig)
               break
@@ -120,7 +126,7 @@ export class DashboardComponent implements AfterViewInit, OnDestroy {
           }
 
           this.snackBar.open(`${job.template?.type} uploaded successfully. Ready for harvesting!`, "Dismiss", { duration: 2000 } as MatSnackBarConfig)
-          this.uploadProgress.delete(job.id);
+          this.clearProgress(job.id);
         }
       });
       fileInput.click();
@@ -179,7 +185,7 @@ export class DashboardComponent implements AfterViewInit, OnDestroy {
    */
   public isUploading(job: Job): boolean {
     if (!job.id) return false;
-    return this.uploadProgress.has(job.id);
+    return this.uploadProgress().has(job.id);
   }
 
   /**
@@ -189,6 +195,29 @@ export class DashboardComponent implements AfterViewInit, OnDestroy {
    */
   public progressForJob(job: Job): number {
     if (!job.id) return 0;
-    return this.uploadProgress.get(job.id) ?? 0;
+    return this.uploadProgress().get(job.id) ?? 0;
+  }
+
+  /**
+   * Records the upload progress for a {@link Job}. Replaces the map so the signal notifies its consumers.
+   *
+   * @param jobId The ID of the {@link Job}.
+   * @param progress The progress in percent.
+   */
+  private setProgress(jobId: number, progress: number) {
+    this.uploadProgress.update(m => new Map(m).set(jobId, progress))
+  }
+
+  /**
+   * Removes the upload progress entry for a {@link Job}.
+   *
+   * @param jobId The ID of the {@link Job}.
+   */
+  private clearProgress(jobId: number) {
+    this.uploadProgress.update(m => {
+      const copy = new Map(m)
+      copy.delete(jobId)
+      return copy
+    })
   }
 }

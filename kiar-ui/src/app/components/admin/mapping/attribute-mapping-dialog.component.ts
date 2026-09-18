@@ -1,9 +1,8 @@
-import {Component, Inject} from "@angular/core";
+import {Component, inject} from "@angular/core";
+import {toSignal} from "@angular/core/rxjs-interop";
 import {MAT_DIALOG_DATA, MatDialogRef} from "@angular/material/dialog";
 import {FormArray, FormControl, FormGroup} from "@angular/forms";
 import {EntityMappingService, ValueParser} from "../../../../../openapi";
-import {Observable, shareReplay} from "rxjs";
-
 
 /**
  * Data describing the attribute data as handed to the {@link AttributeMappingDialogComponent}.
@@ -19,23 +18,23 @@ export interface AttributeMappingData {
     standalone: false
 })
 export class AttributeMappingDialogComponent {
+  /** The {@link MatDialogRef} used to interact with and close this dialog. */
+  private dialogRef = inject<MatDialogRef<AttributeMappingDialogComponent>>(MatDialogRef);
 
-  /** An {@link Observable} of the list of available {@link ValueParser}s. */
-  public readonly parsers: Observable<Array<ValueParser>>
+  /** The {@link EntityMappingService} used to access entity mappings, parsers and mapping formats. */
+  private _service = inject(EntityMappingService);
 
-  constructor(
-      private dialogRef: MatDialogRef<AttributeMappingDialogComponent>,
-      @Inject(MAT_DIALOG_DATA) public data: AttributeMappingData,
-      private _service: EntityMappingService) {
-    this.parsers = this._service.getListParsers().pipe(shareReplay(1))
-  }
+  /** The {@link AttributeMappingData} provided as dialog data. */
+  protected data = inject<AttributeMappingData>(MAT_DIALOG_DATA);
+
+  /** A signal of the available {@link ValueParser}s. */
+  public readonly parsers = toSignal(this._service.getListParsers(), {initialValue: [] as Array<ValueParser>})
 
   /**
    * Accessor for the {@link FormArray} holding parameter values.
    */
-
-  get parameterForms(): FormArray {
-    return this.data.form.get('parameters') as FormArray
+  get parameterForms(): FormArray<FormGroup> {
+    return this.data.form.get('parameters') as FormArray<FormGroup>
   }
 
   /**

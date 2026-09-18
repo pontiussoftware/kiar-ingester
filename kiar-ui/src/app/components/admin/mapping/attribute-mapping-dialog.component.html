@@ -14,7 +14,7 @@
     <mat-form-field appearance="fill" [style.width]="'50%'">
       <mat-label i18n="@@LabelParser">Parser</mat-label>
       <mat-select formControlName="parser">
-        @for (parser of (parsers | async); track parser) {
+        @for (parser of this.parsers(); track parser) {
           <mat-option [value]="parser">
             {{parser}}
           </mat-option>
@@ -43,7 +43,7 @@
         <th>&nbsp;</th>
       </thead>
       <tbody>
-        @for (parameterForm of parameterForms?.controls; track parameterForm; let i = $index) {
+        @for (parameterForm of this.parameterForms.controls; track parameterForm; let i = $index) {
           <tr [formGroup]="parameterForm">
             <td [style.width]="'15%'">
               <mat-form-field appearance="fill" [style.width]="'100%'">

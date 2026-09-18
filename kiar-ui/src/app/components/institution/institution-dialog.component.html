@@ -4,7 +4,7 @@
     <mat-form-field appearance="fill" [style.width]="'50%'">
       <mat-label i18n="@@LabelName">Name</mat-label>
       <input matInput type="text" formControlName="name">
-      @if (formControl.get('name')?.hasError('minlength')) {
+      @if (this.formControl.get('name')?.hasError('minlength')) {
         <mat-error>Minimum length is 10.</mat-error>
       }
     </mat-form-field>
@@ -12,7 +12,7 @@
     <mat-form-field appearance="fill" [style.width]="'20%'">
       <mat-label i18n="@@LabelParticipant">Participant</mat-label>
       <mat-select formControlName="participantName">
-        @for (participant of (participants | async); track participant) {
+        @for (participant of this.participants(); track participant) {
           <mat-option [value]="participant">
             {{ participant }}
           </mat-option>
@@ -23,7 +23,7 @@
     <mat-form-field appearance="fill" [style.width]="'20%'">
       <mat-label i18n="@@LabelCanton">Canton</mat-label>
       <mat-select formControlName="canton">
-        @for (canton of (cantons | async); track canton) {
+        @for (canton of this.cantons(); track canton) {
           <mat-option [value]="canton">
             {{ canton }}
           </mat-option>
@@ -38,7 +38,7 @@
     <mat-form-field appearance="fill" [style.width]="'100%'">
       <mat-label i18n="@@LabelDisplayName">Display Name</mat-label>
       <input matInput type="text" formControlName="displayName">
-      @if (formControl.get('displayName')?.hasError('minlength')) {
+      @if (this.formControl.get('displayName')?.hasError('minlength')) {
         <mat-error>Minimum length is 10.</mat-error>
       }
     </mat-form-field>
@@ -94,7 +94,7 @@
         <mat-form-field appearance="fill" [style.width]="'30%'">
           <mat-label i18n="@@LabelDefaultRightStatement">Default Right Statement</mat-label>
           <mat-select formControlName="defaultRightStatement">
-            @for (rightStatement of (rightStatements | async); track rightStatement) {
+            @for (rightStatement of this.rightStatements(); track rightStatement) {
               <mat-option
                 [value]="rightStatement.shortName">
                 {{ rightStatement.longName }}
@@ -117,7 +117,7 @@
       <!-- Tab of available collections (admin only).  -->
       <mat-tab label="Available Collections" i18n-label="@@LabelAvailableCollections">
         <ul formArrayName="availableCollections" class="checkbox-list">
-          @for (option of availableCollectionsForms; track option; let i = $index) {
+          @for (option of this.availableCollectionsForms; track option; let i = $index) {
             <li>
               <mat-checkbox [formControl]="option">
                 {{ allCollections[i].displayName }}
@@ -130,7 +130,7 @@
       <!-- Tab of selected collections -->
       <mat-tab label="Published Collections" i18n-label="@@LabelPublishedCollections">
         <ul formArrayName="selectedCollections" class="checkbox-list">
-          @for (option of selectedCollectionsForms; track option; let i = $index) {
+          @for (option of this.selectedCollectionsForms; track option; let i = $index) {
             <li>
               <mat-checkbox [formControl]="option">
                 {{ availableCollections[i].displayName }}

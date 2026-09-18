@@ -1,6 +1,7 @@
-import {AfterViewInit, Component} from "@angular/core";
+import {AfterViewInit, Component, inject} from "@angular/core";
+import {toSignal} from "@angular/core/rxjs-interop";
 import {ApacheSolrConfig, ConfigService, EntityMapping, JobTemplate} from "../../../../../openapi";
-import {mergeMap, Observable, Observer, shareReplay, Subject} from "rxjs";
+import {mergeMap, Observer, Subject} from "rxjs";
 import {MatDialog} from "@angular/material/dialog";
 import {AddEntityMappingDialogComponent} from "./add-entity-mapping-dialog.component";
 import {MatSnackBar, MatSnackBarConfig} from "@angular/material/snack-bar";
@@ -15,44 +16,29 @@ import {AddParticipantDialogComponent} from "./add-participant-dialog.component"
     standalone: false
 })
 export class AdminDashboardComponent implements AfterViewInit {
+  /** The {@link ConfigService} used to access application configuration (templates, mappings, Solr configurations, participants). */
+  private config = inject(ConfigService);
 
+  /** The {@link MatDialog} service used to open dialogs. */
+  private _dialog = inject(MatDialog);
 
-  /** {@link Observable} of all available {@link JobTemplate}s. */
-  public readonly templates: Observable<Array<JobTemplate>>
-
-  /** {@link Observable} of all available {@link EntityMapping}s. */
-  public readonly mappings: Observable<Array<EntityMapping>>
-
-  /** {@link Observable} of all available {@link ApacheSolrConfig}s. */
-  public readonly solr: Observable<Array<ApacheSolrConfig>>
-
-  /** {@link Observable} of all available participants. */
-  public readonly participant: Observable<Array<String>>
+  /** The {@link MatSnackBar} used to display notifications. */
+  private _snackBar = inject(MatSnackBar);
 
   /** A {@link Subject} that can be used to trigger a data reload. */
-  private reload= new Subject<void>()
+  private reload = new Subject<void>()
 
-  constructor(private config: ConfigService, private _dialog: MatDialog, private _snackBar: MatSnackBar) {
-    this.templates = this.reload.pipe(
-        mergeMap(m => this.config.getListJobTemplates()),
-        shareReplay(1)
-    );
+  /** A signal of the available {@link JobTemplate}s. */
+  public readonly templates = toSignal(this.reload.pipe(mergeMap(() => this.config.getListJobTemplates())), {initialValue: [] as Array<JobTemplate>})
 
-    this.mappings = this.reload.pipe(
-        mergeMap(m => this.config.getListEntityMappings()),
-        shareReplay(1)
-    );
+  /** A signal of the available {@link EntityMapping}s. */
+  public readonly mappings = toSignal(this.reload.pipe(mergeMap(() => this.config.getListEntityMappings())), {initialValue: [] as Array<EntityMapping>})
 
-    this.solr = this.reload.pipe(
-        mergeMap(m => this.config.getListSolrConfiguration()),
-        shareReplay(1)
-    );
+  /** A signal of the available {@link ApacheSolrConfig}s. */
+  public readonly solr = toSignal(this.reload.pipe(mergeMap(() => this.config.getListSolrConfiguration())), {initialValue: [] as Array<ApacheSolrConfig>})
 
-    this.participant = this.reload.pipe(
-        mergeMap(m => this.config.getListParticipants()),
-        shareReplay(1)
-    );
-  }
+  /** A signal of the available participant names. */
+  public readonly participant = toSignal(this.reload.pipe(mergeMap(() => this.config.getListParticipants())), {initialValue: [] as Array<string>})
 
   /**
    * Reloads the data once the view has been loaded.

@@ -1,6 +1,7 @@
-import {Component, Inject} from "@angular/core";
+import {Component, inject} from "@angular/core";
+import {toSignal} from "@angular/core/rxjs-interop";
 import {FormControl, FormGroup, Validators} from "@angular/forms";
-import {first, map, Observable, shareReplay, tap} from "rxjs";
+import {first, map, tap} from "rxjs";
 import {Institution, InstitutionService, Role, User, UserService} from "../../../../openapi";
 import {MAT_DIALOG_DATA, MatDialogRef} from "@angular/material/dialog";
 import {PASSWORD_VALIDATOR} from "../../utilities/password";
@@ -12,17 +13,32 @@ import {PASSWORD_VALIDATOR} from "../../utilities/password";
     standalone: false
 })
 export class UserDialogComponent {
+  /** The {@link UserService} used to load and edit user information. */
+  private user = inject(UserService);
+
+  /** The {@link InstitutionService} used to load institution information. */
+  private institution = inject(InstitutionService);
+
+  /** The provided input data. */
+  private data = inject<User | null>(MAT_DIALOG_DATA);
+
+  /** The {@link MatDialogRef} used to interact with the dialog. */
+  private dialogRef = inject<MatDialogRef<UserDialogComponent>>(MatDialogRef);
 
   /** The {@link FormControl} that backs this {@link AddEntityMappingDialogComponent}. */
   public formControl: FormGroup
 
-  /** An {@link Observable} of available {@link Institution}s. */
-  public readonly institutions: Observable<Array<Institution>>
+  /** A signal of the available {@link Institution}s. */
+  public readonly institutions = toSignal(this.institution.getInstitutions(0, 1000).pipe(
+        first(),
+        map(r => r.results),
+        tap(institutions => {
+          this.formControl.get('institution')?.setValue(institutions.find(i => i.id == this.data?.institution?.id) ?? null)
+        })), {initialValue: [] as Array<Institution>})
 
-  /** An {@link Observable} of available {@link Role}s. */
-  public readonly roles: Observable<Array<Role>>
-
-  constructor(private user: UserService, private institution: InstitutionService, private dialogRef: MatDialogRef<UserDialogComponent>, @Inject(MAT_DIALOG_DATA) private data: User | null) {
+  /** A signal of the available {@link Role}s. */
+  public readonly roles = toSignal(this.user.getListRoles().pipe(first()), {initialValue: [] as Array<Role>})
+  constructor() {
     this.formControl = new FormGroup({
       username: new FormControl(this.data?.username || '', [Validators.required, Validators.minLength(4)]),
       email: new FormControl(this.data?.email || '', [Validators.email]),
@@ -34,20 +50,6 @@ export class UserDialogComponent {
       role: new FormControl(this.data?.role || ''),
       institution: new FormControl<Institution | null>(null),
     })
-
-    /* Get list of institutions. */
-    this.institutions = this.institution.getInstitutions(0, 1000).pipe(
-        first(),
-        map(r => r.results),
-        tap(institutions => {
-          this.formControl.get('institution')?.setValue(institutions.find(i => i.id == this.data?.institution?.id) ?? null)
-        }),
-        shareReplay(1)
-    )
-    this.roles = this.user.getListRoles().pipe(
-        first(),
-        shareReplay(1)
-    )
   }
 
   /**

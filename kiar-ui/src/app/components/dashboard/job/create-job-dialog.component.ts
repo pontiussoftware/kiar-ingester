@@ -1,7 +1,8 @@
-import {Component} from "@angular/core";
+import {Component, inject} from "@angular/core";
+import {toSignal} from "@angular/core/rxjs-interop";
 import {FormControl, FormGroup} from "@angular/forms";
-import {CreateJobRequest, Job, JobService, JobTemplate, Role, SessionStatus, SuccessStatus, User} from "../../../../../openapi";
-import {Observable, Observer, shareReplay} from "rxjs";
+import {CreateJobRequest, Job, JobService, JobTemplate} from "../../../../../openapi";
+import {Observable, Observer} from "rxjs";
 import {MatSnackBar, MatSnackBarConfig} from "@angular/material/snack-bar";
 import {MatDialogRef} from "@angular/material/dialog";
 
@@ -11,15 +12,23 @@ import {MatDialogRef} from "@angular/material/dialog";
     standalone: false
 })
 export class CreateJobDialogComponent {
+  /** The {@link JobService} used to access and manage jobs. */
+  private service = inject(JobService);
+
+  /** The {@link MatSnackBar} used to display notifications. */
+  private snackBar = inject(MatSnackBar);
+
+  /** The {@link MatDialogRef} used to interact with and close this dialog. */
+  private dialogRef = inject<MatDialogRef<CreateJobDialogComponent>>(MatDialogRef);
+
   /** The {@link FormControl} that backs this {@link AddJobTemplateDialogComponent}. */
   public formControl: FormGroup =  new FormGroup({
     name: new FormControl(''),
     template: new FormControl('')
   })
 
-  /** An {@link Observable} of available {@link JobTemplate}s. */
-  public readonly templates: Observable<Array<JobTemplate>>
-
+  /** A signal of the available {@link JobTemplate}s. */
+  public readonly templates = toSignal(this.service.getListJobTemplates(), {initialValue: [] as Array<JobTemplate>})
   /**
    * Initializes the {@link Observable} of available {@link JobTemplate}s.
    *
@@ -27,9 +36,6 @@ export class CreateJobDialogComponent {
    * @param snackBar
    * @param dialogRef
    */
-  constructor(private service: JobService, private snackBar: MatSnackBar, private dialogRef: MatDialogRef<CreateJobDialogComponent>,) {
-    this.templates = this.service.getListJobTemplates().pipe(shareReplay(1, 30000))
-  }
 
   /**
    * Tries to create a new Job based on the entries made by the user.
@@ -46,7 +52,6 @@ export class CreateJobDialogComponent {
           this.snackBar.open(`Error occurred while creating job: ${err?.error?.description}.`, "Dismiss", { duration: 2000 } as MatSnackBarConfig)
         }
       } as Observer<Job>
-
 
       /* Post job. */
       this.service.postCreateJob({

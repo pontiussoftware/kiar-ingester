@@ -3,7 +3,7 @@
     <mat-icon>arrow_back</mat-icon>
   </button>
 
-  Job Logs (ID: {{(jobId | async)}})
+  Job Logs (ID: {{this.jobId()}})
 
   &nbsp;
 
@@ -25,7 +25,7 @@
   </mat-button-toggle-group>
 </h1>
 
-<table mat-table [dataSource]="dataSource" class="mat-elevation-z8">
+<table mat-table [dataSource]="this.dataSource.data()" class="mat-elevation-z8">
   <!-- Document Column -->
   <ng-container matColumnDef="documentId" i18n="@@LabelDocumentId">
     <th mat-header-cell *matHeaderCellDef> Document ID</th>
@@ -65,4 +65,4 @@
   </tr>
 </table>
 
-<mat-paginator [length]="dataSource.totalSize" [pageSize]="50" [pageSizeOptions]="[25, 50, 100]"></mat-paginator>
+<mat-paginator [length]="this.dataSource.total()" [pageSize]="50" [pageSizeOptions]="[25, 50, 100]"></mat-paginator>

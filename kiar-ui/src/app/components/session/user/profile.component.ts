@@ -1,4 +1,4 @@
-import {AfterViewInit, Component} from "@angular/core";
+import {AfterViewInit, Component, inject} from "@angular/core";
 import {FormControl, FormGroup, Validators} from "@angular/forms";
 import {Role, SessionService, SessionStatus, User} from "../../../../../openapi";
 import {Observer} from "rxjs";
@@ -12,7 +12,11 @@ import {PASSWORD_VALIDATOR} from "../../../utilities/password";
     standalone: false
 })
 export class ProfileComponent implements AfterViewInit {
+  /** The {@link SessionService} used to access the current session. */
+  private service = inject(SessionService);
 
+  /** The {@link MatSnackBar} used to display notifications. */
+  private snackBar = inject(MatSnackBar);
 
   /** The {@link FormControl} that backs this {@link AddJobTemplateDialogComponent}. */
   public formControl: FormGroup =  new FormGroup({
@@ -27,14 +31,9 @@ export class ProfileComponent implements AfterViewInit {
     },{ validators: PASSWORD_VALIDATOR })
   })
 
-  constructor(private service: SessionService, private snackBar: MatSnackBar) {
-  }
-
-
   ngAfterViewInit() {
     this.reload()
   }
-
 
   /**
    * Reloads the user data that backs this form.

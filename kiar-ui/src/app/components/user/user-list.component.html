@@ -5,7 +5,7 @@
   &nbsp;
 </h1>
 
-<table mat-table [dataSource]="dataSource" class="mat-elevation-z8" matSort>
+<table mat-table [dataSource]="this.dataSource.data()" class="mat-elevation-z8" matSort>
   <!-- Username Column -->
   <ng-container matColumnDef="username" i18n="@@LabelUsername">
     <th mat-header-cell *matHeaderCellDef mat-sort-header sortActionDescription="Sort by name.">Username</th>
@@ -49,4 +49,4 @@
   <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
 </table>
 
-<mat-paginator [length]="dataSource.totalSize" [pageSize]="15" [pageSizeOptions]="[15, 25, 50, 100]"></mat-paginator>
+<mat-paginator [length]="this.dataSource.total()" [pageSize]="15" [pageSizeOptions]="[15, 25, 50, 100]"></mat-paginator>

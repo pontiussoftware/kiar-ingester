@@ -12,7 +12,7 @@
     <mat-form-field appearance="fill" [style.width]="'20%'">
       <mat-label i18n="@@LabelRole">Role</mat-label>
       <mat-select formControlName="role">
-        @for (role of (roles | async); track role) {
+        @for (role of this.roles(); track role) {
           <mat-option [value]="role">
             {{role}}
           </mat-option>
@@ -32,7 +32,7 @@
     <mat-form-field appearance="fill" [style.width]="'50%'">
       <mat-label i18n="@@LabelInstitution">Institution</mat-label>
       <mat-select formControlName="institution">
-        @for (institution of (institutions | async); track institution.id) {
+        @for (institution of this.institutions(); track institution.id) {
           <mat-option [value]="institution">
             {{ institution.name}}
           </mat-option>
@@ -44,7 +44,7 @@
       <mat-form-field [style.width]="'100%'">
         <mat-label i18n="@@LabelPassword">Password:</mat-label>
         <input type="password" matInput placeholder="Minimum of 8 characters" formControlName="passwordFirst" />
-        @if (formControl.get('password')?.hasError('notLongEnough')) {
+        @if (this.formControl.get('password')?.hasError('notLongEnough')) {
           <mat-error>Password must have at least 8 characters.</mat-error>
         }
       </mat-form-field>
@@ -52,7 +52,7 @@
       <mat-form-field [style.width]="'100%'">
         <mat-label i18n="@@LabelPasswordRepeat">Password (repeat):</mat-label>
         <input type="password" matInput placeholder="Minimum of 8 characters" formControlName="passwordSecond"  />
-        @if (formControl.get('password')?.hasError('notSame')) {
+        @if (this.formControl.get('password')?.hasError('notSame')) {
           <mat-error>Passwords do not match.</mat-error>
         }
       </mat-form-field>

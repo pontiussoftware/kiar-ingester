@@ -1,8 +1,6 @@
-import { Component } from '@angular/core';
+import {Component, inject} from '@angular/core';
 import {AuthenticationService} from "./services/authentication.service";
-import {map, Observable} from "rxjs";
 import {Router} from "@angular/router";
-import {Role} from "../../openapi";
 import {MatDialog} from "@angular/material/dialog";
 import {ProfileComponent} from "./components/session/user/profile.component";
 
@@ -13,61 +11,29 @@ import {ProfileComponent} from "./components/session/user/profile.component";
     standalone: false
 })
 export class AppComponent {
-  constructor(private authentication: AuthenticationService, private dialog: MatDialog, private router: Router) {
-  }
+  /** The {@link AuthenticationService} used to query and change the login state. */
+  private authentication = inject(AuthenticationService);
 
-  /**
-   * Returns an {@link Observable} of the current login status.
-   *
-   * @return {@link Observable} of the current login status.
-   */
-  get isLoggedIn(): Observable<boolean> {
-    return this.authentication.isLoggedIn
-  }
+  /** The {@link MatDialog} service used to open dialogs. */
+  private dialog = inject(MatDialog);
 
-  /**
-   * Returns an {@link Observable} of the username of the currently active user.
-   *
-   * @return {@link Observable} of {@link Role}
-   */
-  get username(): Observable<string | undefined> {
-    return this.authentication.status.pipe(
-        map(s => s?.username)
-    )
-  }
+  /** The {@link Router} used for navigation. */
+  private router = inject(Router);
 
-  /**
-   * Returns an {@link Observable} that indicates, if current user is an admin.
-   *
-   * @return {@link Observable}
-   */
-  get isAdmin(): Observable<boolean> {
-    return this.authentication.status.pipe(
-        map(s => s != null && s.role == Role.ADMINISTRATOR)
-    )
-  }
+  /** A signal of the current login status. */
+  public readonly isLoggedIn = this.authentication.isLoggedIn
 
-  /**
-   * Returns an {@link Observable} that indicates, if current user is a manager (or higher).
-   *
-   * @return {@link Observable}
-   */
-  get isManager(): Observable<boolean> {
-    return this.authentication.status.pipe(
-        map(s => s != null && (s.role == Role.ADMINISTRATOR || s.role == Role.MANAGER))
-    )
-  }
+  /** A signal of the username of the currently active user. */
+  public readonly username = this.authentication.username
 
-  /**
-   * Returns an {@link Observable} that indicates, if current user is a viewer (or higher).
-   *
-   * @return {@link Observable}
-   */
-  get isViewer(): Observable<boolean> {
-    return this.authentication.status.pipe(
-        map(s => s != null && (s.role == Role.ADMINISTRATOR || s.role == Role.MANAGER || s.role == Role.VIEWER))
-    )
-  }
+  /** A signal that indicates, if current user is an admin. */
+  public readonly isAdmin = this.authentication.isAdmin
+
+  /** A signal that indicates, if current user is a manager (or higher). */
+  public readonly isManager = this.authentication.isManager
+
+  /** A signal that indicates, if current user is a viewer (or higher). */
+  public readonly isViewer = this.authentication.isViewer
 
   /**
    * Opens the user profile dialog.

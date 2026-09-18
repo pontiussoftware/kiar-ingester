@@ -1,58 +1,30 @@
-import {CollectionViewer, DataSource} from "@angular/cdk/collections";
-import {CollectionService, Institution, InstitutionService, ObjectCollection} from "../../../../openapi";
-import {BehaviorSubject, catchError, map, Observable, of} from "rxjs";
+import {signal} from "@angular/core";
+import {CollectionService, ObjectCollection} from "../../../../openapi";
 
 /**
- * A {@link DataSource} for {@link ObjectCollection} object loaded through the backend API.
+ * Holds a page of {@link ObjectCollection} objects loaded through the backend API, exposed as signals.
  *
- * Can be used as a data source for table.
+ * Bind {@link data} to a table's `[dataSource]` and {@link total} to a paginator's `[length]`.
  */
-export class CollectionDatasource implements DataSource<ObjectCollection> {
-  /** The {@link BehaviorSubject} that acts as a data source. */
-  private data = new BehaviorSubject<ObjectCollection[]>([])
+export class CollectionDatasource {
+  /** The currently loaded page of {@link ObjectCollection} objects. */
+  public readonly data = signal<Array<ObjectCollection>>([])
 
-  /** The {@link BehaviorSubject} that acts as a data source. */
-  private total = new BehaviorSubject<number>(0)
+  /** The total number of {@link ObjectCollection} objects available on the server. */
+  public readonly total = signal(0)
 
   constructor(private service: CollectionService) {}
 
   /**
-   * Connects this {@link DataSource} to a {@link CollectionViewer}.
-   *
-   * @param collectionViewer
-   */
-  public connect(collectionViewer: CollectionViewer): Observable<ObjectCollection[]> {
-    return this.data.asObservable();
-  }
-
-  /**
-   * Disconnects this {@link DataSource} from a {@link CollectionViewer}.
-   *
-   * @param collectionViewer
-   */
-  public disconnect(collectionViewer: CollectionViewer): void {
-    this.data.complete()
-  }
-
-  /**
-   * Returns the total size for this {@link JobLogDatasource} as {@link Observable}.
-   */
-  get totalSize(): number {
-    return this.total.value
-  }
-
-  /**
-   * Reloads the data using the provided page index and page size, order field and order direction
-   * @param page The requested page index.
-   * @param pageSize The requested page size.
-   * @param filter The filter to apply.
+   * Reloads the data using the provided paging parameters.
+   * @param page
+   * @param pageSize
+   * @param filter
    */
   public load(page: number, pageSize: number, filter: string | undefined = undefined) {
-    this.service.getCollections(filter, page, pageSize).subscribe(
-        (next) => {
-          this.total.next(next.total)
-          this.data.next(next.results)
-        }
-    )
+    this.service.getCollections(filter, page, pageSize).subscribe(next => {
+      this.total.set(next.total)
+      this.data.set(next.results)
+    })
   }
 }

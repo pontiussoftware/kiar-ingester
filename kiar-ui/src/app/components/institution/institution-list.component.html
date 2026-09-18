@@ -13,7 +13,7 @@
     <mat-icon>sync</mat-icon>
   </button>
   <mat-menu #menu="matMenu" class=".collection-menu">
-    @for (collection of (collections | async ) ?? []; track collection) {
+    @for (collection of this.collections(); track collection) {
       <button mat-menu-item (click)="synchronize(collection)">{{collection.name}} (ID: {{collection.id}})</button>
     }
   </mat-menu>
@@ -27,7 +27,7 @@
 </div>
 
 
-<table mat-table [dataSource]="dataSource" class="mat-elevation-z8" matSort>
+<table mat-table [dataSource]="this.dataSource.data()" class="mat-elevation-z8" matSort>
 
   <!-- Image Column -->
   <ng-container matColumnDef="image" i18n="@@Image">
@@ -104,4 +104,4 @@
   <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
 </table>
 
-<mat-paginator [length]="dataSource.totalSize" [pageSize]="15" [pageSizeOptions]="[15, 25, 50, 100]"></mat-paginator>
+<mat-paginator [length]="this.dataSource.total()" [pageSize]="15" [pageSizeOptions]="[15, 25, 50, 100]"></mat-paginator>

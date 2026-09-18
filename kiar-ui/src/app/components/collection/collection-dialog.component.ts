@@ -1,4 +1,5 @@
-import {Component, ElementRef, Inject, ViewChild} from "@angular/core";
+import {Component, inject} from "@angular/core";
+import {toSignal} from "@angular/core/rxjs-interop";
 import {FormArray, FormControl, FormGroup, Validators} from "@angular/forms";
 import {CollectionService, Institution, InstitutionService, ObjectCollection,} from "../../../../openapi";
 import {MAT_DIALOG_DATA, MatDialogRef} from "@angular/material/dialog";
@@ -12,28 +13,38 @@ import {MatSnackBar, MatSnackBarConfig} from "@angular/material/snack-bar";
     standalone: false
 })
 export class CollectionDialogComponent {
+  /** The {@link InstitutionService} used to access institution data. */
+  private institutionService = inject(InstitutionService);
+
+  /** The {@link CollectionService} used to access collection data. */
+  private collectionService = inject(CollectionService);
+
+  /** The {@link MatDialogRef} used to interact with and close this dialog. */
+  private dialogRef = inject<MatDialogRef<CollectionDialogComponent>>(MatDialogRef);
+
+  /** The {@link MatSnackBar} used to display notifications. */
+  private snackBar = inject(MatSnackBar);
+
+  /** The ID of the {@link ObjectCollection} to edit, provided as dialog data (null when creating a new one). */
+  protected collectionId = inject<number | null>(MAT_DIALOG_DATA);
 
   /** The {@link FormControl} that backs this {@link AddEntityMappingDialogComponent}. */
   public formControl: FormGroup
 
-  /** An {@link Observable} of available participants. */
-  public readonly institutions: Observable<Array<Institution>>
+  /** {@link Observable} of the available {@link Institution}s; shared between {@link institutions} and {@link reload}. */
+  private readonly institutions$ = this.institutionService.getInstitutions(0, 1000).pipe(
+      first(),
+      map(r => r.results),
+      shareReplay(1)
+  )
+
+  /** A signal of the available {@link Institution}s. */
+  public readonly institutions = toSignal(this.institutions$, {initialValue: [] as Array<Institution>})
 
   /** List of images that should be displayed. */
   public images: Array<string> = []
 
-  /** Reference to the file input. */
-  @ViewChild('fileInput')
-  fileInput: ElementRef<HTMLInputElement>;
-
-
-  constructor(
-      private institutionService: InstitutionService,
-      private collectionService: CollectionService,
-      private dialogRef: MatDialogRef<CollectionDialogComponent>,
-      private snackBar: MatSnackBar,
-      @Inject(MAT_DIALOG_DATA) protected collectionId: number | null
-  ) {
+  constructor() {
     /* Prepare empty form. */
     this.formControl = new FormGroup({
       name: new FormControl(null, [Validators.required, Validators.minLength(5)]),
@@ -45,13 +56,6 @@ export class CollectionDialogComponent {
           new FormControl(null, [Validators.required]),
       ], [Validators.minLength(1)]),
     })
-
-    /* Get list of available participants. */
-    this.institutions = this.institutionService.getInstitutions(0, 1000).pipe(
-        first(),
-        map(r => r.results),
-        shareReplay(1)
-    )
 
     /* Reload institution data. */
     if (this.collectionId) {
@@ -150,7 +154,7 @@ export class CollectionDialogComponent {
    * @param id The ID of the collection to reload.
    */
   private reload(id: number) {
-    combineLatest([this.collectionService.getCollection(id), this.institutions]).subscribe({
+    combineLatest([this.collectionService.getCollection(id), this.institutions$]).subscribe({
       next: ([collection, institutions]) => {
         /* Update form control. */
         this.formControl.get('name')?.setValue(collection.name)

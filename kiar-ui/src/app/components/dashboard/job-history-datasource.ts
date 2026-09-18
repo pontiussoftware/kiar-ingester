@@ -1,49 +1,29 @@
-import {Job, JobLog, JobService} from "../../../../openapi";
-import {CollectionViewer, DataSource} from "@angular/cdk/collections";
-import {BehaviorSubject, Observable} from "rxjs";
+import {signal} from "@angular/core";
+import {Job, JobService} from "../../../../openapi";
 
 /**
- * A {@link DataSource} for {@link Job} object loaded through the backend API.
+ * Holds a page of {@link Job} objects loaded through the backend API, exposed as signals.
  *
- * Can be used as a data source for table.
+ * Bind {@link data} to a table's `[dataSource]` and {@link total} to a paginator's `[length]`.
  */
-export class JobHistoryDatasource implements DataSource<Job> {
+export class JobHistoryDatasource {
+  /** The currently loaded page of {@link Job} objects. */
+  public readonly data = signal<Array<Job>>([])
 
-  /** The {@link BehaviorSubject} that acts as a data source. */
-  private data = new BehaviorSubject<Array<Job>>([])
+  /** The total number of {@link Job} objects available on the server. */
+  public readonly total = signal(0)
 
-  /** The {@link BehaviorSubject} that acts as a data source. */
-  private total = new BehaviorSubject<number>(0)
-
-  constructor(private service: JobService) {
-  }
-
-  public connect(collectionViewer: CollectionViewer): Observable<Job[]> {
-    return this.data.asObservable();
-  }
-
-  public disconnect(collectionViewer: CollectionViewer): void {
-    this.data.complete()
-  }
+  constructor(private service: JobService) {}
 
   /**
-   * Returns the total size for this {@link JobLogDatasource} as {@link Observable}.
-   */
-  get totalSize(): number {
-    return this.total.value
-  }
-
-  /**
-   * Reloads the data using the provided page index and page size.
+   * Reloads the data using the provided paging parameters.
    * @param page The requested page index.
    * @param pageSize The requested page size.
    */
   public load(page: number, pageSize: number) {
-    this.service.getInactiveJobs(page, pageSize).subscribe(
-        (next) => {
-          this.total.next(next.total)
-          this.data.next(next.results)
-        }
-    )
+    this.service.getInactiveJobs(page, pageSize).subscribe(next => {
+      this.total.set(next.total)
+      this.data.set(next.results)
+    })
   }
 }

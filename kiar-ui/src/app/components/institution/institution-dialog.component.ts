@@ -1,4 +1,5 @@
-import {Component, Inject} from "@angular/core";
+import {Component, inject} from "@angular/core";
+import {toSignal} from "@angular/core/rxjs-interop";
 import {FormArray, FormControl, FormGroup, Validators} from "@angular/forms";
 import {
   ApacheSolrCollection,
@@ -10,7 +11,7 @@ import {
   RightStatement
 } from "../../../../openapi";
 import {MAT_DIALOG_DATA, MatDialogRef} from "@angular/material/dialog";
-import {combineLatestWith, first, map, Observable, shareReplay} from "rxjs";
+import {combineLatestWith, first, map} from "rxjs";
 import {MatSnackBar, MatSnackBarConfig} from "@angular/material/snack-bar";
 
 @Component({
@@ -20,22 +21,35 @@ import {MatSnackBar, MatSnackBarConfig} from "@angular/material/snack-bar";
     standalone: false
 })
 export class InstitutionDialogComponent {
+  /** The {@link ConfigService} used to access application configuration (templates, mappings, Solr configurations, participants). */
+  private config = inject(ConfigService);
+
+  /** The {@link MasterdataService} used to load master data such as cantons and right statements. */
+  private masterdata = inject(MasterdataService);
+
+  /** The {@link InstitutionService} used to access institution data. */
+  private institution = inject(InstitutionService);
+
+  /** The {@link MatDialogRef} used to interact with and close this dialog. */
+  private dialogRef = inject<MatDialogRef<InstitutionDialogComponent>>(MatDialogRef);
+
+  /** The {@link MatSnackBar} used to display notifications. */
+  private snackBar = inject(MatSnackBar);
+
+  /** The ID of the {@link Institution} to edit, provided as dialog data (null when creating a new one). */
+  protected institutionId = inject<number | null>(MAT_DIALOG_DATA);
 
   /** The {@link FormControl} that backs this {@link AddEntityMappingDialogComponent}. */
   public formControl: FormGroup
 
-  /** An {@link Observable} of available participants. */
-  public readonly participants: Observable<Array<String>>
+  /** A signal of the available participant names. */
+  public readonly participants = toSignal(this.config.getListParticipants(), {initialValue: [] as Array<string>})
 
-  /** An {@link Observable} of available {@link RightStatement}s. */
-  public readonly rightStatements: Observable<Array<RightStatement>>
+  /** A signal of the available {@link RightStatement}s. */
+  public readonly rightStatements = toSignal(this.masterdata.getListRightStatements(), {initialValue: [] as Array<RightStatement>})
 
-  /** An {@link Observable} of available {@link ApacheSolrCollection}s. */
-  public readonly collections: Observable<Array<ApacheSolrCollection>>
-
-  /** An {@link Observable} of available {@link Canton}s. */
-  public readonly cantons: Observable<Array<Canton>>
-
+  /** A signal of the available {@link Canton}s. */
+  public readonly cantons = toSignal(this.masterdata.getListCantons(), {initialValue: [] as Array<Canton>})
   /** A list of all collections. */
   public allCollections: Array<ApacheSolrCollection> = []
 
@@ -48,14 +62,7 @@ export class InstitutionDialogComponent {
   /** A list of selected collections. */
   public selectedCollectionsForms: Array<FormControl> = []
 
-  constructor(
-      private config: ConfigService,
-      private masterdata: MasterdataService,
-      private institution: InstitutionService,
-      private dialogRef: MatDialogRef<InstitutionDialogComponent>,
-      private snackBar: MatSnackBar,
-      @Inject(MAT_DIALOG_DATA) protected institutionId: number | null
-  ) {
+  constructor() {
     /* Prepare empty form. */
     this.formControl = new FormGroup({
       name: new FormControl(null, [Validators.required, Validators.minLength(5)]),
@@ -78,13 +85,6 @@ export class InstitutionDialogComponent {
       availableCollections: new FormArray(this.availableCollectionsForms),
       selectedCollections: new FormArray(this.selectedCollectionsForms)
     })
-
-    /* Get list of available participants. */
-    this.participants = this.config.getListParticipants().pipe(shareReplay(1, 30000))
-
-    /* Get masterdata. */
-    this.rightStatements = this.masterdata.getListRightStatements().pipe(shareReplay(1))
-    this.cantons = this.masterdata.getListCantons().pipe(shareReplay(1))
 
     /* Reload institution data. */
     if (this.institutionId) {

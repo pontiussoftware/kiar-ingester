@@ -9,7 +9,7 @@
     <mat-form-field appearance="fill" [style.width]="'10%'">
       <mat-label>Type</mat-label>
       <mat-select formControlName="type">
-        @for (type of (types | async); track type) {
+        @for (type of this.types(); track type) {
           <mat-option [value]="type">
             {{type}}
           </mat-option>
@@ -20,7 +20,7 @@
     <mat-form-field appearance="fill" [style.width]="'20%'">
       <mat-label>Participant</mat-label>
       <mat-select formControlName="participantName">
-        @for (participant of (participants | async); track participant) {
+        @for (participant of this.participants(); track participant) {
           <mat-option [value]="participant">
             {{participant}}
           </mat-option>
@@ -40,7 +40,7 @@
     <mat-form-field appearance="fill" [style.width]="'50%'">
       <mat-label>Entity Mapping</mat-label>
       <mat-select formControlName="mapping">
-        @for (mapping of (mappings | async); track mapping) {
+        @for (mapping of this.mappings(); track mapping) {
           <mat-option [value]="mapping">
             {{mapping.name}} ({{mapping.type}})
           </mat-option>
@@ -51,7 +51,7 @@
     <mat-form-field appearance="fill" [style.width]="'50%'">
       <mat-label>Apache Solr Config</mat-label>
       <mat-select formControlName="config">
-        @for (config of (solr | async); track config) {
+        @for (config of this.solr(); track config) {
           <mat-option [value]="config">
             {{config.name}} ({{config.server}})
           </mat-option>

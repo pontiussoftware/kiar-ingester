@@ -1,6 +1,6 @@
 <form [formGroup]="formControl">
 
-  <h1>Apache Solr Configuration (ID: {{solrId | async}})</h1>
+  <h1>Apache Solr Configuration (ID: {{this.solrId()}})</h1>
 
   <div id="main" [style.display]="'flex'">
     <mat-form-field appearance="fill" [style.width]="'15%'">
@@ -82,7 +82,7 @@
           <mat-form-field appearance="fill" [style.width]="'100%'">
             <mat-label i18n="@@LabelFormat">Type</mat-label>
             <mat-select formControlName="format">
-              @for (format of (imageFormats | async); track format) {
+              @for (format of this.imageFormats(); track format) {
                 <mat-option [value]="format">
                   {{format}}
                 </mat-option>

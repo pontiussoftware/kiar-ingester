@@ -1,8 +1,8 @@
-import {Component} from "@angular/core";
+import {Component, inject} from "@angular/core";
+import {toSignal} from "@angular/core/rxjs-interop";
 import {FormControl, FormGroup, Validators} from "@angular/forms";
 import {MatDialogRef} from "@angular/material/dialog";
 import {EntityMapping, EntityMappingService, MappingFormat} from "../../../../../openapi";
-import {Observable, shareReplay} from "rxjs";
 
 @Component({
     selector: 'kiar-add-entity-mapping-dialog',
@@ -10,6 +10,11 @@ import {Observable, shareReplay} from "rxjs";
     standalone: false
 })
 export class AddEntityMappingDialogComponent {
+  /** The {@link MatDialogRef} used to interact with and close this dialog. */
+  private dialogRef = inject<MatDialogRef<AddEntityMappingDialogComponent>>(MatDialogRef);
+
+  /** The {@link EntityMappingService} used to access entity mappings, parsers and mapping formats. */
+  private service = inject(EntityMappingService);
 
   /** The {@link FormControl} that backs this {@link AddEntityMappingDialogComponent}. */
   public formControl: FormGroup =  new FormGroup({
@@ -18,12 +23,8 @@ export class AddEntityMappingDialogComponent {
     type: new FormControl('', [Validators.required]),
   })
 
-  /** An {@link Observable} of available {@link MappingFormat}. */
-  public readonly mappingFormats: Observable<Array<MappingFormat>>
-
-  constructor(private dialogRef: MatDialogRef<AddEntityMappingDialogComponent>, private service: EntityMappingService,) {
-    this.mappingFormats = this.service.getListMappingFormats().pipe(shareReplay(1))
-  }
+  /** A signal of the available {@link MappingFormat}s. */
+  public readonly mappingFormats = toSignal(this.service.getListMappingFormats(), {initialValue: [] as Array<MappingFormat>})
 
   /**
    * Saves the data in this {@link AddEntityMappingDialogComponent}.

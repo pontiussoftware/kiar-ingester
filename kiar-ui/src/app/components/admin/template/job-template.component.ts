@@ -1,4 +1,5 @@
-import {AfterViewInit, Component} from "@angular/core";
+import {AfterViewInit, Component, inject} from "@angular/core";
+import {toSignal} from "@angular/core/rxjs-interop";
 import {catchError, firstValueFrom, map, mergeMap, Observable, of, shareReplay} from "rxjs";
 import {FormArray, FormControl, FormGroup, Validators} from "@angular/forms";
 import {
@@ -22,28 +23,49 @@ import {MatDialog} from "@angular/material/dialog";
     standalone: false
 })
 export class JobTemplateComponent implements AfterViewInit {
+  /** The {@link ConfigService} used to access application configuration (templates, mappings, Solr configurations, participants). */
+  private service = inject(ConfigService);
 
-  /** An {@link Observable} of the mapping ID that is being inspected by this {@link EntityMappingComponent}. */
-  public readonly templateId: Observable<number>
+  /** The {@link Router} used for navigation. */
+  private router = inject(Router);
 
+  /** The {@link ActivatedRoute} used to read route parameters. */
+  private route = inject(ActivatedRoute);
+
+  /** The {@link MatSnackBar} used to display notifications. */
+  private snackBar = inject(MatSnackBar);
+
+  /** The {@link MatDialog} service used to open dialogs. */
+  private dialog = inject(MatDialog);
+
+  /** {@link Observable} backing {@link templateId}. */
+  private readonly templateId$ = this.route.paramMap.pipe(map(params => Number(params.get('id')!!)))
+
+  /** A signal of the current templateId. */
+  public readonly templateId = toSignal(this.templateId$)
   /** List of transformers {@link FormGroup}s. */
-  public readonly transformers: FormArray = new FormArray<any>([])
+  public readonly transformers: FormArray<FormGroup> = new FormArray<FormGroup>([])
 
-  /** An {@link Observable} of available {@link EntityMapping}. */
-  public readonly mappings: Observable<Array<EntityMapping>>
+  /** {@link Observable} backing {@link mappings}. */
+  private readonly mappings$ = this.service.getListEntityMappings().pipe(shareReplay(1))
 
-  /** An {@link Observable} of available {@link ApacheSolrConfig}. */
-  public readonly solr: Observable<Array<ApacheSolrConfig>>
+  /** A signal of the available {@link EntityMapping}s. */
+  public readonly mappings = toSignal(this.mappings$, {initialValue: [] as Array<EntityMapping>})
 
-  /** An {@link Observable} of available {@link JobType}. */
-  public readonly jobTypes: Observable<Array<JobType>>
+  /** {@link Observable} backing {@link solr}. */
+  private readonly solr$ = this.service.getListSolrConfiguration().pipe(shareReplay(1))
 
-  /** An {@link Observable} of available {@link TransformerType}. */
-  public readonly transformerTypes: Observable<Array<TransformerType>>
+  /** A signal of the available {@link ApacheSolrConfig}s. */
+  public readonly solr = toSignal(this.solr$, {initialValue: [] as Array<ApacheSolrConfig>})
 
-  /** An {@link Observable} of available participants. */
-  public readonly participants: Observable<Array<String>>
+  /** A signal of the available {@link JobType}s. */
+  public readonly jobTypes = toSignal(this.service.getListJobTemplateTypes(), {initialValue: [] as Array<JobType>})
 
+  /** A signal of the available {@link TransformerType}s. */
+  public readonly transformerTypes = toSignal(this.service.getListTransformerTypes(), {initialValue: [] as Array<TransformerType>})
+
+  /** A signal of the available participant names. */
+  public readonly participants = toSignal(this.service.getListParticipants(), {initialValue: [] as Array<string>})
   /** The {@link FormControl} that backs this {@link EntityMappingComponent}. */
   public formControl = new FormGroup({
     name: new FormControl('', [Validators.required]),
@@ -56,21 +78,6 @@ export class JobTemplateComponent implements AfterViewInit {
     transformers: this.transformers
   })
 
-  constructor(
-      private service: ConfigService,
-      private router: Router,
-      private route: ActivatedRoute,
-      private snackBar: MatSnackBar,
-      private dialog: MatDialog
-  ) {
-    this.templateId = this.route.paramMap.pipe(map(params => Number(params.get('id')!!)));
-    this.mappings = this.service.getListEntityMappings().pipe(shareReplay(1))
-    this.solr = this.service.getListSolrConfiguration().pipe(shareReplay(1))
-    this.jobTypes = this.service.getListJobTemplateTypes().pipe(shareReplay(1))
-    this.transformerTypes = this.service.getListTransformerTypes().pipe(shareReplay(1))
-    this.participants = this.service.getListParticipants().pipe(shareReplay(1))
-  }
-
   /**
    * Refreshes the data after view has been setup.
    */
@@ -82,7 +89,7 @@ export class JobTemplateComponent implements AfterViewInit {
    * Reloads and refreshes the data backing this {@link EntityMappingComponent}.
    */
   public refresh() {
-    this.templateId.pipe(
+    this.templateId$.pipe(
         mergeMap(id => this.service.getJobTemplate(id)),
     ).subscribe({
       next: (c) => this.updateForm(c),
@@ -94,7 +101,7 @@ export class JobTemplateComponent implements AfterViewInit {
    * Tries to save the current state of the {@link JobTemplate} represented by the local {@link FormControl}
    */
   public save() {
-    this.templateId.pipe(
+    this.templateId$.pipe(
         mergeMap((id) => this.service.updateJobTemplate(id, this.formToJobTemplate(id)))
     ).subscribe({
       next: () => this.snackBar.open(`Successfully updated job template.`, "Dismiss", { duration: 2000 } as MatSnackBarConfig),
@@ -107,7 +114,7 @@ export class JobTemplateComponent implements AfterViewInit {
    */
   public delete() {
     if (confirm("Are you sure that you want to delete this Job template?\nAfter deletion, it can no longer be retrieved.")) {
-      this.templateId.pipe(
+      this.templateId$.pipe(
           mergeMap((id) =>  this.service.deleteJobTemplate(id))
       ).subscribe({
         next: () => {
@@ -119,12 +126,11 @@ export class JobTemplateComponent implements AfterViewInit {
     }
   }
 
-
   /**
    * Downloads the current {@link JobTemplate} as a file.
    */
   public download() {
-    this.templateId.pipe(
+    this.templateId$.pipe(
         mergeMap(id => this.service.getJobTemplate(id)),
         catchError((err) => {
           this.snackBar.open(`Error occurred while trying to load job template: ${err?.error?.description}.`, "Dismiss", {duration: 2000} as MatSnackBarConfig);
@@ -249,8 +255,8 @@ export class JobTemplateComponent implements AfterViewInit {
     this.formControl.controls['description'].setValue(template?.description ?? '');
     this.formControl.controls['type'].setValue(template?.type ?? '');
     this.formControl.controls['participantName'].setValue(template?.participantName ?? '');
-    this.formControl.controls['config'].setValue(await firstValueFrom(this.solr.pipe(map( s => s.find(s => s.id === template.config?.id)))) ?? null);
-    this.formControl.controls['mapping'].setValue(await firstValueFrom(this.mappings.pipe(map( s => s.find(s => s.id === template.mapping?.id)))) ?? null);
+    this.formControl.controls['config'].setValue(await firstValueFrom(this.solr$.pipe(map( s => s.find(s => s.id === template.config?.id)))) ?? null);
+    this.formControl.controls['mapping'].setValue(await firstValueFrom(this.mappings$.pipe(map( s => s.find(s => s.id === template.mapping?.id)))) ?? null);
     this.formControl.controls['startAutomatically'].setValue(template?.startAutomatically ?? false);
 
     this.transformers.clear()

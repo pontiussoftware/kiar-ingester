@@ -1,6 +1,7 @@
-import {Component, Input, OnInit} from "@angular/core";
+import {Component, computed, inject, input, linkedSignal, signal} from "@angular/core";
+import {toObservable, toSignal} from "@angular/core/rxjs-interop";
 import {CollectionService} from "../../../../openapi";
-import {catchError, of} from "rxjs";
+import {catchError, map, of, switchMap} from "rxjs";
 
 @Component({
     selector: 'kiar-collection-image',
@@ -8,60 +9,57 @@ import {catchError, of} from "rxjs";
     styleUrls: ['collection-image.component.scss'],
     standalone: false
 })
-export class CollectionImageComponent implements OnInit {
+export class CollectionImageComponent {
+  /** The {@link CollectionService} used to access collection data. */
+  private collectionService = inject(CollectionService);
+
   /** The ID to fetch image for. */
-  @Input() collectionId!: number;
+  readonly collectionId = input.required<number>();
 
   /** The name of the image. */
-  @Input() name: string;
+  readonly name = input.required<string>();
 
   /** The edit status of the image. */
-  @Input() edit: boolean = false;
+  readonly edit = input<boolean>(false);
 
   /** The width of th image. */
-  @Input() width: number = 100;
+  readonly width = input<number>(100);
 
   /** The height of th image. */
-  @Input() height: number = 100;
-
-  /** The generate image URL. */
-  public imageUrl: string | null = null;
+  readonly height = input<number>(100);
 
   /** The overlay state. */
-  public showOverlay: boolean = false;
+  public readonly showOverlay = signal(false);
 
-  constructor(private collectionService: CollectionService) { }
+  /** The image URL as loaded from the backend; re-fetched whenever {@link collectionId} or {@link name} changes. */
+  private readonly loadedUrl = toSignal(
+      toObservable(computed(() => ({id: this.collectionId(), name: this.name()}))).pipe(
+          switchMap(({id, name}) => this.collectionService.getCollectionImage(id, name).pipe(
+              catchError(err => {
+                console.log('Failed to load image.', err)
+                return of(null)
+              })
+          )),
+          map(imageData => imageData ? URL.createObjectURL(imageData) : null)
+      ),
+      {initialValue: null}
+  );
 
-  /**
-   * Loads the image and displays it.
-   */
-  public ngOnInit() {
-    this.collectionService.getCollectionImage(this.collectionId, this.name).pipe(
-        catchError(err => {
-          console.log('Failed to load image.', err)
-          return of(null)
-        })
-    ).subscribe({
-      next: (imageData) => {
-        if (imageData) {
-          this.imageUrl = URL.createObjectURL(imageData)
-        }
-      }
-    });
-  }
+  /** The displayed image URL. Follows {@link loadedUrl} but can be cleared locally after a delete. */
+  public readonly imageUrl = linkedSignal(() => this.loadedUrl());
 
   /**
    * Deletes the image.
    */
   public delete() {
-    this.collectionService.deleteCollectionImage(this.collectionId, this.name).pipe(
+    this.collectionService.deleteCollectionImage(this.collectionId(), this.name()).pipe(
         catchError(err => {
           console.log('Failed to delete image', err)
           return of(null)
         })
     ).subscribe({
       next: () => {
-        this.imageUrl = null;
+        this.imageUrl.set(null);
       }
     })
   }
