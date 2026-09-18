@@ -13,7 +13,6 @@ import org.xml.sax.Attributes
 import org.xml.sax.SAXParseException
 import org.xml.sax.helpers.DefaultHandler
 import javax.xml.parsers.DocumentBuilder
-import javax.xml.parsers.DocumentBuilderFactory
 
 /** The [KLogger] instance for [XmlParsingContext]. */
 private val logger: KLogger = KotlinLogging.logger {}
@@ -37,7 +36,7 @@ class XmlParsingContext(config: EntityMapping, private val context: ProcessingCo
     private val newDocumentOn: String
 
     /** The [DocumentBuilder] instance used by this [XmlDocumentParser]. */
-    private val documentBuilder: DocumentBuilder = DocumentBuilderFactory.newInstance().newDocumentBuilder()
+    private val documentBuilder: DocumentBuilder = XmlFactories.newDocumentBuilderFactory().newDocumentBuilder()
 
     /** The [XmlDocumentParser] to use for parsing individual documents. */
     private val parser: XmlDocumentParser

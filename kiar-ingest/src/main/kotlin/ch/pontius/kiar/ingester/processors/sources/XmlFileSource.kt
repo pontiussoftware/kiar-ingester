@@ -1,5 +1,6 @@
 package ch.pontius.kiar.ingester.processors.sources
 
+import ch.pontius.kiar.ingester.parsing.xml.XmlFactories
 import ch.pontius.kiar.ingester.parsing.xml.XmlParsingContext
 import ch.pontius.kiar.ingester.processors.ProcessingContext
 import ch.pontius.kiar.ingester.solrj.Field
@@ -30,7 +31,7 @@ class XmlFileSource(private val file: Path): Source<SolrInputDocument> {
      */
     override fun toFlow(context: ProcessingContext): Flow<SolrInputDocument> = channelFlow {
         val channel = this
-        val factory: SAXParserFactory = SAXParserFactory.newInstance()
+        val factory: SAXParserFactory = XmlFactories.newSaxParserFactory()
         val saxParser: SAXParser = factory.newSAXParser()
         Files.newInputStream(this@XmlFileSource.file).use { input ->
             val mapping = context.jobTemplate.mapping ?: throw IllegalArgumentException("No entity mapping for job with ID ${context.jobId} found.")

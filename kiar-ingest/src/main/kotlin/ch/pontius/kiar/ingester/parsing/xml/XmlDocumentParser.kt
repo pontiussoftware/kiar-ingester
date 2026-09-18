@@ -11,7 +11,6 @@ import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.StandardOpenOption
 import javax.xml.parsers.DocumentBuilder
-import javax.xml.parsers.DocumentBuilderFactory
 import javax.xml.xpath.XPathConstants
 import javax.xml.xpath.XPathExpression
 import javax.xml.xpath.XPathFactory
@@ -24,7 +23,7 @@ import javax.xml.xpath.XPathFactory
  */
 class XmlDocumentParser(config: EntityMapping, private val context: ProcessingContext) {
     /** The [DocumentBuilder] instance used by this [XmlDocumentParser]. */
-    private val documentBuilder: DocumentBuilder = DocumentBuilderFactory.newInstance().newDocumentBuilder()
+    private val documentBuilder: DocumentBuilder = XmlFactories.newDocumentBuilderFactory().newDocumentBuilder()
 
     /** A [Map] of all [XPathExpression]s used for document parsing. */
     private val mappings: List<Pair<ValueParser<*>,XPathExpression>>
