@@ -67,8 +67,8 @@ class ApacheSolrSink(input: Source<SolrInputDocument>): AbstractApacheSolrSink(i
 
                         /* Apply per-object collection filter. */
                         if (doc.has(Field.PUBLISH_TO)) {
-                            doc.getAll<String>(Field.PUBLISH_TO)
-                            if (!collections.contains(collection)) {
+                            val publishTo = doc.getAll<String>(Field.PUBLISH_TO)
+                            if (collection.name !in publishTo) {
                                 logger.debug { "Skipping document due to institution not publishing to per-object filter (jobId = ${context.jobId}, collection = $collection, docId = $uuid)." }
                                 continue
                             }
