@@ -2,6 +2,7 @@ package ch.pontius.kiar.ingester.processors.sources
 
 import ch.pontius.kiar.ingester.media.MediaProvider
 import ch.pontius.kiar.ingester.parsing.xml.XmlDocumentParser
+import ch.pontius.kiar.ingester.processors.JobAbortedException
 import ch.pontius.kiar.ingester.processors.ProcessingContext
 import ch.pontius.kiar.ingester.solrj.Field
 import ch.pontius.kiar.ingester.solrj.addField
@@ -58,8 +59,8 @@ class KiarFileSource(private val file: Path, private val skipResources: Boolean 
                     }
                 }
 
-                /* Check if context is still active. Break otherwise. */
-                if (context.aborted) break
+                /* Check if context is still active. Abort otherwise. */
+                if (context.aborted) throw JobAbortedException(context.jobId)
 
                 /* Send document down the channel. */
                 this.send(doc)

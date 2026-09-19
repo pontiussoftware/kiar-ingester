@@ -12,12 +12,16 @@ import ch.pontius.kiar.ingester.processors.sources.Source
 import ch.pontius.kiar.ingester.solrj.Field
 import io.github.oshai.kotlinlogging.KLogger
 import io.github.oshai.kotlinlogging.KotlinLogging
+import kotlinx.coroutines.CancellationException
+import org.apache.solr.client.solrj.SolrServerException
 import org.apache.solr.client.solrj.request.schema.SchemaRequest
+import org.apache.solr.common.SolrException
 import org.apache.solr.common.SolrInputDocument
 import org.jetbrains.exposed.v1.core.and
 import org.jetbrains.exposed.v1.core.eq
 import org.jetbrains.exposed.v1.jdbc.select
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
+import java.io.IOException
 import java.util.*
 
 /** The [KLogger] instance for [AbstractApacheSolrSink]. */
@@ -146,20 +150,45 @@ abstract class AbstractApacheSolrSink(override val input: Source<SolrInputDocume
      * @param collections The [List] of available [ApacheSolrCollection]s
      */
     protected fun commit(context: ProcessingContext, collections: List<ApacheSolrCollection>) {
+        val failed = LinkedList<String>()
         for (c in collections) {
             logger.info {  "Data ingest (name = ${context.jobId}, collection = $c) completed; committing..." }
             try {
                 val response = context.solrClient.commit(c.name)
                 if (response.status == 0) {
                     logger.info { "Data ingest (name = ${context.jobTemplate.participantName}, collection = $c) committed successfully." }
-                } else {
-                    logger.warn { "Failed to commit data ingest (name = ${context.jobTemplate.participantName}, collection = $c)." }
+                    continue
                 }
+                logger.warn { "Failed to commit data ingest (name = ${context.jobTemplate.participantName}, collection = $c); status = ${response.status}. Rolling back..." }
             } catch (e: Throwable) {
-                logger.error(e) { "Failed to finalize data ingest due to server error (name = ${context.jobTemplate.participantName}, collection = $c. Rolling back..." }
+                logger.error(e) { "Failed to finalize data ingest due to server error (name = ${context.jobTemplate.participantName}, collection = $c). Rolling back..." }
+            }
+
+            /* Commit failed: roll back and remember the failure. */
+            failed.add(c.name)
+            try {
                 context.solrClient.rollback(c.name)
+            } catch (e: Throwable) {
+                logger.error(e) { "Failed to rollback data ingest after failed commit (name = ${context.jobTemplate.participantName}, collection = $c)." }
             }
         }
+
+        /* A failed commit must fail the job; otherwise it would be reported as ingested while the collection is stale or incomplete. */
+        if (failed.isNotEmpty()) {
+            context.log(JobLog(context.jobId, null, null, JobLogContext.SYSTEM, JobLogLevel.SEVERE, "Failed to commit data ingest for collection(s) ${failed.joinToString()}; changes were rolled back."))
+            throw IllegalStateException("Failed to commit data ingest for collection(s) ${failed.joinToString()}.")
+        }
+    }
+
+    /**
+     * Returns true if this [Throwable] indicates that Apache Solr is unreachable or failing (as opposed to a problem with a single document).
+     *
+     * Such failures must abort the ingest: the participant's data has already been purged and continuing would commit an incomplete collection.
+     */
+    protected fun Throwable.isFatalSolrFailure(): Boolean = when (this) {
+        is CancellationException, is SolrServerException, is IOException -> true
+        is SolrException -> this.code() >= 500
+        else -> false
     }
 
     /**

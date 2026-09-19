@@ -1,6 +1,7 @@
 package ch.pontius.kiar.ingester.processors.sources
 
 import ch.pontius.kiar.ingester.parsing.json.JsonDocumentParser
+import ch.pontius.kiar.ingester.processors.JobAbortedException
 import ch.pontius.kiar.ingester.processors.ProcessingContext
 import com.google.gson.JsonParser
 import com.google.gson.stream.JsonReader
@@ -29,8 +30,8 @@ class JsonFileSource(private val file: Path): Source<SolrInputDocument> {
                 val doc = SolrInputDocument()
                 docParser.parse(JsonParser.parseReader(reader), doc)
 
-                /* Check if context is still active. Break otherwise. */
-                if (context.aborted) break
+                /* Check if context is still active. Abort otherwise. */
+                if (context.aborted) throw JobAbortedException(context.jobId)
 
                 /* Emit document. */
                 emit(doc)

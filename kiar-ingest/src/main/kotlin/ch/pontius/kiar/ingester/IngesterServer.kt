@@ -182,12 +182,13 @@ class IngesterServer(val config: Config) {
                 /* Store information about finished job. */
                 transaction {
                     Jobs.update({ Jobs.id eq jobId }) { update ->
-                        if (e != null) {
-                            logger.error(e) { "Data ingest (ID = $jobId, test = ${test}) failed." }
-                            update[status] = JobStatus.FAILED
-                        } else if (context.aborted) {
+                        if (context.aborted) {
+                            /* Checked first: an abort terminates the flow with a JobAbortedException, which is not a failure. */
                             logger.warn { "Data ingest (ID = $jobId, test = ${test}) was aborted by user!" }
                             update[status] = JobStatus.ABORTED
+                        } else if (e != null) {
+                            logger.error(e) { "Data ingest (ID = $jobId, test = ${test}) failed." }
+                            update[status] = JobStatus.FAILED
                         } else {
                             logger.info { "Data ingest (ID = $jobId, test = ${test}) completed successfully!" }
                             if (test) {

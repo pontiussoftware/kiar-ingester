@@ -2,6 +2,7 @@ package ch.pontius.kiar.ingester.processors.sources
 
 import ch.pontius.kiar.ingester.parsing.xml.XmlFactories
 import ch.pontius.kiar.ingester.parsing.xml.XmlParsingContext
+import ch.pontius.kiar.ingester.processors.JobAbortedException
 import ch.pontius.kiar.ingester.processors.ProcessingContext
 import ch.pontius.kiar.ingester.solrj.Field
 import ch.pontius.kiar.ingester.solrj.setField
@@ -51,9 +52,10 @@ class XmlFileSource(private val file: Path): Source<SolrInputDocument> {
             try {
                 saxParser.parse(input, parser)
             } catch (e: SAXException) {
-                if (e.cause !is InterruptedException) {
-                    throw e
+                if (e.cause is InterruptedException) {
+                    throw JobAbortedException(context.jobId)
                 }
+                throw e
             }
         }
     }.flowOn(Dispatchers.IO)

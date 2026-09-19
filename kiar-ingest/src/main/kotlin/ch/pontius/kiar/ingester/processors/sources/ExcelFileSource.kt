@@ -1,6 +1,7 @@
 package ch.pontius.kiar.ingester.processors.sources
 
 import ch.pontius.kiar.ingester.parsing.values.ValueParser
+import ch.pontius.kiar.ingester.processors.JobAbortedException
 import ch.pontius.kiar.ingester.processors.ProcessingContext
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
@@ -53,8 +54,8 @@ class ExcelFileSource(private val file: Path): Source<SolrInputDocument> {
                         parser.parse(value, doc, context)
                     }
 
-                    /* Check if context is still active. Break otherwise. */
-                    if (context.aborted) break
+                    /* Check if context is still active. Abort otherwise. */
+                    if (context.aborted) throw JobAbortedException(context.jobId)
 
                     /* Emit document. */
                     emit(doc)

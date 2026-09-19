@@ -100,6 +100,11 @@ class ApacheSolrSink(input: Source<SolrInputDocument>): AbstractApacheSolrSink(i
                             context.log(JobLog(context.jobId, uuid, collection.name, JobLogContext.SYSTEM, JobLogLevel.ERROR, "Failed to ingest document due to an Apache Solr error (status = ${response.status})."))
                         }
                     } catch (e: Throwable) {
+                        /* Communication failures with Apache Solr are fatal: the participant's data has already been purged, so continuing would commit an incomplete collection. */
+                        if (e.isFatalSolrFailure()) {
+                            context.log(JobLog(context.jobId, uuid, collection.name, JobLogContext.SYSTEM, JobLogLevel.SEVERE, "Aborting ingest due to Apache Solr failure: ${e.message}."))
+                            throw e
+                        }
                         context.log(JobLog(context.jobId, uuid, collection.name, JobLogContext.SYSTEM, JobLogLevel.SEVERE, "Failed to ingest document due to exception: ${e.message}."))
                     }
                 }
@@ -110,8 +115,8 @@ class ApacheSolrSink(input: Source<SolrInputDocument>): AbstractApacheSolrSink(i
                 context.log(JobLog(context.jobId, null, null, JobLogContext.SYSTEM, JobLogLevel.SEVERE, "Failed to ingest document, because UUID is missing."))
             }
         }.onCompletion { e ->
-            /* Finalize ingest for all collections. */
-            if (e != null) {
+            /* Finalize ingest for all collections. An aborted job must roll back even if the flow terminated without an exception. */
+            if (e != null || context.aborted) {
                 this@ApacheSolrSink.abort(context, collections)
             } else {
                 this@ApacheSolrSink.commit(context, collections)

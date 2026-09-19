@@ -58,9 +58,11 @@ class ImageDeployment(override val input: Source<SolrInputDocument>): Transforme
                 throw IllegalArgumentException("Directory $deployTo does not exist!")
             }
 
-            /* Create the necessary directories. */
-            Files.createDirectories(deployTo.resolve(context.jobTemplate.participantName).resolve(deployment.name))
-            Files.createDirectories(deployTo.resolve(context.jobTemplate.participantName).resolve("${deployment.name}~tmp"))
+            /* Create the necessary directories (a test run writes nothing, so it must not touch the deployment folders). */
+            if (!context.test) {
+                Files.createDirectories(deployTo.resolve(context.jobTemplate.participantName).resolve(deployment.name))
+                Files.createDirectories(deployTo.resolve(context.jobTemplate.participantName).resolve("${deployment.name}~tmp"))
+            }
 
             /* Prepare writers. */
             writers[deployment] = when (deployment.format) {
@@ -115,13 +117,17 @@ class ImageDeployment(override val input: Source<SolrInputDocument>): Transforme
                 it.setField(Field.IMAGECOUNT, 0)
             }
         }.onCompletion { e ->
+            /* A test run never writes images, so there is nothing to finalise; swapping in the (empty) staging folder would delete the live images. */
+            if (context.test) {
+                return@onCompletion
+            }
             for (deployment in deployments) {
                 try {
                     val dst = Paths.get(deployment.path).resolve(context.jobTemplate.participantName).resolve(deployment.name)
                     val tmp = Paths.get(deployment.path).resolve(context.jobTemplate.participantName).resolve("${deployment.name}~tmp")
                     val bak = Paths.get(deployment.path).resolve(context.jobTemplate.participantName).resolve("${deployment.name}~bak")
-                    if (e != null) {
-                        /* Case 1: Cleanup after error. */
+                    if (e != null || context.aborted) {
+                        /* Case 1: Cleanup after error or abort; the live images stay untouched. */
                         Files.walk(tmp).sorted(Comparator.reverseOrder()).forEach { Files.deleteIfExists(it) }
                     } else {
                         /* Case 2: Finalisation */
