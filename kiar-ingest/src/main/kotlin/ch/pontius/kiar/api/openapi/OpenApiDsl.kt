@@ -1,15 +1,10 @@
 package ch.pontius.kiar.api.openapi
 
 import ch.pontius.kiar.api.model.status.ErrorStatus
-import io.ktor.http.ContentType
-import io.ktor.openapi.JsonSchema
-import io.ktor.openapi.JsonType
-import io.ktor.openapi.Operation
+import io.ktor.http.*
+import io.ktor.openapi.*
 import io.ktor.openapi.Parameters
-import io.ktor.openapi.ReferenceOr
-import io.ktor.openapi.Responses
-import io.ktor.openapi.jsonSchema
-import io.ktor.server.routing.openapi.RouteOperationFunction
+import io.ktor.server.routing.openapi.*
 
 /*
  * Small DSL helpers on top of Ktor's OpenAPI [Operation.Builder] so that each route description stays
@@ -45,6 +40,7 @@ internal val REASONS = mapOf(
     401 to "Unauthorized",
     403 to "Forbidden",
     404 to "Not Found",
+    409 to "Conflict",
     500 to "Server Error"
 )
 

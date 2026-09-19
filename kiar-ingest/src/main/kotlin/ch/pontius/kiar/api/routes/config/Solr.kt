@@ -10,6 +10,7 @@ import ch.pontius.kiar.api.model.status.SuccessStatus
 import ch.pontius.kiar.api.openapi.*
 import ch.pontius.kiar.database.config.ImageDeployments
 import ch.pontius.kiar.database.config.ImageDeployments.toImageDeployment
+import ch.pontius.kiar.database.config.JobTemplates
 import ch.pontius.kiar.database.config.SolrCollections
 import ch.pontius.kiar.database.config.SolrCollections.toSolrCollection
 import ch.pontius.kiar.database.config.SolrConfigs
@@ -172,14 +173,21 @@ val deleteSolrConfigDoc: RouteDoc = {
     }
     responses {
         json<SuccessStatus>(200)
-        errors(401, 403, 404, 500)
+        errors(401, 403, 404, 409, 500)
     }
 }
 
 suspend fun deleteSolrConfig(call: ApplicationCall) {
     val solrId = call.pathParam("id").toIntOrNull() ?: throw ErrorStatusException(400, "Malformed configuration ID")
     val deleted = transaction {
-        SolrCollections.deleteWhere { SolrCollections.id eq solrId }
+        /* Job templates reference configurations with RESTRICT; report that as a conflict instead of a constraint violation. */
+        val templates = JobTemplates.selectAll().where { JobTemplates.solrId eq solrId }.count()
+        if (templates > 0) {
+            throw ErrorStatusException(409, "Apache Solr configuration $solrId cannot be deleted because it is used by $templates job template(s).")
+        }
+
+        /* Collections and image deployments cascade. */
+        SolrConfigs.deleteWhere { SolrConfigs.id eq solrId }
     }
     if (deleted > 0) {
         call.respond(SuccessStatus("Apache Solr configuration $solrId deleted successfully."))
