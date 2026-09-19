@@ -33,6 +33,12 @@ class URLImageValueParser(override val mapping: AttributeMapping): ValueParser<L
     /** Reads the optional password from the parameters map. If set, HTTP basic authorization will be used to access the resource.  */
     private val password: String? = this.mapping.parameters["password"]
 
+    /** The host name of the configured [host]; credentials are only sent there. */
+    private val trustedHost: String? = this.host?.let { try { URI(it).host } catch (_: Throwable) { null } }
+
+    /** Whether URLs resolving to private / loopback addresses may be fetched (opt-in for internal image servers). */
+    private val allowPrivateHosts: Boolean = this.mapping.parameters["allowPrivateHosts"]?.toBoolean() ?: false
+
     /**
      * Parses the given [String] and resolves it into a [URLImageProvider] the provided [SolrInputDocument].
      *
@@ -61,7 +67,7 @@ class URLImageValueParser(override val mapping: AttributeMapping): ValueParser<L
 
         /* Process URls. */
         for (url in urls) {
-            val provider = URLImageProvider(into.uuidOrNull(), url, context, this.username, this.password)
+            val provider = URLImageProvider(into.uuidOrNull(), url, context, this.username, this.password, this.trustedHost, this.allowPrivateHosts)
             if (this.mapping.multiValued) {
                 into.addField(this.mapping.destination, provider)
             } else {

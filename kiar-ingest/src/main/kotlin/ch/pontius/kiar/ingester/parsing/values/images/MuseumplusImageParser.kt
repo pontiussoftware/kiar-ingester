@@ -31,6 +31,9 @@ class MuseumplusImageParser(override val mapping: AttributeMapping): ValueParser
     /** Reads the password from the parameters map. This is required! */
     private val password: String = this.mapping.parameters["password"] ?: throw IllegalStateException("Password required but missing.")
 
+    /** The host name of the configured [host]; credentials are only sent there. */
+    private val trustedHost: String = URI(this.host).host ?: throw IllegalStateException("Host '${this.host}' is not a valid URL.")
+
     /** Reads the replacement pattern from the parameters map.*/
     private val mode: Mode = this.mapping.parameters["mode"]?.let {
         Mode.valueOf(it.uppercase())
@@ -54,7 +57,7 @@ class MuseumplusImageParser(override val mapping: AttributeMapping): ValueParser
 
         /* Process URls. */
         for (url in urls) {
-            val provider = URLImageProvider(into.uuidOrNull(), url, context, this.username, this.password)
+            val provider = URLImageProvider(into.uuidOrNull(), url, context, this.username, this.password, this.trustedHost)
             if (this.mapping.multiValued) {
                 into.addField(this.mapping.destination, provider)
             } else {
