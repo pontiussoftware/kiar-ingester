@@ -5,6 +5,7 @@ import ch.pontius.kiar.api.model.institution.Institution
 import ch.pontius.kiar.api.model.job.JobLog
 import ch.pontius.kiar.api.model.job.JobLogLevel
 import ch.pontius.kiar.config.Config
+import ch.pontius.kiar.database.config.SolrConfigs
 import ch.pontius.kiar.database.institutions.Institutions
 import ch.pontius.kiar.database.institutions.Institutions.toInstitution
 import ch.pontius.kiar.database.institutions.Participants
@@ -56,7 +57,10 @@ class ProcessingContext(val jobId: Int, val config: Config, val test: Boolean = 
 
     /** The [HttpJettySolrClient] instance used by this [ProcessingContext]. */
     val solrClient: HttpJettySolrClient by lazy {
-        val config = this.jobTemplate.config ?: throw IllegalStateException("Failed to obtain  Apache Solr configuration configuration for job with ID ${this.jobId}.")
+        val template = this.jobTemplate.config ?: throw IllegalStateException("Failed to obtain  Apache Solr configuration configuration for job with ID ${this.jobId}.")
+
+        /* The API model carries no credentials; load them explicitly. */
+        val config = template.id?.let { SolrConfigs.getByIdWithCredentials(it) } ?: template
 
         /* Prepare HTTP client builder. */
         var httpBuilder = HttpJettySolrClient.Builder(config.server)

@@ -4,7 +4,7 @@ import ch.pontius.kiar.api.model.config.solr.ApacheSolrConfig
 import ch.pontius.kiar.api.model.config.solr.CollectionType
 import ch.pontius.kiar.database.config.SolrCollections
 import ch.pontius.kiar.database.config.SolrConfigs
-import ch.pontius.kiar.database.config.SolrConfigs.toSolr
+import ch.pontius.kiar.database.config.SolrConfigs.toSolrWithCredentials
 import ch.pontius.kiar.ingester.parsing.xml.XmlDocumentParser
 import ch.pontius.kiar.ingester.solrj.Field
 import ch.pontius.kiar.ingester.solrj.uuid
@@ -64,7 +64,7 @@ class OaiServer {
         transaction {
             (SolrCollections innerJoin SolrConfigs).select(SolrConfigs.columns)
                 .where { (SolrCollections.name eq collection) and (SolrCollections.type eq CollectionType.OBJECT) and (SolrCollections.oai eq true)}
-                .map { it.toSolr() }
+                .map { it.toSolrWithCredentials() }
                 .firstOrNull()
         }
     }

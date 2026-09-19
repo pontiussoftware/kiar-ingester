@@ -7,6 +7,8 @@ import org.jetbrains.exposed.v1.core.eq
 import org.jetbrains.exposed.v1.javatime.CurrentTimestamp
 import org.jetbrains.exposed.v1.javatime.timestamp
 import org.jetbrains.exposed.v1.jdbc.select
+import org.jetbrains.exposed.v1.jdbc.selectAll
+import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 
 /**
  * A [IntIdTable] that holds information about [SolrConfigs].
@@ -61,8 +63,29 @@ object SolrConfigs: IntIdTable("solr_configs") {
         server = this[server],
         publicServer = this[publicServer],
         username = this[username],
-        password = this[password],
+        password = null, /* Never exposed through the API model; see toSolrWithCredentials(). */
         createdAt = this[created].toEpochMilli(),
         changedAt = this[modified].toEpochMilli()
     )
+
+    /**
+     * Converts a [ResultRow] to an [ApacheSolrConfig] entry INCLUDING the password.
+     *
+     * Only for use where an Apache Solr client is built from the configuration. Never return the result through the API.
+     *
+     * @return [ApacheSolrConfig]
+     */
+    fun ResultRow.toSolrWithCredentials() = this.toSolr().copy(password = this[password])
+
+    /**
+     * Loads the [ApacheSolrConfig] with the given ID INCLUDING the password.
+     *
+     * Only for use where an Apache Solr client is built from the configuration. Never return the result through the API.
+     *
+     * @param id The ID of the configuration.
+     * @return [ApacheSolrConfig] or null.
+     */
+    fun getByIdWithCredentials(id: Int): ApacheSolrConfig? = transaction {
+        SolrConfigs.selectAll().where { SolrConfigs.id eq id }.map { it.toSolrWithCredentials() }.firstOrNull()
+    }
 }

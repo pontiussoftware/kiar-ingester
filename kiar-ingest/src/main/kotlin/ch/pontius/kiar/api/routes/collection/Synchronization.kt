@@ -12,7 +12,7 @@ import ch.pontius.kiar.database.config.ImageDeployments
 import ch.pontius.kiar.database.config.ImageDeployments.toImageDeployment
 import ch.pontius.kiar.database.config.SolrCollections
 import ch.pontius.kiar.database.config.SolrConfigs
-import ch.pontius.kiar.database.config.SolrConfigs.toSolr
+import ch.pontius.kiar.database.config.SolrConfigs.toSolrWithCredentials
 import ch.pontius.kiar.database.institutions.Institutions
 import ch.pontius.kiar.database.institutions.Participants
 import ch.pontius.kiar.ingester.solrj.Field
@@ -55,7 +55,7 @@ suspend fun postSyncCollections(call: ApplicationCall) {
         val (collectionName, config) = (SolrConfigs innerJoin SolrCollections).select(SolrConfigs.columns + SolrCollections.name).where {
             (SolrCollections.id eq collectionId)  and (SolrCollections.type eq CollectionType.COLLECTION)
         }.map {
-            it[SolrCollections.name] to it.toSolr()
+            it[SolrCollections.name] to it.toSolrWithCredentials()
         }.firstOrNull() ?: throw ErrorStatusException(404, "Apache Solr config with ID $collectionId  could not be found.")
 
         /* Fetch image deployments. */

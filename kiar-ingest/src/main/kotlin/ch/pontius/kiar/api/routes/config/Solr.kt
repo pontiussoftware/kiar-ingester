@@ -7,14 +7,18 @@ import ch.pontius.kiar.api.model.config.solr.SolrConfigId
 import ch.pontius.kiar.api.model.status.ErrorStatus
 import ch.pontius.kiar.api.model.status.ErrorStatusException
 import ch.pontius.kiar.api.model.status.SuccessStatus
+import ch.pontius.kiar.api.openapi.*
 import ch.pontius.kiar.database.config.ImageDeployments
 import ch.pontius.kiar.database.config.ImageDeployments.toImageDeployment
 import ch.pontius.kiar.database.config.SolrCollections
 import ch.pontius.kiar.database.config.SolrCollections.toSolrCollection
 import ch.pontius.kiar.database.config.SolrConfigs
 import ch.pontius.kiar.database.config.SolrConfigs.toSolr
+import ch.pontius.kiar.utilities.extensions.pathParam
 import ch.pontius.kiar.utilities.extensions.receiveOrThrow
 import ch.pontius.kiar.utilities.extensions.withSuffix
+import io.ktor.server.application.*
+import io.ktor.server.response.*
 import org.jetbrains.exposed.v1.core.SortOrder
 import org.jetbrains.exposed.v1.core.and
 import org.jetbrains.exposed.v1.core.eq
@@ -22,10 +26,6 @@ import org.jetbrains.exposed.v1.core.notInList
 import org.jetbrains.exposed.v1.jdbc.*
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 import java.time.Instant
-import io.ktor.server.application.ApplicationCall
-import ch.pontius.kiar.api.openapi.*
-import io.ktor.server.response.respond
-import ch.pontius.kiar.utilities.extensions.pathParam
 
 val listSolrConfigurationsDoc: RouteDoc = {
     operationId = "getListSolrConfiguration"
@@ -104,7 +104,7 @@ suspend fun createSolrConfig(call: ApplicationCall) {
             config[server] = request.server
             config[publicServer] = request.publicServer
             config[username] = request.username
-            config[password] = request.password
+            config[password] = request.password?.ifEmpty { null }
         }.value
 
         /* Create collection entries. */
@@ -113,8 +113,8 @@ suspend fun createSolrConfig(call: ApplicationCall) {
         /* Create deployment entries. */
         mergeDeployments(solrConfigId, request.deployments)
 
-        /* Return copy with ID. */
-        request.copy(id = solrConfigId)
+        /* Return copy with ID (and without the password). */
+        request.copy(id = solrConfigId, password = null)
     }
     call.respond(created)
 }
@@ -146,7 +146,10 @@ suspend fun updateSolrConfig(call: ApplicationCall) {
             config[server] = request.server.withSuffix("/")
             config[publicServer] = request.publicServer
             config[username] = request.username
-            config[password] = request.password
+            if (!request.password.isNullOrEmpty()) {
+                /* The API never returns the password, so an empty value means "keep the existing one". */
+                config[password] = request.password
+            }
             config[modified] = Instant.now()
         }
 
@@ -157,7 +160,7 @@ suspend fun updateSolrConfig(call: ApplicationCall) {
         mergeDeployments(solrId, request.deployments)
     }
 
-    call.respond(request)
+    call.respond(request.copy(password = null))
 }
 
 val deleteSolrConfigDoc: RouteDoc = {
