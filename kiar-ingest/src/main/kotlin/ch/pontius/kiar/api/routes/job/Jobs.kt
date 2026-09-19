@@ -4,6 +4,7 @@ import ch.pontius.kiar.api.model.job.*
 import ch.pontius.kiar.api.model.status.ErrorStatusException
 import ch.pontius.kiar.api.model.status.SuccessStatus
 import ch.pontius.kiar.api.model.user.Role
+import ch.pontius.kiar.api.openapi.*
 import ch.pontius.kiar.database.config.JobTemplates
 import ch.pontius.kiar.database.institutions.Institutions
 import ch.pontius.kiar.database.institutions.Participants
@@ -12,17 +13,13 @@ import ch.pontius.kiar.database.jobs.JobLogs.toJobLog
 import ch.pontius.kiar.database.jobs.Jobs
 import ch.pontius.kiar.database.jobs.Jobs.toJob
 import ch.pontius.kiar.ingester.IngesterServer
-import ch.pontius.kiar.utilities.extensions.currentUser
-import ch.pontius.kiar.utilities.extensions.receiveOrThrow
+import ch.pontius.kiar.utilities.extensions.*
+import io.ktor.server.application.*
+import io.ktor.server.response.*
 import org.jetbrains.exposed.v1.core.*
 import org.jetbrains.exposed.v1.jdbc.*
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 import java.time.Instant
-import io.ktor.server.application.ApplicationCall
-import ch.pontius.kiar.api.openapi.*
-import io.ktor.server.response.respond
-import ch.pontius.kiar.utilities.extensions.pathParam
-import ch.pontius.kiar.utilities.extensions.queryParam
 
 val getActiveJobsDoc: RouteDoc = {
     operationId = "getActiveJobs"
@@ -149,6 +146,9 @@ suspend fun getJobLogs(call: ApplicationCall) {
 
     /* Fetch job logs. */
     val (count, results) = transaction {
+        val job = Jobs.getById(jobId) ?: throw ErrorStatusException(404, "Job with ID $jobId could not be found.")
+        call.currentUser().requireParticipant(job.template?.participantName, "You are not allowed to access the logs of a job that has been created for another participant.")
+
         val query = JobLogs.selectAll().where { JobLogs.jobId eq jobId }
 
         /* Apply filters (optional). */
@@ -182,6 +182,8 @@ val purgeJobLogsDoc: RouteDoc = {
 suspend fun purgeJobLogs(call: ApplicationCall) {
     val jobId = call.pathParam("id").toIntOrNull() ?: throw ErrorStatusException(400, "Malformed job ID.")
     val deleted = transaction {
+        val job = Jobs.getById(jobId) ?: throw ErrorStatusException(404, "Job with ID $jobId could not be found.")
+        call.currentUser().requireParticipant(job.template?.participantName, "You are not allowed to purge the logs of a job that has been created for another participant.")
         JobLogs.deleteWhere { JobLogs.jobId eq jobId }
     }
     call.respond(SuccessStatus("Logs for job $jobId purged successfully (count = $deleted)."))

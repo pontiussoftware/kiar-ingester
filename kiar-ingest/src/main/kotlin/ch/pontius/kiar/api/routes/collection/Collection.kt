@@ -84,7 +84,9 @@ suspend fun getCollection(call: ApplicationCall) {
 
     /* Read collection. */
     val collection = transaction {
-        Collections.getById(collectionId) ?: throw ErrorStatusException(400, "Collection with ID $collectionId could not be found.")
+        val collection = Collections.getById(collectionId) ?: throw ErrorStatusException(404, "Collection with ID $collectionId could not be found.")
+        call.currentUser().requireInstitution(collection.institution?.id, "Collection with ID $collectionId cannot be accessed by current user.")
+        collection
     }
 
     /* Return collection object. */
@@ -308,6 +310,7 @@ suspend fun postUploadImageForCollection(call: ApplicationCall) {
     /* Start transaction */
     val (collection, deployments) = transaction {
         val collection = Collections.getById(collectionId) ?:  throw ErrorStatusException(404, "Collection with ID $collectionId could not be found.")
+        call.currentUser().requireInstitution(collection.institution?.id, "Collection with ID $collectionId cannot be edited by current user.")
         val deployments = ImageDeployments.forCollection(collection)
         if (deployments.isEmpty()) {
             throw ErrorStatusException(400, "No deployment configuration found for institution-")

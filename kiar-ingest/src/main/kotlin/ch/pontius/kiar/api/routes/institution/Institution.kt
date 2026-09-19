@@ -7,6 +7,7 @@ import ch.pontius.kiar.api.model.status.ErrorStatus
 import ch.pontius.kiar.api.model.status.ErrorStatusException
 import ch.pontius.kiar.api.model.status.SuccessStatus
 import ch.pontius.kiar.api.model.user.Role
+import ch.pontius.kiar.api.openapi.*
 import ch.pontius.kiar.database.config.ImageDeployments
 import ch.pontius.kiar.database.config.ImageDeployments.toImageDeployment
 import ch.pontius.kiar.database.config.SolrCollections
@@ -17,10 +18,13 @@ import ch.pontius.kiar.database.institutions.InstitutionsSolrCollections
 import ch.pontius.kiar.database.institutions.Participants
 import ch.pontius.kiar.utilities.Geocoding
 import ch.pontius.kiar.utilities.ImageHandler
-import ch.pontius.kiar.utilities.extensions.currentUser
-import ch.pontius.kiar.utilities.extensions.receiveOrThrow
+import ch.pontius.kiar.utilities.extensions.*
 import com.sksamuel.scrimage.ImmutableImage
 import com.sksamuel.scrimage.nio.JpegWriter
+import io.ktor.http.*
+import io.ktor.server.application.*
+import io.ktor.server.http.content.*
+import io.ktor.server.response.*
 import org.jetbrains.exposed.v1.core.*
 import org.jetbrains.exposed.v1.jdbc.*
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
@@ -29,14 +33,6 @@ import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.Paths
 import java.time.Instant
-import io.ktor.server.application.ApplicationCall
-import ch.pontius.kiar.api.openapi.*
-import io.ktor.server.response.respond
-import ch.pontius.kiar.utilities.extensions.pathParam
-import ch.pontius.kiar.utilities.extensions.queryParam
-import io.ktor.http.ContentType
-import io.ktor.server.http.content.LocalFileContent
-import ch.pontius.kiar.utilities.extensions.uploadedFiles
 
 val getListInstitutionsDoc: RouteDoc = {
     operationId = "getInstitutions"
@@ -132,6 +128,9 @@ suspend fun getInstitution(call: ApplicationCall) {
         }
         .map { it.toInstitution() }
         .firstOrNull() ?: throw ErrorStatusException(404, "Institution with ID $institutionId could not be found.")
+
+        /* Make sure, that the current user can actually access this institution. */
+        call.currentUser().requireInstitution(institutionId, "Institution with ID $institutionId cannot be accessed by current user.")
 
         /* Fetches available and active collections. */
         val availableCollections = (InstitutionsSolrCollections innerJoin SolrCollections)
@@ -388,6 +387,7 @@ suspend fun postUploadImageForInstitution(call: ApplicationCall) {
     /* Start transaction */
     try { transaction {
         val institution = (Institutions innerJoin Participants).selectAll().where { Institutions.id eq institutionId }.map { it.toInstitution() }.firstOrNull() ?: throw ErrorStatusException(404, "No Institution with ID $institutionId found.")
+        call.currentUser().requireInstitution(institutionId, "Institution with ID $institutionId cannot be edited by current user.")
         val deployments = ImageDeployments.selectAll().where {
             ImageDeployments.solrInstanceId inSubQuery (InstitutionsSolrCollections innerJoin SolrCollections innerJoin SolrConfigs).select(SolrConfigs.id).where {
                 (InstitutionsSolrCollections.institutionId) eq institutionId and (InstitutionsSolrCollections.selected eq true)

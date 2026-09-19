@@ -3,23 +3,19 @@ package ch.pontius.kiar.api.routes.job
 import ch.pontius.kiar.api.model.job.JobStatus
 import ch.pontius.kiar.api.model.status.ErrorStatusException
 import ch.pontius.kiar.api.model.status.SuccessStatus
-import ch.pontius.kiar.api.model.user.Role
+import ch.pontius.kiar.api.openapi.*
 import ch.pontius.kiar.config.Config
 import ch.pontius.kiar.database.jobs.Jobs
 import ch.pontius.kiar.ingester.IngesterServer
-import ch.pontius.kiar.utilities.extensions.currentUser
+import ch.pontius.kiar.utilities.extensions.*
+import io.ktor.server.application.*
+import io.ktor.server.response.*
 import org.jetbrains.exposed.v1.core.eq
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 import org.jetbrains.exposed.v1.jdbc.update
 import java.nio.file.Files
 import java.nio.file.StandardOpenOption
 import java.time.Instant
-import io.ktor.server.application.ApplicationCall
-import ch.pontius.kiar.api.openapi.*
-import io.ktor.server.response.respond
-import ch.pontius.kiar.utilities.extensions.pathParam
-import ch.pontius.kiar.utilities.extensions.queryParam
-import ch.pontius.kiar.utilities.extensions.uploadedFiles
 
 
 val uploadDoc: RouteDoc = {
@@ -45,6 +41,9 @@ suspend fun upload(call: ApplicationCall, config: Config) {
     val last = call.queryParam("last")?.toBoolean() ?: false
     val participant = transaction {
         val job = Jobs.getById(jobId) ?: throw ErrorStatusException(404, "Job with ID $jobId could not be found.")
+
+        /* Check if user's participant is the same as the one associated with the job. */
+        call.currentUser().requireParticipant(job.template?.participantName, "You are not allowed to upload data for a job that has been created for another participant.")
 
         /* Check if job is still active. */
         if (job.status !in setOf(JobStatus.CREATED, JobStatus.FAILED)) {
@@ -134,9 +133,7 @@ suspend fun scheduleJob(call: ApplicationCall, server: IngesterServer) {
         }
 
         /* Check if user is actually allowed to start the job. */
-        if (currentUser.role != Role.ADMINISTRATOR && job.template?.participantName != currentUser.institution?.participantName) {
-            throw ErrorStatusException(403, "You are not allowed to start job $jobId.")
-        }
+        currentUser.requireParticipant(job.template?.participantName, "You are not allowed to start job $jobId.")
     }
 
     /* Schedule job for execution. */
@@ -167,11 +164,7 @@ suspend fun abortJob(call: ApplicationCall, server: IngesterServer) {
         val job = Jobs.getById(jobId) ?: throw ErrorStatusException(404, "Job with ID $jobId could not be found.")
 
         /* Check if user's participant is the same as the one associated with the template. */
-        if (currentUser.role != Role.ADMINISTRATOR) {
-            if (job.template?.participantName != currentUser.institution?.participantName) {
-                throw ErrorStatusException(403, "You are not allowed to abort a job that has been created for another participant.")
-            }
-        }
+        currentUser.requireParticipant(job.template?.participantName, "You are not allowed to abort a job that has been created for another participant.")
 
         /* Check if job is still active. */
         if (job.status !in setOf(JobStatus.CREATED, JobStatus.HARVESTED, JobStatus.SCHEDULED, JobStatus.INGESTED, JobStatus.INTERRUPTED, JobStatus.RUNNING)) {

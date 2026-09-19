@@ -7,6 +7,7 @@ import ch.pontius.kiar.api.model.status.ErrorStatus
 import ch.pontius.kiar.api.model.status.ErrorStatusException
 import ch.pontius.kiar.api.model.status.SuccessStatus
 import ch.pontius.kiar.api.model.user.Role
+import ch.pontius.kiar.api.openapi.*
 import ch.pontius.kiar.database.config.EntityMappings
 import ch.pontius.kiar.database.config.JobTemplates
 import ch.pontius.kiar.database.config.JobTemplates.toJobTemplate
@@ -16,15 +17,15 @@ import ch.pontius.kiar.database.institutions.Institutions
 import ch.pontius.kiar.database.institutions.Participants
 import ch.pontius.kiar.ingester.IngesterServer
 import ch.pontius.kiar.utilities.extensions.currentUser
+import ch.pontius.kiar.utilities.extensions.pathParam
 import ch.pontius.kiar.utilities.extensions.receiveOrThrow
+import ch.pontius.kiar.utilities.extensions.requireParticipant
+import io.ktor.server.application.*
+import io.ktor.server.response.*
 import org.jetbrains.exposed.v1.core.eq
 import org.jetbrains.exposed.v1.jdbc.*
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 import java.time.Instant
-import io.ktor.server.application.ApplicationCall
-import ch.pontius.kiar.api.openapi.*
-import io.ktor.server.response.respond
-import ch.pontius.kiar.utilities.extensions.pathParam
 
 val listJobTemplatesDoc: RouteDoc = {
     operationId = "getListJobTemplates"
@@ -94,7 +95,7 @@ suspend fun createJobTemplate(call: ApplicationCall, server: IngesterServer) {
         saveTransformers(jobTemplateId, request.transformers)
 
         /* Return created items with ID. */
-        request.copy(jobTemplateId)
+        request.copy(id = jobTemplateId)
     }
 
     /* Schedule watcher if job template starts automatically. */
@@ -123,6 +124,7 @@ suspend fun getJobTemplate(call: ApplicationCall) {
     val templateId = call.pathParam("id").toIntOrNull() ?: throw ErrorStatusException(400, "Malformed job template ID.")
     val template = transaction {
         val template =  JobTemplates.getById(templateId) ?: throw ErrorStatusException(404, "Job template with ID $templateId could not be found.")
+        call.currentUser().requireParticipant(template.participantName, "Job template with ID $templateId cannot be accessed by current user.")
         val transformers = Transformers.getByJobTemplateId(templateId)
         template.copy(transformers = transformers)
     }
