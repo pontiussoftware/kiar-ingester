@@ -87,6 +87,7 @@ dependencies {
     implementation("io.ktor:ktor-server-sessions")
     implementation("io.ktor:ktor-server-status-pages")
     implementation("io.ktor:ktor-server-cors")
+    implementation("io.ktor:ktor-server-default-headers")
     implementation("io.ktor:ktor-server-routing-openapi")
     implementation("io.ktor:ktor-server-swagger")
 

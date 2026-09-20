@@ -51,7 +51,7 @@ fun Route.configureApiRoutes(config: Config, server: IngesterServer, oaiServer: 
     route("session") {
         post("login") { io { login(call) } }.describe(loginDoc)
         authorized(Role.ADMINISTRATOR, Role.VIEWER, Role.MANAGER) {
-            get("logout") { io { logout(call) } }.describe(logoutDoc)
+            post("logout") { io { logout(call) } }.describe(logoutDoc)
             get("status") { io { status(call) } }.describe(statusDoc)
             get("user") { io { getUser(call) } }.describe(getUserDoc)
             put("user") { io { updateUser(call) } }.describe(updateUserDoc)

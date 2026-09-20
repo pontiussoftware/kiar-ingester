@@ -67,6 +67,7 @@ ENV KIAR_CONFIG=/config/config.json \
     KIAR_WEB_PORT=7070 \
     KIAR_JOB_LOG_RETENTION_DAYS=30 \
     KIAR_INPUT_RETENTION_COUNT=1 \
+    KIAR_SECURE_COOKIES=false \
     JAVA_OPTS="-XX:MaxRAMPercentage=75.0"
 
 USER kiar

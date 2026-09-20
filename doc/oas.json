@@ -73,7 +73,7 @@
             }
         },
         "/api/session/logout": {
-            "get": {
+            "post": {
                 "operationId": "logout",
                 "tags": [
                     "Session"

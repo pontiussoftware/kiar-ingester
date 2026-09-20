@@ -25,6 +25,8 @@ services:
       # Only used when no config.json is present in the mapped /config folder (generated on first start).
       KIAR_JOB_LOG_RETENTION_DAYS: ${KIAR_JOB_LOG_RETENTION_DAYS:-30}
       KIAR_INPUT_RETENTION_COUNT: ${KIAR_INPUT_RETENTION_COUNT:-1}
+      # Set to true when the dashboard is served over HTTPS (e.g. behind a TLS-terminating reverse proxy).
+      KIAR_SECURE_COOKIES: ${KIAR_SECURE_COOKIES:-false}
     volumes:
       # Configuration (config.json). Generated on first start if the folder is empty.
       - ${KIAR_CONFIG_DIR:-./data/config}:/config

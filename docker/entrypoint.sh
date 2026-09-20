@@ -23,7 +23,8 @@ if [ ! -f "${KIAR_CONFIG}" ]; then
   "ingestPath": "${KIAR_INGEST_PATH:-/data/ingest}",
   "logPath": "${KIAR_LOG_PATH:-/data/logs}",
   "jobLogRetentionDays": ${KIAR_JOB_LOG_RETENTION_DAYS:-30},
-  "inputRetentionCount": ${KIAR_INPUT_RETENTION_COUNT:-1}
+  "inputRetentionCount": ${KIAR_INPUT_RETENTION_COUNT:-1},
+  "secureCookies": ${KIAR_SECURE_COOKIES:-false}
 }
 EOF
 fi

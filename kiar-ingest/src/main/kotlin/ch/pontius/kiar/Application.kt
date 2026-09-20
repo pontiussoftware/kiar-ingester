@@ -12,35 +12,23 @@ import ch.pontius.kiar.ingester.IngesterServer
 import ch.pontius.kiar.servers.oai.OaiServer
 import ch.pontius.kiar.servers.sru.SruServer
 import ch.pontius.kiar.utilities.CaffeineSessionStorage
-import io.ktor.http.ContentType
-import io.ktor.http.CookieEncoding
-import io.ktor.http.HttpMethod
-import io.ktor.http.HttpStatusCode
-import io.ktor.openapi.ApiKeySecurityScheme
-import io.ktor.openapi.OpenApiDoc
-import io.ktor.openapi.OpenApiInfo
-import io.ktor.openapi.ReferenceOr
-import io.ktor.openapi.SecuritySchemeIn
-import io.ktor.serialization.kotlinx.json.json
-import io.ktor.server.application.Application
-import io.ktor.server.application.install
-import io.ktor.server.engine.embeddedServer
-import io.ktor.server.http.content.singlePageApplication
-import io.ktor.server.netty.Netty
-import io.ktor.server.plugins.contentnegotiation.ContentNegotiation
-import io.ktor.server.plugins.cors.routing.CORS
-import io.ktor.server.plugins.statuspages.StatusPages
-import io.ktor.server.plugins.swagger.swaggerUI
-import io.ktor.server.response.respond
-import io.ktor.server.response.respondText
-import io.ktor.server.routing.Route
-import io.ktor.server.routing.get
-import io.ktor.server.routing.openapi.OpenApiDocSource
-import io.ktor.server.routing.openapi.hide
-import io.ktor.server.routing.routing
-import io.ktor.server.sessions.Sessions
-import io.ktor.server.sessions.cookie
-import io.ktor.utils.io.ExperimentalKtorApi
+import io.ktor.http.*
+import io.ktor.openapi.*
+import io.ktor.serialization.kotlinx.json.*
+import io.ktor.server.application.*
+import io.ktor.server.engine.*
+import io.ktor.server.http.content.*
+import io.ktor.server.netty.*
+import io.ktor.server.plugins.contentnegotiation.*
+import io.ktor.server.plugins.cors.routing.*
+import io.ktor.server.plugins.defaultheaders.*
+import io.ktor.server.plugins.statuspages.*
+import io.ktor.server.plugins.swagger.*
+import io.ktor.server.response.*
+import io.ktor.server.routing.*
+import io.ktor.server.routing.openapi.*
+import io.ktor.server.sessions.*
+import io.ktor.utils.io.*
 import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.async
 import kotlinx.serialization.json.Json
@@ -137,21 +125,38 @@ fun Application.kiar(config: Config) {
         cookie<UserSession>(SESSION_COOKIE, CaffeineSessionStorage(Duration.ofMinutes(30))) {
             cookie.path = "/"
             cookie.httpOnly = true
+            cookie.secure = config.secureCookies
             cookie.maxAgeInSeconds = null /* Session cookie (no Max-Age); the server-side session expires after 30 minutes of inactivity. */
             cookie.encoding = CookieEncoding.RAW
             cookie.extensions["SameSite"] = "Lax"
         }
     }
 
-    /* Enable CORS: reflect the client origin and allow credentials. */
-    install(CORS) {
-        anyHost()
-        allowCredentials = true
-        allowNonSimpleContentTypes = true
-        allowMethod(HttpMethod.Put)
-        allowMethod(HttpMethod.Delete)
-        allowMethod(HttpMethod.Patch)
-        allowMethod(HttpMethod.Options)
+    /* Security-related response headers. */
+    install(DefaultHeaders) {
+        header("X-Frame-Options", "DENY")
+        header("X-Content-Type-Options", "nosniff")
+        header("Referrer-Policy", "same-origin")
+    }
+
+    /* CORS is only needed for cross-origin development setups; the SPA itself is served from the same origin as the API. */
+    if (config.allowedOrigins.isNotEmpty()) {
+        install(CORS) {
+            for (origin in config.allowedOrigins) {
+                val schemeSeparator = origin.indexOf("://")
+                if (schemeSeparator > 0) {
+                    allowHost(origin.substring(schemeSeparator + 3), schemes = listOf(origin.substring(0, schemeSeparator)))
+                } else {
+                    allowHost(origin, schemes = listOf("http", "https"))
+                }
+            }
+            allowCredentials = true
+            allowNonSimpleContentTypes = true
+            allowMethod(HttpMethod.Put)
+            allowMethod(HttpMethod.Delete)
+            allowMethod(HttpMethod.Patch)
+            allowMethod(HttpMethod.Options)
+        }
     }
 
     /* Map exceptions to ErrorStatus JSON. */

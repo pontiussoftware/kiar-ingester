@@ -5,5 +5,7 @@
   "ingestPath": "/data/ingest",
   "logPath": "/data/logs",
   "jobLogRetentionDays": 30,
-  "inputRetentionCount": 1
+  "inputRetentionCount": 1,
+  "secureCookies": false,
+  "allowedOrigins": []
 }

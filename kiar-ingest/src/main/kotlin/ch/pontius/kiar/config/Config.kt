@@ -37,5 +37,18 @@ data class Config(
     val jobLogRetentionDays: Int = 30,
 
     /** Number of input files to retain. */
-    val inputRetentionCount: Int = 1
+    val inputRetentionCount: Int = 1,
+
+    /**
+     * Whether the session cookie is marked 'Secure' (only sent over HTTPS). Enable this whenever the dashboard is served
+     * over TLS (typically behind a reverse proxy); leave it disabled only for plain-HTTP development setups.
+     */
+    val secureCookies: Boolean = false,
+
+    /**
+     * Origins (e.g. "http://localhost:4200") that may call the API cross-origin with credentials. The dashboard is served
+     * from the same origin as the API, so this is only needed for development (e.g. the Angular dev server). When empty,
+     * CORS is disabled entirely.
+     */
+    val allowedOrigins: List<String> = emptyList()
 )
