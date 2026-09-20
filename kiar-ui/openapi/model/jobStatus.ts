@@ -17,7 +17,7 @@ export const JobStatus = {
     SCHEDULED: 'SCHEDULED',
     INTERRUPTED: 'INTERRUPTED',
     INGESTED: 'INGESTED',
-    FAILED: 'FAILED'
+    FAILED: 'FAILED',
 } as const;
 export type JobStatus = typeof JobStatus[keyof typeof JobStatus];
 

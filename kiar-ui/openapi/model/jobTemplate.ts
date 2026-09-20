@@ -7,10 +7,10 @@
  * https://openapi-generator.tech
  * Do not edit the class manually.
  */
-import { EntityMapping } from './entityMapping';
-import { JobType } from './jobType';
-import { TransformerConfig } from './transformerConfig';
-import { ApacheSolrConfig } from './apacheSolrConfig';
+import {EntityMapping} from './entityMapping';
+import {JobType} from './jobType';
+import {TransformerConfig} from './transformerConfig';
+import {ApacheSolrConfig} from './apacheSolrConfig';
 
 
 export interface JobTemplate { 

@@ -13,7 +13,7 @@ export const CollectionType = {
     OBJECT: 'OBJECT',
     PERSON: 'PERSON',
     MUSEUM: 'MUSEUM',
-    COLLECTION: 'COLLECTION'
+    COLLECTION: 'COLLECTION',
 } as const;
 export type CollectionType = typeof CollectionType[keyof typeof CollectionType];
 

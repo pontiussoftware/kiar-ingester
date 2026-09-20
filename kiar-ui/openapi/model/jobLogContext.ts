@@ -12,7 +12,7 @@
 export const JobLogContext = {
     METADATA: 'METADATA',
     RESOURCE: 'RESOURCE',
-    SYSTEM: 'SYSTEM'
+    SYSTEM: 'SYSTEM',
 } as const;
 export type JobLogContext = typeof JobLogContext[keyof typeof JobLogContext];
 

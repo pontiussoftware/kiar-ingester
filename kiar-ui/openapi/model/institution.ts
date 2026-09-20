@@ -7,7 +7,7 @@
  * https://openapi-generator.tech
  * Do not edit the class manually.
  */
-import { Canton } from './canton';
+import {Canton} from './canton';
 
 
 export interface Institution { 

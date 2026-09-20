@@ -9,19 +9,16 @@
  */
 /* tslint:disable:no-unused-variable member-ordering */
 
-import { Inject, Injectable, Optional }                      from '@angular/core';
-import { HttpClient, HttpHeaders, HttpParams,
-         HttpResponse, HttpEvent, HttpParameterCodec, HttpContext 
-        }       from '@angular/common/http';
-import { CustomHttpParameterCodec }                          from '../encoder';
-import { Observable }                                        from 'rxjs';
+import {Inject, Injectable, Optional} from '@angular/core';
+import {HttpClient, HttpContext, HttpEvent, HttpParams, HttpResponse} from '@angular/common/http';
+import {Observable} from 'rxjs';
+import {OpenApiHttpParams, QueryParamStyle} from '../query.params';
 
 
 // @ts-ignore
-import { BASE_PATH, COLLECTION_FORMATS }                     from '../variables';
-import { Configuration }                                     from '../configuration';
-import { BaseService } from '../api.base.service';
-
+import {BASE_PATH, COLLECTION_FORMATS} from '../variables';
+import {Configuration} from '../configuration';
+import {BaseService} from '../api.base.service';
 
 
 @Injectable({
@@ -44,6 +41,7 @@ export class OAIService extends BaseService {
      * @param set The OAI-PMH set criterion for selective harvesting (used for ListIdentifiers and ListRecords).
      * @param observe set whether or not to return the data Observable as the body, response or events. defaults to returning the body.
      * @param reportProgress flag to report request and response progress.
+     * @param options additional options
      */
     public getOaiPmh(collection: string, verb: string, identifier?: string, resumptionToken?: string, metadataPrefix?: string, set?: string, observe?: 'body', reportProgress?: boolean, options?: {httpHeaderAccept?: 'text/xml', context?: HttpContext, transferCache?: boolean}): Observable<any>;
     public getOaiPmh(collection: string, verb: string, identifier?: string, resumptionToken?: string, metadataPrefix?: string, set?: string, observe?: 'response', reportProgress?: boolean, options?: {httpHeaderAccept?: 'text/xml', context?: HttpContext, transferCache?: boolean}): Observable<HttpResponse<any>>;
@@ -56,17 +54,52 @@ export class OAIService extends BaseService {
             throw new Error('Required parameter verb was null or undefined when calling getOaiPmh.');
         }
 
-        let localVarQueryParameters = new HttpParams({encoder: this.encoder});
-        localVarQueryParameters = this.addToHttpParams(localVarQueryParameters,
-          <any>verb, 'verb');
-        localVarQueryParameters = this.addToHttpParams(localVarQueryParameters,
-          <any>identifier, 'identifier');
-        localVarQueryParameters = this.addToHttpParams(localVarQueryParameters,
-          <any>resumptionToken, 'resumptionToken');
-        localVarQueryParameters = this.addToHttpParams(localVarQueryParameters,
-          <any>metadataPrefix, 'metadataPrefix');
-        localVarQueryParameters = this.addToHttpParams(localVarQueryParameters,
-          <any>set, 'set');
+        let localVarQueryParameters = new OpenApiHttpParams(this.encoder);
+
+        localVarQueryParameters = this.addToHttpParams(
+            localVarQueryParameters,
+            'verb',
+            <any>verb,
+            QueryParamStyle.Form,
+            true,
+        );
+
+
+        localVarQueryParameters = this.addToHttpParams(
+            localVarQueryParameters,
+            'identifier',
+            <any>identifier,
+            QueryParamStyle.Form,
+            true,
+        );
+
+
+        localVarQueryParameters = this.addToHttpParams(
+            localVarQueryParameters,
+            'resumptionToken',
+            <any>resumptionToken,
+            QueryParamStyle.Form,
+            true,
+        );
+
+
+        localVarQueryParameters = this.addToHttpParams(
+            localVarQueryParameters,
+            'metadataPrefix',
+            <any>metadataPrefix,
+            QueryParamStyle.Form,
+            true,
+        );
+
+
+        localVarQueryParameters = this.addToHttpParams(
+            localVarQueryParameters,
+            'set',
+            <any>set,
+            QueryParamStyle.Form,
+            true,
+        );
+
 
         let localVarHeaders = this.defaultHeaders;
 
@@ -98,7 +131,7 @@ export class OAIService extends BaseService {
         return this.httpClient.request<any>('get', `${basePath}${localVarPath}`,
             {
                 context: localVarHttpContext,
-                params: localVarQueryParameters,
+                params: localVarQueryParameters.toHttpParams(),
                 responseType: <any>responseType_,
                 ...(withCredentials ? { withCredentials } : {}),
                 headers: localVarHeaders,
@@ -120,6 +153,7 @@ export class OAIService extends BaseService {
      * @param set 
      * @param observe set whether or not to return the data Observable as the body, response or events. defaults to returning the body.
      * @param reportProgress flag to report request and response progress.
+     * @param options additional options
      */
     public postOaiPmh(collection: string, verb?: string, identifier?: string, resumptionToken?: string, metadataPrefix?: string, set?: string, observe?: 'body', reportProgress?: boolean, options?: {httpHeaderAccept?: 'text/xml', context?: HttpContext, transferCache?: boolean}): Observable<any>;
     public postOaiPmh(collection: string, verb?: string, identifier?: string, resumptionToken?: string, metadataPrefix?: string, set?: string, observe?: 'response', reportProgress?: boolean, options?: {httpHeaderAccept?: 'text/xml', context?: HttpContext, transferCache?: boolean}): Observable<HttpResponse<any>>;

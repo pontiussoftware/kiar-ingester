@@ -7,8 +7,8 @@
  * https://openapi-generator.tech
  * Do not edit the class manually.
  */
-import { Role } from './role';
-import { Institution } from './institution';
+import {Role} from './role';
+import {Institution} from './institution';
 
 
 export interface User { 

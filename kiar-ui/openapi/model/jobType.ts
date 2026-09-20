@@ -13,7 +13,7 @@ export const JobType = {
     XML: 'XML',
     JSON: 'JSON',
     EXCEL: 'EXCEL',
-    KIAR: 'KIAR'
+    KIAR: 'KIAR',
 } as const;
 export type JobType = typeof JobType[keyof typeof JobType];
 

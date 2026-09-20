@@ -11,7 +11,7 @@
 
 export const JobSource = {
     WATCHER: 'WATCHER',
-    WEB: 'WEB'
+    WEB: 'WEB',
 } as const;
 export type JobSource = typeof JobSource[keyof typeof JobSource];
 

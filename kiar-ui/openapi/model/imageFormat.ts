@@ -11,7 +11,7 @@
 
 export const ImageFormat = {
     JPEG: 'JPEG',
-    PNG: 'PNG'
+    PNG: 'PNG',
 } as const;
 export type ImageFormat = typeof ImageFormat[keyof typeof ImageFormat];
 

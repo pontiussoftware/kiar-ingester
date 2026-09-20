@@ -7,9 +7,9 @@
  * https://openapi-generator.tech
  * Do not edit the class manually.
  */
-import { JobStatus } from './jobStatus';
-import { JobSource } from './jobSource';
-import { JobTemplate } from './jobTemplate';
+import {JobStatus} from './jobStatus';
+import {JobSource} from './jobSource';
+import {JobTemplate} from './jobTemplate';
 
 
 export interface Job { 

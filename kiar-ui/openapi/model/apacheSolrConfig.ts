@@ -7,8 +7,8 @@
  * https://openapi-generator.tech
  * Do not edit the class manually.
  */
-import { ImageDeployment } from './imageDeployment';
-import { ApacheSolrCollection } from './apacheSolrCollection';
+import {ImageDeployment} from './imageDeployment';
+import {ApacheSolrCollection} from './apacheSolrCollection';
 
 
 export interface ApacheSolrConfig { 

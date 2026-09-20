@@ -13,7 +13,7 @@ export const JobLogLevel = {
     WARNING: 'WARNING',
     ERROR: 'ERROR',
     VALIDATION: 'VALIDATION',
-    SEVERE: 'SEVERE'
+    SEVERE: 'SEVERE',
 } as const;
 export type JobLogLevel = typeof JobLogLevel[keyof typeof JobLogLevel];
 

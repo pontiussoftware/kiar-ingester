@@ -13,7 +13,7 @@ export const TransformerType = {
     DISPLAY: 'DISPLAY',
     SYSTEM: 'SYSTEM',
     RIGHTS: 'RIGHTS',
-    UUID: 'UUID'
+    UUID: 'UUID',
 } as const;
 export type TransformerType = typeof TransformerType[keyof typeof TransformerType];
 

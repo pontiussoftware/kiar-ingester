@@ -15,7 +15,7 @@ export const Canton = {
     BL: 'BL',
     BS: 'BS',
     LU: 'LU',
-    SO: 'SO'
+    SO: 'SO',
 } as const;
 export type Canton = typeof Canton[keyof typeof Canton];
 

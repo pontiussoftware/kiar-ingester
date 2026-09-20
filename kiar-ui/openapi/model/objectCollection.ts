@@ -7,7 +7,7 @@
  * https://openapi-generator.tech
  * Do not edit the class manually.
  */
-import { Institution } from './institution';
+import {Institution} from './institution';
 
 
 export interface ObjectCollection { 

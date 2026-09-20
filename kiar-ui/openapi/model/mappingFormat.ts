@@ -12,7 +12,7 @@
 export const MappingFormat = {
     XML: 'XML',
     JSON: 'JSON',
-    EXCEL: 'EXCEL'
+    EXCEL: 'EXCEL',
 } as const;
 export type MappingFormat = typeof MappingFormat[keyof typeof MappingFormat];
 
