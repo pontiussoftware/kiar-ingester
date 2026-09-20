@@ -1,6 +1,5 @@
 package ch.pontius.kiar.api.routes.session
 
-import ch.pontius.kiar.api.UserSession
 import ch.pontius.kiar.api.model.session.LoginRequest
 import ch.pontius.kiar.api.model.session.SessionStatus
 import ch.pontius.kiar.api.model.status.ErrorStatusException
@@ -12,7 +11,6 @@ import ch.pontius.kiar.database.institutions.Users.toUser
 import ch.pontius.kiar.utilities.extensions.*
 import io.ktor.server.application.*
 import io.ktor.server.response.*
-import io.ktor.server.sessions.*
 import org.jetbrains.exposed.v1.core.and
 import org.jetbrains.exposed.v1.core.eq
 import org.jetbrains.exposed.v1.jdbc.selectAll
@@ -35,12 +33,7 @@ val loginDoc: RouteDoc = {
 suspend fun login(call: ApplicationCall) {
     val request = call.receiveOrThrow<LoginRequest>()
 
-    /* Check if user is already logged-in.*/
-    val session = call.sessions.get<UserSession>()
-    if (session != null && session.username == request.username) {
-        call.respond(SuccessStatus("Already logged in."))
-        return
-    }
+    /* Credentials are always verified, even if a session exists; a successful login then replaces that session (see setUser). */
 
     /* Find active user with given username; the password hash is read from the row and never leaves this function. */
     val (user, hash) = transaction {

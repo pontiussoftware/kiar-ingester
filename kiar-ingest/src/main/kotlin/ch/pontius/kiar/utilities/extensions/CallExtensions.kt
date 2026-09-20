@@ -11,6 +11,7 @@ import io.ktor.server.plugins.ContentTransformationException
 import io.ktor.server.request.*
 import io.ktor.server.routing.*
 import io.ktor.server.sessions.*
+import io.ktor.util.*
 import io.ktor.utils.io.jvm.javaio.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -69,10 +70,21 @@ fun ApplicationCall.pathParam(name: String): String = ((this as? RoutingCall)?.p
  */
 fun ApplicationCall.queryParam(name: String): String? = this.request.queryParameters[name]
 
+/** The attribute under which Ktor's [io.ktor.server.sessions.SessionTrackerById] keeps the current session ID (internal to Ktor, but stable). */
+private val SESSION_ID_KEY = AttributeKey<String>("SessionId")
+
 /**
  * A convenience method used to set the currently active [User] in the session.
+ *
+ * Any session that arrived with the request is invalidated first and detached from the call, so that Ktor issues a
+ * fresh session ID for the authenticated session (prevents session fixation).
  */
-fun ApplicationCall.setUser(user: User) {
+suspend fun ApplicationCall.setUser(user: User) {
+    val current = this.sessionId
+    if (current != null) {
+        this.sessions.clear<UserSession>(current)
+        this.attributes.remove(SESSION_ID_KEY)
+    }
     this.sessions.set(UserSession(user.id!!, user.username))
 }
 
