@@ -12,6 +12,8 @@ import ch.pontius.kiar.ingester.IngesterServer
 import ch.pontius.kiar.servers.oai.OaiServer
 import ch.pontius.kiar.servers.sru.SruServer
 import ch.pontius.kiar.utilities.CaffeineSessionStorage
+import io.github.oshai.kotlinlogging.KLogger
+import io.github.oshai.kotlinlogging.KotlinLogging
 import io.ktor.http.*
 import io.ktor.openapi.*
 import io.ktor.serialization.kotlinx.json.*
@@ -19,11 +21,13 @@ import io.ktor.server.application.*
 import io.ktor.server.engine.*
 import io.ktor.server.http.content.*
 import io.ktor.server.netty.*
+import io.ktor.server.plugins.*
 import io.ktor.server.plugins.contentnegotiation.*
 import io.ktor.server.plugins.cors.routing.*
 import io.ktor.server.plugins.defaultheaders.*
 import io.ktor.server.plugins.statuspages.*
 import io.ktor.server.plugins.swagger.*
+import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import io.ktor.server.routing.openapi.*
@@ -39,7 +43,11 @@ import java.nio.file.Files
 import java.nio.file.Paths
 import java.sql.Connection
 import java.time.Duration
+import java.util.*
 import kotlin.system.exitProcess
+
+/** The [KLogger] instance for the application. */
+private val logger: KLogger = KotlinLogging.logger {}
 
 /** The name of the session cookie. */
 const val SESSION_COOKIE = "SESSIONID"
@@ -164,8 +172,17 @@ fun Application.kiar(config: Config) {
         exception<ErrorStatusException> { call, e ->
             call.respond(HttpStatusCode.fromValue(e.code), ErrorStatus(e.code, e.message))
         }
+        exception<UnsupportedMediaTypeException> { call, _ ->
+            call.respond(HttpStatusCode.UnsupportedMediaType, ErrorStatus(415, "Unsupported media type."))
+        }
+        exception<BadRequestException> { call, _ ->
+            call.respond(HttpStatusCode.BadRequest, ErrorStatus(400, "Malformed request."))
+        }
         exception<Throwable> { call, e ->
-            call.respond(HttpStatusCode.InternalServerError, ErrorStatus(500, "Internal server error: ${e.localizedMessage}"))
+            /* Internal details (SQL, file paths, upstream URLs) stay in the server log; the client only gets a reference to find them. */
+            val reference = UUID.randomUUID().toString().substring(0, 8)
+            logger.error(e) { "Unhandled exception while processing ${call.request.httpMethod.value} ${call.request.uri} (ref = $reference)." }
+            call.respond(HttpStatusCode.InternalServerError, ErrorStatus(500, "Internal server error (ref = $reference). Please contact the administrator."))
         }
     }
 

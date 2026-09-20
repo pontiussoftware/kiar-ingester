@@ -150,7 +150,8 @@ private fun synchronise(config: ApacheSolrConfig, collection: String, collection
                 logger.error { "Failed to commit documents (collection = $collection)." }
             }
         } catch (e: Throwable) {
-            throw ErrorStatusException(500, "Error occurred while trying to purge Apache Solr collection: ${e.message}")
+            logger.error(e) { "Failed to synchronise collections with Apache Solr (collection = $collection)." }
+            throw ErrorStatusException(500, "Error occurred while trying to synchronise Apache Solr collection '$collection'; see server log for details.")
         }
     }
 }

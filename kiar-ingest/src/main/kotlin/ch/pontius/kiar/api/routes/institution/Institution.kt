@@ -206,7 +206,7 @@ suspend fun postCreateInstitution(call: ApplicationCall) {
             val selected = request.selectedCollections.contains(collection)
             InstitutionsSolrCollections.insert { insert ->
                 insert[InstitutionsSolrCollections.institutionId] = institutionId
-                insert[InstitutionsSolrCollections.solrCollectionId] = SolrCollections.select(SolrCollections.id).where { SolrCollections.name eq collection }.map { it[SolrCollections.id] }.first()
+                insert[InstitutionsSolrCollections.solrCollectionId] = SolrCollections.select(SolrCollections.id).where { SolrCollections.name eq collection }.map { it[SolrCollections.id] }.firstOrNull() ?: throw ErrorStatusException(400, "Unknown collection '$collection'.")
                 insert[InstitutionsSolrCollections.selected] = selected
             }
         }
@@ -297,7 +297,7 @@ suspend fun putUpdateInstitution(call: ApplicationCall) {
                 val selected = request.selectedCollections.contains(collection)
                 InstitutionsSolrCollections.insert { insert ->
                     insert[InstitutionsSolrCollections.institutionId] = institutionId
-                    insert[InstitutionsSolrCollections.solrCollectionId] = SolrCollections.select(SolrCollections.id).where { SolrCollections.name eq collection }.map { it[SolrCollections.id] }.first()
+                    insert[InstitutionsSolrCollections.solrCollectionId] = SolrCollections.select(SolrCollections.id).where { SolrCollections.name eq collection }.map { it[SolrCollections.id] }.firstOrNull() ?: throw ErrorStatusException(400, "Unknown collection '$collection'.")
                     insert[InstitutionsSolrCollections.selected] = selected
                 }
             }

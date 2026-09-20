@@ -1,16 +1,17 @@
 package ch.pontius.kiar.api.routes.publication
 
+import ch.pontius.kiar.api.model.status.ErrorStatusException
+import ch.pontius.kiar.api.openapi.*
 import ch.pontius.kiar.servers.oai.OaiServer
+import ch.pontius.kiar.utilities.extensions.pathParam
+import io.ktor.http.*
+import io.ktor.server.application.*
+import io.ktor.server.request.*
+import io.ktor.server.response.*
 import java.io.StringWriter
 import javax.xml.transform.TransformerFactory
 import javax.xml.transform.dom.DOMSource
 import javax.xml.transform.stream.StreamResult
-import io.ktor.server.application.ApplicationCall
-import ch.pontius.kiar.api.openapi.*
-import io.ktor.http.ContentType
-import io.ktor.server.request.receiveParameters
-import io.ktor.server.response.respondText
-import ch.pontius.kiar.utilities.extensions.pathParam
 
 val getOaiPmhDoc: RouteDoc = {
     operationId = "getOaiPmh"
@@ -31,7 +32,11 @@ val getOaiPmhDoc: RouteDoc = {
 
 suspend fun getOaiPmh(call: ApplicationCall, server: OaiServer) {
     val parameters = call.request.queryParameters.entries().associate { it.key to it.value.first() }
-    val doc = server.handle(call.pathParam("collection"), parameters)
+    val doc = try {
+        server.handle(call.pathParam("collection"), parameters)
+    } catch (e: IllegalArgumentException) {
+        throw ErrorStatusException(404, "Collection not found or not available via OAI-PMH.")
+    }
 
     /* Convert Document to XML string */
     val transformer = TransformerFactory.newInstance().newTransformer()
@@ -58,7 +63,11 @@ val postOaiPmhDoc: RouteDoc = {
 
 suspend fun postOaiPmh(call: ApplicationCall, server: OaiServer) {
     val parameters = call.receiveParameters().entries().associate { it.key to it.value.first() }
-    val doc = server.handle(call.pathParam("collection"), parameters)
+    val doc = try {
+        server.handle(call.pathParam("collection"), parameters)
+    } catch (_: IllegalArgumentException) {
+        throw ErrorStatusException(404, "Collection not found or not available via OAI-PMH.")
+    }
 
     /* Convert Document to XML string */
     val transformer = TransformerFactory.newInstance().newTransformer()

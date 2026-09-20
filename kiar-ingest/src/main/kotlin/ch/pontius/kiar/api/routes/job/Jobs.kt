@@ -141,8 +141,8 @@ suspend fun getJobLogs(call: ApplicationCall) {
     val jobId = call.pathParam("id").toIntOrNull() ?: throw ErrorStatusException(400, "Malformed job ID.")
     val page = call.queryParam("page")?.toIntOrNull() ?: 0
     val pageSize = call.queryParam("pageSize")?.toIntOrNull() ?: 50
-    val level = call.queryParam("level")?.uppercase()?.let { JobLogLevel.valueOf(it) }
-    val context = call.queryParam("context")?.uppercase()?.let { JobLogContext.valueOf(it) }
+    val level = call.queryParam("level")?.uppercase()?.let { value -> JobLogLevel.entries.find { it.name == value } ?: throw ErrorStatusException(400, "Unknown log level '$value'.") }
+    val context = call.queryParam("context")?.uppercase()?.let { value -> JobLogContext.entries.find { it.name == value } ?: throw ErrorStatusException(400, "Unknown log context '$value'.") }
 
     /* Fetch job logs. */
     val (count, results) = transaction {
