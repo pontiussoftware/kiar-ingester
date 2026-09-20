@@ -115,9 +115,9 @@ class IngesterServer(val config: Config) {
      * @return True on success, false otherwise.
      */
     fun scheduleWatcher(templateId: JobTemplateId, path: Path): Boolean {
-        if (this.activeWatchers.contains(templateId)) return false
         val watcher = FileWatcher(this, templateId, path)
-        this.activeWatchers[templateId] = watcher
+        /* Atomic check-and-put: 'contains(key)' on a ConcurrentHashMap resolves to containsValue() and never matched. */
+        if (this.activeWatchers.putIfAbsent(templateId, watcher) != null) return false
         this.watcherService.execute(watcher)
         return true
     }
