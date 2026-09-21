@@ -50,8 +50,7 @@ val getListCollectionsDoc: RouteDoc = {
 }
 
 suspend fun getListCollections(call: ApplicationCall) {
-    val page = call.queryParam("page")?.toIntOrNull() ?: 0
-    val pageSize = call.queryParam("pageSize")?.toIntOrNull() ?: 50
+    val (page, pageSize) = call.pagination()
     val filter = call.queryParam("filter")?.lowercase()
     val (total, result) = transaction {
         val query = (Collections innerJoin Institutions innerJoin Participants).selectAll()
@@ -60,7 +59,7 @@ suspend fun getListCollections(call: ApplicationCall) {
                 (Collections.name like "$filter%") or  (Collections.displayName like "$filter%")
             }
         }
-        query.count() to query.offset((page * pageSize).toLong()).limit(pageSize).asSequence().map { it.toObjectCollection() }.toList()
+        query.count() to query.offset(page.toLong() * pageSize).limit(pageSize).asSequence().map { it.toObjectCollection() }.toList()
     }
     call.respond(PaginatedObjectCollectionResult(total, page, pageSize, result))
 }

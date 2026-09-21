@@ -70,6 +70,24 @@ fun ApplicationCall.pathParam(name: String): String = ((this as? RoutingCall)?.p
  */
 fun ApplicationCall.queryParam(name: String): String? = this.request.queryParameters[name]
 
+/** The largest page size a client may request from a list endpoint. The UI loads institution lists for dropdowns with 1000. */
+const val MAX_PAGE_SIZE = 1000
+
+/**
+ * Reads and clamps the 'page' and 'pageSize' query parameters of this [ApplicationCall].
+ *
+ * The page index is clamped to a non-negative value (and kept small enough that page * pageSize cannot overflow), the
+ * page size to 1..[MAX_PAGE_SIZE]. Malformed values fall back to the defaults.
+ *
+ * @param defaultPageSize The page size used when the parameter is absent or malformed.
+ * @return [Pair] of page index and page size.
+ */
+fun ApplicationCall.pagination(defaultPageSize: Int = 50): Pair<Int, Int> {
+    val page = (this.queryParam("page")?.toIntOrNull() ?: 0).coerceIn(0, Int.MAX_VALUE / MAX_PAGE_SIZE)
+    val pageSize = (this.queryParam("pageSize")?.toIntOrNull() ?: defaultPageSize).coerceIn(1, MAX_PAGE_SIZE)
+    return page to pageSize
+}
+
 /** The attribute under which Ktor's [io.ktor.server.sessions.SessionTrackerById] keeps the current session ID (internal to Ktor, but stable). */
 private val SESSION_ID_KEY = AttributeKey<String>("SessionId")
 

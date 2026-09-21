@@ -52,8 +52,7 @@ val getListInstitutionsDoc: RouteDoc = {
 }
 
 suspend fun getListInstitutions(call: ApplicationCall) {
-    val page = call.queryParam("page")?.toIntOrNull() ?: 0
-    val pageSize = call.queryParam("pageSize")?.toIntOrNull() ?: 50
+    val (page, pageSize) = call.pagination()
     val order = call.queryParam("order")?.lowercase() ?: "name"
     val orderDir = call.queryParam("orderDir")?.uppercase()?.let {
         try {
@@ -82,7 +81,8 @@ suspend fun getListInstitutions(call: ApplicationCall) {
         }
 
         /* Execute query and return paginated result. */
-        query.count() to query.drop(page * pageSize).take(pageSize).asSequence().map { it.toInstitution() }.toList()
+        /* Paginate in SQL (offset/limit), not in memory. */
+        query.count() to query.offset(page.toLong() * pageSize).limit(pageSize).map { it.toInstitution() }
     }
     call.respond(PaginatedInstitutionResult(total, page, pageSize, results))
 }

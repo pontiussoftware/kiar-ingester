@@ -39,8 +39,7 @@ val getListUsersDoc: RouteDoc = {
 }
 
 suspend fun getListUsers(call: ApplicationCall) {
-    val page = call.queryParam("page")?.toIntOrNull() ?: 0
-    val pageSize = call.queryParam("pageSize")?.toIntOrNull() ?: 50
+    val (page, pageSize) = call.pagination()
     val order = call.queryParam("order")?.lowercase() ?: "name"
     val orderDir = call.queryParam("orderDir")?.uppercase()?.let {
         try {
@@ -59,7 +58,7 @@ suspend fun getListUsers(call: ApplicationCall) {
         }
         val users = (Users leftJoin Institutions leftJoin Participants).selectAll()
             .orderBy(order, orderDir)
-            .offset((page * pageSize).toLong())
+            .offset(page.toLong() * pageSize)
             .limit(pageSize)
             .map { it.toUser() }
         total to users

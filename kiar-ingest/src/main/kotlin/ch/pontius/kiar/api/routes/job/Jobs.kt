@@ -36,8 +36,7 @@ val getActiveJobsDoc: RouteDoc = {
 }
 
 suspend fun getActiveJobs(call: ApplicationCall, server: IngesterServer) {
-    val page = call.queryParam("page")?.toIntOrNull() ?: 0
-    val pageSize = call.queryParam("pageSize")?.toIntOrNull() ?: 50
+    val (page, pageSize) = call.pagination()
 
     /* Fetch jobs. */
     val (count, results) = transaction {
@@ -57,7 +56,7 @@ suspend fun getActiveJobs(call: ApplicationCall, server: IngesterServer) {
             }
         }
 
-        query.count() to query.orderBy(Jobs.modified, SortOrder.DESC).offset((page * pageSize).toLong()).limit(pageSize).map {
+        query.count() to query.orderBy(Jobs.modified, SortOrder.DESC).offset(page.toLong() * pageSize).limit(pageSize).map {
             val job = it.toJob()
             val context = server.getContext(job.id!!)
             if (context != null) {
@@ -88,8 +87,7 @@ val getInactiveJobsDoc: RouteDoc = {
 }
 
 suspend fun getInactiveJobs(call: ApplicationCall) {
-    val page = call.queryParam("page")?.toIntOrNull() ?: 0
-    val pageSize = call.queryParam("pageSize")?.toIntOrNull() ?: 50
+    val (page, pageSize) = call.pagination()
 
     /* Fetch jobs. */
     val (count, results) = transaction {
@@ -109,7 +107,7 @@ suspend fun getInactiveJobs(call: ApplicationCall) {
             }
         }
 
-        query.count() to query.orderBy(Jobs.modified, SortOrder.DESC).offset((page * pageSize).toLong()).limit(pageSize).map {
+        query.count() to query.orderBy(Jobs.modified, SortOrder.DESC).offset(page.toLong() * pageSize).limit(pageSize).map {
             val job = it.toJob()
             val count = JobLogs.selectAll().where { JobLogs.jobId eq job.id!! }.count()
             job.copy(logEntries = count)
@@ -139,8 +137,7 @@ val getJobLogsDoc: RouteDoc = {
 
 suspend fun getJobLogs(call: ApplicationCall) {
     val jobId = call.pathParam("id").toIntOrNull() ?: throw ErrorStatusException(400, "Malformed job ID.")
-    val page = call.queryParam("page")?.toIntOrNull() ?: 0
-    val pageSize = call.queryParam("pageSize")?.toIntOrNull() ?: 50
+    val (page, pageSize) = call.pagination()
     val level = call.queryParam("level")?.uppercase()?.let { value -> JobLogLevel.entries.find { it.name == value } ?: throw ErrorStatusException(400, "Unknown log level '$value'.") }
     val context = call.queryParam("context")?.uppercase()?.let { value -> JobLogContext.entries.find { it.name == value } ?: throw ErrorStatusException(400, "Unknown log context '$value'.") }
 
@@ -159,7 +156,7 @@ suspend fun getJobLogs(call: ApplicationCall) {
             query.andWhere { JobLogs.context eq context }
         }
 
-        query.count() to query.offset((page * pageSize).toLong()).limit(pageSize).map { it.toJobLog() }
+        query.count() to query.offset(page.toLong() * pageSize).limit(pageSize).map { it.toJobLog() }
     }
 
     /* Return results. */
