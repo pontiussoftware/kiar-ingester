@@ -8,6 +8,7 @@ import ch.pontius.kiar.ingester.solrj.Field
 import ch.pontius.kiar.ingester.solrj.addField
 import ch.pontius.kiar.ingester.solrj.setField
 import ch.pontius.kiar.kiar.KiarFile
+import ch.pontius.kiar.utilities.SafeImageLoader
 import com.sksamuel.scrimage.ImmutableImage
 import io.github.oshai.kotlinlogging.KLogger
 import io.github.oshai.kotlinlogging.KotlinLogging
@@ -74,7 +75,7 @@ class KiarFileSource(private val file: Path, private val skipResources: Boolean 
     private data class KiarImageProvider(private val index: Int, private val entry: KiarFile.KiarEntry): MediaProvider.Image {
         override fun open(): ImmutableImage? = try {
             this.entry.openResource(this.index).use {
-                ImmutableImage.loader().fromStream(it)
+                SafeImageLoader.load(it)
             }
         } catch (e: Throwable) {
             logger.error(e) { "Failed to decode image ${this.index} from KIAR entry ${entry.uuid} due to exception." }

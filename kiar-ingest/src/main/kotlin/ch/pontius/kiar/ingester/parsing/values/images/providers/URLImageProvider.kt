@@ -5,6 +5,7 @@ import ch.pontius.kiar.api.model.job.JobLogContext
 import ch.pontius.kiar.api.model.job.JobLogLevel
 import ch.pontius.kiar.ingester.media.MediaProvider
 import ch.pontius.kiar.ingester.processors.ProcessingContext
+import ch.pontius.kiar.utilities.SafeImageLoader
 import com.sksamuel.scrimage.ImmutableImage
 import java.net.HttpURLConnection
 import java.net.InetAddress
@@ -68,7 +69,7 @@ class URLImageProvider(
                             this.warn("Refused to download image from '$current': content length ${connection.contentLengthLong} exceeds limit of $MAX_CONTENT_LENGTH bytes.")
                             break
                         }
-                        image = connection.inputStream.use { ImmutableImage.loader().fromStream(it) }
+                        image = connection.inputStream.use { SafeImageLoader.load(it) }
                     }
                     status in 300..399 -> {
                         val location = connection.getHeaderField("Location")

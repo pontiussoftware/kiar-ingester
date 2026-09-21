@@ -16,8 +16,8 @@ import ch.pontius.kiar.database.institutions.Institutions
 import ch.pontius.kiar.database.institutions.InstitutionsSolrCollections
 import ch.pontius.kiar.database.institutions.Participants
 import ch.pontius.kiar.utilities.ImageHandler
+import ch.pontius.kiar.utilities.SafeImageLoader
 import ch.pontius.kiar.utilities.extensions.*
-import com.sksamuel.scrimage.ImmutableImage
 import com.sksamuel.scrimage.nio.JpegWriter
 import io.ktor.http.*
 import io.ktor.server.application.*
@@ -326,7 +326,9 @@ suspend fun postUploadImageForCollection(call: ApplicationCall) {
     for (f in files) {
         /* Open image. */
         val image = try {
-            f.content().use { ImmutableImage.loader().fromStream(it) }
+            SafeImageLoader.load(f.path)
+        } catch (e: SafeImageLoader.ImageTooLargeException) {
+            throw ErrorStatusException(400, "Uploaded image is too large: ${e.message}")
         } catch (_: IOException) {
             throw ErrorStatusException(400, "Uploaded image file could not be opened.")
         }

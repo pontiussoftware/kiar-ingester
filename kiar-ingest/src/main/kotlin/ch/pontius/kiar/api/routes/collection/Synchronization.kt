@@ -17,8 +17,8 @@ import ch.pontius.kiar.database.institutions.Institutions
 import ch.pontius.kiar.database.institutions.Participants
 import ch.pontius.kiar.ingester.solrj.Field
 import ch.pontius.kiar.ingester.solrj.setField
+import ch.pontius.kiar.utilities.SafeImageLoader
 import ch.pontius.kiar.utilities.extensions.queryParam
-import com.sksamuel.scrimage.ImmutableImage
 import io.github.oshai.kotlinlogging.KLogger
 import io.github.oshai.kotlinlogging.KotlinLogging
 import io.ktor.server.application.*
@@ -118,7 +118,7 @@ private fun synchronise(config: ApacheSolrConfig, collection: String, collection
                     for (imageName in collection.images) {
                         val path = Paths.get(deployment.path).resolve("collections").resolve(deployment.name).resolve(imageName)
                         try {
-                            val image = ImmutableImage.loader().fromPath(path)
+                            val image = SafeImageLoader.load(path)
                             if (deployment.server == null) {
                                 doc.addField(deployment.name, "/collections/${deployment.name}/$imageName")
                             } else {
