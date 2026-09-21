@@ -8,8 +8,10 @@ import ch.pontius.kiar.api.model.user.User
 import ch.pontius.kiar.api.openapi.*
 import ch.pontius.kiar.database.institutions.Users
 import ch.pontius.kiar.database.institutions.Users.toUser
+import ch.pontius.kiar.utilities.LoginThrottle
 import ch.pontius.kiar.utilities.extensions.*
 import io.ktor.server.application.*
+import io.ktor.server.plugins.*
 import io.ktor.server.response.*
 import org.jetbrains.exposed.v1.core.and
 import org.jetbrains.exposed.v1.core.eq
@@ -26,29 +28,42 @@ val loginDoc: RouteDoc = {
     jsonBody<LoginRequest>()
     responses {
         json<SuccessStatus>(200)
-        errors(400, 401, 500)
+        errors(400, 401, 429, 500)
     }
 }
 
+/**
+ * A bcrypt hash that is checked against when the user does not exist, so that unknown and known usernames take the same
+ * time to reject (prevents username enumeration through response timing).
+ */
+private val DUMMY_HASH: String = BCrypt.hashpw("not-a-real-password", BCrypt.gensalt(BCRYPT_COST))
+
 suspend fun login(call: ApplicationCall) {
     val request = call.receiveOrThrow<LoginRequest>()
+    val address = call.request.origin.remoteHost
+
+    /* Reject early if this user or address has too many recent failures. */
+    LoginThrottle.check(request.username, address)
 
     /* Credentials are always verified, even if a session exists; a successful login then replaces that session (see setUser). */
 
     /* Find active user with given username; the password hash is read from the row and never leaves this function. */
-    val (user, hash) = transaction {
+    val found = transaction {
         Users.selectAll().where {
             Users.name eq request.username and (Users.inactive eq false)
         }.map { it.toUser() to it[Users.password] }.firstOrNull()
-    } ?: throw ErrorStatusException(401, "The provided credentials are invalid.")
-
-    /* Check password. */
-    if (!BCrypt.checkpw(request.password, hash)) {
-        throw ErrorStatusException(401, "The provided credentials are invalid.")
-    } else {
-        call.setUser(user)
-        call.respond(SuccessStatus("Login successful!"))
     }
+
+    /* Check password (against a dummy hash if the user is unknown, to keep timing uniform). */
+    val valid = BCrypt.checkpw(request.password, found?.second ?: DUMMY_HASH) && found != null
+    if (!valid) {
+        LoginThrottle.failure(request.username, address)
+        throw ErrorStatusException(401, "The provided credentials are invalid.")
+    }
+
+    LoginThrottle.success(request.username)
+    call.setUser(found.first)
+    call.respond(SuccessStatus("Login successful!"))
 }
 
 val logoutDoc: RouteDoc = {
