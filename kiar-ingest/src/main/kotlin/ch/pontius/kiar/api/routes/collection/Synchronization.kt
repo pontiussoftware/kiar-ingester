@@ -17,13 +17,13 @@ import ch.pontius.kiar.database.institutions.Institutions
 import ch.pontius.kiar.database.institutions.Participants
 import ch.pontius.kiar.ingester.solrj.Field
 import ch.pontius.kiar.ingester.solrj.setField
+import ch.pontius.kiar.solr.SolrClientProvider
 import ch.pontius.kiar.utilities.SafeImageLoader
 import ch.pontius.kiar.utilities.extensions.queryParam
 import io.github.oshai.kotlinlogging.KLogger
 import io.github.oshai.kotlinlogging.KotlinLogging
 import io.ktor.server.application.*
 import io.ktor.server.response.*
-import org.apache.solr.client.solrj.jetty.HttpJettySolrClient
 import org.apache.solr.client.solrj.response.UpdateResponse
 import org.apache.solr.common.SolrInputDocument
 import org.jetbrains.exposed.v1.core.and
@@ -85,11 +85,7 @@ suspend fun postSyncCollections(call: ApplicationCall) {
  */
 private fun synchronise(config: ApacheSolrConfig, collection: String, collections: List<ObjectCollection>) {
     /* Prepare HTTP client builder. */
-    var httpBuilder = HttpJettySolrClient.Builder(config.server)
-    if (config.username != null && config.password != null) {
-        httpBuilder = httpBuilder.withBasicAuthCredentials(config.username, config.password)
-    }
-    httpBuilder.build().use { client ->
+    SolrClientProvider.newClient(config).use { client ->
         try {
             /* Delete all existing entries. */
             var response: UpdateResponse = client.deleteByQuery(collection, "*:*")

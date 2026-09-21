@@ -11,6 +11,7 @@ import ch.pontius.kiar.database.institutions.Institutions.toInstitution
 import ch.pontius.kiar.database.institutions.Participants
 import ch.pontius.kiar.database.jobs.JobLogs
 import ch.pontius.kiar.database.jobs.Jobs
+import ch.pontius.kiar.solr.SolrClientProvider
 import io.github.oshai.kotlinlogging.KLogger
 import io.github.oshai.kotlinlogging.KotlinLogging
 import org.apache.solr.client.solrj.jetty.HttpJettySolrClient
@@ -62,13 +63,8 @@ class ProcessingContext(val jobId: Int, val config: Config, val test: Boolean = 
         /* The API model carries no credentials; load them explicitly. */
         val config = template.id?.let { SolrConfigs.getByIdWithCredentials(it) } ?: template
 
-        /* Prepare HTTP client builder. */
-        var httpBuilder = HttpJettySolrClient.Builder(config.server)
-        if (config.username != null && config.password != null) {
-            httpBuilder = httpBuilder.withBasicAuthCredentials(config.username, config.password)
-        }
-        /* Prepare Apache Solr client. */
-        httpBuilder.build()
+        /* Prepare Apache Solr client (dedicated to this job; closed with the context). */
+        SolrClientProvider.newClient(config)
     }
 
     /** A [Map] of [Institution.name] to [Institution]. */
