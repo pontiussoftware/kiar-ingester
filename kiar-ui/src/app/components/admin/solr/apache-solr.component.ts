@@ -196,13 +196,18 @@ export class ApacheSolrComponent implements AfterViewInit{
    * @param index The index of the {@link ApacheSolrCollection} to view.
    */
   public viewCollection(index: number) {
-    let server = this.formControl.controls['publicServer'].value || this.formControl.controls['server'].value
-    let collection = this.collections[index]?.get('name')?.value
+    const server: string | null = this.formControl.controls['publicServer'].value || this.formControl.controls['server'].value
+    const collection: string | null = this.collections[index]?.get('name')?.value
     if (server != null && collection != null) {
-      if (server.endsWith('/')) {
-        window.open(`${server}${collection}/select?q=*:*`, "_blank");
-      } else {
-        window.open(`${server}/${collection}/select?q=*:*`, "_blank");
+      /* Only ever open http(s) URLs (the value is user-supplied) and never hand the opener to the new window. */
+      let url: URL
+      try {
+        url = new URL(`${server.endsWith('/') ? server : server + '/'}${encodeURIComponent(collection)}/select?q=*:*`)
+      } catch {
+        return
+      }
+      if (url.protocol === 'http:' || url.protocol === 'https:') {
+        window.open(url.toString(), '_blank', 'noopener,noreferrer')
       }
     }
   }

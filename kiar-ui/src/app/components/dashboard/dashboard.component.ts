@@ -142,18 +142,23 @@ export class DashboardComponent implements AfterViewInit, OnDestroy {
           /* Slice file and upload it. */
           const sliceSize = 1e8
           const slices = Math.floor(file.size / sliceSize) + 1
+          let failed = false
           for (let i = 0; i < slices; i++) {
             const slice = file.slice(i * sliceSize, Math.min((i + 1) * sliceSize, file.size), file.type)
             try {
               await firstValueFrom(this.service.putUpload(job.id!!, i == 0, i == (slices - 1), slice, 'body'));
-              this.setProgress(job.id, (i / slices) * 100)
+              this.setProgress(job.id, ((i + 1) / slices) * 100)
             } catch (err) {
-              this.snackBar.open(this.translate.instant('dashboard.messages.uploadError', {type: job.template?.type, id: job.id}), this.translate.instant('common.action.dismiss'), { duration: 2000 } as MatSnackBarConfig)
+              this.snackBar.open(this.translate.instant('dashboard.messages.uploadError', {type: job.template?.type, id: job.id}), this.translate.instant('common.action.dismiss'), { duration: 5000 } as MatSnackBarConfig)
+              failed = true
               break
             }
           }
 
-          this.snackBar.open(this.translate.instant('dashboard.messages.uploadSuccess', {type: job.template?.type}), this.translate.instant('common.action.dismiss'), { duration: 2000 } as MatSnackBarConfig)
+          /* Only report success if every chunk was accepted; a partial upload leaves the job in a state that must be re-uploaded. */
+          if (!failed) {
+            this.snackBar.open(this.translate.instant('dashboard.messages.uploadSuccess', {type: job.template?.type}), this.translate.instant('common.action.dismiss'), { duration: 2000 } as MatSnackBarConfig)
+          }
           this.clearProgress(job.id);
         }
       });

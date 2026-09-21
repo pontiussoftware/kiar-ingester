@@ -80,7 +80,7 @@ export class AuthenticationService {
         catchError((err, caught) => {
             if (err.status == 401 || err.status == 403) {
               this._status.set(null) /* Automatically log-out. */
-              return of(this.router.parseUrl(`/login?returnUrl=${state.url}`))
+              return of(this.router.parseUrl(`/login?returnUrl=${encodeURIComponent(state.url)}`))
             }
             return of(this.router.parseUrl('/forbidden'))
         })
