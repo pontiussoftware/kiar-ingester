@@ -16,10 +16,7 @@ import ch.pontius.kiar.database.config.Transformers
 import ch.pontius.kiar.database.institutions.Institutions
 import ch.pontius.kiar.database.institutions.Participants
 import ch.pontius.kiar.ingester.IngesterServer
-import ch.pontius.kiar.utilities.extensions.currentUser
-import ch.pontius.kiar.utilities.extensions.pathParam
-import ch.pontius.kiar.utilities.extensions.receiveOrThrow
-import ch.pontius.kiar.utilities.extensions.requireParticipant
+import ch.pontius.kiar.utilities.extensions.*
 import io.ktor.server.application.*
 import io.ktor.server.response.*
 import org.jetbrains.exposed.v1.core.eq
@@ -76,6 +73,7 @@ val createJobTemplateDoc: RouteDoc = {
 
 suspend fun createJobTemplate(call: ApplicationCall, server: IngesterServer) {
     val request = call.receiveOrThrow<JobTemplate>()
+    request.name.requireSafePathSegment("job template name") /* The name becomes part of the watched file's path. */
     val created = transaction {
         val jobTemplateId = JobTemplates.insertAndGetId { insert ->
             insert[name] = request.name
@@ -149,6 +147,7 @@ suspend fun updateJobTemplate(call: ApplicationCall, server: IngesterServer) {
     /* Extract the ID and the request body. */
     val templateId = call.pathParam("id").toIntOrNull() ?: throw ErrorStatusException(400, "Malformed job template ID.")
     val request = call.receiveOrThrow<JobTemplate>()
+    request.name.requireSafePathSegment("job template name") /* The name becomes part of the watched file's path. */
 
     /* Start transaction. */
     transaction {

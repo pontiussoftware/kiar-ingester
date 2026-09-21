@@ -1,6 +1,9 @@
 package ch.pontius.kiar.ingester.parsing.values.images
 
 import ch.pontius.kiar.api.model.config.mappings.AttributeMapping
+import ch.pontius.kiar.api.model.job.JobLog
+import ch.pontius.kiar.api.model.job.JobLogContext
+import ch.pontius.kiar.api.model.job.JobLogLevel
 import ch.pontius.kiar.ingester.parsing.values.ValueParser
 import ch.pontius.kiar.ingester.parsing.values.images.providers.FileImageProvider
 import ch.pontius.kiar.ingester.processors.ProcessingContext
@@ -43,9 +46,15 @@ class FileImageValueParser(override val mapping: AttributeMapping): ValueParser<
             value.trim()
         }
 
-        /* Parse path. */
+        /* Parse path. If a source directory is configured, the record's path must stay inside it (an absolute or '..' path would otherwise escape). */
         val path = if (!this.source.isNullOrEmpty()) {
-            Paths.get(this.source).resolve(actualPath)
+            val base = Paths.get(this.source).toAbsolutePath().normalize()
+            val resolved = base.resolve(actualPath).toAbsolutePath().normalize()
+            if (!resolved.startsWith(base)) {
+                context.log(JobLog(context.jobId, into.uuidOrNull(), null, JobLogContext.RESOURCE, JobLogLevel.WARNING, "Refused image path '$actualPath': it points outside the configured source directory."))
+                return
+            }
+            resolved
         } else {
             Paths.get(actualPath)
         }

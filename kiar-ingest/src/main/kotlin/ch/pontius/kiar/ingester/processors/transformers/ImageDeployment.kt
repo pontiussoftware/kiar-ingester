@@ -74,6 +74,14 @@ class ImageDeployment(override val input: Source<SolrInputDocument>): Transforme
         /* Return flow for image deployment. */
         return this.input.toFlow(context).onEach {
             if (it.has(Field.RAW)) {
+                /* The UUID becomes part of the image file name; a string mapping can supply arbitrary text, so insist on an actual UUID. */
+                val uuid = it.uuid()
+                if (runCatching { UUID.fromString(uuid) }.isFailure) {
+                    context.log(JobLog(context.jobId, null, null, JobLogContext.RESOURCE, JobLogLevel.WARNING, "Skipping image deployment for document '$uuid': not a valid UUID."))
+                    it.setField(Field.IMAGECOUNT, 0)
+                    return@onEach
+                }
+
                 val providers = LinkedList(it.getAll<MediaProvider.Image>(Field.RAW))
                 var counter = 1
                 for (provider in providers) {

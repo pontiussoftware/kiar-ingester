@@ -17,6 +17,7 @@ import ch.pontius.kiar.database.config.SolrConfigs
 import ch.pontius.kiar.database.config.SolrConfigs.toSolr
 import ch.pontius.kiar.utilities.extensions.pathParam
 import ch.pontius.kiar.utilities.extensions.receiveOrThrow
+import ch.pontius.kiar.utilities.extensions.requireSafePathSegment
 import ch.pontius.kiar.utilities.extensions.withSuffix
 import io.ktor.server.application.*
 import io.ktor.server.response.*
@@ -248,7 +249,7 @@ private fun mergeDeployments(solrConfigId: SolrConfigId, deployments: List<Image
         ImageDeployments.insert { deployment ->
             if (d.id != null) deployment[ImageDeployments.id] = d.id
             deployment[ImageDeployments.solrInstanceId] = solrConfigId
-            deployment[ImageDeployments.name] = d.name
+            deployment[ImageDeployments.name] = d.name.requireSafePathSegment("image deployment name") /* Used as a directory name below the deployment path. */
             deployment[ImageDeployments.format] = d.format
             deployment[ImageDeployments.src] = d.source
             deployment[ImageDeployments.server] = d.server?.withSuffix("/")

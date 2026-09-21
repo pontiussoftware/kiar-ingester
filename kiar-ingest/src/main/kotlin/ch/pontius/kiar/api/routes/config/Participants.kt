@@ -3,16 +3,17 @@ package ch.pontius.kiar.api.routes.config
 import ch.pontius.kiar.api.model.status.ErrorStatus
 import ch.pontius.kiar.api.model.status.ErrorStatusException
 import ch.pontius.kiar.api.model.status.SuccessStatus
+import ch.pontius.kiar.api.openapi.*
 import ch.pontius.kiar.database.institutions.Participants
+import ch.pontius.kiar.utilities.extensions.pathParam
+import ch.pontius.kiar.utilities.extensions.requireSafePathSegment
+import io.ktor.server.application.*
+import io.ktor.server.response.*
 import org.jetbrains.exposed.v1.core.eq
 import org.jetbrains.exposed.v1.jdbc.deleteWhere
 import org.jetbrains.exposed.v1.jdbc.insert
 import org.jetbrains.exposed.v1.jdbc.select
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
-import io.ktor.server.application.ApplicationCall
-import ch.pontius.kiar.api.openapi.*
-import io.ktor.server.response.respond
-import ch.pontius.kiar.utilities.extensions.pathParam
 
 
 val listParticipantsDoc: RouteDoc = {
@@ -46,7 +47,7 @@ val createParticipantsDoc: RouteDoc = {
 }
 
 suspend fun createParticipants(call: ApplicationCall) {
-    val participantName = call.pathParam("name")
+    val participantName = call.pathParam("name").requireSafePathSegment("participant name") /* The name becomes a directory under the ingest path. */
     transaction {
         Participants.insert {
             it[name] = participantName
