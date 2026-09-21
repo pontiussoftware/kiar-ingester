@@ -1,6 +1,5 @@
 package ch.pontius.kiar.api.routes.config
 
-import ch.pontius.kiar.api.model.status.ErrorStatus
 import ch.pontius.kiar.api.model.status.ErrorStatusException
 import ch.pontius.kiar.api.model.status.SuccessStatus
 import ch.pontius.kiar.api.openapi.*
@@ -77,6 +76,6 @@ suspend fun deleteParticipants(call: ApplicationCall) {
     if (deleted > 0) {
         call.respond(SuccessStatus("Participant with ID $participantId deleted successfully."))
     } else {
-        call.respond(ErrorStatus(404, "Participant with ID could not be found."))
+        throw ErrorStatusException(404, "Participant with ID $participantId could not be found.")
     }
 }

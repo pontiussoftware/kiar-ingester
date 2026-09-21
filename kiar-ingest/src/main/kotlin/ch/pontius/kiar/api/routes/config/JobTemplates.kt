@@ -3,7 +3,6 @@ package ch.pontius.kiar.api.routes.config
 import ch.pontius.kiar.api.model.config.templates.JobTemplate
 import ch.pontius.kiar.api.model.config.templates.JobTemplateId
 import ch.pontius.kiar.api.model.config.transformers.TransformerConfig
-import ch.pontius.kiar.api.model.status.ErrorStatus
 import ch.pontius.kiar.api.model.status.ErrorStatusException
 import ch.pontius.kiar.api.model.status.SuccessStatus
 import ch.pontius.kiar.api.model.user.Role
@@ -214,7 +213,7 @@ suspend fun deleteJobTemplate(call: ApplicationCall, server: IngesterServer) {
     if (deleted > 0) {
         call.respond(SuccessStatus("Job template with ID $templateId  deleted successfully."))
     } else {
-        call.respond(ErrorStatus(404, "Job template with ID $templateId could not be deleted because it could not be found."))
+        throw ErrorStatusException(404, "Job template with ID $templateId could not be deleted because it could not be found.")
     }
 }
 

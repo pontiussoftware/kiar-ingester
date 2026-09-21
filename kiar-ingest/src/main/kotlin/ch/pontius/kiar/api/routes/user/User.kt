@@ -1,6 +1,5 @@
 package ch.pontius.kiar.api.routes.user
 
-import ch.pontius.kiar.api.model.status.ErrorStatus
 import ch.pontius.kiar.api.model.status.ErrorStatusException
 import ch.pontius.kiar.api.model.status.SuccessStatus
 import ch.pontius.kiar.api.model.user.PaginatedUserResult
@@ -195,6 +194,6 @@ suspend fun deleteUser(call: ApplicationCall) {
     if (count > 0) {
         call.respond(SuccessStatus("User  with ID$userId deleted successfully."))
     } else {
-        call.respond(ErrorStatus(404, "User with ID $userId could not be found."))
+        throw ErrorStatusException(404, "User with ID $userId could not be found.")
     }
 }

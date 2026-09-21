@@ -3,7 +3,6 @@ package ch.pontius.kiar.api.routes.collection
 import ch.pontius.kiar.api.model.collection.ObjectCollection
 import ch.pontius.kiar.api.model.collection.PaginatedObjectCollectionResult
 import ch.pontius.kiar.api.model.config.image.ImageFormat
-import ch.pontius.kiar.api.model.status.ErrorStatus
 import ch.pontius.kiar.api.model.status.ErrorStatusException
 import ch.pontius.kiar.api.model.status.SuccessStatus
 import ch.pontius.kiar.api.model.user.Role
@@ -171,7 +170,7 @@ suspend fun putUpdateCollection(call: ApplicationCall) {
     if (updated > 0) {
         call.respond(SuccessStatus("Collection with ID $collectionId updated successfully."))
     } else {
-        call.respond(ErrorStatus(404, "Collection with ID $collectionId could not be updated because it does not exist."))
+        throw ErrorStatusException(404, "Collection with ID $collectionId could not be updated because it does not exist.")
     }
 }
 

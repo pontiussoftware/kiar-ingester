@@ -1,22 +1,21 @@
 import ch.pontius.kiar.api.model.config.mappings.AttributeMapping
 import ch.pontius.kiar.api.model.config.mappings.EntityMapping
 import ch.pontius.kiar.api.model.config.mappings.EntityMappingId
-import ch.pontius.kiar.api.model.status.ErrorStatus
 import ch.pontius.kiar.api.model.status.ErrorStatusException
 import ch.pontius.kiar.api.model.status.SuccessStatus
+import ch.pontius.kiar.api.openapi.*
 import ch.pontius.kiar.database.config.AttributeMappings
 import ch.pontius.kiar.database.config.AttributeMappings.toAttributeMapping
 import ch.pontius.kiar.database.config.EntityMappings
 import ch.pontius.kiar.database.config.EntityMappings.toEntityMapping
+import ch.pontius.kiar.utilities.extensions.pathParam
 import ch.pontius.kiar.utilities.extensions.receiveOrThrow
+import io.ktor.server.application.*
+import io.ktor.server.response.*
 import org.jetbrains.exposed.v1.core.eq
 import org.jetbrains.exposed.v1.jdbc.*
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 import java.time.Instant
-import io.ktor.server.application.ApplicationCall
-import ch.pontius.kiar.api.openapi.*
-import io.ktor.server.response.respond
-import ch.pontius.kiar.utilities.extensions.pathParam
 
 val listEntityMappingsDoc: RouteDoc = {
     operationId = "getListEntityMappings"
@@ -151,7 +150,7 @@ suspend fun deleteEntityMapping(call: ApplicationCall) {
     if (deleted > 0) {
         call.respond(SuccessStatus("Mapping with ID $mappingId deleted successfully."))
     } else {
-        call.respond(ErrorStatus(404, "Mapping with ID $mappingId could not be deleted, because it does not exist."))
+        throw ErrorStatusException(404, "Mapping with ID $mappingId could not be deleted, because it does not exist.")
     }
 }
 

@@ -4,7 +4,6 @@ import ch.pontius.kiar.api.model.config.image.ImageDeployment
 import ch.pontius.kiar.api.model.config.solr.ApacheSolrCollection
 import ch.pontius.kiar.api.model.config.solr.ApacheSolrConfig
 import ch.pontius.kiar.api.model.config.solr.SolrConfigId
-import ch.pontius.kiar.api.model.status.ErrorStatus
 import ch.pontius.kiar.api.model.status.ErrorStatusException
 import ch.pontius.kiar.api.model.status.SuccessStatus
 import ch.pontius.kiar.api.openapi.*
@@ -193,7 +192,7 @@ suspend fun deleteSolrConfig(call: ApplicationCall) {
     if (deleted > 0) {
         call.respond(SuccessStatus("Apache Solr configuration $solrId deleted successfully."))
     } else {
-        call.respond(ErrorStatus(404, "Apache Solr configuration with ID $solrId could not be found."))
+        throw ErrorStatusException(404, "Apache Solr configuration with ID $solrId could not be found.")
     }
 }
 

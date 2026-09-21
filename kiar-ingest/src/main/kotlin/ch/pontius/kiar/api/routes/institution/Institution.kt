@@ -3,7 +3,6 @@ package ch.pontius.kiar.api.routes.institution
 import ch.pontius.kiar.api.model.config.image.ImageFormat
 import ch.pontius.kiar.api.model.institution.Institution
 import ch.pontius.kiar.api.model.institution.PaginatedInstitutionResult
-import ch.pontius.kiar.api.model.status.ErrorStatus
 import ch.pontius.kiar.api.model.status.ErrorStatusException
 import ch.pontius.kiar.api.model.status.SuccessStatus
 import ch.pontius.kiar.api.model.user.Role
@@ -486,7 +485,7 @@ suspend fun deleteInstitution(call: ApplicationCall) {
     if (deleted > 0) {
         call.respond(SuccessStatus("Institution with ID $institutionId deleted successfully."))
     } else {
-        call.respond(ErrorStatus(404, "Institution with ID $institutionId could not be deleted because it doesn't exist."))
+        throw ErrorStatusException(404, "Institution with ID $institutionId could not be deleted because it doesn't exist.")
     }
 }
 
