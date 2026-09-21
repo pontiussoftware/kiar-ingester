@@ -46,8 +46,13 @@ import java.time.Duration
 import java.util.*
 import kotlin.system.exitProcess
 
-/** The [KLogger] instance for the application. */
-private val logger: KLogger = KotlinLogging.logger {}
+/**
+ * The [KLogger] instance for the application.
+ *
+ * Deliberately lazy: a top-level logger would be created during class initialisation, i.e., before [main] has set the
+ * 'log4j.saveDirectory' system property, and Log4j would then initialise with an unresolved placeholder as log path.
+ */
+private val logger: KLogger by lazy { KotlinLogging.logger {} }
 
 /** The name of the session cookie. */
 const val SESSION_COOKIE = "SESSIONID"
