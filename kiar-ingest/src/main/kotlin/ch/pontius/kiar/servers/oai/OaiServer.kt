@@ -9,7 +9,6 @@ import ch.pontius.kiar.ingester.parsing.xml.XmlDocumentParser
 import ch.pontius.kiar.ingester.solrj.Field
 import ch.pontius.kiar.ingester.solrj.uuid
 import ch.pontius.kiar.servers.mapper.Formats
-import ch.pontius.kiar.servers.mapper.Mapper
 import ch.pontius.kiar.servers.oai.Verbs.*
 import ch.pontius.kiar.solr.SolrClientProvider
 import com.github.benmanes.caffeine.cache.Caffeine
@@ -25,7 +24,6 @@ import java.text.ParseException
 import java.text.SimpleDateFormat
 import java.time.Duration
 import java.util.*
-import java.util.concurrent.ConcurrentHashMap
 import javax.xml.parsers.DocumentBuilder
 import javax.xml.parsers.DocumentBuilderFactory
 
@@ -56,11 +54,11 @@ class OaiServer {
     /** The [DocumentBuilder] instance used by this [XmlDocumentParser]. */
     private val documentBuilder: DocumentBuilder = DocumentBuilderFactory.newInstance().newDocumentBuilder()
 
-    /** A [ConcurrentHashMap] of [Http2SolrClient] used by this [OaiServer] to fetch data. */
-    private val tokens = Caffeine.newBuilder().expireAfterAccess(Duration.ofMinutes(60)).build<String, Triple<Int, String?, Mapper>>().asMap()
+    /** Outstanding resumption tokens. Bounded, since clients can mint them freely. */
+    private val tokens = Caffeine.newBuilder().expireAfterAccess(Duration.ofMinutes(60)).maximumSize(5000).build<String, ResumptionState>().asMap()
 
-    /** A cache of [Http2SolrClient]s used by this data ingest server. */
-    private val collections = Caffeine.newBuilder().expireAfterWrite(Duration.ofHours(12)).build<String, ApacheSolrConfig?> { collection ->
+    /** A cache of [ApacheSolrConfig]s by collection name. Short-lived, so configuration changes take effect promptly. */
+    private val collections = Caffeine.newBuilder().expireAfterWrite(Duration.ofMinutes(5)).maximumSize(100).build<String, ApacheSolrConfig?> { collection ->
         transaction {
             (SolrCollections innerJoin SolrConfigs).select(SolrConfigs.columns)
                 .where { (SolrCollections.name eq collection) and (SolrCollections.type eq CollectionType.OBJECT) and (SolrCollections.oai eq true)}
@@ -285,24 +283,27 @@ class OaiServer {
         /* Parse request. */
         val token = parameters["resumptionToken"]
 
-        /* Determine start, set and mapper to use. */
-        val (start, set, mapper) = if (token != null) {
-            this.tokens[token] ?: return handleError("badResumptionToken", "Invalid resumption token.")
+        /* Determine start, set and mapper to use; a resumption token carries the complete context of the original request. */
+        val state = if (token != null) {
+            val resumed = this.tokens[token] ?: return handleError("badResumptionToken", "Invalid resumption token.")
+            if (resumed.collection != collection) return handleError("badResumptionToken", "Resumption token does not belong to this collection.")
+            resumed
         } else {
             val prefix = parameters["metadataPrefix"] ?: return handleError("badArgument", "Missing metadata prefix.")
             val mapper = Formats.entries.find { it.prefix == prefix }?.toMapper() ?: return handleError("cannotDisseminateFormat", "Unsupported metadata prefix '$prefix'.")
-            Triple(0, parameters["set"], mapper)
+            ResumptionState(0, parameters["set"], mapper, collection, parameters["from"], parameters["until"])
         }
+        val (start, set, mapper) = state
 
         /* Parse dates. */
-        val from = parameters["from"]?.let {
+        val from = state.from?.let {
             try {
                 GRANULARITY_FORMAT.parse(it)
             } catch (_: ParseException) {
                 return handleError("badArgument", "Malformed 'from'.")
             }
         }
-        val until = parameters["until"]?.let {
+        val until = state.until?.let {
             try {
                 GRANULARITY_FORMAT.parse(it)
             } catch (_: ParseException) {
@@ -363,7 +364,7 @@ class OaiServer {
         if (response.results.numFound > lastElement) {
             /* Update resumption token. */
             val newToken = UUID.randomUUID().toString()
-            this.tokens[newToken] = Triple(lastElement, set, mapper)
+            this.tokens[newToken] = state.copy(start = lastElement)
 
             /* Include new token in response. */
             val resumptionTokenElement = doc.createElement("resumptionToken")
@@ -388,24 +389,27 @@ class OaiServer {
         /* Parse request. */
         val token = parameters["resumptionToken"]
 
-        /* Determine start, set and mapper to use. */
-        val (start, set, mapper) = if (token != null) {
-            this.tokens[token] ?: return handleError("badResumptionToken", "Invalid resumption token.")
+        /* Determine start, set and mapper to use; a resumption token carries the complete context of the original request. */
+        val state = if (token != null) {
+            val resumed = this.tokens[token] ?: return handleError("badResumptionToken", "Invalid resumption token.")
+            if (resumed.collection != collection) return handleError("badResumptionToken", "Resumption token does not belong to this collection.")
+            resumed
         } else {
             val prefix = parameters["metadataPrefix"] ?: return handleError("badArgument", "Missing metadata prefix.")
             val mapper = Formats.entries.find { it.prefix == prefix }?.toMapper() ?: return handleError("cannotDisseminateFormat", "Unsupported metadata prefix '$prefix'.")
-            Triple(0, parameters["set"], mapper)
+            ResumptionState(0, parameters["set"], mapper, collection, parameters["from"], parameters["until"])
         }
+        val (start, set, mapper) = state
 
         /* Parse optional start and end date. */
-        val from = parameters["from"]?.let {
+        val from = state.from?.let {
             try {
                 GRANULARITY_FORMAT.parse(it)
             } catch (_: ParseException) {
                 return handleError("badArgument", "Malformed 'from'.")
             }
         }
-        val until = parameters["until"]?.let {
+        val until = state.until?.let {
             try {
                 GRANULARITY_FORMAT.parse(it)
             } catch (_: ParseException) {
@@ -459,7 +463,7 @@ class OaiServer {
         if (response.results.numFound > lastElement) {
             /* Update resumption token. */
             val newToken = UUID.randomUUID().toString()
-            this.tokens[newToken] = Triple(lastElement, set, mapper)
+            this.tokens[newToken] = state.copy(start = lastElement)
 
             /* Include new token in response. */
             val resumptionTokenElement = doc.createElement("resumptionToken")

@@ -49,7 +49,7 @@ class SruServer {
     private val documentBuilder: DocumentBuilder = DocumentBuilderFactory.newInstance().newDocumentBuilder()
 
     /** A cache of [ApacheSolrConfig]s used by this [SruServer]. */
-    private val collections = Caffeine.newBuilder().expireAfterWrite(Duration.ofHours(12)).build<String, ApacheSolrConfig?> { collection ->
+    private val collections = Caffeine.newBuilder().expireAfterWrite(Duration.ofMinutes(5)).maximumSize(100).build<String, ApacheSolrConfig?> { collection ->
         transaction {
             (SolrCollections innerJoin SolrConfigs).select(SolrConfigs.columns)
                 .where { (SolrCollections.name eq collection) and (SolrCollections.type eq CollectionType.OBJECT) and (SolrCollections.sru eq true)}

@@ -1,7 +1,7 @@
 package ch.pontius.kiar.utilities
 
 import com.github.benmanes.caffeine.cache.Caffeine
-import io.ktor.server.sessions.SessionStorage
+import io.ktor.server.sessions.*
 import java.time.Duration
 
 /**
@@ -15,7 +15,7 @@ import java.time.Duration
 class CaffeineSessionStorage(idleTimeout: Duration = Duration.ofMinutes(30)) : SessionStorage {
 
     /** The cache holding the serialized session data. */
-    private val sessions = Caffeine.newBuilder().expireAfterAccess(idleTimeout).build<String, String>()
+    private val sessions = Caffeine.newBuilder().expireAfterAccess(idleTimeout).maximumSize(10_000).build<String, String>()
 
     override suspend fun write(id: String, value: String) {
         this.sessions.put(id, value)
