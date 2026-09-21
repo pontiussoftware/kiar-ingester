@@ -77,7 +77,7 @@ class FileWatcher(private val server: IngesterServer, private val templateId: Jo
                     this.server.scheduleJob(jobId)
                 } catch (e: Throwable) {
                     /* The job's own status has been recorded by the server; just keep watching. */
-                    logger.warn(e) { "Job $jobId created from ${this.file} did not complete successfully." }
+                    logger.warn(e) { "Job $jobId created from ${this.file} could not be scheduled." }
                 }
             }
         } catch (_: InterruptedException) {

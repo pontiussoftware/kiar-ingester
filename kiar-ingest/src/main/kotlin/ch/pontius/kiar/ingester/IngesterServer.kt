@@ -83,6 +83,9 @@ class IngesterServer(val config: Config) {
      */
     private val jobDispatcher = this.jobService.asCoroutineDispatcher()
 
+    /** The [CoroutineScope] jobs are executed in. Jobs are independent of each other, hence the [SupervisorJob]. */
+    private val jobScope = CoroutineScope(this.jobDispatcher + SupervisorJob() + CoroutineName("ingester"))
+
     /** Flag indicating that the [IngesterServer] is still running. */
     @Volatile
     var isRunning: Boolean = true
@@ -141,28 +144,35 @@ class IngesterServer(val config: Config) {
      * @param test Whether the Job should only be run as test (i.e., no pushing to Apache Solr)
      */
     fun scheduleJob(jobId: JobId, test: Boolean = false) {
-        /* Step 1: Perform sanity checks and create pipeline. */
-        val job = transaction {
-            val job = Jobs.getById(jobId) ?: throw IllegalStateException("Unknown job ID $jobId.")
-
-            /* Sanity check. */
-            require(job.status == JobStatus.FAILED || job.status == JobStatus.HARVESTED || job.status == JobStatus.INTERRUPTED) {
-                "Job $jobId cannot be executed because it is in wrong state."
-            }
-
-            /* Update job. */
-            Jobs.update({ Jobs.id eq jobId }) { update ->
-                update[status] = JobStatus.SCHEDULED
-                update[modified] = Instant.now()
-            }
-
-            /* Return pipeline. */
-            job
+        /* Step 1: Reserve the job slot; a job that is already scheduled or running must not be started twice. */
+        val context = ProcessingContext(jobId, this.config, test)
+        if (this.activeJobs.putIfAbsent(jobId, context) != null) {
+            throw IllegalStateException("Job $jobId is already scheduled or running.")
         }
 
-        /* Step 2: Create processing context. */
-        val context = ProcessingContext(jobId, this.config, test)
-        this.activeJobs[jobId] = context
+        /* Step 2: Perform sanity checks and mark the job as scheduled. */
+        val job = try {
+            transaction {
+                val job = Jobs.getById(jobId) ?: throw IllegalStateException("Unknown job ID $jobId.")
+
+                /* Sanity check. */
+                require(job.status == JobStatus.FAILED || job.status == JobStatus.HARVESTED || job.status == JobStatus.INTERRUPTED) {
+                    "Job $jobId cannot be executed because it is in wrong state."
+                }
+
+                /* Update job. */
+                Jobs.update({ Jobs.id eq jobId }) { update ->
+                    update[status] = JobStatus.SCHEDULED
+                    update[modified] = Instant.now()
+                }
+
+                /* Return pipeline. */
+                job
+            }
+        } catch (e: Throwable) {
+            this.activeJobs.remove(jobId)
+            throw e
+        }
 
         /* Step 3: Create flow. */
         val flow = try {
@@ -226,13 +236,19 @@ class IngesterServer(val config: Config) {
                 }
                 context.close()
             }
+            this.activeJobs.remove(jobId)
             return
         }
 
-        /* Step 4: Schedule job for execution. */
-       runBlocking {
-            launch(this@IngesterServer.jobDispatcher) {
+        /* Step 4: Execute the job asynchronously; jobs run one after another on the single-threaded job dispatcher. The caller returns immediately. */
+        this.jobScope.launch {
+            try {
                 flow.collect()
+            } catch (_: CancellationException) {
+                /* Aborted by user; the job status has been recorded by the flow's completion handler. */
+            } catch (e: Throwable) {
+                /* Failed; the job status has been recorded by the flow's completion handler. */
+                logger.debug(e) { "Data ingest (ID = $jobId, test = ${test}) terminated with exception." }
             }
         }
     }
@@ -269,6 +285,9 @@ class IngesterServer(val config: Config) {
         if (this.isRunning) {
             this.watcherService.shutdown()
             this.watcherService.awaitTermination(10000L, TimeUnit.MILLISECONDS)
+            this.jobScope.cancel()
+            this.jobService.shutdown()
+            this.jobService.awaitTermination(10000L, TimeUnit.MILLISECONDS)
             this.timer.cancel()
             this.isRunning = false
         }
