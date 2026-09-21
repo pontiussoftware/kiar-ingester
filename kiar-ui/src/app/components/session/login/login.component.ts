@@ -66,7 +66,10 @@ export class LoginComponent implements AfterViewInit {
           this.router.navigateByUrl(this.returnUrl).then(s => {});
         },
         error: (err) => {
-          if (err?.error) {
+          if (err?.status === 429) {
+            /* Too many failed attempts: the account (or client) is temporarily locked. */
+            this.snackBar.open(this.translate.instant('login.messages.tooManyAttempts'), this.translate.instant('common.action.dismiss'), { duration: 10000 });
+          } else if (err?.error) {
             this.snackBar.open(this.translate.instant('login.messages.failed', {error: err?.error?.description}), undefined, { duration: 5000 });
           } else {
             this.snackBar.open(this.translate.instant('login.messages.connectionError'), undefined, { duration: 5000 });

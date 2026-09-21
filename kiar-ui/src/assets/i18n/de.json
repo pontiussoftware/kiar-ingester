@@ -90,6 +90,7 @@
     "messages": {
       "success": "Anmeldung erfolgreich!",
       "failed": "Anmeldung fehlgeschlagen: {{error}}!",
+      "tooManyAttempts": "Zu viele fehlgeschlagene Anmeldeversuche. Die Anmeldung ist vorübergehend gesperrt, bitte versuchen Sie es in 15 Minuten erneut.",
       "connectionError": "Anmeldung aufgrund eines Verbindungsproblems fehlgeschlagen!"
     }
   },

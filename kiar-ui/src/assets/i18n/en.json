@@ -90,6 +90,7 @@
     "messages": {
       "success": "Login successful!",
       "failed": "Login failed: {{error}}!",
+      "tooManyAttempts": "Too many failed login attempts. Login is temporarily locked; please try again in 15 minutes.",
       "connectionError": "Login failed due to a connection issue!"
     }
   },
