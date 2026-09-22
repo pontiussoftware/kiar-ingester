@@ -26,7 +26,7 @@ private val logger: KLogger = KotlinLogging.logger {}
 object SafeImageLoader {
 
     /** Maximum number of pixels (width x height) an image may declare. 50 MP decodes to roughly 200 MB. */
-    const val MAX_PIXELS: Long = 50_000_000L
+    const val MAX_PIXELS: Long = 150_000_000L
 
     /** Maximum number of bytes read from a stream before giving up. */
     const val MAX_BYTES: Long = 100L * 1024 * 1024
