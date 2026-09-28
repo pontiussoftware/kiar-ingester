@@ -27,6 +27,9 @@ object XmlFactories {
     /** Disables loading of external DTDs. */
     private const val LOAD_EXTERNAL_DTD = "http://apache.org/xml/features/nonvalidating/load-external-dtd"
 
+    /** Allows the parser to continue after a fatal error has been reported to (and not re-thrown by) the error handler. */
+    private const val CONTINUE_AFTER_FATAL_ERROR = "http://apache.org/xml/features/continue-after-fatal-error"
+
     /**
      * Creates a new, hardened [SAXParserFactory].
      *
@@ -38,6 +41,7 @@ object XmlFactories {
         this.setFeature(EXTERNAL_GENERAL_ENTITIES, false)
         this.setFeature(EXTERNAL_PARAMETER_ENTITIES, false)
         this.setFeature(LOAD_EXTERNAL_DTD, false)
+        this.setFeature(CONTINUE_AFTER_FATAL_ERROR, true)
         this.isXIncludeAware = false
         this.isNamespaceAware = false
         this.isValidating = false

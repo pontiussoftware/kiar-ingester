@@ -2,6 +2,9 @@ package ch.pontius.kiar.ingester.parsing.xml
 
 import ch.pontius.kiar.api.model.config.mappings.AttributeMapping
 import ch.pontius.kiar.api.model.config.mappings.EntityMapping
+import ch.pontius.kiar.api.model.job.JobLog
+import ch.pontius.kiar.api.model.job.JobLogContext
+import ch.pontius.kiar.api.model.job.JobLogLevel
 import ch.pontius.kiar.ingester.processors.ProcessingContext
 import io.github.oshai.kotlinlogging.KLogger
 import io.github.oshai.kotlinlogging.KotlinLogging
@@ -23,7 +26,7 @@ private val logger: KLogger = KotlinLogging.logger {}
  * Processing of the individual [SolrInputDocument] is provided by a callback method.
  *
  * @author Ralph Gasser
- * @version 1.2.3
+ * @version 1.2.4
  */
 class XmlParsingContext(config: EntityMapping, private val context: ProcessingContext, private val callback: (SolrInputDocument) -> Unit): DefaultHandler() {
     /** Internal [StringBuffer] used for buffering raw characters during XML parsing. */
@@ -44,8 +47,8 @@ class XmlParsingContext(config: EntityMapping, private val context: ProcessingCo
     /** The currently active XML [Node] (to which new [Element]s will be appended). */
     private var appendTo: Node = this.documentBuilder.newDocument()
 
-    /** An internal error flag */
-    private var error: Boolean = false
+    /** The [SAXParseException] encountered while parsing the current document; null if no error occurred. */
+    private var error: SAXParseException? = null
 
     init {
         /* Determine common prefix. */
@@ -81,9 +84,10 @@ class XmlParsingContext(config: EntityMapping, private val context: ProcessingCo
 
         /* Flush old document (if needed). */
         if (this.xpath == this.newDocumentOn) {
-            if (this.error) {
-                logger.warn { "Skipping document due to parse error." }
-                this.error = false /* Clear error flag when new document starts. */
+            val error = this.error
+            if (error != null) {
+                this.context.log(JobLog(this.context.jobId, null, null, JobLogContext.METADATA, JobLogLevel.VALIDATION, "Skipped document due to XML parse error at line ${error.lineNumber}, column ${error.columnNumber}: ${error.message}"))
+                this.error = null /* Clear error when new document starts. */
             } else {
                 val doc = SolrInputDocument()
                 this.parser.parse(this.appendTo.ownerDocument, doc)
@@ -121,7 +125,7 @@ class XmlParsingContext(config: EntityMapping, private val context: ProcessingCo
      */
     override fun error(e: SAXParseException) {
         logger.error(e) { "SAX parse error encountered while parsing document: ${e.message}." }
-        this.error = true
+        if (this.error == null) this.error = e
     }
 
     /**
@@ -130,15 +134,8 @@ class XmlParsingContext(config: EntityMapping, private val context: ProcessingCo
      * @param e [SAXParseException]
      */
     override fun fatalError(e: SAXParseException) {
-        /* Convert invalid characters to recoverable error. */
-        if (e.message?.endsWith(" is an invalid XML character.") == true) {
-            logger.error(e) { "Encountered invalid character while parsing XML: ${e.message}." }
-            this.error = true
-            return
-        }
-
-        /* For other fatal errors, use default behavior. */
-        super.fatalError(e)
+        logger.error(e) {  "Fatal SAX parse error encountered while parsing document: ${e.message}." }
+        if (this.error == null) this.error = e
     }
 
     /**
