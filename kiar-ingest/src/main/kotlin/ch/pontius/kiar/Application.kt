@@ -32,6 +32,7 @@ import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import io.ktor.server.routing.openapi.*
 import io.ktor.server.sessions.*
+import io.ktor.util.cio.ChannelWriteException
 import io.ktor.utils.io.*
 import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.async
@@ -39,6 +40,8 @@ import kotlinx.serialization.json.Json
 import org.jetbrains.exposed.v1.jdbc.Database
 import org.jetbrains.exposed.v1.jdbc.transactions.TransactionManager
 import java.io.FileNotFoundException
+import java.io.IOException
+import java.nio.channels.ClosedChannelException
 import java.nio.file.Files
 import java.nio.file.Paths
 import java.sql.Connection
@@ -184,6 +187,12 @@ fun Application.kiar(config: Config) {
             call.respond(HttpStatusCode.BadRequest, ErrorStatus(400, "Malformed request."))
         }
         exception<Throwable> { call, e ->
+            /* The client went away while the response was being written (e.g., the browser aborted an image download). Nothing can be sent back and nothing is wrong on our side. */
+            if (e.isClientAbort()) {
+                logger.debug(e) { "Client closed connection while processing ${call.request.httpMethod.value} ${call.request.uri}." }
+                return@exception
+            }
+
             /* Internal details (SQL, file paths, upstream URLs) stay in the server log; the client only gets a reference to find them. */
             val reference = UUID.randomUUID().toString().substring(0, 8)
             logger.error(e) { "Unhandled exception while processing ${call.request.httpMethod.value} ${call.request.uri} (ref = $reference)." }
@@ -232,4 +241,24 @@ fun Application.kiar(config: Config) {
             defaultPage = "index.html"
         }
     }
+}
+
+/**
+ * Returns true if this [Throwable] (or any of its causes) indicates that the client closed the connection
+ * while the response was being written. Such failures are not server errors and cannot be answered anyway.
+ */
+private fun Throwable.isClientAbort(): Boolean {
+    var current: Throwable? = this
+    val seen = mutableSetOf<Throwable>()
+    while (current != null && seen.add(current)) {
+        when (current) {
+            is ChannelWriteException, is ClosedByteChannelException, is ClosedChannelException -> return true
+            is IOException -> {
+                val message = current.message ?: ""
+                if (message.contains("Broken pipe", ignoreCase = true) || message.contains("Connection reset", ignoreCase = true)) return true
+            }
+        }
+        current = current.cause
+    }
+    return false
 }

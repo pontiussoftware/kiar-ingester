@@ -75,6 +75,12 @@ export class InstitutionListComponent implements AfterViewInit  {
   }
 
   /**
+   * Tracks table rows by {@link Institution} ID so that a reload of the data source only re-renders rows that
+   * actually changed, instead of destroying every row (and aborting in-flight image requests of {@link InstitutionImageComponent}).
+   */
+  public readonly trackById = (index: number, institution: Institution): number => institution.id ?? index
+
+  /**
    * Registers an observable for page change.
    */
   public ngAfterViewInit() {

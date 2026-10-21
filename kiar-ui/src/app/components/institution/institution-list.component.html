@@ -27,7 +27,7 @@
 </div>
 
 
-<table mat-table [dataSource]="this.dataSource.data()" class="mat-elevation-z8" matSort>
+<table mat-table [dataSource]="this.dataSource.data()" [trackBy]="trackById" class="mat-elevation-z8" matSort>
 
   <!-- Image Column -->
   <ng-container matColumnDef="image">
